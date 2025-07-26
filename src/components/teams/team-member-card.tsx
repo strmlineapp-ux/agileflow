@@ -12,6 +12,46 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { cn, getContrastColor } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Input } from '../ui/input';
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+function SortableAssignedBadge({ badge, canManageRoles, handleToggleRole }: { badge: Badge, canManageRoles: boolean, handleToggleRole: (badgeName: string) => void }) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: badge.id });
+    
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+    };
+
+    return (
+        <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                    <button
+                        onClick={() => canManageRoles && handleToggleRole(badge.name)}
+                        className={cn(
+                        'h-7 w-7 rounded-full border flex items-center justify-center bg-transparent',
+                        canManageRoles && 'cursor-pointer'
+                        )}
+                        style={{ borderColor: badge.color }}
+                    >
+                        <GoogleSymbol
+                        name={badge.icon}
+                        style={{ fontSize: '20px', color: badge.color }}
+                        weight={100}
+                        />
+                    </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                    <p>{badge.name}</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+        </div>
+    );
+}
 
 export function TeamMemberCard({ member, team, isViewer }: { member: User, team: Team, isViewer: boolean }) {
   const { viewAsUser, updateUser, updateTeam, allBadges, allBadgeCollections } = useUser();
@@ -36,27 +76,29 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
   }, [team.activeBadgeCollections, allBadgeCollections, allBadges]);
   
   const teamBadgeNames = useMemo(() => new Set(userAssignableBadges.map(b => b.name)), [userAssignableBadges]);
+  
+  const assignedBadges = useMemo(() => {
+    // Keep the order from member.roles
+    return (member.roles || [])
+      .map(roleName => userAssignableBadges.find(b => b.name === roleName))
+      .filter((b): b is Badge => !!b);
+  }, [member.roles, userAssignableBadges]);
 
   const groupedBadges = useMemo(() => {
-    const assignedBadgeNames = new Set(member.roles || []);
     const groups: { [collectionId: string]: { collectionName: string; badges: Badge[] } } = {};
-
-    userAssignableBadges
-        .filter(b => assignedBadgeNames.has(b.name))
-        .forEach(badge => {
-            const collectionId = badge.ownerCollectionId;
-            if (!groups[collectionId]) {
-                const collection = allBadgeCollections.find(c => c.id === collectionId);
-                groups[collectionId] = {
-                    collectionName: collection?.name || "Other Badges",
-                    badges: [],
-                };
-            }
-            groups[collectionId].badges.push(badge);
-        });
-
+    assignedBadges.forEach(badge => {
+        const collectionId = badge.ownerCollectionId;
+        if (!groups[collectionId]) {
+            const collection = allBadgeCollections.find(c => c.id === collectionId);
+            groups[collectionId] = {
+                collectionName: collection?.name || "Other Badges",
+                badges: [],
+            };
+        }
+        groups[collectionId].badges.push(badge);
+    });
     return Object.values(groups);
-  }, [member.roles, userAssignableBadges, allBadgeCollections]);
+  }, [assignedBadges, allBadgeCollections]);
   
   const unassignedBadges = useMemo(() => {
     const assigned = new Set(member.roles || []);
@@ -117,62 +159,33 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
     };
   }, [isEditingLabel, handleSaveLabel]);
 
-  const renderBadge = (badge: Badge, isAssigned: boolean) => {
-    if (!isAssigned) {
-      return (
-        <TooltipProvider key={badge.id}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <UiBadge
-                variant={'outline'}
-                style={{
-                  borderColor: 'hsl(var(--muted-foreground))',
-                  backgroundColor: 'transparent',
-                  borderStyle: 'dashed',
-                }}
-                className={cn(
-                  'gap-1 p-1 pl-2 rounded-full h-7 text-sm font-thin',
-                  canManageRoles && 'cursor-pointer'
-                )}
-                onClick={() => canManageRoles && handleToggleRole(badge.name)}
-              >
-                <GoogleSymbol 
-                    name={badge.icon} 
-                    style={{ fontSize: '20px', color: 'hsl(var(--muted-foreground))' }} 
-                    weight={100} />
-                <span style={{color: 'hsl(var(--muted-foreground))' }}>{badge.name}</span>
-              </UiBadge>
-            </TooltipTrigger>
-            <TooltipContent>
-              {canManageRoles ? 'Click to assign' : badge.description || badge.name}
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      );
-    }
-
-    // Assigned badge, icon-only
+  const renderBadge = (badge: Badge) => {
     return (
       <TooltipProvider key={badge.id}>
         <Tooltip>
           <TooltipTrigger asChild>
-            <button
-              onClick={() => canManageRoles && handleToggleRole(badge.name)}
+            <UiBadge
+              variant={'outline'}
+              style={{
+                borderColor: 'hsl(var(--muted-foreground))',
+                backgroundColor: 'transparent',
+                borderStyle: 'dashed',
+              }}
               className={cn(
-                'h-7 w-7 rounded-full border flex items-center justify-center bg-transparent',
+                'gap-1 p-1 pl-2 rounded-full h-7 text-sm font-thin',
                 canManageRoles && 'cursor-pointer'
               )}
-              style={{ borderColor: badge.color }}
+              onClick={() => canManageRoles && handleToggleRole(badge.name)}
             >
-              <GoogleSymbol
-                name={badge.icon}
-                style={{ fontSize: '20px', color: badge.color }}
-                weight={100}
-              />
-            </button>
+              <GoogleSymbol 
+                  name={badge.icon} 
+                  style={{ fontSize: '20px', color: 'hsl(var(--muted-foreground))' }} 
+                  weight={100} />
+              <span style={{color: 'hsl(var(--muted-foreground))' }}>{badge.name}</span>
+            </UiBadge>
           </TooltipTrigger>
           <TooltipContent>
-            <p>{badge.name}</p>
+            {canManageRoles ? 'Click to assign' : badge.description || badge.name}
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -220,17 +233,21 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
                 <div className="flex flex-col gap-2 min-h-[24px] rounded-md border p-2 bg-muted/20">
                 {userAssignableBadges.length > 0 ? (
                     <>
-                    {groupedBadges.map(({ collectionName, badges }) => (
-                        <div key={collectionName}>
-                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">{collectionName}</p>
-                            <div className="flex flex-wrap gap-1.5">
-                                {badges.map(badge => renderBadge(badge, true))}
+                    <SortableContext items={assignedBadges.map(b => b.id)} strategy={verticalListSortingStrategy}>
+                       {groupedBadges.map(({ collectionName, badges }) => (
+                            <div key={collectionName}>
+                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">{collectionName}</p>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {badges.map(badge => (
+                                        <SortableAssignedBadge key={badge.id} badge={badge} canManageRoles={canManageRoles} handleToggleRole={handleToggleRole} />
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        ))}
+                    </SortableContext>
                     {unassignedBadges.length > 0 && (
                         <div className="flex flex-wrap gap-1.5">
-                            {unassignedBadges.map(badge => renderBadge(badge, false))}
+                            {unassignedBadges.map(badge => renderBadge(badge))}
                         </div>
                     )}
                     </>

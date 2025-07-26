@@ -7,7 +7,7 @@ import { TeamMemberCard } from './team-member-card';
 import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent, DragOverlay } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
@@ -32,7 +32,8 @@ function SortableTeamMember({ member, team, isViewer }: { member: User, team: Te
 
 
 export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
-    const { viewAsUser, users, updateAppTab, updateTeam, isDragModifierPressed } = useUser();
+    const { viewAsUser, users, updateAppTab, updateTeam, isDragModifierPressed, allBadges } = useUser();
+    const [activeDragItem, setActiveDragItem] = useState<{type: string, id: string} | null>(null);
     
     // Safeguard to prevent rendering if team data is not available.
     if (!team) {
@@ -173,36 +174,57 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     };
     
     const onDragEnd = (event: DragEndEvent) => {
-      const { active, over } = event;
-      if (!over || active.id === over.id) {
-        return;
-      }
+        const { active, over } = event;
+        setActiveDragItem(null);
 
-      const activeList = adminIds.includes(active.id as string) ? 'admins' : 'members';
-      const overList = adminIds.includes(over.id as string) ? 'admins' : 'members';
+        if (!over || active.id === over.id) {
+            return;
+        }
 
-      if (activeList !== overList) {
-        // For simplicity, we don't support dragging between lists in this view.
-        // That logic is handled in the Team Management view.
-        return;
-      }
-      
-      const list = activeList === 'admins' ? admins : members;
-      const oldIndex = list.findIndex(item => item.userId === active.id);
-      const newIndex = list.findIndex(item => item.userId === over.id);
-      
-      const reorderedList = arrayMove(list, oldIndex, newIndex);
+        if (active.data.current?.type === 'assigned-badge') {
+            const memberId = active.data.current.memberId;
+            const member = teamMembers.find(m => m.userId === memberId);
+            if (!member || !member.roles) return;
+            
+            const oldIndex = member.roles.findIndex(roleName => allBadges.find(b => b.name === roleName)?.id === active.id);
+            const newIndex = member.roles.findIndex(roleName => allBadges.find(b => b.name === roleName)?.id === over.id);
 
-      const newAdmins = activeList === 'admins' ? reorderedList : admins;
-      const newMembers = activeList === 'members' ? reorderedList : members;
-      
-      const newMemberIds = [...newAdmins, ...newMembers].map(m => m.userId);
+            if (oldIndex !== -1 && newIndex !== -1) {
+                const newRoles = arrayMove(member.roles, oldIndex, newIndex);
+                updateUser(memberId, { roles: newRoles });
+            }
+            return;
+        }
 
-      updateTeam(team.id, { members: newMemberIds });
+        // Logic for reordering members
+        const activeList = adminIds.includes(active.id as string) ? 'admins' : 'members';
+        const overList = adminIds.includes(over.id as string) ? 'admins' : 'members';
+
+        if (activeList !== overList) {
+            return;
+        }
+        
+        const list = activeList === 'admins' ? admins : members;
+        const oldIndex = list.findIndex(item => item.userId === active.id);
+        const newIndex = list.findIndex(item => item.userId === over.id);
+        
+        const reorderedList = arrayMove(list, oldIndex, newIndex);
+        const newAdmins = activeList === 'admins' ? reorderedList : admins;
+        const newMembers = activeList === 'members' ? reorderedList : members;
+        const newMemberIds = [...newAdmins, ...newMembers].map(m => m.userId);
+
+        updateTeam(team.id, { members: newMemberIds });
     };
 
+    const onDragStart = (event: DragEndEvent) => {
+        const { active } = event;
+        setActiveDragItem({ type: active.data.current?.type, id: active.id as string });
+    }
+
+    const activeBadge = activeDragItem?.type === 'assigned-badge' ? allBadges.find(b => b.id === activeDragItem.id) : null;
+
     return (
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+      <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
         <div className="space-y-6">
             <div className="flex items-center gap-2 mb-6">
                 {isEditingTitle ? (
@@ -277,6 +299,20 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                 </div>
             </div>
         </div>
+        <DragOverlay>
+            {activeBadge ? (
+                <div
+                    className='h-7 w-7 rounded-full border flex items-center justify-center bg-card'
+                    style={{ borderColor: activeBadge.color }}
+                >
+                    <GoogleSymbol
+                        name={activeBadge.icon}
+                        style={{ fontSize: '20px', color: activeBadge.color }}
+                        weight={100}
+                    />
+                </div>
+            ) : null}
+        </DragOverlay>
       </DndContext>
     );
 }

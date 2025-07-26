@@ -11,7 +11,7 @@ This document outlines the established UI patterns and design choices that ensur
 ### 1. Card & Content Padding
 The application favors a compact, information-dense layout. Card components are the primary building block for displaying content.
 
--   **Standard Implementation**: The `CalendarCard` (`/src/components/calendar/calendar-management.tsx`) and `TeamCard` (`/src/components/teams/team-management.tsx`) serve as the ideal examples of the compact card pattern.
+-   **Standard Implementation**: The `CalendarCard` (`/src/components/calendar/calendar-management.tsx`), `TeamCard` (`/src/components/teams/team-management.tsx`), `PageCard` (`/src/components/admin/page.tsx`), and `BadgeCollectionCard` (`/src/components/teams/badge-management.tsx`) serve as the ideal examples of the compact card pattern.
 -   **Header Padding**: The `<CardHeader>` for these cards must use a compact `p-2` padding.
 -   **Content Padding**: The `<CardContent>` should use `p-2 pt-0` to keep vertical spacing tight and aligned with the header.
 -   **Card Backgrounds**: Cards use a `bg-transparent` background, relying on their `border` for definition. This creates a lighter, more modern UI.
@@ -45,7 +45,7 @@ This pattern provides a clean, minimal interface for search functionality, espec
   - Clicking the button reveals the input field.
   - **Crucially, the input must have a transparent background and no borders or box-shadow**, ensuring it blends seamlessly into the UI.
 - **Behavior:**
-  - **Automatic Focus**: To trigger focus when a parent element (like a side panel) becomes visible, pass an `autoFocus={isPanelOpen}` prop to the component. The component's internal `useEffect` hook will then focus the input a single time when the panel opens.
+  - **Automatic Focus**: For specific single-view pages like **Account Settings**, an `autoFocus={true}` prop can be passed to focus the input on initial load.
   - **Manual Focus**: Clicking the search icon will always expand the input and focus it.
   - **Collapse on Blur**: The input always collapses back to its icon-only state when it loses focus (`onBlur`) and the field is empty.
 - **Application:** Used for filtering lists of icons, users, or other filterable content within popovers and management pages like the Admin screen.
@@ -140,7 +140,7 @@ This is the application's perfected, gold-standard pattern for managing a collec
     -   **Positioning**: To ensure the overlay appears directly under the cursor and tracks it smoothly without an offset, the `<DragOverlay>` component **must** use the `snapCenterToCursor` modifier from the `@dnd-kit/modifiers` library. Example: `modifiers={[snapCenterToCursor]}`.
     -   **Card Overlays (Pages, Calendars, Teams, Badge Collections)**: The overlay consists **only** of the entity's icon. It is rendered using the `<GoogleSymbol>` component, styled with the entity's specific color and an appropriate size (e.g., `fontSize: '48px'`) to make it a clear visual target.
     -   **User Overlays**: The overlay consists **only** of the user's `<Avatar>` component, rendered at an appropriate size (e.g., `h-12 w-12`).
-    -   **Badge Overlays**: The overlay is a direct render of the `<BadgeDisplayItem>` component. This ensures the overlay accurately reflects the badge's current name, icon, and color, providing full context during the drag operation.
+    -   **Badge Overlays**: The overlay is a direct render of the `<BadgeDisplayItem>` component (or a simplified icon-only version for assigned user badges). This ensures the overlay accurately reflects the badge's current name, icon, and color, providing full context during the drag operation.
 -   **Internal Card Layout**: Each card is structured for clarity. The header contains the primary entity identifier (icon and name) and contextual controls. To keep cards compact, headers and content areas should use minimal padding (e.g., `p-2`). Titles should be configured to wrap gracefully to handle longer text. **All icon-only buttons inside a card MUST have a `<Tooltip>`**.
 -   **User Item Display**: When users are displayed as items within a management card (e.g., `TeamCard`), they are presented **without a border**. Each user item must display their avatar, full name, and professional title underneath the name for consistency.
 -   **Unique Draggable & Droppable IDs (Critical)**:
@@ -250,10 +250,11 @@ This pattern is a specialized, ultra-compact version of the standard `<Badge>` c
 This pattern describes the user interface for assigning and unassigning badges to team members.
 - **Layout**: Within each `TeamMemberCard`, badges are grouped visually by their parent `BadgeCollection`. Each collection is displayed with its name as a sub-header.
 - **Interaction**:
-    - **Click to Toggle**: A user with the correct permissions can click on any badge pill—assigned or unassigned—to toggle its state for that team member.
+    - **Click to Toggle**: A user with the correct permissions can click on any badge to toggle its state for that team member.
+    - **Reordering**: A user with permission can reorder a member's **assigned** badges by holding down their drag modifier key and dragging an icon-only badge to a new position within that member's assigned list.
 - **Visual States**:
-    - **Assigned Badges**: Appear with a solid, colored border and a filled background, indicating a "selected" state.
-    - **Unassigned Badges**: Appear with a solid border with reduced opacity and a transparent background, indicating an "available" but unselected state.
+    - **Assigned Badges**: Appear as icon-only buttons with a solid, colored border. The icon inside matches the border color. The name of the badge is revealed in a tooltip on hover.
+    - **Unassigned Badges**: Appear as full pills with a dashed, muted border. The text and icon inside are also muted. This indicates an "available" but unselected state.
 - **Application**: Used on the **Team Members** tab within each team's management page.
 
 ---
