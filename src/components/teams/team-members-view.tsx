@@ -302,12 +302,12 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         <DragOverlay>
             {activeBadge ? (
                 <div
-                    className='h-7 w-7 rounded-full border-2 flex items-center justify-center bg-card'
+                    className='h-8 w-8 rounded-full border-2 flex items-center justify-center bg-card'
                     style={{ borderColor: activeBadge.color }}
                 >
                     <GoogleSymbol
                         name={activeBadge.icon}
-                        style={{ fontSize: '20px', color: activeBadge.color }}
+                        style={{ fontSize: '24px', color: activeBadge.color }}
                         weight={100}
                     />
                 </div>

@@ -983,7 +983,7 @@ function SortableCollectionCard({ collection, ...props }: { collection: BadgeCol
 
 
 function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
-  const { isOver, setNodeRef } = useDroppable({ id });
+  const { setNodeRef, isOver } = useDroppable({ id });
   
   return (
     <div
@@ -1314,10 +1314,10 @@ export function BadgeManagement({ tab, page, team, isActive }: { team: Team; tab
                         opticalSize={48}
                     />
                 ) : activeDragItem?.type === 'badge' && activeDragItem?.data?.badge ? (
-                    <div className="h-7 w-7 rounded-full border-2 flex items-center justify-center bg-card" style={{ borderColor: activeDragItem.data.badge.color }}>
+                    <div className="h-8 w-8 rounded-full border-2 flex items-center justify-center bg-card" style={{ borderColor: activeDragItem.data.badge.color }}>
                       <GoogleSymbol
                           name={activeDragItem.data.badge.icon}
-                          style={{ fontSize: '20px', color: activeDragItem.data.badge.color }}
+                          style={{ fontSize: '24px', color: activeDragItem.data.badge.color }}
                           weight={100}
                       />
                     </div>
