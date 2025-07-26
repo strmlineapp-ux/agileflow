@@ -71,9 +71,9 @@ This pattern transforms standard form inputs into minimalist, text-like elements
 This pattern replaces large, card-style "Add New" buttons with a more compact and contextually relevant control.
 
 - **Appearance:** A circular button containing a plus (`+`) or `add_circle` icon. It uses `text-4xl` and `weight={100}` for a large but light appearance.
-- **Placement:** Positioned directly adjacent to the title of the section or list it pertains to.
+- **Placement:** The button's placement is contextual. It can be positioned directly adjacent to a section title (e.g., on the Admin Management pages) or in a dedicated action area, such as below the tab navigation on the Tasks page.
 - **Behavior:** Clicking the button initiates the process of adding a new item, typically by opening a dialog or form.
-- **Application:** Used for creating new items in a list or grid, such as adding a new team, priority strategy, or a badge to a collection.
+- **Application:** Used for creating new items in a list or grid, such as adding a new page, team, or task.
 
 ---
 
@@ -203,18 +203,19 @@ This pattern is **deprecated**. All deletion confirmations now use the **Compact
   - The icon is `text-4xl` with a `weight={100}` for a large but light appearance.
   - The active tab is indicated by colored text (`text-primary`).
   - The entire tab list has a subtle divider underneath it, separating it from the content below.
+- **Reordering**: On pages where it is enabled (like the Admin page), users can reorder tabs by holding their drag modifier key and dragging a tab to a new position.
 - **Application**: Used for all main page-level tab navigation, such as on the Admin, Service Delivery, and Team Management pages.
 
 ---
 
 ### 12. Seamless Single-Tab Pages
 
-- **Description**: This pattern ensures a streamlined user experience for pages that contain only a single content tab. Instead of displaying a redundant page header, the tab's content becomes the page itself.
+- **Description**: This pattern ensures a streamlined, header-less user experience for pages that are designed as primary content views.
 - **Behavior**:
-  - When a page is configured with exactly one associated tab, the main page layout does not render its own title or icon.
-  - The single tab's component is rendered directly within the main content area.
-  - The tab's component is responsible for displaying the page's title and icon, effectively promoting its header to become the page's header. This is especially true for pages like "Overview," "Settings," and "Notifications" where the content *is* the page.
-- **Application**: Applied automatically to any page in the dynamic routing system (`/dashboard/[...page]`) that meets the single-tab condition. This creates a more integrated and less cluttered UI.
+  - The main page rendering component (`/src/app/dashboard/[...page]/page.tsx`) contains a predefined list of "seamless" page IDs (e.g., `page-overview`, `page-admin-management`, `page-calendar`).
+  - If the currently rendered page's ID is in this list, the component will **not** render a page header (title and icon).
+  - The content component for that page (e.g., `<OverviewContent />`) is then rendered directly, filling the entire content area and creating a more focused, app-like feel.
+- **Application**: Applied to the **Overview**, **Admin**, **Calendar**, **Tasks**, **Notifications**, and **Settings** pages.
 
 ---
 
@@ -249,9 +250,9 @@ This pattern describes the user interface for assigning and unassigning badges t
 - **Layout**: Within each `TeamMemberCard`, badges are grouped visually by their parent `BadgeCollection`. Each collection is displayed with its name as a sub-header.
 - **Interaction**:
     - **Click to Toggle**: A user with the correct permissions can click on any badge pill—assigned or unassigned—to toggle its state for that team member.
-    - **Visual States**:
-        - **Assigned Badges**: Appear with a solid, colored border and a filled background, indicating a "selected" state.
-        - **Unassigned Badges**: Appear with a dashed border and a transparent background, indicating an "available" but unselected state.
+- **Visual States**:
+    - **Assigned Badges**: Appear with a **solid, colored border**, with the icon and text also matching the badge's color. The background is transparent. This indicates an active "selected" state.
+    - **Unassigned Badges**: Appear with a **dashed, muted border**, with the icon and text also using the muted foreground color. The background is transparent. This indicates an "available" but unselected state, minimizing visual noise.
 - **Application**: Used on the **Team Members** tab within each team's management page.
 
 ---
@@ -332,3 +333,7 @@ This is the single source of truth for indicating user interaction state across 
 -   **Badges in Compact View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
 
 
+
+
+
+    
