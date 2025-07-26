@@ -522,7 +522,7 @@ function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
 }
 
 export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: AppTab; page: AppPage; isSingleTabPage?: boolean }) {
-    const { viewAsUser, users, teams, appSettings, addTeam, updateTeam, deleteTeam, reorderTeams, updateAppTab, updateUser, isDragModifierPressed, searchSharedTeams } = useUser();
+    const { viewAsUser, users, teams, appSettings, addTeam, updateTeam, deleteTeam, reorderTeams, updateAppTab, updateUser, isDragModifierPressed } = useUser();
     const router = useRouter();
     const pathname = usePathname();
     const { toast } = useToast();
@@ -685,9 +685,10 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
 
     useEffect(() => {
         if (isSharedPanelOpen) {
-            searchSharedTeams(sharedSearchTerm).then(setSharedTeams);
+            const filteredShared = teams.filter(team => team.isShared && team.owner.id !== viewAsUser.userId && team.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
+            setSharedTeams(filteredShared);
         }
-    }, [isSharedPanelOpen, sharedSearchTerm, searchSharedTeams]);
+    }, [isSharedPanelOpen, sharedSearchTerm, teams, viewAsUser.userId]);
     
     const onDragEnd = (result: DragEndEvent) => {
         setActiveDragItem(null);

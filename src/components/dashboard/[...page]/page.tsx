@@ -199,7 +199,7 @@ export default function DynamicPage() {
                 </div>
                 <div className="p-4 border-2 border-dashed rounded-lg text-center text-muted-foreground">
                     <p>This page has no content configured.</p>
-                    {viewAsUser.isAdmin && <p>An administrator can add tabs to this page in the Admin section.</p>}
+                    {viewAsUser?.isAdmin && <p>An administrator can add tabs to this page in the Admin section.</p>}
                 </div>
             </div>
         );
