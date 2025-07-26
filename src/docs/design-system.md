@@ -204,7 +204,7 @@ This pattern is **deprecated**. All deletion confirmations now use the **Compact
   - The icon is `text-4xl` with a `weight={100}` for a large but light appearance.
   - The active tab is indicated by colored text (`text-primary`).
   - The entire tab list has a subtle divider underneath it, separating it from the content below.
-- **Reordering**: On pages where it is enabled (like the Admin page), users can reorder tabs by holding their drag modifier key and dragging a tab to a new position.
+- **Reordering**: On pages where it is enabled (like the Admin page), users can reorder tabs by holding their drag modifier key and dragging them to a new position.
 - **Application**: Used for all main page-level tab navigation, such as on the Admin, Service Delivery, and Team Management pages.
 
 ---
@@ -251,8 +251,8 @@ This pattern describes the user interface for assigning and unassigning badges t
 
 - **Layout**: Within each `TeamMemberCard`, badges that are **currently assigned** to that member are displayed as icon-only buttons. The card does not show unassigned or "available" badges.
 - **Interaction (Drag-and-Drop Only)**:
-    - **Assigning**: To assign a new badge, the user must drag it from the "Assignable Badges" side panel and drop it onto a team member's card. The card will highlight with an inset ring to indicate it is a valid drop zone.
-    - **Un-assigning**: To un-assign a badge, the user must drag an assigned badge from a member's card and drop it into the "Assignable Badges" side panel. The panel will highlight to indicate it can receive the badge.
+    - **Assigning**: To assign a new badge, the user must drag it from the "Assignable Badges" side panel and drop it onto a team member's card. The member's card will highlight with an inset ring to indicate it is a valid drop zone.
+    - **Un-assigning**: To un-assign a badge, the user must drag an assigned badge from a member's card and drop it into the "Assignable Badges" side panel. The panel will highlight to confirm it can be dropped.
     - **Re-assigning**: To move a badge from one member to another, the user can drag it from the source member's card and drop it directly onto the target member's card.
 - **Visual States**:
     - **Assigned Badges**: Appear as icon-only `28px` buttons with a solid, colored border and a transparent background. The `20px` icon inside matches the border color. The name of the badge is revealed in a tooltip on hover. There is no `onClick` functionality; interaction is exclusively through drag-and-drop.
@@ -334,4 +334,5 @@ This is the single source of truth for indicating user interaction state across 
       - **Ownership Status**: `absolute -top-0 -right-3`.
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Compact View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
+
 
