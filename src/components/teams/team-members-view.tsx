@@ -62,6 +62,7 @@ function SortableTeamMember({ member, team, isViewer }: { member: User, team: Te
   const { isDragModifierPressed } = useUser();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ 
     id: member.userId, 
+    data: { type: 'member', user: member },
     disabled: isViewer || !isDragModifierPressed 
   });
 
@@ -285,23 +286,25 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
             return;
         }
     
-        if (activeType === 'member' && overType === 'member') {
+        if (activeType === 'member' && overType === 'member-list') {
             if (active.id === over.id) return;
             const activeList = adminIds.includes(active.id as string) ? 'admins' : 'members';
-            const overList = adminIds.includes(over.id as string) ? 'admins' : 'members';
-    
-            if (activeList !== overList) return;
+            const overListId = over.id as string;
+            
+            if (activeList !== overListId) return;
             
             const list = activeList === 'admins' ? admins : members;
             const oldIndex = list.findIndex(item => item.userId === active.id);
-            const newIndex = list.findIndex(item => item.userId === over.id);
+            const overItem = over.data.current?.item as User | undefined;
+            const newIndex = overItem ? list.findIndex(item => item.userId === overItem.userId) : list.length;
             
-            const reorderedList = arrayMove(list, oldIndex, newIndex);
-            const newAdmins = activeList === 'admins' ? reorderedList : admins;
-            const newMembers = activeList === 'members' ? reorderedList : members;
-            const newMemberIds = [...newAdmins, ...newMembers].map(m => m.userId);
-    
-            updateTeam(team.id, { members: newMemberIds });
+            if (oldIndex !== -1 && newIndex !== -1) {
+                const reorderedList = arrayMove(list, oldIndex, newIndex);
+                const newAdmins = activeList === 'admins' ? reorderedList : admins;
+                const newMembers = activeList === 'members' ? reorderedList : members;
+                const newMemberIds = [...newAdmins, ...newMembers].map(m => m.userId);
+                updateTeam(team.id, { members: newMemberIds });
+            }
         }
     };
 
