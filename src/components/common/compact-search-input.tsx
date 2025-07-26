@@ -33,21 +33,24 @@ export function CompactSearchInput({
   useEffect(() => {
     if (isActive) {
       setIsSearching(true);
+    }
+  }, [isActive]);
+
+  useEffect(() => {
+    if (isSearching && isActive && inputRef.current) {
       const timer = setTimeout(() => {
         inputRef.current?.focus();
-      }, 50); // Small delay to ensure the input is rendered
+      }, 50);
       return () => clearTimeout(timer);
     }
-  }, [isActive, inputRef]);
+  }, [isSearching, isActive, inputRef]);
 
   const handleIconClick = () => {
-    setIsSearching(true);
-    setTimeout(() => inputRef.current?.focus(), 50);
-  };
-
-  const handleBlur = () => {
-    if (!searchTerm) {
-      setIsSearching(false);
+    if (isSearching) {
+        setSearchTerm('');
+        setIsSearching(false);
+    } else {
+        setIsSearching(true);
     }
   };
 
@@ -60,7 +63,7 @@ export function CompactSearchInput({
           placeholder={placeholder}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          onBlur={handleBlur}
+          onBlur={() => { if (!searchTerm) setIsSearching(false); }}
           className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 font-thin"
         />
       </div>

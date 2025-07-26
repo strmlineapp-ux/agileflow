@@ -257,167 +257,165 @@ function TeamCard({
 
     return (
         <Card className="flex flex-col h-full bg-transparent relative" {...props}>
-            <div {...props.dragHandleProps}>
-                <CardHeader className="group p-2">
-                     {!isSharedPreview && (
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className={cn("absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity z-10", isDragModifierPressed && "hidden")}
-                                        onPointerDown={(e) => { e.stopPropagation(); onDelete(team); }}
-                                    >
-                                        <GoogleSymbol name="cancel" className="text-lg" weight={100} opticalSize={20} />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent><p>{canManageTeam ? "Delete Team" : "Unlink Team"}</p></TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    )}
-                    <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <div className="relative">
-                                <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                                    <TooltipProvider>
+            <CardHeader className="group p-2" {...props.dragHandleProps}>
+                 {!isSharedPreview && (
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className={cn("absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity z-10", isDragModifierPressed && "hidden")}
+                                    onPointerDown={(e) => { e.stopPropagation(); onDelete(team); }}
+                                >
+                                    <GoogleSymbol name="cancel" className="text-lg" weight={100} opticalSize={20} />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>{canManageTeam ? "Delete Team" : "Unlink Team"}</p></TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                )}
+                <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="relative">
+                            <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManageTeam || isDragModifierPressed}>
+                                                <Button variant="ghost" className="h-10 w-12 flex items-center justify-center p-0">
+                                                    <GoogleSymbol name={team.icon} opticalSize={20} grade={-25} style={{ fontSize: '36px' }} weight={100} />
+                                                </Button>
+                                            </PopoverTrigger>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Change Icon</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                <PopoverContent className="w-80 p-0" onPointerDown={(e) => e.stopPropagation()}>
+                                    <div className="flex items-center gap-1 p-2 border-b">
+                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} opticalSize={20} />
+                                        <input
+                                            ref={iconSearchInputRef}
+                                            placeholder="Search icons..."
+                                            value={iconSearch}
+                                            onChange={(e) => setIconSearch(e.target.value)}
+                                            className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                        />
+                                    </div>
+                                    <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (
+                                        <TooltipProvider key={iconName}>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
-                                                <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManageTeam || isDragModifierPressed}>
-                                                    <Button variant="ghost" className="h-10 w-12 flex items-center justify-center p-0">
-                                                        <GoogleSymbol name={team.icon} opticalSize={20} grade={-25} style={{ fontSize: '36px' }} weight={100} />
-                                                    </Button>
-                                                </PopoverTrigger>
+                                            <Button variant={team.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(team.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} className="text-4xl" weight={100} opticalSize={20} /></Button>
                                             </TooltipTrigger>
-                                            <TooltipContent><p>Change Icon</p></TooltipContent>
+                                            <TooltipContent><p>{iconName}</p></TooltipContent>
                                         </Tooltip>
-                                    </TooltipProvider>
-                                    <PopoverContent className="w-80 p-0" onPointerDown={(e) => e.stopPropagation()}>
-                                        <div className="flex items-center gap-1 p-2 border-b">
-                                            <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} opticalSize={20} />
-                                            <input
-                                                ref={iconSearchInputRef}
-                                                placeholder="Search icons..."
-                                                value={iconSearch}
-                                                onChange={(e) => setIconSearch(e.target.value)}
-                                                className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                            />
+                                        </TooltipProvider>
+                                    ))}</div></ScrollArea>
+                                </PopoverContent>
+                            </Popover>
+                            <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManageTeam || isDragModifierPressed}>
+                                                <button className={cn("absolute -bottom-0 -right-3 h-4 w-4 rounded-full border-0", canManageTeam && !isDragModifierPressed && "cursor-pointer", isDragModifierPressed && "hidden")} style={{ backgroundColor: team.color }} />
+                                            </PopoverTrigger>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Change Color</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                <PopoverContent className="w-auto p-4" onPointerDown={(e) => e.stopPropagation()}>
+                                    <div className="space-y-4">
+                                        <HexColorPicker color={color} onChange={setColor} className="!w-full" />
+                                        <div className="flex items-center gap-2">
+                                            <span className="p-2 border rounded-md" style={{ backgroundColor: color }} />
+                                            <HexColorInput prefixed alpha color={color} onChange={setColor} className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50" />
                                         </div>
-                                        <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (
-                                            <TooltipProvider key={iconName}>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                <Button variant={team.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { onUpdate(team.id, { icon: iconName }); setIsIconPopoverOpen(false);}} className="h-8 w-8 p-0"><GoogleSymbol name={iconName} className="text-4xl" weight={100} opticalSize={20} /></Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent><p>{iconName}</p></TooltipContent>
-                                            </Tooltip>
-                                            </TooltipProvider>
-                                        ))}</div></ScrollArea>
-                                    </PopoverContent>
-                                </Popover>
-                                <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                    <TooltipProvider>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManageTeam || isDragModifierPressed}>
-                                                    <button className={cn("absolute -bottom-0 -right-3 h-4 w-4 rounded-full border-0", canManageTeam && !isDragModifierPressed && "cursor-pointer", isDragModifierPressed && "hidden")} style={{ backgroundColor: team.color }} />
-                                                </PopoverTrigger>
-                                            </TooltipTrigger>
-                                            <TooltipContent><p>Change Color</p></TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                    <PopoverContent className="w-auto p-4" onPointerDown={(e) => e.stopPropagation()}>
-                                        <div className="space-y-4">
-                                            <HexColorPicker color={color} onChange={setColor} className="!w-full" />
-                                            <div className="flex items-center gap-2">
-                                                <span className="p-2 border rounded-md" style={{ backgroundColor: color }} />
-                                                <HexColorInput prefixed alpha color={color} onChange={setColor} className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50" />
-                                            </div>
-                                            <div className="grid grid-cols-8 gap-1">
-                                                {predefinedColors.map(c => (
-                                                    <button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(team.id, { color: c }); setIsColorPopoverOpen(false);}}></button>
-                                                ))}
-                                            </div>
-                                            <Button onClick={() => { onUpdate(team.id, { color }); setIsColorPopoverOpen(false); }} className="w-full">Set Color</Button>
+                                        <div className="grid grid-cols-8 gap-1">
+                                            {predefinedColors.map(c => (
+                                                <button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(team.id, { color: c }); setIsColorPopoverOpen(false);}}></button>
+                                            ))}
                                         </div>
-                                    </PopoverContent>
-                                </Popover>
-                                {shareIcon && (
-                                    <TooltipProvider>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <div 
-                                                    className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white"
-                                                    style={{ backgroundColor: ownerColor }}
-                                                >
-                                                    <GoogleSymbol name={shareIcon} style={{fontSize: '16px'}} opticalSize={20} />
-                                                </div>
-                                            </TooltipTrigger>
-                                            <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                )}
-                            </div>
-                            <div onPointerDown={(e) => { if (!isDragModifierPressed) { e.stopPropagation() }; }} className="flex-1 min-w-0">
-                                {isEditingName && canManageTeam ? (
-                                    <Input
-                                        ref={nameInputRef}
-                                        defaultValue={team.name}
-                                        onBlur={handleSaveName}
-                                        onKeyDown={handleNameKeyDown}
-                                        className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
-                                    />
-                                ) : (
-                                    <CardTitle className={cn("font-headline text-xl font-thin truncate", canManageTeam && !isDragModifierPressed && "cursor-pointer")} onClick={() => { if (canManageTeam && !isDragModifierPressed) setIsEditingName(true); }}>
-                                        {team.name}
-                                    </CardTitle>
-                                )}
-                            </div>
+                                        <Button onClick={() => { onUpdate(team.id, { color }); setIsColorPopoverOpen(false); }} className="w-full">Set Color</Button>
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
+                            {shareIcon && (
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <div 
+                                                className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white"
+                                                style={{ backgroundColor: ownerColor }}
+                                            >
+                                                <GoogleSymbol name={shareIcon} style={{fontSize: '16px'}} opticalSize={20} />
+                                            </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            )}
                         </div>
-                        <div className={cn("flex items-center", isDragModifierPressed && "hidden")} onPointerDown={(e) => e.stopPropagation()}>
-                            {canManageTeam && !isSharedPreview && (
-                                <Popover open={isAddUserPopoverOpen} onOpenChange={setIsAddUserPopoverOpen}>
-                                    <TooltipProvider>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <PopoverTrigger asChild disabled={!canManageTeam || isDragModifierPressed} onPointerDown={(e) => e.stopPropagation()}>
-                                                    <Button variant="ghost" size="icon" className={cn("h-8 w-8 text-muted-foreground hover:text-primary", isDragModifierPressed && "hidden")}><GoogleSymbol name="group_add" weight={100} opticalSize={20} /></Button>
-                                                </PopoverTrigger>
-                                            </TooltipTrigger>
-                                            <TooltipContent><p>Add User</p></TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                    <PopoverContent className="w-64 p-0" onPointerDown={(e) => e.stopPropagation()}>
-                                        <div className="p-2 border-b">
-                                            <div className="flex items-center gap-1 w-full">
-                                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} opticalSize={20} />
-                                                <input
-                                                    ref={addUserSearchInputRef}
-                                                    placeholder="Search..."
-                                                    value={userSearch}
-                                                    onChange={(e) => setUserSearch(e.target.value)}
-                                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
-                                                />
-                                            </div>
-                                        </div>
-                                        <ScrollArea className="h-64">
-                                            <div className="p-2 space-y-1">
-                                                {availableUsersToAdd.map(user => (
-                                                    <div key={user.userId} onPointerDown={() => {onAddUser(team.id, user.userId); setIsAddUserPopoverOpen(false);}} className="flex items-center gap-2 p-2 rounded-md hover:text-primary cursor-pointer">
-                                                        <Avatar className="h-8 w-8"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
-                                                        <p className="font-normal text-sm">{user.displayName}</p>
-                                                    </div>
-                                                ))}
-                                                {availableUsersToAdd.length === 0 && <p className="text-center text-xs text-muted-foreground py-4">No users found.</p>}
-                                            </div>
-                                        </ScrollArea>
-                                    </PopoverContent>
-                                </Popover>
+                        <div onPointerDown={(e) => { if (!isDragModifierPressed) { e.stopPropagation() }; }} className="flex-1 min-w-0">
+                            {isEditingName && canManageTeam ? (
+                                <Input
+                                    ref={nameInputRef}
+                                    defaultValue={team.name}
+                                    onBlur={handleSaveName}
+                                    onKeyDown={handleNameKeyDown}
+                                    className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
+                                />
+                            ) : (
+                                <CardTitle className={cn("font-headline text-xl font-thin truncate", canManageTeam && !isDragModifierPressed && "cursor-pointer")} onClick={() => { if (canManageTeam && !isDragModifierPressed) setIsEditingName(true); }}>
+                                    {team.name}
+                                </CardTitle>
                             )}
                         </div>
                     </div>
-                </CardHeader>
-            </div>
+                    <div className={cn("flex items-center", isDragModifierPressed && "hidden")} onPointerDown={(e) => e.stopPropagation()}>
+                        {canManageTeam && !isSharedPreview && (
+                            <Popover open={isAddUserPopoverOpen} onOpenChange={setIsAddUserPopoverOpen}>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <PopoverTrigger asChild disabled={!canManageTeam || isDragModifierPressed} onPointerDown={(e) => e.stopPropagation()}>
+                                                <Button variant="ghost" size="icon" className={cn("h-8 w-8 text-muted-foreground hover:text-primary", isDragModifierPressed && "hidden")}><GoogleSymbol name="group_add" weight={100} opticalSize={20} /></Button>
+                                            </PopoverTrigger>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Add User</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                <PopoverContent className="w-64 p-0" onPointerDown={(e) => e.stopPropagation()}>
+                                    <div className="p-2 border-b">
+                                        <div className="flex items-center gap-1 w-full">
+                                            <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} opticalSize={20} />
+                                            <input
+                                                ref={addUserSearchInputRef}
+                                                placeholder="Search..."
+                                                value={userSearch}
+                                                onChange={(e) => setUserSearch(e.target.value)}
+                                                className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                                            />
+                                        </div>
+                                    </div>
+                                    <ScrollArea className="h-64">
+                                        <div className="p-2 space-y-1">
+                                            {availableUsersToAdd.map(user => (
+                                                <div key={user.userId} onPointerDown={() => {onAddUser(team.id, user.userId); setIsAddUserPopoverOpen(false);}} className="flex items-center gap-2 p-2 rounded-md hover:text-primary cursor-pointer">
+                                                    <Avatar className="h-8 w-8"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
+                                                    <p className="font-normal text-sm">{user.displayName}</p>
+                                                </div>
+                                            ))}
+                                            {availableUsersToAdd.length === 0 && <p className="text-center text-xs text-muted-foreground py-4">No users found.</p>}
+                                        </div>
+                                    </ScrollArea>
+                                </PopoverContent>
+                            </Popover>
+                        )}
+                    </div>
+                </div>
+            </CardHeader>
             {!isDragging && isExpanded && (
                 <CardContent className="flex-grow p-2 pt-0 flex flex-col min-h-0">
                     <ScrollArea className="max-h-48 pr-2 flex-grow">
@@ -774,7 +772,7 @@ export function TeamManagement({ tab, page, isActive, isSingleTabPage = false }:
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 {isEditingTitle ? (
-                                  <Input ref={titleInputRef} defaultValue={finalTitle} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+                                  <Input ref={titleInputRef} defaultValue={finalTitle} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
                                 ) : (
                                   <TooltipProvider>
                                       <Tooltip>
