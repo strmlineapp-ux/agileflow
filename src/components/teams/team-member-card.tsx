@@ -12,9 +12,9 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { cn, getContrastColor } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Input } from '../ui/input';
-import { SortableContext, useSortable, verticalListSortingStrategy, DndContext, type DragEndEvent, DragOverlay, type DragStartEvent, useSensors, useSensor, PointerSensor, KeyboardSensor, sortableKeyboardCoordinates } from '@dnd-kit/core';
+import { DndContext, type DragEndEvent, DragOverlay, type DragStartEvent, useSensors, useSensor, PointerSensor, KeyboardSensor } from '@dnd-kit/core';
+import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { arrayMove } from '@dnd-kit/sortable';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
 
 function SortableAssignedBadge({ badge, canManageRoles, handleToggleRole }: { badge: Badge, canManageRoles: boolean, handleToggleRole: (badgeName: string) => void }) {
@@ -131,7 +131,7 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
     setActiveBadge(null);
     const { active, over } = event;
 
-    if (active.id !== over?.id) {
+    if (over && active.id !== over.id) {
         const oldIndex = assignedBadges.findIndex(b => b.id === active.id);
         const newIndex = assignedBadges.findIndex(b => b.id === over.id);
 
