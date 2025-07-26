@@ -40,8 +40,9 @@ const statusLabels: Record<Task['status'], string> = {
   completed: 'Completed',
 };
 
-export function TaskList({ tasks, limit }: { tasks: Task[], limit?: number }) {
-  const { allBadgeCollections, allBadges } = useUser();
+export function TaskList({ tasks: tasksFromProps, limit }: { tasks?: Task[], limit?: number }) {
+  const { allBadgeCollections, allBadges, tasks: allTasksFromContext } = useUser();
+  const tasks = tasksFromProps || allTasksFromContext;
 
   const taskPriorities = React.useMemo(() => {
     const taskPriorityCollection = allBadgeCollections.find(c => c.applications?.includes('tasks'));
