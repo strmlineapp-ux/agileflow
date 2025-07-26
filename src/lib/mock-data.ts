@@ -262,3 +262,82 @@ export const mockHolidays: Holiday[] = [
     new Date(new Date().getFullYear(), 6, 4), // Independence Day
     new Date(new Date().getFullYear(), 11, 25), // Christmas Day
 ];
+
+const now = new Date();
+
+export let mockEvents: Event[] = [
+    { 
+        eventId: 'evt-1', 
+        title: 'Project Kick-off Meeting', 
+        calendarId: 'production',
+        startTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0),
+        endTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 11, 0),
+        attendees: [userToAttendee(mockUsers[0]), userToAttendee(mockUsers[1]), userToAttendee(mockUsers[3])],
+        location: 'ACR',
+        priority: 'p1',
+        createdBy: '2',
+        createdAt: new Date(),
+        lastUpdated: new Date(),
+        attachments: [],
+    },
+    {
+        eventId: 'evt-2', 
+        title: 'Q3 All Hands Rehearsal', 
+        calendarId: 'live-events',
+        startTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 13, 0),
+        endTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 16, 30),
+        attendees: mockUsers.slice(2, 10).map(userToAttendee),
+        location: 'Auditorium',
+        priority: 'p0',
+        roleAssignments: { 'TD': '9', 'Audio Engineer': '8', 'Camera Op.': '11', 'ES Operator': '3', 'Content Op': null },
+        templateId: 'template-3',
+        createdBy: '3',
+        createdAt: new Date(),
+        lastUpdated: new Date(),
+        attachments: [],
+    },
+     { 
+        eventId: 'evt-3', 
+        title: 'VFX Review', 
+        calendarId: 'video-production',
+        startTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 11, 0),
+        endTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0),
+        attendees: [userToAttendee(mockUsers[0]), userToAttendee(mockUsers[4])],
+        location: 'EDIT 1',
+        priority: 'p2',
+        createdBy: '1',
+        createdAt: new Date(),
+        lastUpdated: new Date(),
+        attachments: [],
+    },
+     { 
+        eventId: 'evt-4', 
+        title: 'Weekly Sync', 
+        calendarId: 'production',
+        startTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0),
+        endTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 30),
+        attendees: [userToAttendee(mockUsers[3]), userToAttendee(mockUsers[14])],
+        location: 'Training Room',
+        priority: 'p3',
+        createdBy: '4',
+        createdAt: new Date(),
+        lastUpdated: new Date(),
+        attachments: [],
+    },
+];
+
+export let mockTasks: Task[] = [
+  { taskId: 'task-1', title: 'Draft Q4 Comms Strategy', assignedTo: [mockUsers[5]], dueDate: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2), priority: 'task-high', status: 'in_progress', createdBy: '2', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: 'task-2', title: 'Review new sizzle reel edit', assignedTo: [mockUsers[0], mockUsers[5]], dueDate: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1), priority: 'task-high', status: 'awaiting_review', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: 'task-3', title: 'Organize asset library', assignedTo: [mockUsers[6]], dueDate: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7), priority: 'task-medium', status: 'not_started', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: 'task-4', title: 'Finalize audio mix for All-Hands', assignedTo: [mockUsers[7]], dueDate: new Date(now.getFullYear(), now.getMonth(), now.getDate()), priority: 'task-high', status: 'completed', createdBy: '3', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: 'task-5', title: 'Update presentation deck', assignedTo: [mockUsers[9]], dueDate: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 3), priority: 'task-low', status: 'in_progress', createdBy: '3', createdAt: new Date(), lastUpdated: new Date() },
+  { taskId: 'task-6', title: 'Source new background music', assignedTo: [mockUsers[4]], dueDate: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 5), priority: 'task-medium', status: 'blocked', createdBy: '1', createdAt: new Date(), lastUpdated: new Date() },
+];
+
+export let mockNotifications: Notification[] = [
+    { id: 'notif-1', type: 'standard', user: mockUsers[2], content: 'approved your request for PTO.', time: new Date(Date.now() - 1000 * 60 * 5), read: false },
+    { id: 'notif-2', type: 'standard', user: mockUsers[3], content: 'assigned you to the Q3 All Hands Rehearsal as ES Operator.', time: new Date(Date.now() - 1000 * 60 * 60 * 2), read: false },
+    { id: 'notif-3', type: 'standard', user: mockUsers[0], content: 'completed the task "Finalize audio mix for All-Hands".', time: new Date(Date.now() - 1000 * 60 * 60 * 24), read: true },
+    { id: 'notif-4', type: 'access_request', status: 'pending', user: { displayName: 'new.user@example.com', avatarUrl: '', userId: '' }, content: 'has requested access to the workspace.', time: new Date(Date.now() - 1000 * 60 * 60 * 48), read: false, data: { email: 'new.user@example.com', displayName: 'New User' }},
+];
