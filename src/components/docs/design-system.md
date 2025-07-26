@@ -11,8 +11,9 @@ This document outlines the established UI patterns and design choices that ensur
 ### 1. Card & Content Padding
 The application favors a compact, information-dense layout. Card components are the primary building block for displaying content.
 
--   **Gold Standard**: The login form (`/login`) serves as the ideal example of "perfect" padding. It has a larger header area and tighter content padding (`p-2`) which makes the card feel like a single, cohesive unit.
--   **Global Default**: To align with this, the global default `CardContent` padding has been reduced from `p-6` to a tighter `p-4`. This affects all cards in the app, creating a more consistent look.
+-   **Standard Implementation**: The `CalendarCard` (`/src/components/calendar/calendar-management.tsx`), `TeamCard` (`/src/components/teams/team-management.tsx`), `PageCard` (`/src/components/admin/page.tsx`), and `BadgeCollectionCard` (`/src/components/teams/badge-management.tsx`) serve as the ideal examples of the compact card pattern.
+-   **Header Padding**: The `<CardHeader>` for these cards must use a compact `p-2` padding.
+-   **Content Padding**: The `<CardContent>` should use `p-2 pt-0` to keep vertical spacing tight and aligned with the header.
 -   **Card Backgrounds**: Cards use a `bg-transparent` background, relying on their `border` for definition. This creates a lighter, more modern UI.
 -   **Text Wrapping**: Card titles and descriptions should gracefully handle long text by wrapping. The `break-words` utility should be used on titles to prevent layout issues from long, unbroken strings.
 
@@ -44,7 +45,7 @@ This pattern provides a clean, minimal interface for search functionality, espec
   - Clicking the button reveals the input field.
   - **Crucially, the input must have a transparent background and no borders or box-shadow**, ensuring it blends seamlessly into the UI.
 - **Behavior:**
-  - **Automatic Focus**: To trigger focus when a parent element (like a side panel) becomes visible, pass an `autoFocus={isPanelOpen}` prop to the component. The component's internal `useEffect` hook will then focus the input a single time when the panel opens.
+  - **Automatic Focus**: For specific single-view pages like **Account Settings**, an `autoFocus={true}` prop can be passed to focus the input on initial load.
   - **Manual Focus**: Clicking the search icon will always expand the input and focus it.
   - **Collapse on Blur**: The input always collapses back to its icon-only state when it loses focus (`onBlur`) and the field is empty.
 - **Application:** Used for filtering lists of icons, users, or other filterable content within popovers and management pages like the Admin screen.
@@ -71,9 +72,9 @@ This pattern transforms standard form inputs into minimalist, text-like elements
 This pattern replaces large, card-style "Add New" buttons with a more compact and contextually relevant control.
 
 - **Appearance:** A circular button containing a plus (`+`) or `add_circle` icon. It uses `text-4xl` and `weight={100}` for a large but light appearance.
-- **Placement:** Positioned directly adjacent to the title of the section or list it pertains to.
+- **Placement:** The button's placement is contextual. It can be positioned directly adjacent to a section title (e.g., on the Admin Management pages) or in a dedicated action area, such as below the tab navigation on the Tasks page.
 - **Behavior:** Clicking the button initiates the process of adding a new item, typically by opening a dialog or form.
-- **Application:** Used for creating new items in a list or grid, such as adding a new team, priority strategy, or a badge to a collection.
+- **Application:** Used for creating new items in a list or grid, such as adding a new page, team, or task.
 
 ---
 
@@ -139,7 +140,7 @@ This is the application's perfected, gold-standard pattern for managing a collec
     -   **Positioning**: To ensure the overlay appears directly under the cursor and tracks it smoothly without an offset, the `<DragOverlay>` component **must** use the `snapCenterToCursor` modifier from the `@dnd-kit/modifiers` library. Example: `modifiers={[snapCenterToCursor]}`.
     -   **Card Overlays (Pages, Calendars, Teams, Badge Collections)**: The overlay consists **only** of the entity's icon. It is rendered using the `<GoogleSymbol>` component, styled with the entity's specific color and an appropriate size (e.g., `fontSize: '48px'`) to make it a clear visual target.
     -   **User Overlays**: The overlay consists **only** of the user's `<Avatar>` component, rendered at an appropriate size (e.g., `h-12 w-12`).
-    -   **Badge Overlays**: The overlay is a direct render of the `<BadgeDisplayItem>` component. This ensures the overlay accurately reflects the badge's current name, icon, and color, providing full context during the drag operation.
+    -   **Badge Overlays**: The overlay for an assigned badge is a larger, `36px` version of the assigned badge icon: a colored icon within a matching circular colored border.
 -   **Internal Card Layout**: Each card is structured for clarity. The header contains the primary entity identifier (icon and name) and contextual controls. To keep cards compact, headers and content areas should use minimal padding (e.g., `p-2`). Titles should be configured to wrap gracefully to handle longer text. **All icon-only buttons inside a card MUST have a `<Tooltip>`**.
 -   **User Item Display**: When users are displayed as items within a management card (e.g., `TeamCard`), they are presented **without a border**. Each user item must display their avatar, full name, and professional title underneath the name for consistency.
 -   **Unique Draggable & Droppable IDs (Critical)**:
@@ -203,18 +204,19 @@ This pattern is **deprecated**. All deletion confirmations now use the **Compact
   - The icon is `text-4xl` with a `weight={100}` for a large but light appearance.
   - The active tab is indicated by colored text (`text-primary`).
   - The entire tab list has a subtle divider underneath it, separating it from the content below.
+- **Reordering**: On pages where it is enabled (like the Admin page), users can reorder tabs by holding their drag modifier key and dragging a tab to a new position.
 - **Application**: Used for all main page-level tab navigation, such as on the Admin, Service Delivery, and Team Management pages.
 
 ---
 
 ### 12. Seamless Single-Tab Pages
 
-- **Description**: This pattern ensures a streamlined user experience for pages that contain only a single content tab. Instead of displaying a redundant page header, the tab's content becomes the page itself.
+- **Description**: This pattern ensures a streamlined, header-less user experience for pages that are designed as primary content views.
 - **Behavior**:
-  - When a page is configured with exactly one associated tab, the main page layout does not render its own title or icon.
-  - The single tab's component is rendered directly within the main content area.
-  - The tab's component is responsible for displaying the page's title and icon, effectively promoting its header to become the page's header. This is especially true for pages like "Overview," "Settings," and "Notifications" where the content *is* the page.
-- **Application**: Applied automatically to any page in the dynamic routing system (`/dashboard/[...page]`) that meets the single-tab condition. This creates a more integrated and less cluttered UI.
+  - The main page rendering component (`/src/app/dashboard/[...page]/page.tsx`) contains a predefined list of "seamless" page IDs (e.g., `page-overview`, `page-admin-management`, `page-calendar`).
+  - If the currently rendered page's ID is in this list, the component will **not** render a page header (title and icon).
+  - The content component for that page (e.g., `<OverviewContent />`) is then rendered directly, filling the entire content area and creating a more focused, app-like feel.
+- **Application**: Applied to the **Overview**, **Admin**, **Calendar**, **Tasks**, **Notifications**, and **Settings** pages.
 
 ---
 
@@ -245,13 +247,13 @@ This pattern is a specialized, ultra-compact version of the standard `<Badge>` c
 
 ---
 ### 15. Team Member Badge Assignment
-This pattern describes the user interface for assigning and unassigning badges to team members.
-- **Layout**: Within each `TeamMemberCard`, badges are grouped visually by their parent `BadgeCollection`. Each collection is displayed with its name as a sub-header.
-- **Interaction**:
-    - **Click to Toggle**: A user with the correct permissions can click on any badge pill—assigned or unassigned—to toggle its state for that team member.
-    - **Visual States**:
-        - **Assigned Badges**: Appear with a solid, colored border and a filled background, indicating a "selected" state.
-        - **Unassigned Badges**: Appear with a dashed border and a transparent background, indicating an "available" but unselected state.
+This pattern describes the user interface for assigning and unassigning badges to team members. The interaction is exclusively handled via drag-and-drop to ensure a clear and unambiguous workflow.
+
+- **Layout**: Within each `TeamMemberCard`, badges that are **currently assigned** to that member are displayed as icon-only buttons. The card does not show unassigned or "available" badges.
+- **Interaction (Drag-and-Drop Only)**:
+    - **Re-assigning**: To move a badge from one member to another, the user can drag it from the source member's card and drop it directly onto the target member's card.
+- **Visual States**:
+    - **Assigned Badges**: Appear as icon-only `28px` buttons with a solid, colored border and a transparent background. The `20px` icon inside matches the border color. The name of the badge is revealed in a tooltip on hover. There is no `onClick` functionality; interaction is exclusively through drag-and-drop.
 - **Application**: Used on the **Team Members** tab within each team's management page.
 
 ---
@@ -330,5 +332,7 @@ This is the single source of truth for indicating user interaction state across 
       - **Ownership Status**: `absolute -top-0 -right-3`.
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Compact View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
+
+
 
 
