@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -23,7 +24,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { TaskStatusBadge } from './task-status-badge';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge as UiBadge } from '@/components/ui/badge';
 import { useUser } from '@/context/user-context';
 import { PriorityBadge } from '../calendar/priority-badge';
@@ -40,9 +40,8 @@ const statusLabels: Record<Task['status'], string> = {
   completed: 'Completed',
 };
 
-export function TaskList({ tasks: tasksFromProps, limit }: { tasks?: Task[], limit?: number }) {
-  const { allBadgeCollections, allBadges, tasks: allTasksFromContext } = useUser();
-  const tasks = tasksFromProps || allTasksFromContext;
+export function TaskList({ tasks, limit }: { tasks: Task[], limit?: number }) {
+  const { allBadgeCollections, allBadges } = useUser();
 
   const taskPriorities = React.useMemo(() => {
     const taskPriorityCollection = allBadgeCollections.find(c => c.applications?.includes('tasks'));

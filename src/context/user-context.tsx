@@ -4,7 +4,7 @@
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
 import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeOwner, type Task, type Holiday } from '@/types';
-import { mockUsers, mockCalendars, mockLocations, mockTeams, mockAppSettings, allMockBadgeCollections, videoProdBadges, liveEventsBadges, pScaleBadges, starRatingBadges, effortBadges, mockTasks, mockHolidays, mockEvents } from '@/lib/mock-data';
+import { mockUsers, mockCalendars, mockLocations, mockTeams, mockAppSettings, allMockBadgeCollections, videoProdBadges, liveEventsBadges, pScaleBadges, starRatingBadges, effortBadges, mockTasks, mockHolidays } from '@/lib/mock-data';
 import { GoogleAuthProvider, getAuth } from 'firebase/auth';
 import { getFirestore } from "firebase/firestore";
 import { useToast } from '@/hooks/use-toast';
@@ -41,7 +41,6 @@ const UserSessionContext = createContext<UserSessionContextType | null>(null);
 interface UserDataContextType {
   loading: boolean;
   isDragModifierPressed: boolean;
-  tasks: Task[];
   holidays: Holiday[];
   teams: Team[];
   addTeam: (teamData: Omit<Team, 'id'>) => Promise<void>;
@@ -62,9 +61,10 @@ interface UserDataContextType {
   updateCalendar: (calendarId: string, calendarData: Partial<SharedCalendar>) => Promise<void>;
   deleteCalendar: (calendarId: string) => Promise<void>;
   fetchEvents: (start: Date, end: Date) => Promise<Event[]>;
-  addEvent: (currentEvents: Event[], newEventData: Omit<Event, 'eventId'>) => Promise<Event[]>;
-  updateEvent: (currentEvents: Event[], eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => Promise<Event[]>;
-  deleteEvent: (currentEvents: Event[], eventId: string) => Promise<Event[]>;
+  addEvent: (newEventData: Omit<Event, 'eventId'>) => Promise<Event>;
+  updateEvent: (eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => Promise<Event>;
+  deleteEvent: (eventId: string) => Promise<void>;
+  fetchTasks: () => Promise<Task[]>;
   locations: BookableLocation[];
   allBookableLocations: BookableLocation[];
   addLocation: (locationName: string) => Promise<void>;
@@ -100,7 +100,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [userStatusAssignments, setUserStatusAssignments] = useState<Record<string, UserStatusAssignment[]>>({});
   const [calendars, setCalendars] = useState<SharedCalendar[]>([]);
   const [locations, setLocations] = useState<BookableLocation[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [appSettings, setAppSettings] = useState<AppSettings>({ pages: [], tabs: [] });
   const [allBadges, setAllBadges] = useState<Badge[]>([]);
@@ -125,7 +124,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       setTeams(mockTeams);
       setCalendars(mockCalendars);
       setLocations(mockLocations);
-      setTasks(mockTasks);
       setHolidays(mockHolidays);
 
       const badgesMap = new Map<string, Badge>();
@@ -309,8 +307,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, [calendars]);
 
   const fetchEvents = useCallback(async (start: Date, end: Date): Promise<Event[]> => {
-    await simulateApi(); // Simulate network delay
-    // In a real app, this would be an API call, e.g., fetch(`/api/events?start=${start}&end=${end}`)
+    await simulateApi(); 
+    const { mockEvents } = await import('@/lib/mock-data');
     const filteredEvents = mockEvents.filter(event => {
         const eventTime = event.startTime.getTime();
         return eventTime >= start.getTime() && eventTime < end.getTime();
@@ -318,30 +316,33 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     return filteredEvents;
   }, []);
 
-  const addEvent = useCallback(async (currentEvents: Event[], newEventData: Omit<Event, 'eventId'>) => {
+  const addEvent = useCallback(async (newEventData: Omit<Event, 'eventId'>) => {
+    const { mockEvents } = await import('@/lib/mock-data');
     const event: Event = { ...newEventData, eventId: crypto.randomUUID() };
     await simulateApi();
-    mockEvents.push(event); // In a real app, this would be a POST API call
+    mockEvents.push(event);
     triggerGoogleCalendarSync(event.calendarId);
-    return [...currentEvents, event]; // Return the updated list for local state
+    return event;
   }, [triggerGoogleCalendarSync]);
   
-  const updateEvent = useCallback(async (currentEvents: Event[], eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => {
+  const updateEvent = useCallback(async (eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => {
+      const { mockEvents } = await import('@/lib/mock-data');
       await simulateApi();
       const eventIndex = mockEvents.findIndex(e => e.eventId === eventId);
-      let updatedEvent: Event | undefined;
+      let updatedEvent: Event;
       if (eventIndex > -1) {
           updatedEvent = { ...mockEvents[eventIndex], ...eventData, lastUpdated: new Date() } as Event;
           mockEvents[eventIndex] = updatedEvent;
           triggerGoogleCalendarSync(updatedEvent.calendarId);
+          return updatedEvent;
       }
-      // Return the updated list for local state
-      return currentEvents.map(e => e.eventId === eventId ? updatedEvent! : e);
+      throw new Error("Event not found");
   }, [triggerGoogleCalendarSync]);
   
-  const deleteEvent = useCallback(async (currentEvents: Event[], eventId: string) => {
+  const deleteEvent = useCallback(async (eventId: string) => {
+      const { mockEvents } = await import('@/lib/mock-data');
       const eventToDelete = mockEvents.find(e => e.eventId === eventId);
-      if (!eventToDelete) return currentEvents;
+      if (!eventToDelete) return;
   
       await simulateApi();
       const eventIndex = mockEvents.findIndex(e => e.eventId === eventId);
@@ -349,9 +350,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           mockEvents.splice(eventIndex, 1);
           triggerGoogleCalendarSync(eventToDelete.calendarId);
       }
-      // Return the updated list for local state
-      return currentEvents.filter(e => e.eventId !== eventId);
   }, [triggerGoogleCalendarSync]);
+  
+  const fetchTasks = useCallback(async (): Promise<Task[]> => {
+    await simulateApi();
+    const { mockTasks } = await import('@/lib/mock-data');
+    return mockTasks;
+  }, []);
 
   const addLocation = useCallback(async (locationName: string) => {
       const newLocation: BookableLocation = { id: crypto.randomUUID(), name: locationName };
@@ -572,8 +577,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }), [realUser, viewAsUser, users]);
 
   const dataValue = useMemo(() => ({
-    loading, isDragModifierPressed, tasks, holidays, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors,
-  }), [loading, isDragModifierPressed, tasks, holidays, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, userStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges]);
+    loading, isDragModifierPressed, holidays, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors,
+  }), [loading, isDragModifierPressed, holidays, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, userStatusAssignments, addUser, linkGoogleCalendar, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges]);
 
   if (!realUser || !viewAsUser) {
     return null; // Or a loading spinner

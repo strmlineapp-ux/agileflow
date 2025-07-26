@@ -1,11 +1,12 @@
 
 'use client';
 
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TaskList } from '@/components/tasks/task-list';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
-import { type AppPage } from '@/types';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { type AppPage, type Task } from '@/types';
+import { useUser } from '@/context/user-context';
 
 const stats = [
   { title: 'Active Tasks', value: '12', icon: 'checklist' },
@@ -15,6 +16,33 @@ const stats = [
 ];
 
 export function OverviewContent({ tab: pageConfig, isSingleTabPage }: { tab: AppPage, isSingleTabPage?: boolean }) {
+  const { fetchTasks } = useUser();
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadTasks = async () => {
+      setLoading(true);
+      const fetchedTasks = await fetchTasks();
+      setTasks(fetchedTasks);
+      setLoading(false);
+    };
+    loadTasks();
+  }, [fetchTasks]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}><CardHeader className="h-24"></CardHeader></Card>
+          ))}
+        </div>
+        <Card><CardHeader className="h-64"></CardHeader></Card>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -33,7 +61,7 @@ export function OverviewContent({ tab: pageConfig, isSingleTabPage }: { tab: App
       </div>
       <div>
         <h2 className="font-headline text-2xl font-thin mb-4">Recent Tasks</h2>
-        <TaskList limit={5} />
+        <TaskList tasks={tasks} limit={5} />
       </div>
     </div>
   );
