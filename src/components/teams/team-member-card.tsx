@@ -56,7 +56,7 @@ function AssignedBadge({ badge, memberId, teamId, canManage }: { badge: Badge, m
     );
 }
 
-export function TeamMemberCard({ member, team, isViewer, onSetAdmin }: { member: User, team: Team, isViewer: boolean, onSetAdmin: () => void }) {
+export function TeamMemberCard({ member, team, isViewer, onSetAdmin, isOver }: { member: User, team: Team, isViewer: boolean, onSetAdmin: () => void, isOver?: boolean }) {
   const { viewAsUser, updateTeam, allBadges, allBadgeCollections, isDragModifierPressed } = useUser();
 
   const [isEditingLabel, setIsEditingLabel] = useState(false);
@@ -114,7 +114,7 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin }: { member:
   const isTeamAdmin = (team.teamAdmins || []).includes(member.userId);
 
   return (
-      <Card>
+      <Card className={cn(isOver && "ring-1 ring-inset ring-primary")}>
         <CardHeader>
           <div className="flex items-center gap-4">
              <div 

@@ -38,12 +38,11 @@ function DraggableBadgeFromPool({ badge }: { badge: Badge }) {
     };
     
     return (
-        <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
+        <div ref={setNodeRef} style={style} {...listeners} {...attributes} title={badge.description || badge.name}>
             <UiBadge
                 variant={'outline'}
                 style={{ color: badge.color, borderColor: badge.color }}
                 className={cn('flex items-center gap-1.5 p-1 pl-2 rounded-full text-sm h-8 font-thin cursor-grab')}
-                title={badge.description || badge.name}
             >
                 <GoogleSymbol name={badge.icon} style={{ fontSize: '20px' }} weight={100} />
                 <span>{badge.name}</span>
@@ -81,7 +80,6 @@ function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.8 : 1,
-    zIndex: isDragging ? 10 : 'auto',
   };
   
   const canManage = !isViewer;
@@ -90,10 +88,10 @@ function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }
     <div 
         ref={setNodeRef}
         style={style} 
-        className={cn("rounded-md", isDragging && "shadow-xl", isOver && "ring-1 ring-inset ring-primary")}
+        className={cn("relative rounded-md", isDragging && "shadow-xl z-10", isOver && "ring-1 ring-inset ring-primary")}
     >
       <div {...attributes} {...listeners} className="relative group">
-        <TeamMemberCard member={member} team={team} isViewer={isViewer} onSetAdmin={onSetAdmin}/>
+        <TeamMemberCard member={member} team={team} isViewer={isViewer} onSetAdmin={onSetAdmin} />
         {canManage && (
             <TooltipProvider>
                 <Tooltip>
@@ -492,10 +490,10 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                 </div>
             </div>
             <DragOverlay modifiers={[snapCenterToCursor]}>
-                {activeDragItem?.type === 'member-card' ? (
+                {activeDragItem?.type === 'member-card' && activeDragItem?.data?.member ? (
                     <Avatar className="h-12 w-12">
-                        <AvatarImage src={activeDragItem.data.user.avatarUrl} alt={activeDragItem.data.user.displayName} data-ai-hint="user avatar" />
-                        <AvatarFallback>{activeDragItem.data.user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                        <AvatarImage src={activeDragItem.data.member.avatarUrl} alt={activeDragItem.data.member.displayName} data-ai-hint="user avatar" />
+                        <AvatarFallback>{activeDragItem.data.member.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                 ) : activeBadge ? (
                      <div className="h-9 w-9 rounded-full border-2 flex items-center justify-center bg-card" style={{ borderColor: activeBadge.color }}>
