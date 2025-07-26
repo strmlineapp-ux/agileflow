@@ -36,13 +36,12 @@ function DraggableBadgeFromPool({ badge, canManage }: { badge: Badge; canManage:
         <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <div ref={setNodeRef} {...listeners} {...attributes} className={cn(isDragging && "opacity-50")}>
+                    <div ref={setNodeRef} {...listeners} {...attributes} className={cn(isDragging && "opacity-50", canManage && "cursor-grab")}>
                         <UiBadge
                             variant={'outline'}
                             style={{ color: badge.color, borderColor: badge.color }}
                             className={cn(
-                                'flex items-center gap-1.5 p-1 pl-2 rounded-full text-sm h-8 font-thin',
-                                canManage && 'cursor-grab'
+                                'flex items-center gap-1.5 p-1 pl-2 rounded-full text-sm h-8 font-thin'
                             )}
                         >
                             <GoogleSymbol name={badge.icon} style={{ fontSize: '20px' }} weight={100} />
@@ -78,6 +77,15 @@ function SortableTeamMember({ member, team, isViewer }: { member: User, team: Te
       <TeamMemberCard member={member} team={team} isViewer={isViewer} />
     </div>
   );
+}
+
+function DroppableUserList({ id, children, className }: { id: string; children: React.ReactNode; className?: string }) {
+    const { setNodeRef, isOver } = useDroppable({ id });
+    return (
+        <div ref={setNodeRef} className={cn(className, "rounded-md p-2 transition-colors", isOver && "ring-1 ring-border ring-inset")}>
+            {children}
+        </div>
+    );
 }
 
 
@@ -142,12 +150,6 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         }),
         useSensor(KeyboardSensor, {
           coordinateGetter: sortableKeyboardCoordinates,
-          onActivation: ({ event }) => {
-            if (!isDragModifierPressed) {
-                return false;
-            }
-            return true;
-          }
         })
     );
 
@@ -288,22 +290,24 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     
         if (activeType === 'member' && overType === 'member-list') {
             if (active.id === over.id) return;
-            const activeList = adminIds.includes(active.id as string) ? 'admins' : 'members';
+            
+            const activeIsAdmin = adminIds.includes(active.id as string);
             const overListId = over.id as string;
             
-            if (activeList !== overListId) return;
-            
-            const list = activeList === 'admins' ? admins : members;
-            const oldIndex = list.findIndex(item => item.userId === active.id);
-            const overItem = over.data.current?.item as User | undefined;
-            const newIndex = overItem ? list.findIndex(item => item.userId === overItem.userId) : list.length;
-            
-            if (oldIndex !== -1 && newIndex !== -1) {
-                const reorderedList = arrayMove(list, oldIndex, newIndex);
-                const newAdmins = activeList === 'admins' ? reorderedList : admins;
-                const newMembers = activeList === 'members' ? reorderedList : members;
-                const newMemberIds = [...newAdmins, ...newMembers].map(m => m.userId);
-                updateTeam(team.id, { members: newMemberIds });
+            if ((activeIsAdmin && overListId === 'admins') || (!activeIsAdmin && overListId === 'members')) {
+                // Reordering within the same list
+                const list = activeIsAdmin ? admins : members;
+                const oldIndex = list.findIndex(item => item.userId === active.id);
+                const overItem = over.data.current?.item as User | undefined;
+                const newIndex = overItem ? list.findIndex(item => item.userId === overItem.userId) : list.length;
+                
+                if (oldIndex !== -1 && newIndex !== -1) {
+                    const reorderedList = arrayMove(list, oldIndex, newIndex);
+                    const newAdmins = activeIsAdmin ? reorderedList : admins;
+                    const newMembers = !activeIsAdmin ? reorderedList : members;
+                    const newMemberIds = [...newAdmins, ...newMembers].map(m => m.userId);
+                    updateTeam(team.id, { members: newMemberIds });
+                }
             }
         }
     };
@@ -313,7 +317,6 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         setActiveDragItem({ type: active.data.current?.type, id: active.id as string, data: active.data.current });
     }
     
-    const activeMember = activeDragItem?.type === 'member' ? users.find(u => u.userId === activeDragItem.id) : null;
     const activeBadge = activeDragItem?.type?.includes('badge') ? activeDragItem.data.badge : null;
     
     const { setNodeRef: badgePoolRef, isOver: isBadgePoolOver } = useDroppable({
@@ -373,13 +376,13 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                                         {teamAdminsLabel}
                                     </h3>
                                 )}
-                                <SortableContext items={adminIds} strategy={verticalListSortingStrategy}>
-                                    <div className="space-y-4">
+                                <DroppableUserList id="admins" className="space-y-4">
+                                    <SortableContext items={adminIds} strategy={verticalListSortingStrategy}>
                                         {admins.map((member) => (
                                             <SortableTeamMember key={member.userId} member={member} team={team} isViewer={isViewer} />
                                         ))}
-                                    </div>
-                                </SortableContext>
+                                    </SortableContext>
+                                </DroppableUserList>
                             </div>
                         )}
 
@@ -398,25 +401,27 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                                 </h3>
                             )}
                             {members.length > 0 && (
-                                <SortableContext items={memberIds} strategy={verticalListSortingStrategy}>
-                                    <div className="flex flex-wrap -m-3">
-                                    {members.map((member) => (
-                                        <div key={member.userId} className="p-3 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0">
-                                            <SortableTeamMember member={member} team={team} isViewer={isViewer} />
+                                <DroppableUserList id="members">
+                                    <SortableContext items={memberIds} strategy={verticalListSortingStrategy}>
+                                        <div className="flex flex-wrap -m-3">
+                                        {members.map((member) => (
+                                            <div key={member.userId} className="p-3 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0">
+                                                <SortableTeamMember member={member} team={team} isViewer={isViewer} />
+                                            </div>
+                                        ))}
                                         </div>
-                                    ))}
-                                    </div>
-                                </SortableContext>
+                                    </SortableContext>
+                                </DroppableUserList>
                             )}
                         </div>
                     </div>
                 </div>
             </div>
             <DragOverlay modifiers={[snapCenterToCursor]}>
-                {activeMember ? (
+                {activeDragItem?.type === 'member' && activeDragItem?.data?.user ? (
                     <Avatar className="h-12 w-12">
-                        <AvatarImage src={activeMember.avatarUrl} alt={activeMember.displayName} data-ai-hint="user avatar" />
-                        <AvatarFallback>{activeMember.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                        <AvatarImage src={activeDragItem.data.user.avatarUrl} alt={activeDragItem.data.user.displayName} data-ai-hint="user avatar" />
+                        <AvatarFallback>{activeDragItem.data.user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                 ) : activeBadge ? (
                      <div className="h-9 w-9 rounded-full border-2 flex items-center justify-center bg-card" style={{ borderColor: activeBadge.color }}>
