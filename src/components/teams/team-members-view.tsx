@@ -152,7 +152,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
 
     const adminIds = useMemo(() => admins.map(a => a.userId), [admins]);
     const memberIds = useMemo(() => members.map(m => m.userId), [members]);
-
+    
     const userAssignableBadges = useMemo(() => {
         const activeAndApplicableCollections = allBadgeCollections.filter(
           (c) =>
@@ -163,11 +163,22 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         return allBadges.filter(badge => badgeIds.has(badge.id) && badge.name.toLowerCase().includes(badgePoolSearch.toLowerCase()));
     }, [team.activeBadgeCollections, allBadgeCollections, allBadges, badgePoolSearch]);
 
+    const groupedAssignableBadges = useMemo(() => {
+        const groups: { [collectionId: string]: { collectionName: string; badges: Badge[] } } = {};
+        userAssignableBadges.forEach(badge => {
+            const collection = allBadgeCollections.find(c => c.badgeIds.includes(badge.id) && (team.activeBadgeCollections || []).includes(c.id));
+            if (collection) {
+                if (!groups[collection.id]) {
+                    groups[collection.id] = { collectionName: collection.name, badges: [] };
+                }
+                groups[collection.id].badges.push(badge);
+            }
+        });
+        return Object.values(groups);
+    }, [userAssignableBadges, allBadgeCollections, team.activeBadgeCollections]);
+
     const sensors = useSensors(
         useSensor(PointerSensor, {
-            activationConstraint: {
-                distance: 8,
-            },
             onActivation: ({ event }) => {
                 if (!isDragModifierPressed) {
                     return false;
@@ -290,8 +301,8 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     
     const handleSetAdmin = useCallback((teamId: string, userId: string) => {
         if (isViewer) return;
-        const team = users.find(u => u.userId === teamId);
-        if(!team) return;
+        const teamData = users.find(u => u.userId === teamId);
+        if(!teamData) return;
 
         const currentAdmins = new Set(team.teamAdmins || []);
         if (currentAdmins.has(userId)) {
@@ -300,7 +311,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
             currentAdmins.add(userId);
         }
         updateTeam(teamId, { teamAdmins: Array.from(currentAdmins) });
-    }, [isViewer, users, updateTeam]);
+    }, [isViewer, users, updateTeam, team]);
     
     const handleRemoveUser = useCallback((userId: string) => {
         if (isViewer) return;
@@ -494,9 +505,16 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                     </CardHeader>
                     <CardContent ref={badgePoolRef} className={cn("flex-1 p-2 overflow-hidden min-h-0 rounded-md", isBadgePoolOver && "ring-1 ring-destructive ring-inset")}>
                         <ScrollArea className="h-full">
-                            <div className="flex flex-wrap gap-2">
-                                {userAssignableBadges.map(badge => (
-                                    <DraggableBadgeFromPool key={badge.id} badge={badge} canManage={canManage} />
+                            <div className="space-y-4">
+                                {groupedAssignableBadges.map(({ collectionName, badges }) => (
+                                    <div key={collectionName}>
+                                        <p className="text-xs font-semibold text-muted-foreground tracking-wider mb-2">{collectionName}</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {badges.map(badge => (
+                                                <DraggableBadgeFromPool key={badge.id} badge={badge} canManage={canManage} />
+                                            ))}
+                                        </div>
+                                    </div>
                                 ))}
                                 {userAssignableBadges.length === 0 && <p className="text-xs text-muted-foreground text-center p-4 w-full">No badges available to assign. Activate badge collections in the "Badges" tab.</p>}
                             </div>
