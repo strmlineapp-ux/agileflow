@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import * as React from 'react';
@@ -98,7 +96,10 @@ const formSchema = z.object({
 
 type EventFormProps = {
   event?: Event;
-  onFinished: () => void;
+  onFinished: (mutatedEvent?: Event) => void;
+  onAdd?: (newEventData: Omit<Event, 'eventId'>) => void;
+  onUpdate?: (eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => void;
+  onDelete?: (eventId: string) => void;
   initialData?: Partial<z.infer<typeof formSchema>>;
 };
 
@@ -112,8 +113,8 @@ const getDefaultCalendarId = (user: User, availableCalendars: SharedCalendar[]):
     return undefined;
 };
 
-export function EventForm({ event, onFinished, initialData }: EventFormProps) {
-  const { realUser, viewAsUser, users, calendars, teams, addEvent, updateEvent, deleteEvent, allBookableLocations, userStatusAssignments, allBadges, allBadgeCollections } = useUser();
+export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onDelete }: EventFormProps) {
+  const { realUser, viewAsUser, users, calendars, teams, allBookableLocations, userStatusAssignments, allBadges, allBadgeCollections } = useUser();
   const { toast } = useToast();
   
   const isEditing = !!event;
@@ -364,15 +365,16 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
 
     try {
       if (isEditing) {
-        await updateEvent(event.eventId, finalEventData);
+        onUpdate?.(event.eventId, finalEventData);
         toast({ title: 'Event Updated', description: `"${values.title}" has been saved.` });
       } else {
-        await addEvent({
+        const newEvent = {
             ...finalEventData,
             createdBy: realUser.userId,
             createdAt: new Date(),
             lastUpdated: new Date()
-        });
+        };
+        onAdd?.(newEvent);
         toast({ title: 'Event Created', description: `"${values.title}" has been added to the calendar.`});
         form.reset();
       }
@@ -386,11 +388,11 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [isEditing, event, roleAssignments, addEvent, updateEvent, realUser.userId, onFinished, toast, form]);
+  }, [isEditing, event, roleAssignments, onAdd, onUpdate, realUser, onFinished, toast, form]);
   
   const handleDelete = async () => {
-    if (!event) return;
-    await deleteEvent(event.eventId);
+    if (!event || !onDelete) return;
+    onDelete(event.eventId);
     toast({ title: 'Event Deleted' });
     setIsDeleteDialogOpen(false);
     onFinished();
@@ -528,7 +530,7 @@ export function EventForm({ event, onFinished, initialData }: EventFormProps) {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button type="button" variant="ghost" size="icon" onClick={onFinished} disabled={isLoading} aria-label="Discard changes">
+                      <Button type="button" variant="ghost" size="icon" onClick={() => onFinished()} disabled={isLoading} aria-label="Discard changes">
                         <GoogleSymbol name="close" />
                       </Button>
                     </TooltipTrigger>

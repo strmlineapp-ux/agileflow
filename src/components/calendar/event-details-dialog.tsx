@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import * as React from 'react';
@@ -210,4 +208,3 @@ export function EventDetailsDialog({ event, isOpen, onOpenChange, onUpdate, onDe
     </Dialog>
   );
 }
-

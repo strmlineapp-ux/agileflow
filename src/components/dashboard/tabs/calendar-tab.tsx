@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
@@ -144,8 +143,9 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
     setViewEvents(updatedEvents);
   }, []);
 
-  const closeNewEventDialog = useCallback((mutatedEvent?: Event) => {
+  const closeDialogs = useCallback(() => {
     setIsNewEventOpen(false);
+    setSelectedEvent(null);
     setInitialEventData(null);
   }, []);
 
@@ -192,7 +192,7 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-xl">
                   <EventForm 
-                    onFinished={closeNewEventDialog} 
+                    onFinished={closeDialogs} 
                     initialData={initialEventData} 
                     onAdd={(newEventData) => handleEventMutation(() => addEvent(viewEvents, newEventData))}
                   />
@@ -255,4 +255,3 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
     </>
   );
 }
-
