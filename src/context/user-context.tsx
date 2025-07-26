@@ -4,7 +4,7 @@
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
 import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeOwner, type Task, type Holiday } from '@/types';
-import { mockUsers, mockCalendars, mockEvents, mockLocations, mockTeams, mockAppSettings, allMockBadgeCollections, videoProdBadges, liveEventsBadges, pScaleBadges, starRatingBadges, effortBadges, mockTasks, mockHolidays } from '@/lib/mock-data';
+import { mockUsers, mockCalendars, mockLocations, mockTeams, mockAppSettings, allMockBadgeCollections, videoProdBadges, liveEventsBadges, pScaleBadges, starRatingBadges, effortBadges, mockTasks, mockHolidays, mockEvents } from '@/lib/mock-data';
 import { GoogleAuthProvider, getAuth } from 'firebase/auth';
 import { getFirestore } from "firebase/firestore";
 import { useToast } from '@/hooks/use-toast';
@@ -98,7 +98,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [userStatusAssignments, setUserStatusAssignments] = useState<Record<string, UserStatusAssignment[]>>({});
   const [calendars, setCalendars] = useState<SharedCalendar[]>([]);
-  const [events, setEvents] = useState<Event[]>([]);
   const [locations, setLocations] = useState<BookableLocation[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [holidays, setHolidays] = useState<Holiday[]>([]);
@@ -124,7 +123,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       setUsers(mockUsers);
       setTeams(mockTeams);
       setCalendars(mockCalendars);
-      setEvents(mockEvents); // Note: We keep this for non-calendar-view access for now.
       setLocations(mockLocations);
       setTasks(mockTasks);
       setHolidays(mockHolidays);
@@ -312,34 +310,31 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const addEvent = useCallback(async (newEventData: Omit<Event, 'eventId'>) => {
     const event: Event = { ...newEventData, eventId: crypto.randomUUID() };
     await simulateApi();
-    setEvents(currentEvents => [...currentEvents, event]);
+    mockEvents.push(event); // In a real app, this would be an API call
     triggerGoogleCalendarSync(event.calendarId);
   }, [triggerGoogleCalendarSync]);
-
+  
   const updateEvent = useCallback(async (eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => {
-    await simulateApi();
-    let calendarIdToSync: string | null = null;
-    setEvents(currentEvents => currentEvents.map(e => {
-        if (e.eventId === eventId) {
-            const updatedEvent = { ...e, ...eventData, lastUpdated: new Date() } as Event;
-            calendarIdToSync = updatedEvent.calendarId;
-            return updatedEvent;
-        }
-        return e;
-    }));
-    if (calendarIdToSync) {
-        triggerGoogleCalendarSync(calendarIdToSync);
-    }
+      await simulateApi();
+      const eventIndex = mockEvents.findIndex(e => e.eventId === eventId);
+      if (eventIndex > -1) {
+          const updatedEvent = { ...mockEvents[eventIndex], ...eventData, lastUpdated: new Date() } as Event;
+          mockEvents[eventIndex] = updatedEvent;
+          triggerGoogleCalendarSync(updatedEvent.calendarId);
+      }
   }, [triggerGoogleCalendarSync]);
-
+  
   const deleteEvent = useCallback(async (eventId: string) => {
-    const eventToDelete = events.find(e => e.eventId === eventId);
-    if (!eventToDelete) return;
-    
-    await simulateApi();
-    setEvents(currentEvents => currentEvents.filter(e => e.eventId !== eventId));
-    triggerGoogleCalendarSync(eventToDelete.calendarId);
-  }, [events, triggerGoogleCalendarSync]);
+      const eventToDelete = mockEvents.find(e => e.eventId === eventId);
+      if (!eventToDelete) return;
+  
+      await simulateApi();
+      const eventIndex = mockEvents.findIndex(e => e.eventId === eventId);
+      if (eventIndex > -1) {
+          mockEvents.splice(eventIndex, 1);
+          triggerGoogleCalendarSync(eventToDelete.calendarId);
+      }
+  }, [triggerGoogleCalendarSync]);
 
   const addLocation = useCallback(async (locationName: string) => {
       const newLocation: BookableLocation = { id: crypto.randomUUID(), name: locationName };
