@@ -12,11 +12,21 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { cn, getContrastColor } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Input } from '../ui/input';
-import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableContext, useSortable, verticalListSortingStrategy, DndContext, type DragEndEvent, DragOverlay, type DragStartEvent, useSensors, useSensor, PointerSensor, KeyboardSensor, sortableKeyboardCoordinates } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
+import { arrayMove } from '@dnd-kit/sortable';
+import { snapCenterToCursor } from '@dnd-kit/modifiers';
 
 function SortableAssignedBadge({ badge, canManageRoles, handleToggleRole }: { badge: Badge, canManageRoles: boolean, handleToggleRole: (badgeName: string) => void }) {
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: badge.id });
+    const { isDragModifierPressed } = useUser();
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ 
+        id: badge.id,
+        disabled: !isDragModifierPressed,
+        data: {
+            type: 'assigned-badge',
+            badge: badge,
+        },
+     });
     
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -33,7 +43,7 @@ function SortableAssignedBadge({ badge, canManageRoles, handleToggleRole }: { ba
                         onClick={() => canManageRoles && handleToggleRole(badge.name)}
                         className={cn(
                         'h-7 w-7 rounded-full border flex items-center justify-center bg-transparent',
-                        canManageRoles && 'cursor-pointer'
+                        canManageRoles && isDragModifierPressed ? 'cursor-grabbing' : canManageRoles ? 'cursor-pointer' : 'cursor-default'
                         )}
                         style={{ borderColor: badge.color }}
                     >
@@ -54,12 +64,13 @@ function SortableAssignedBadge({ badge, canManageRoles, handleToggleRole }: { ba
 }
 
 export function TeamMemberCard({ member, team, isViewer }: { member: User, team: Team, isViewer: boolean }) {
-  const { viewAsUser, updateUser, updateTeam, allBadges, allBadgeCollections } = useUser();
+  const { viewAsUser, updateUser, updateTeam, allBadges, allBadgeCollections, isDragModifierPressed } = useUser();
   const { toast } = useToast();
 
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const labelInputRef = useRef<HTMLInputElement>(null);
-  
+  const [activeBadge, setActiveBadge] = useState<Badge | null>(null);
+
   const canManageRoles = !isViewer && (viewAsUser.isAdmin || team.teamAdmins?.includes(viewAsUser.userId));
   const teamBadgesLabel = team.userBadgesLabel || 'Team Badges';
   
@@ -104,6 +115,36 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
     const assigned = new Set(member.roles || []);
     return userAssignableBadges.filter(badge => !assigned.has(badge.name));
   }, [userAssignableBadges, member.roles]);
+  
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+  
+  const handleBadgeDragStart = (event: DragStartEvent) => {
+    setActiveBadge(event.active.data.current?.badge);
+  }
+  
+  const handleBadgeDragEnd = (event: DragEndEvent) => {
+    setActiveBadge(null);
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+        const oldIndex = assignedBadges.findIndex(b => b.id === active.id);
+        const newIndex = assignedBadges.findIndex(b => b.id === over.id);
+
+        if (oldIndex !== -1 && newIndex !== -1) {
+            const newBadgeOrder = arrayMove(assignedBadges, oldIndex, newIndex);
+            const newRoles = newBadgeOrder.map(b => b.name);
+            const nonTeamRoles = (member.roles || []).filter(role => !teamBadgeNames.has(role));
+            const finalRoles = [...new Set([...nonTeamRoles, ...newRoles])];
+            updateUser(member.userId, { roles: finalRoles });
+        }
+    }
+  }
+
 
   const handleToggleRole = async (badgeName: string) => {
     if (!canManageRoles) {
@@ -230,21 +271,22 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
                         </span>
                     )}
                 </h4>
+                <DndContext sensors={sensors} onDragStart={handleBadgeDragStart} onDragEnd={handleBadgeDragEnd} collisionDetection={closestCenter}>
                 <div className="flex flex-col gap-2 min-h-[24px] rounded-md border p-2 bg-muted/20">
                 {userAssignableBadges.length > 0 ? (
                     <>
-                    <SortableContext items={assignedBadges.map(b => b.id)} strategy={verticalListSortingStrategy}>
                        {groupedBadges.map(({ collectionName, badges }) => (
                             <div key={collectionName}>
                                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">{collectionName}</p>
+                                <SortableContext items={badges.map(b => b.id)} strategy={verticalListSortingStrategy}>
                                 <div className="flex flex-wrap gap-1.5">
                                     {badges.map(badge => (
                                         <SortableAssignedBadge key={badge.id} badge={badge} canManageRoles={canManageRoles} handleToggleRole={handleToggleRole} />
                                     ))}
                                 </div>
+                                </SortableContext>
                             </div>
                         ))}
-                    </SortableContext>
                     {unassignedBadges.length > 0 && (
                         <div className="flex flex-wrap gap-1.5">
                             {unassignedBadges.map(badge => renderBadge(badge))}
@@ -255,6 +297,14 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
                     <p className="text-xs text-muted-foreground italic w-full text-center">No assignable badges configured for this team.</p>
                 )}
                 </div>
+                <DragOverlay modifiers={[snapCenterToCursor]}>
+                    {activeBadge ? (
+                        <div className="h-9 w-9 rounded-full border-2 flex items-center justify-center bg-card" style={{ borderColor: activeBadge.color }}>
+                            <GoogleSymbol name={activeBadge.icon} style={{ fontSize: '28px', color: activeBadge.color }} weight={100} />
+                        </div>
+                    ) : null}
+                </DragOverlay>
+                </DndContext>
             </div>
             </CardContent>
         )}
