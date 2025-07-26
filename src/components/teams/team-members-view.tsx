@@ -23,8 +23,8 @@ import { Badge as UiBadge } from '../ui/badge';
 import { useDroppable } from '@dnd-kit/core';
 
 function DraggableBadgeFromPool({ badge }: { badge: Badge }) {
-    const { attributes, listeners, setNodeRef, isDragging, transform } = useSortable({
-        id: `pool-badge-${badge.id}`,
+    const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
+        id: `pool-badge::${badge.id}`,
         data: {
             type: 'pool-badge',
             badge: badge,
@@ -33,6 +33,7 @@ function DraggableBadgeFromPool({ badge }: { badge: Badge }) {
 
     const style = {
         transform: CSS.Transform.toString(transform),
+        transition,
         opacity: isDragging ? 0.5 : 1,
     };
     
@@ -62,6 +63,14 @@ function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }
     disabled: isViewer || !isDragModifierPressed
   });
   
+  const { setNodeRef: droppableRef, isOver } = useDroppable({
+    id: member.userId,
+    data: {
+      type: 'member-card',
+      member: member,
+    }
+  });
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -75,10 +84,10 @@ function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }
     <div 
         ref={setNodeRef}
         style={style} 
-        className={cn("relative rounded-md", isDragging && "shadow-xl")}
+        className={cn("relative rounded-md", isDragging && "shadow-xl", isOver && 'ring-1 ring-inset ring-primary')}
     >
-      <div {...attributes} {...listeners} className="relative group">
-        <TeamMemberCard member={member} team={team} isViewer={isViewer} onSetAdmin={onSetAdmin} />
+      <div {...attributes} {...listeners} className="relative group" ref={droppableRef}>
+        <TeamMemberCard member={member} team={team} isViewer={isViewer} onSetAdmin={onSetAdmin} isOver={isOver}/>
         {canManage && (
             <TooltipProvider>
                 <Tooltip>
@@ -329,12 +338,10 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         
         const activeType = active.data.current?.type;
         const overType = over.data.current?.type;
-        
-        // --- Badge Assignment/Unassignment/Reassignment ---
+        const badge = active.data.current?.badge as Badge;
         
         // Case 1: Dragging a badge from the pool to a member card
         if (activeType === 'pool-badge' && overType === 'member-card') {
-            const badge = active.data.current?.badge as Badge;
             const member = over.data.current?.member as User;
             if (badge && member) {
                 handleBadgeAssignment(badge, member.userId);
@@ -344,7 +351,6 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
 
         // Case 2: Dragging an assigned badge back to the pool
         if (activeType === 'assigned-badge' && overType === 'badge-pool') {
-            const badge = active.data.current?.badge as Badge;
             const memberId = active.data.current?.memberId as string;
             handleBadgeUnassignment(badge, memberId);
             return;
@@ -352,7 +358,6 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         
         // Case 3: Dragging an assigned badge from one member to another
         if (activeType === 'assigned-badge' && overType === 'member-card') {
-            const badge = active.data.current?.badge as Badge;
             const targetMember = over.data.current?.member as User;
             const sourceMemberId = active.data.current?.memberId as string;
 
@@ -398,7 +403,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
 
     const activeBadge = (activeDragItem?.type?.includes('badge')) ? activeDragItem.data.badge : null;
 
-    const assignableBadgeIds = useMemo(() => userAssignableBadges.map(b => `pool-badge-${b.id}`), [userAssignableBadges]);
+    const assignableBadgeIds = useMemo(() => userAssignableBadges.map(b => `pool-badge::${b.id}`), [userAssignableBadges]);
 
     return (
       <div className="flex h-full gap-4">

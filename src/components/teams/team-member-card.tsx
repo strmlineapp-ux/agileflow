@@ -12,11 +12,13 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Input } from '../ui/input';
-import { useDraggable, useDroppable } from '@dnd-kit/core';
+import { useDroppable, useDraggable } from '@dnd-kit/core';
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 
 function AssignedBadge({ badge, memberId, teamId, canManage }: { badge: Badge, memberId: string, teamId: string, canManage: boolean }) {
-    const { attributes, listeners, setNodeRef, isDragging, transform } = useDraggable({
+    const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
         id: `assigned-badge::${teamId}::${memberId}::${badge.id}`,
         data: {
             type: 'assigned-badge',
@@ -26,7 +28,11 @@ function AssignedBadge({ badge, memberId, teamId, canManage }: { badge: Badge, m
         disabled: !canManage,
     });
 
-    const style = transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : {};
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+    };
     
     return (
         <TooltipProvider>
@@ -59,19 +65,11 @@ function AssignedBadge({ badge, memberId, teamId, canManage }: { badge: Badge, m
     );
 }
 
-export function TeamMemberCard({ member, team, isViewer, onSetAdmin }: { member: User, team: Team, isViewer: boolean, onSetAdmin: () => void }) {
+export function TeamMemberCard({ member, team, isViewer, onSetAdmin, isOver }: { member: User, team: Team, isViewer: boolean, onSetAdmin: () => void, isOver: boolean }) {
   const { viewAsUser, updateTeam, allBadges, allBadgeCollections, isDragModifierPressed } = useUser();
 
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const labelInputRef = useRef<HTMLInputElement>(null);
-
-  const { setNodeRef, isOver } = useDroppable({
-    id: `member-card-droppable:${member.userId}`,
-    data: {
-        type: 'member-card',
-        member: member
-    }
-  });
   
   const teamBadgesLabel = team.userBadgesLabel || 'Team Badges';
   const canManage = !isViewer;
@@ -81,6 +79,8 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin }: { member:
       .map(roleName => allBadges.find(b => b.name === roleName))
       .filter((b): b is Badge => !!b);
   }, [member.roles, allBadges]);
+
+  const assignedBadgeIds = useMemo(() => assignedBadges.map(b => `assigned-badge::${team.id}::${member.userId}::${b.id}`), [assignedBadges, team.id, member.userId]);
 
   const groupedBadges = useMemo(() => {
     const groups: { [collectionName: string]: Badge[] } = {};
@@ -161,7 +161,7 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin }: { member:
           </div>
         </CardHeader>
         {!isViewer && (
-            <CardContent ref={setNodeRef} className={cn("transition-colors", isOver && "ring-1 ring-inset ring-primary rounded-md")}>
+            <CardContent className={cn("transition-colors", isOver && "ring-1 ring-inset ring-primary rounded-md")}>
             <div className="mt-4 space-y-2">
                 <h4 className="text-sm font-normal">
                     {isEditingLabel && canManage ? (
@@ -183,24 +183,26 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin }: { member:
                         </span>
                     )}
                 </h4>
-                <div className="flex flex-col gap-2 min-h-[24px] rounded-md border p-2 bg-muted/20">
-                {assignedBadges.length > 0 ? (
-                    <>
-                       {groupedBadges.map(({ collectionName, badges }) => (
-                            <div key={collectionName}>
-                                <p className="text-xs tracking-wider mb-1.5">{collectionName}</p>
-                                <div className="flex flex-wrap gap-1.5">
-                                    {badges.map(badge => (
-                                        <AssignedBadge key={badge.id} badge={badge} memberId={member.userId} teamId={team.id} canManage={canManage} />
-                                    ))}
+                <SortableContext items={assignedBadgeIds} strategy={verticalListSortingStrategy}>
+                    <div className="flex flex-col gap-2 min-h-[24px] rounded-md border p-2 bg-muted/20">
+                    {assignedBadges.length > 0 ? (
+                        <>
+                           {groupedBadges.map(({ collectionName, badges }) => (
+                                <div key={collectionName}>
+                                    <p className="text-xs tracking-wider mb-1.5">{collectionName}</p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {badges.map(badge => (
+                                            <AssignedBadge key={badge.id} badge={badge} memberId={member.userId} teamId={team.id} canManage={canManage} />
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
-                    </>
-                ) : (
-                    <p className="text-xs text-muted-foreground italic w-full text-center">Drag badges from the pool to assign.</p>
-                )}
-                </div>
+                            ))}
+                        </>
+                    ) : (
+                        <p className="text-xs text-muted-foreground italic w-full text-center">Drag badges from the pool to assign.</p>
+                    )}
+                    </div>
+                </SortableContext>
             </div>
             </CardContent>
         )}
