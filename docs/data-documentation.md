@@ -2,7 +2,58 @@
 
 # AgileFlow: Data Documentation
 
-This document provides a detailed breakdown of the data structures, entities, and their relationships within the AgileFlow application. The data architecture is designed for a **Firestore (NoSQL) database environment**, which influences how data is structured and related. It serves as a technical reference for understanding how data flows through the system and interacts with internal and external services.
+This document provides a detailed breakdown of the data structures, entities, and their relationships within the AgileFlow application. It serves as a technical reference for understanding how data flows through the system and interacts with internal and external services.
+
+## Data Fetching Strategy: Scalable On-Demand Model
+
+AgileFlow employs a highly scalable, on-demand data-fetching strategy that is optimized for a NoSQL database environment and a context-aware user experience. This approach ensures the application remains fast and responsive, regardless of the amount of data in the system.
+
+1.  **Minimal Initial Load**: When the application starts, it loads only the absolute minimum data required for the user to operate:
+    *   The current `User` object, which contains their profile, preferences, and a list of Team IDs they belong to (`memberOfTeamIds`).
+    *   The global `AppSettings` object, which defines the application's page structure and navigation.
+    *   All other data (Teams, Calendars, Events, Tasks) is **not** loaded at startup.
+
+2.  **Context-Aware, On-Demand Fetching**: Data is fetched by components precisely when and where it is needed, driven by user navigation.
+    *   **Team Data**: When you navigate to a specific team's management page (e.g., `/dashboard/teams/team-id-123`), the component uses the ID from the URL to fetch the data for *only that specific team*. Similarly, the main Team Management page fetches a list of teams based on the IDs stored in the user's profile.
+    *   **Events & Tasks**: High-volume data like events and tasks have always been fetched on-demand. The Calendar fetches events for the visible date range, and the Tasks page fetches tasks when it loads.
+
+3.  **Benefits of this Approach**:
+    *   **Scalability**: The initial load time is constant and extremely fast, regardless of whether there are 10 or 10,000 teams in the system.
+    *   **Performance**: Memory usage is kept to a minimum by only holding the data relevant to the current view.
+    *   **NoSQL Optimization**: This model aligns perfectly with NoSQL best practices, which favor fetching specific documents by ID over performing large, complex queries.
+
+## Multi-Tenant Architecture
+
+AgileFlow is designed as a multi-tenant application, where each company or organization (a "tenant") operates within its own completely isolated Firebase project. This ensures the highest level of data privacy, security, and scalability.
+
+### Tenant Identification & Configuration
+
+1.  **Tenant ID**: Each tenant is identified by a unique ID, which typically corresponds to a subdomain (e.g., `tenant-a.agileflow.app`).
+2.  **Dynamic Configuration**: The application uses a dynamic lookup mechanism (simulated in `/src/lib/firebase.ts`) to fetch the specific Firebase configuration for the tenant making a request.
+3.  **Data Isolation**: Because each tenant has a unique `projectId`, all their data—including Firestore documents, Storage files, and authenticated users—resides in a separate, dedicated Google Cloud project. There is no possibility of data crossover between tenants.
+
+### Tenant Onboarding & Provisioning
+
+**Important Security Note:** The process of creating a new tenant and configuring their Firebase project is a privileged, administrative action. **A UI should NOT be created for tenants to enter their own Firebase details**, as this would be a significant security risk.
+
+The correct, secure workflow is as follows:
+1.  **Admin Provisioning**: When a new tenant signs up, a system administrator for AgileFlow uses secure, backend scripts (e.g., Google Cloud SDK) to programmatically create a new, dedicated Firebase project for that tenant.
+2.  **Secure Key Management**: The configuration keys for this new project are then securely added to the application's central tenant configuration store (currently simulated in `firebase.ts`, but would be a secure database in production).
+3.  **Tenant Access**: The tenant is then given their unique subdomain (e.g., `new-company.agileflow.app`) to access their isolated environment. They never handle API keys directly.
+
+### Tenant Parameters & Independence
+
+Each tenant's configuration consists of a standard set of Firebase project keys. It is essential that each tenant has its own unique set of these keys, as they point to their independent cloud resources.
+
+| Parameter | Purpose & Importance for Isolation |
+| :--- | :--- |
+| `apiKey` | **API Key.** Authorizes requests to Firebase services for this specific project. |
+| `authDomain` | **Authentication Domain.** The dedicated domain for Firebase Authentication actions (e.g., `tenant-a.firebaseapp.com`). |
+| `projectId` | **Project ID.** The globally unique identifier for the tenant's Google Cloud project. **This is the most critical key for ensuring database and resource isolation.** |
+| `storageBucket` | **Cloud Storage Bucket.** The unique bucket for storing files like user uploads or images. |
+| `messagingSenderId` | **Sender ID.** Used for Firebase Cloud Messaging (push notifications). |
+| `appId` | **App ID.** A unique identifier for the specific Firebase web app instance within the tenant's project. |
+
 
 **Important Architectural Note:** Application pages are configured within the `AppSettings` object and are not hardcoded entities. Any references to them in documentation are purely as examples of how a dynamic page can be constructed. The codebase should not treat these pages as special or distinct from any other page an administrator might create.
 
@@ -26,15 +77,18 @@ This table details the information stored directly within each `User` object.
 | `avatarUrl?: string` | **Google Service.** A URL to the user's profile picture. This is part of the basic profile information obtained during a standard "Sign in with Google" action and **does not require separate permissions**. |
 | `location?: string` | **Google Service.** The user's primary work location. This is designed to be populated from the user's **Google Account profile** (from their address information) **after the user grants the necessary permissions**. |
 | `googleCalendarLinked: boolean` | **Google Service.** A flag that is set to `true` only after the user successfully completes an OAuth consent flow via **Firebase Authentication** to grant the app permission to access their Google Calendar. |
-| `roles?: string[]` | **Internal.** An array of strings that includes the names of any `Badge`s the user has been assigned. The application determines the name's meaning and properties by looking it up in the relevant `Team` object. |
+| `roles?: string[]` | **Internal.** An array of `badgeId`s assigned to the user. |
 | `directReports?: string[]` | **Internal.** An array of `userId`s for users who report directly to this user. This is currently informational. |
+| `memberOfTeamIds?: string[]` | **Internal.** An array of `teamId`s for all teams the user is a member of. This is a crucial de-normalization for efficient permission checking. |
 | `theme?: 'light' \| 'dark'` | **Internal.** A UI preference for the app's color scheme. |
 | `primaryColor?: string` | **Internal.** A user-selected hex color code that overrides the default primary color of their chosen theme. |
-| `defaultCalendarView?: 'month' \| 'week' \| ...` | **Internal.** A UI preference for the default calendar layout. |
+| `defaultCalendarView?: 'month' \| 'week' \| 'day' \| 'production-schedule'` | **Internal.** A UI preference for the default calendar layout. |
 | `easyBooking?: boolean` | **Internal.** A UI preference for enabling quick event creation from the calendar. |
-| `timeFormat?: '12h' \| '24h'` | **Internal.** A UI preference for displaying time in 12-hour or 24-hour format. |
+| `timeFormat?: '12h' \| '24h'` | **Internal.** A UI preference for displaying time in 12-hour or 24-hour time format. |
 | `linkedTeamIds?: string[]` | **Internal.** An array of `teamId`s for shared teams that the user has chosen to display on their management board. |
 | `linkedCollectionIds?: string[]` | **Internal.** An array of `collectionId`s for shared Badge Collections that the user has chosen to display on their management board. |
+| `linkedCalendarIds?: string[]` | **Internal.** An array of `calendarId`s for shared calendars that the user has chosen to display on their management board. |
+| `dragActivationKey?: 'alt' \| 'ctrl' \| 'meta' \| 'shift'` | **Internal.** A user-selected modifier key that must be held down to initiate drag-and-drop operations on complex components. |
 
 ### Dynamic Access Control for Pages & Tabs
 
@@ -42,7 +96,7 @@ Access to every page and content tab in the application is controlled by a dynam
 
 **How It Works:**
 
-1.  **Page Access**: Access to a page is determined by the `access` object on its `AppPage` configuration. A user can view a page if they are a system admin, if the page has no access rules (making it public), or if their `userId` or `Team` membership is listed in the corresponding access array.
+1.  **Page Access**: Access to a page is determined by the `access` object on its `AppPage` configuration. The `hasAccess` function now works more efficiently by checking the `memberOfTeamIds` array on the `User` object, removing the need to search through a large list of teams. A user can view a page if they are a system admin, if the page has no access rules (making it public), or if their `userId` or a team they belong to is listed in the page's access arrays.
 
 2.  **Tab Visibility**: A page's content is composed of one or more `AppTab`s. If a page has zero associated tabs, it is considered unconfigured and will **not** appear in the sidebar navigation, making it inaccessible. A page must have at least one tab to be rendered.
 
@@ -67,7 +121,21 @@ When a user creates a new shareable item (like a **Team** or **Badge Collection*
 ## Shared Calendar Entity
 **Firestore Collection**: `/calendars/{calendarId}`
 
-This entity represents an internal AgileFlow calendar. It acts as a logical container for events within the application and can be linked to a real, external Google Calendar for future synchronization. These are managed on a dynamically configured page by an administrator (e.g., a page with a "Calendars" tab).
+This entity represents an internal AgileFlow calendar. These are managed on a dynamically configured page by an administrator (e.g., a page with a "Calendars" tab).
+
+### Future-State Calendar Linking
+
+The current implementation uses a simple `googleCalendarId` text field for developers to manually link an internal calendar to an external Google Calendar. The final, user-facing implementation will be more robust and intuitive. The ideal workflow will be:
+
+1.  **Onboarding**: During the initial sign-in or from their user settings, a user will grant the application permission to access their Google Calendar account.
+2.  **Calendar Management UI**: When creating or editing an AgileFlow calendar, an administrator will be presented with two options:
+    *   **"Create New Google Calendar"**: This action will trigger a flow that programmatically creates a new, corresponding calendar in the administrator's connected Google account.
+    *   **"Link Existing Google Calendar"**: This will trigger a flow that fetches and displays a list of all calendars the administrator owns or has permission to manage in their Google account. They can then select the appropriate calendar from this list to create the link.
+3.  **Synchronization**: Once linked, event synchronization will be handled automatically by a background process, ensuring both calendars stay up-to-date.
+
+This approach abstracts away the complexity of calendar IDs and provides a seamless, secure experience for the administrator.
+
+### SharedCalendar Data
 
 | Data Point | Description & Link to Services |
 | :--- | :--- |
@@ -75,8 +143,9 @@ This entity represents an internal AgileFlow calendar. It acts as a logical cont
 | `name: string` | **Internal.** The display name for the calendar within the application. |
 | `icon: string` | **Internal.** The Google Symbol name for the calendar's icon. |
 | `color: string` | **Internal.** The hex color code used for this calendar's events in the UI. |
-| `googleCalendarId?: string` | **External (Google Calendar).** The unique ID of the Google Calendar that this internal calendar is linked to. This ID can be found in the settings of a shared Google Calendar and typically looks like an email address (e.g., `your-calendar-id@group.calendar.google.com`). This is the key for enabling event synchronization. |
-| `managers?: string[]` | **Internal.** An array of `userId`s for users who can manage this calendar's events and settings. |
+| `owner: { type: 'user', id: string }` | An object that defines which `User` owns the calendar. Ownership dictates who can edit the calendar's properties. |
+| `googleCalendarId?: string` | **External (Google Calendar).** The unique ID of the Google Calendar that this internal calendar is linked to. This is currently set manually but will be populated automatically by the future calendar linking flow. |
+| `isShared?: boolean` | **Internal.** If `true`, this calendar will be visible to other users in the application for discovery and linking. |
 | `defaultEventTitle?: string` | **Internal.** A placeholder string for the title of new events created on this calendar. |
 | `roleAssignmentsLabel?: string` | **Internal.** A custom label for the "Role Assignments" section in the event details view. |
 
@@ -91,10 +160,9 @@ This entity, `AppSettings`, holds global configuration data that allows for cust
 | Data Point | Description |
 | :--- | :--- |
 | `pages: AppPage[]` | **The core of the dynamic navigation.** This is an array of objects defining every page in the application. The order of pages in this array directly corresponds to their order in the sidebar navigation. The order is managed on the **Admin Management** page using the "Draggable Card Management" UI pattern. Each page object includes its name, icon, URL path, access control rules, and a list of associated `tab.id`s that should be rendered on it. |
-| `tabs: AppTab[]` | **The core of the dynamic content.** This is an array of objects defining all reusable content tabs. The order of tabs in this array defines their default order in popovers (like "Manage Tabs") and can be reordered by an admin on the "Tabs" management page. Each object includes the tab's name, icon, and a `componentKey` that maps it to a React component. |
-| `globalBadges: Badge[]` | An array of globally-defined badges. These are typically owned by a system process and are managed on the **Badge Management** page of any team. |
-| `calendarManagementLabel?: string` | An alias for the "Manage Calendars" tab. |
-| `teamManagementLabel?: string` | An alias for the "Team Management" tab. |
+| `tabs: AppTab[]` | **The core of the dynamic content.** This is an array of objects defining all reusable content tabs. The order of tabs in this array defines their default order in popovers (like "Manage Tabs") and can be reordered by an admin on the "Tabs" management page. Each object includes the tab's name, icon, and a `componentKey` that maps it to a specific React component. |
+| `calendarManagementLabel?: string` | An alias for the "Manage Calendars" tab on a dynamically created management page. |
+| `teamManagementLabel?: string` | An alias for the "Team Management" tab on a dynamically created management page. |
 
 ### AppPage Entity
 A sub-entity of `AppSettings`, `AppPage` defines a single entry in the application's navigation.
@@ -105,7 +173,7 @@ A sub-entity of `AppSettings`, `AppPage` defines a single entry in the applicati
 | `name: string` | The display name for the page. |
 | `icon: string` | The Google Symbol name for the page's icon. |
 | `color: string` | The hex color for the page's icon. |
-| `path: string` | The base URL path for the page (e.g., `/dashboard/service-delivery` or `/dashboard/teams`). |
+| `path: string` | The base URL path for the page (e.g., `/dashboard/projects` or `/dashboard/teams`). |
 | `isDynamic: boolean` | If `false`, `path` is a fixed URL. If `true`, the `path` acts as a template, and the system will append an entity ID (e.g., a team ID) to create unique URLs like `/dashboard/teams/team-id-1`. |
 | `associatedTabs: string[]` | An array of `AppTab` IDs that define the content to be rendered on this page. A page must have at least one tab to be visible. |
 | `access: { users: string[], teams: string[] }` | An object containing arrays of `userId`s and `teamId`s who can access this page. |
@@ -136,17 +204,14 @@ The `Team` entity is a functional unit that groups users together for collaborat
 | `name: string` | The display name of the team. |
 | `icon: string` | The Google Symbol name for the team's icon. |
 | `color: string` | The hex color for the team's icon. |
-| `owner: { type: 'user', id: string }` | An object that defines who owns the team. Ownership dictates who can edit the team's properties. |
+| `owner: { type: 'user', id: string }` | An object that defines which `User` owns the team. Ownership dictates who can edit the team's properties. |
 | `isShared?: boolean` | **Internal.** If `true`, this team will be visible to other teams in the application for discovery and linking. |
 | `members: string[]` | An array of `userId`s for all members of the team. |
 | `teamAdmins?: string[]` | A subset of `members` who have administrative privileges for this team (e.g., can add/remove members). |
 | `teamAdminsLabel?: string` | A custom label for the Team Admins list on the Team Members tab. |
 | `membersLabel?: string` | A custom label for the Members list on the Team Members tab. |
-| `allBadges: Badge[]` | The single source of truth for all `Badge` objects **owned** by this team. |
-| `badgeCollections: BadgeCollection[]` | An array of `BadgeCollection` objects. This includes collections *owned* by the team, and *links* to collections owned by other teams. |
 | `userBadgesLabel?: string` | A custom label for the "Team Badges" section on the Team Members tab. |
-| `linkedCollectionIds?: string[]` | An array of `collectionId`s for shared Badge Collections that this team has chosen to use. |
-| `activeBadgeCollections?: string[]` | A subset of `badgeCollections` and `linkedCollectionIds` that are currently active for this team. |
+| `activeBadgeCollections?: string[]` | An array of `collectionId`s. Badges from these collections become available for assignment to members of this team. This is a local setting for the team. |
 | `pinnedLocations?: string[]` | An array of location names pinned to this team's schedule. |
 | `checkLocations?: string[]` | A subset of pinnedLocations designated for daily checks. |
 | `locationAliases?: { [key:string]: string }` | A map of canonical location names to custom display aliases. |
@@ -155,38 +220,53 @@ The `Team` entity is a functional unit that groups users together for collaborat
 | `eventTemplates?: EventTemplate[]` | An array of reusable templates for common events. |
 
 
-### BadgeCollection Entity
-A sub-entity of `Team`, this groups related Badges together. It can be owned by the team or shared with others.
+## Badge & Badge Collection Entities
+
+This section outlines the simplified and robust ownership model for badges and their collections. This model ensures clarity and prevents data conflicts.
+
+### Core Principle: Direct User Ownership
+
+The system is built on a simple principle: **the user who creates an item is its owner.** Both `Badge` and `BadgeCollection` entities have an explicit `owner` field that links them directly to a `User`.
+
+-   **Permissions**: Only the user designated in an item's `owner` field can edit or delete that item. This rule applies universally.
+-   **Creating Items**: When a user creates a new `Badge` or `BadgeCollection`, its `owner` field is automatically set to that user's ID.
+
+### Linking vs. Owning
+
+This clear ownership model simplifies how "linking" works:
+
+-   **Linked Badges**: A user can add any badge to a collection they own. If a badge's `owner` is different from the collection's `owner`, that badge is considered "linked." The collection owner can **unlink** the badge (remove it from their `badgeIds` array), but they **cannot** edit or delete the original badge.
+-   **Linked Collections**: When a user adds a shared `BadgeCollection` to their management view, they are creating a link. If the collection's `owner` is another user, the current user can **unlink** the collection (remove it from their view), but they **cannot** edit or delete the original collection.
+
+This approach eliminates ambiguity. An item's edit and delete permissions are always determined by a direct check of its `owner` property.
+
+### BadgeCollection Entity Data
 
 | Data Point | Description |
 | :--- | :--- |
 | `id: string` | A unique identifier for the collection. |
-| `owner: { type: 'user', id: string }` | An object that defines who owns the collection. Ownership dictates who can edit the collection's properties and the original badges within it. |
-| `isShared?: boolean` | **Internal.** If `true`, this collection and its badges will be visible to all other teams in the application for discovery and linking. |
-| `name: string` | The name of the collection (e.g., "Skills"). |
+| `owner: { type: 'user', id: string }` | **Crucial.** An object that defines which `User` owns the collection. Ownership dictates who can edit the collection's properties. |
+| `isShared?: boolean` | **Internal.** If `true`, this collection and its badges will be visible to all other users in the application for discovery and linking. |
+| `name: string` | The name of the collection (e.g., "Video Production Roles"). |
 | `icon: string` | The Google Symbol name for the collection's icon. |
 | `color: string` | The hex color for the collection's icon. |
-| `badgeIds: string[]` | An array of `badgeId`s belonging to this collection. This can include badges owned by this team or linked from other shared collections. |
+| `badgeIds: string[]` | An array of `badgeId`s belonging to this collection. This can include a mix of owned and linked badges. |
 | `applications?: BadgeApplication[]` | Defines where badges from this collection can be applied (e.g., 'Team Members', 'Events'). For linked collections, this is a local override; changing it does not affect the original shared collection. |
-| `viewMode: 'assorted' \| 'detailed' \| 'list'` | **Internal.** A UI preference for how to display the badges within this collection. |
+| `viewMode: 'compact' \| 'grid' \| 'list'` | **Internal.** A UI preference for how to display the badges within this collection. |
 | `description?: string` | An optional description for the collection. |
 
 
-### Badge Entity
-This represents a specific, functional role or skill. The single source of truth for a badge is stored in the `allBadges` array of its owner's `Team` object.
+### Badge Entity Data
+
+This represents a specific, functional role or skill. The single source of truth for a badge is the instance owned by its creator.
 
 | Data Point | Description |
 | :--- | :--- |
 | `id: string` | A unique identifier for the badge. |
-| `ownerCollectionId: string` | The `collectionId` of the badge's original, "source-of-truth" collection. |
+| `owner: { type: 'user', id: string }` | **Crucial.** An object that defines which `User` owns the badge. Ownership dictates who can edit the badge's properties. |
+| `ownerCollectionId: string` | The `collectionId` of the badge's original, "source-of-truth" collection where it was created. |
 | `name: string` | The display name for the badge (e.g., "Camera", "Audio"). |
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
 
-
-
-
-
-
-    

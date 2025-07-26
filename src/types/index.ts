@@ -108,6 +108,7 @@ export interface Team {
   teamAdmins?: string[]; // array of userIds who are admins for this team
   teamAdminsLabel?: string;
   membersLabel?: string;
+  userBadgesLabel?: string;
   activeBadgeCollections?: string[];
   locationCheckManagers?: string[]; // array of userIds who can manage check locations
   pinnedLocations?: string[]; // array of location names
