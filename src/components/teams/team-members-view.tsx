@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useUser } from '@/context/user-context';
@@ -22,7 +23,7 @@ import { Badge as UiBadge } from '../ui/badge';
 import { useDroppable } from '@dnd-kit/core';
 
 function DraggableBadgeFromPool({ badge }: { badge: Badge }) {
-    const { attributes, listeners, setNodeRef, isDragging } = useSortable({
+    const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
         id: `pool-badge-${badge.id}`,
         data: {
             type: 'pool-badge',
@@ -32,15 +33,17 @@ function DraggableBadgeFromPool({ badge }: { badge: Badge }) {
 
     const style = {
         transform: CSS.Transform.toString(transform),
+        transition,
         opacity: isDragging ? 0.5 : 1,
     };
     
     return (
-        <div ref={setNodeRef} style={style} {...listeners} {...attributes} title={badge.description || badge.name}>
+        <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
             <UiBadge
                 variant={'outline'}
                 style={{ color: badge.color, borderColor: badge.color }}
                 className={cn('flex items-center gap-1.5 p-1 pl-2 rounded-full text-sm h-8 font-thin cursor-grab')}
+                title={badge.description || badge.name}
             >
                 <GoogleSymbol name={badge.icon} style={{ fontSize: '20px' }} weight={100} />
                 <span>{badge.name}</span>
@@ -48,6 +51,7 @@ function DraggableBadgeFromPool({ badge }: { badge: Badge }) {
         </div>
     );
 }
+
 
 function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }: { member: User, team: Team, isViewer: boolean, onSetAdmin: () => void, onRemoveUser: () => void }) {
   const { isDragModifierPressed } = useUser();
@@ -111,7 +115,7 @@ function DroppableUserList({ id, children, className }: { id: string; children: 
 
 
 export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
-    const { viewAsUser, users, updateAppTab, updateTeam, isDragModifierPressed, allBadges, updateUser, handleBadgeUnassignment, allBadgeCollections } = useUser();
+    const { viewAsUser, users, updateAppTab, updateTeam, isDragModifierPressed, allBadges, updateUser, allBadgeCollections } = useUser();
     const [activeDragItem, setActiveDragItem] = useState<{type: string, id: string, data: any} | null>(null);
 
     if (!team) {
@@ -330,7 +334,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         
         if (activeType === 'pool-badge' && overType === 'member-card') {
             const badge = active.data.current?.badge as Badge;
-            const member = over.data.current?.member as User;
+            const member = over.data.current?.user as User;
             if (badge && member) {
                 handleBadgeAssignment(badge, member.userId);
             }
@@ -340,8 +344,11 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         if (activeType === 'assigned-badge' && overType === 'badge-pool') {
             const badge = active.data.current?.badge as Badge;
             const memberId = active.data.current?.memberId as string;
-            if (badge && memberId) {
-                handleBadgeUnassignment(badge, memberId);
+            const member = users.find(u => u.userId === memberId);
+            if (badge && member) {
+                const updatedRoles = (member.roles || []).filter(roleName => roleName !== badge.name);
+                updateUser(memberId, { roles: updatedRoles });
+                toast({ title: 'Badge Un-assigned', description: `"${badge.name}" removed from ${member.displayName}.`});
             }
             return;
         }
@@ -519,9 +526,13 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                                 </SortableContext>
                             </ScrollArea>
                              <DragOverlay modifiers={[snapCenterToCursor]}>
-                                {activeBadge ? (
-                                    <div className="h-9 w-9 rounded-full border-2 flex items-center justify-center bg-card" style={{ borderColor: activeBadge.color }}>
-                                        <GoogleSymbol name={activeBadge.icon} style={{ fontSize: '28px', color: activeBadge.color }} weight={100} />
+                                {activeDragItem?.type === 'pool-badge' && activeDragItem?.data.badge ? (
+                                    <div className="h-9 w-9 rounded-full border-2 flex items-center justify-center bg-card" style={{ borderColor: activeDragItem.data.badge.color }}>
+                                        <GoogleSymbol name={activeDragItem.data.badge.icon} style={{ fontSize: '28px', color: activeDragItem.data.badge.color }} weight={100} />
+                                    </div>
+                                ) : activeDragItem?.type === 'assigned-badge' && activeDragItem?.data.badge ? (
+                                    <div className="h-9 w-9 rounded-full border-2 flex items-center justify-center bg-card" style={{ borderColor: activeDragItem.data.badge.color }}>
+                                        <GoogleSymbol name={activeDragItem.data.badge.icon} style={{ fontSize: '28px', color: activeDragItem.data.badge.color }} weight={100} />
                                     </div>
                                 ) : null}
                             </DragOverlay>
