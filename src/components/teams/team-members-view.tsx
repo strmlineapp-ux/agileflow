@@ -300,7 +300,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         }
     
         // Case 3: Reordering member cards (existing logic)
-        if (activeType === 'member' && overType === 'member') {
+        if (active.data.current?.type === 'member' && over.data.current?.type === 'member') {
             if (active.id === over.id) return;
             const activeList = adminIds.includes(active.id as string) ? 'admins' : 'members';
             const overList = adminIds.includes(over.id as string) ? 'admins' : 'members';

@@ -252,9 +252,10 @@ This pattern describes the user interface for assigning and unassigning badges t
 - **Interaction**:
     - **Click to Toggle**: A user with the correct permissions can click on any badge to toggle its state for that team member.
     - **Reordering**: A user with permission can reorder a member's **assigned** badges by holding down their drag modifier key and dragging an icon-only badge to a new position within that member's assigned list.
+    - **Drag to Assign/Unassign**: A user can drag a badge from the "Assignable Badges" side panel and drop it on a member's card to assign it. Conversely, they can drag an assigned badge from a member card and drop it onto the side panel to unassign it.
 - **Visual States**:
     - **Assigned Badges**: Appear as icon-only `28px` buttons with a solid, colored border and a transparent background. The `20px` icon inside matches the border color. The name of the badge is revealed in a tooltip on hover.
-    - **Unassigned Badges**: Appear as full pills with a dashed, muted border. The text and icon inside are also muted, using the `--muted-foreground` color. This indicates an "available" but unselected state.
+    - **Unassigned Badges (in member card)**: Appear as full pills with a dashed, muted border. The text and icon inside are also muted, using the `--muted-foreground` color. This indicates an "available" but unselected state.
 - **Application**: Used on the **Team Members** tab within each team's management page.
 
 ---
@@ -333,4 +334,5 @@ This is the single source of truth for indicating user interaction state across 
       - **Ownership Status**: `absolute -top-0 -right-3`.
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Compact View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
+
 
