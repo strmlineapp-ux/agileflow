@@ -20,7 +20,7 @@ import { CompactSearchInput } from '../common/compact-search-input';
 import { ScrollArea } from '../ui/scroll-area';
 import { toast } from '@/hooks/use-toast';
 import { Badge as UiBadge } from '../ui/badge';
-import { useDroppable, useDraggable } from '@dnd-kit/core';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
 
 function DraggableBadgeFromPool({ badge, canManage }: { badge: Badge; canManage: boolean }) {
     const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
@@ -73,7 +73,7 @@ function SortableTeamMember({ member, team, isViewer }: { member: User, team: Te
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className={cn(isDragging && "shadow-xl", "rounded-md focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50")}>
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className={cn(isDragging && "shadow-xl", "rounded-md")}>
       <TeamMemberCard member={member} team={team} isViewer={isViewer} />
     </div>
   );
@@ -267,7 +267,6 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         const activeType = active.data.current?.type;
         const overType = over.data.current?.type;
     
-        // Case 1: Dragging a badge from the pool to a member card
         if (activeType === 'pool-badge' && overType === 'member-card') {
             const badge = active.data.current?.badge as Badge;
             const member = over.data.current?.member as User;
@@ -277,7 +276,6 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
             return;
         }
         
-        // Case 2: Dragging an assigned badge to the pool to unassign
         if (activeType === 'assigned-badge' && over.id === 'badge-pool') {
             const badge = active.data.current?.badge as Badge;
             const sourceMember = active.data.current?.member as User;
@@ -287,8 +285,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
             return;
         }
     
-        // Case 3: Reordering member cards (existing logic)
-        if (active.data.current?.type === 'member' && over.data.current?.type === 'member') {
+        if (activeType === 'member' && overType === 'member') {
             if (active.id === over.id) return;
             const activeList = adminIds.includes(active.id as string) ? 'admins' : 'members';
             const overList = adminIds.includes(over.id as string) ? 'admins' : 'members';
@@ -451,5 +448,3 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
       </div>
     );
 }
-
-    

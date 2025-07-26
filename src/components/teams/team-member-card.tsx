@@ -98,7 +98,6 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
   const teamBadgeNames = useMemo(() => new Set(userAssignableBadges.map(b => b.name)), [userAssignableBadges]);
   
   const assignedBadges = useMemo(() => {
-    // Keep the order from member.roles
     return (member.roles || [])
       .map(roleName => userAssignableBadges.find(b => b.name === roleName))
       .filter((b): b is Badge => !!b);
