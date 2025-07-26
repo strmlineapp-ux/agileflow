@@ -121,19 +121,17 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, isOver }: {
           </div>
         </CardHeader>
         {!isViewer && (
-            <CardContent className="p-0">
-                <div className="mt-2 space-y-2">
-                    <div ref={setNodeRef} className={cn("transition-colors min-h-[48px] rounded-md border p-2 bg-muted/20 flex flex-wrap gap-1.5 items-center")}>
-                        <SortableContext items={assignedBadgeIds} strategy={verticalListSortingStrategy}>
-                            {assignedBadges.length > 0 ? (
-                                assignedBadges.map(badge => (
-                                    <AssignedBadge key={badge.id} badge={badge} canManage={canManage} contextId={member.userId} />
-                                ))
-                            ) : (
-                                <p className="text-xs text-muted-foreground italic w-full text-center py-2">Drag badges here to assign.</p>
-                            )}
-                        </SortableContext>
-                    </div>
+            <CardContent ref={setNodeRef} className="p-2 pt-0 mt-2">
+                <div className="transition-colors min-h-[48px] rounded-md border p-2 bg-muted/20 flex flex-wrap gap-1.5 items-center">
+                    <SortableContext items={assignedBadgeIds} strategy={verticalListSortingStrategy}>
+                        {assignedBadges.length > 0 ? (
+                            assignedBadges.map(badge => (
+                                <AssignedBadge key={badge.id} badge={badge} canManage={canManage} contextId={member.userId} />
+                            ))
+                        ) : (
+                            <p className="text-xs text-muted-foreground italic w-full text-center py-2">Drag badges here to assign.</p>
+                        )}
+                    </SortableContext>
                 </div>
             </CardContent>
         )}

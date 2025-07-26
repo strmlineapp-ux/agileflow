@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useUser } from '@/context/user-context';
@@ -286,7 +287,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         membersLabelInputRef.current?.select();
         document.addEventListener("mousedown", handleOutsideClick);
         return () => {
-            document.removeEventListener("mousedown", handleOutsideClick);
+            document.removeEventListener("mousedown", handleSaveMembersLabel);
         };
     }, [isEditingMembersLabel, handleSaveMembersLabel]);
 
@@ -314,45 +315,50 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         updateTeam(team.id, { members: newMembers, teamAdmins: newAdmins });
         toast({ title: 'User Removed from Team' });
     }, [isViewer, team, updateTeam, toast]);
-
+    
     const onDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
         setActiveDragItem(null);
-    
+
         if (!over || !canManage) return;
-    
+
         const activeType = active.data.current?.type;
+        const overId = over.id.toString();
         const overType = over.data.current?.type;
-    
-        if (activeType === 'pool-badge' || activeType === 'assigned-badge') {
-            const badge = active.data.current?.badge as Badge;
-            if (!badge) return;
-    
-            if (overType === 'badge-pool') {
-                if (activeType !== 'assigned-badge') return;
+        
+        const badge = active.data.current?.badge as Badge | undefined;
+
+        // Handle badge drops
+        if (badge && (activeType === 'pool-badge' || activeType === 'assigned-badge')) {
+            // Case 1: Drop into the main badge pool (un-assign)
+            if (overType === 'badge-pool' && activeType === 'assigned-badge') {
                 const sourceMemberId = active.data.current?.memberId;
                 if (sourceMemberId) {
-                    handleBadgeUnassignment(badge.id, sourceMemberId);
+                    handleBadgeUnassignment(badge, sourceMemberId);
                 }
                 return;
             }
-    
+
+            // Case 2: Drop onto a member card (assign or re-assign)
             if (overType === 'member-card') {
                 const targetMemberId = over.data.current?.memberId;
                 if (!targetMemberId) return;
-    
-                handleBadgeAssignment(badge.id, targetMemberId);
-    
+
+                // Assign the badge to the target member
+                handleBadgeAssignment(badge, targetMemberId);
+
+                // If it was dragged from another member, un-assign from the source
                 if (activeType === 'assigned-badge') {
                     const sourceMemberId = active.data.current?.memberId;
                     if (sourceMemberId && sourceMemberId !== targetMemberId) {
-                        handleBadgeUnassignment(badge.id, sourceMemberId);
+                        handleBadgeUnassignment(badge, sourceMemberId);
                     }
                 }
             }
             return;
         }
-    
+
+        // Handle team member reordering
         if (activeType === 'member-card') {
             const user = active.data.current?.member as User;
             const activeIsAdmin = adminIds.includes(user.userId);
