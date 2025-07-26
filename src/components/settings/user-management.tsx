@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, Fragment, useRef, useEffect, useMemo } from 'react';
@@ -41,7 +42,7 @@ const CustomColorPicker = ({ user, onUpdate, onClose }: { user: User, onUpdate: 
                     <button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => onUpdate(c)} />
                 ))}
             </div>
-            <Button onClick={handleSave} className="w-full">Set Color</Button>
+            <Button onClick={handleSave} className="w-full bg-primary">Set Color</Button>
         </div>
     );
 };
@@ -320,8 +321,8 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
                   <CompactSearchInput 
                     searchTerm={searchTerm} 
                     setSearchTerm={setSearchTerm} 
-                    placeholder="Search users..." 
-                    autoFocus={true} 
+                    placeholder="Search users..."
+                    autoFocus={true}
                   />
               </div>
           )}

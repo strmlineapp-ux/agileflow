@@ -202,7 +202,7 @@ This pattern is **deprecated**. All deletion confirmations now use the **Compact
   - The icon is `text-4xl` with a `weight={100}` for a large but light appearance.
   - The active tab is indicated by colored text (`text-primary`).
   - The entire tab list has a subtle divider underneath it, separating it from the content below.
-- **Reordering**: On pages where it is enabled (like the Admin page), users can reorder tabs by holding their drag modifier key and dragging a tab to a new position.
+- **Reordering**: On pages where it is enabled (like the Admin page), users can reorder tabs by holding their drag modifier key and dragging them to a new position.
 - **Application**: Used for all main page-level tab navigation, such as on the Admin, Service Delivery, and Team Management pages.
 
 ---
