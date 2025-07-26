@@ -188,7 +188,7 @@ function CalendarCard({
 
   let shareIcon: string | null = null;
   let shareIconTitle: string = '';
-  let shareIconColor = '#64748B'; // Consistent muted color
+  const shareIconColor = '#64748B';
 
   const isOwned = ownerUser?.userId === viewAsUser.userId;
 
@@ -238,7 +238,7 @@ function CalendarCard({
                                       <Tooltip>
                                           <TooltipTrigger asChild>
                                               <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={!canManage || isDragModifierPressed}>
-                                                  <Button variant="ghost" className="h-10 w-12 flex items-center justify-center p-0">
+                                                  <Button variant="ghost" className="h-10 w-12 flex items-center justify-center p-0 text-muted-foreground hover:text-foreground">
                                                         <GoogleSymbol name={calendar.icon} opticalSize={20} grade={-25} style={{ fontSize: '36px' }} weight={100} />
                                                     </Button>
                                               </PopoverTrigger>
@@ -292,7 +292,7 @@ function CalendarCard({
                                                 <button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(calendar.id, { color: c }); setIsColorPopoverOpen(false);}} />
                                             ))}
                                         </div>
-                                        <Button onClick={() => { onUpdate(calendar.id, { color }); setIsColorPopoverOpen(false); }} className="w-full">Set Color</Button>
+                                        <Button onClick={() => { onUpdate(calendar.id, { color }); setIsColorPopoverOpen(false); }} className="w-full bg-primary">Set Color</Button>
                                     </div>
                                   </PopoverContent>
                               </Popover>
