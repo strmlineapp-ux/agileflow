@@ -22,7 +22,7 @@ import { toast } from '@/hooks/use-toast';
 import { Badge as UiBadge } from '../ui/badge';
 import { useDroppable } from '@dnd-kit/core';
 
-function DraggableBadgeFromPool({ badge, canManage, onAssign }: { badge: Badge, canManage: boolean, onAssign: (badge: Badge) => void }) {
+function DraggableBadgeFromPool({ badge, canManage }: { badge: Badge, canManage: boolean }) {
     const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
         id: `pool-badge-${badge.id}`,
         data: {
@@ -44,7 +44,6 @@ function DraggableBadgeFromPool({ badge, canManage, onAssign }: { badge: Badge, 
                                 'flex items-center gap-1.5 p-1 pl-2 rounded-full text-sm h-8 font-thin',
                                 canManage && 'cursor-grab'
                             )}
-                            onClick={() => canManage && onAssign(badge)}
                         >
                             <GoogleSymbol name={badge.icon} style={{ fontSize: '20px' }} weight={100} />
                             <span>{badge.name}</span>
@@ -126,21 +125,6 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         const badgeIds = new Set(activeAndApplicableCollections.flatMap(c => c.badgeIds));
         return allBadges.filter(badge => badgeIds.has(badge.id) && badge.name.toLowerCase().includes(badgePoolSearch.toLowerCase()));
     }, [team.activeBadgeCollections, allBadgeCollections, allBadges, badgePoolSearch]);
-
-    const handleAssignBadgeToAll = (badge: Badge) => {
-        if (isViewer) return;
-        team.members.forEach(memberId => {
-            const member = users.find(u => u.userId === memberId);
-            if (member && !member.roles?.includes(badge.name)) {
-                const updatedRoles = [...(member.roles || []), badge.name];
-                updateUser(memberId, { roles: updatedRoles });
-            }
-        });
-        toast({
-            title: "Badge Assigned",
-            description: `"${badge.name}" has been assigned to all eligible team members.`
-        });
-    };
     
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -451,7 +435,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                         <ScrollArea className="h-full">
                             <div className="flex flex-wrap gap-2">
                                 {userAssignableBadges.map(badge => (
-                                    <DraggableBadgeFromPool key={badge.id} badge={badge} canManage={!isViewer} onAssign={handleAssignBadgeToAll} />
+                                    <DraggableBadgeFromPool key={badge.id} badge={badge} canManage={!isViewer} />
                                 ))}
                                 {userAssignableBadges.length === 0 && <p className="text-xs text-muted-foreground text-center p-4 w-full">No badges available to assign. Activate badge collections in the "Badges" tab.</p>}
                             </div>
