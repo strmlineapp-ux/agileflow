@@ -9,8 +9,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
-import { useSortable, SortableContext } from '@dnd-kit/sortable';
-import { useDroppable } from '@dnd-kit/core';
+import { useDroppable, useSortable } from '@dnd-kit/sortable';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 function AssignedBadge({ badge, canManage, contextId }: { badge: Badge, canManage: boolean, contextId: string }) {
     const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
@@ -70,8 +71,6 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, isOver }: {
       .map(roleId => allBadges.find(b => b.id === roleId))
       .filter((b): b is Badge => !!b);
   }, [member.roles, allBadges]);
-
-  const assignedBadgeIds = useMemo(() => assignedBadges.map(b => `badge-assigned:${member.userId}:${b.id}`), [assignedBadges, member.userId]);
   
   const { setNodeRef } = useDroppable({
     id: `member-card:${member.userId}`,
@@ -119,7 +118,7 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, isOver }: {
         {!isViewer && (
             <CardContent ref={setNodeRef} className="p-2 pt-0 mt-2">
                 <div className="transition-colors min-h-[48px] rounded-md border p-2 bg-muted/20 flex flex-wrap gap-1.5 items-center">
-                    <SortableContext items={assignedBadgeIds}>
+                    <SortableContext items={assignedBadges.map(b => `badge-assigned:${member.userId}:${b.id}`)} strategy={verticalListSortingStrategy}>
                         {assignedBadges.length > 0 ? (
                             assignedBadges.map(badge => (
                                 <AssignedBadge key={badge.id} badge={badge} canManage={canManage} contextId={member.userId} />
