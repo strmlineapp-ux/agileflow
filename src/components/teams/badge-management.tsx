@@ -676,6 +676,10 @@ function BadgeCollectionCard({
         { mode: 'list', icon: 'view_list', label: 'List View' }
     ];
 
+    const associationsToRender = isOwner
+        ? APPLICATIONS
+        : APPLICATIONS.filter(app => collection.applications?.includes(app.key));
+
     return (
         <Card className={cn("h-full flex flex-col bg-transparent relative", !isSharedPreview && !isActive && !!contextTeam && "opacity-50")} {...props}>
             <div {...dragHandleProps}>
@@ -883,49 +887,50 @@ function BadgeCollectionCard({
                             })}
                         </DroppableCollectionContent>
                     </CardContent>
-                    {!isSharedPreview && !isOwner && (
-                        <CardFooter className={cn("flex items-center justify-between gap-2 p-2 mt-auto", isDragModifierPressed && "hidden")}>
-                            <div className={cn("flex items-center gap-2 invisible")}>
-                                {APPLICATIONS.map(app => (
-                                    <TooltipProvider key={app.key}>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className={cn("h-8 w-8", collection.applications?.includes(app.key) ? 'text-primary' : 'text-muted-foreground')}
-                                                    onClick={() => handleToggleApplication(app.key)}
-                                                    onPointerDown={(e) => e.stopPropagation()}
-                                                    disabled={!isOwner}
-                                                >
-                                                    <GoogleSymbol name={app.icon} weight={100} opticalSize={20} />
-                                                </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent>Associated with {app.label}</TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                ))}
-                            </div>
-                            {contextTeam && !isViewer && (
-                                <TooltipProvider>
+                    <CardFooter className={cn("flex items-center justify-between gap-2 p-2 mt-auto", isDragModifierPressed && "hidden")}>
+                        <div className="flex items-center gap-2">
+                           {associationsToRender.map(app => (
+                                <TooltipProvider key={app.key}>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                className={cn("h-8 w-8", isActive ? 'text-primary' : 'text-muted-foreground')}
-                                                onClick={handleToggleCollectionActive}
+                                                className={cn("h-8 w-8", 
+                                                    isOwner ? (collection.applications?.includes(app.key) ? 'text-primary' : 'text-muted-foreground')
+                                                            : 'text-muted-foreground'
+                                                )}
+                                                onClick={() => isOwner && handleToggleApplication(app.key)}
                                                 onPointerDown={(e) => e.stopPropagation()}
+                                                disabled={!isOwner}
                                             >
-                                                <GoogleSymbol name={isActive ? 'check_circle' : 'circle'} weight={100} filled={isActive} opticalSize={20} />
+                                                <GoogleSymbol name={app.icon} weight={100} opticalSize={20} />
                                             </Button>
                                         </TooltipTrigger>
-                                        <TooltipContent><p>{isActive ? 'Deactivate' : 'Activate'} for Team</p></TooltipContent>
+                                        <TooltipContent>Associated with {app.label}</TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
-                            )}
-                        </CardFooter>
-                    )}
+                            ))}
+                        </div>
+                        {contextTeam && !isViewer && !isSharedPreview && (
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className={cn("h-8 w-8", isActive ? 'text-primary' : 'text-muted-foreground')}
+                                            onClick={handleToggleCollectionActive}
+                                            onPointerDown={(e) => e.stopPropagation()}
+                                        >
+                                            <GoogleSymbol name={isActive ? 'check_circle' : 'circle'} weight={100} filled={isActive} opticalSize={20} />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>{isActive ? 'Deactivate' : 'Activate'} for Team</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        )}
+                    </CardFooter>
                 </>
              )}
             <div className={cn("absolute -bottom-1 right-0", isDragModifierPressed && "hidden", (isViewer && !isSharedPreview) && 'hidden' )}>
