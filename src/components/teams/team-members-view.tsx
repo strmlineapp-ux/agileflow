@@ -104,6 +104,15 @@ function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }
   );
 }
 
+function DroppableUserList({ id, children, className }: { id: string, children: React.ReactNode, className?: string }) {
+    const { setNodeRef, isOver } = useDroppable({ id, data: { type: 'user-list-container' } });
+    return (
+        <div ref={setNodeRef} className={cn(className, "transition-colors rounded-md", isOver && "bg-primary/5")}>
+            {children}
+        </div>
+    )
+}
+
 export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     const { viewAsUser, users, updateAppTab, updateTeam, isDragModifierPressed, allBadges, handleBadgeAssignment, handleBadgeUnassignment, allBadgeCollections } = useUser();
     const [activeDragItem, setActiveDragItem] = useState<{type: string, id: string, data: any} | null>(null);
@@ -314,12 +323,10 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
 
             if (!badge) return;
     
-            // Case 1: Drop onto a member card (Assign or Re-assign)
             if (overType === 'member-card') {
                 const targetMemberId = over.data.current?.memberId;
                 if (!targetMemberId) return;
 
-                // Un-assign from source first if it's a re-assignment
                 if (sourceContext === 'member' && sourceMemberId && sourceMemberId !== targetMemberId) {
                     handleBadgeUnassignment(badge, sourceMemberId);
                 }
@@ -327,7 +334,6 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                 return;
             }
             
-            // Case 2: Drop into the badge pool (Un-assign)
             if (overType === 'badge-pool' && sourceContext === 'member' && sourceMemberId) {
                 handleBadgeUnassignment(badge, sourceMemberId);
                 return;
