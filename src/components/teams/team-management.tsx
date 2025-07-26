@@ -259,7 +259,7 @@ function TeamCard({
     return (
         <Card className="flex flex-col h-full bg-transparent relative" {...props}>
             <div {...props.dragHandleProps}>
-                <CardHeader className="group">
+                <CardHeader className="group p-2">
                      {!isSharedPreview && (
                         <TooltipProvider>
                             <Tooltip>
@@ -420,7 +420,7 @@ function TeamCard({
                 </CardHeader>
             </div>
             {!isDragging && isExpanded && (
-                <CardContent className="flex-grow pt-0 flex flex-col">
+                <CardContent className="flex-grow pt-0 flex flex-col p-2">
                     <ScrollArea className="max-h-48 pr-2 flex-grow">
                         <SortableContext items={teamMembers.map(m => `user-sort:${team.id}:${m.userId}`)} strategy={verticalListSortingStrategy}>
                             <div ref={setUsersDroppableRef} className={cn("min-h-[60px] rounded-md p-2 -m-2 space-y-1 transition-colors", isUsersDroppableOver && "ring-1 ring-border ring-inset")}>
@@ -586,8 +586,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                 members: [],
                 teamAdmins: [],
                 locationCheckManagers: [],
-                allBadges: [],
-                badgeCollections: [],
+                activeBadgeCollections: [],
             };
         }
         
