@@ -282,7 +282,16 @@ function BadgeDisplayItem({
                 </Popover>
                 {!isViewer && isOwner && (
                     <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                        <TooltipProvider><Tooltip><TooltipTrigger asChild><PopoverTrigger asChild disabled={!isOwner || isDragModifierPressed} onPointerDown={(e) => e.stopPropagation()}><button className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", !isOwner || isDragModifierPressed ? "cursor-not-allowed" : "cursor-pointer", isDragModifierPressed && "hidden")} style={{ backgroundColor: badge.color }} aria-label="Change badge color" /></PopoverTrigger></TooltipTrigger><TooltipContent><p>Change Color</p></TooltipContent></Tooltip></TooltipProvider>
+                         <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <PopoverTrigger asChild disabled={!isOwner || isDragModifierPressed} onPointerDown={(e) => e.stopPropagation()}>
+                                        <div className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", !isOwner || isDragModifierPressed ? "cursor-not-allowed" : "cursor-pointer", isDragModifierPressed && "hidden")} style={{ backgroundColor: badge.color }} aria-label="Change badge color" />
+                                    </PopoverTrigger>
+                                </TooltipTrigger>
+                                <TooltipContent><p>Change Color</p></TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
                         {colorPickerContent}
                     </Popover>
                 )}
@@ -331,7 +340,7 @@ function BadgeDisplayItem({
                      {!isViewer && isOwner && (
                         <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
                             <PopoverTrigger asChild disabled={!isOwner || isDragModifierPressed} onPointerDown={(e) => e.stopPropagation()}>
-                                <button
+                                <div
                                     className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", !isOwner || isDragModifierPressed ? "cursor-not-allowed" : "cursor-pointer", isDragModifierPressed && "hidden")}
                                     style={{ backgroundColor: badge.color }}
                                     aria-label="Change badge color"
@@ -732,7 +741,16 @@ function BadgeCollectionCard({
                             {!isViewer && isOwner && (
                                 <>
                                     <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                        <TooltipProvider><Tooltip><TooltipTrigger asChild><PopoverTrigger asChild disabled={!isOwner || isDragModifierPressed} onPointerDown={(e) => e.stopPropagation()}><button className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", !isOwner || isDragModifierPressed ? "cursor-not-allowed" : "cursor-pointer", isDragModifierPressed && "hidden")} style={{ backgroundColor: collection.color }} /></PopoverTrigger></TooltipTrigger><TooltipContent><p>Change Color</p></TooltipContent></Tooltip></TooltipProvider>
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <PopoverTrigger asChild disabled={!isOwner || isDragModifierPressed} onPointerDown={(e) => e.stopPropagation()}>
+                                                        <div className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", !isOwner || isDragModifierPressed ? "cursor-not-allowed" : "cursor-pointer", isDragModifierPressed && "hidden")} style={{ backgroundColor: collection.color }} />
+                                                    </PopoverTrigger>
+                                                </TooltipTrigger>
+                                                <TooltipContent><p>Change Color</p></TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
                                         <PopoverContent className="w-auto p-4" onPointerDown={(e) => e.stopPropagation()}>
                                             <div className="space-y-4">
                                                 <HexColorPicker color={color} onChange={setColor} className="!w-full" />
@@ -785,7 +803,7 @@ function BadgeCollectionCard({
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <PopoverTrigger onPointerDown={(e) => e.stopPropagation()}>
+                                        <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
                                             <Button variant="ghost" size="icon" className={cn("h-8 w-8 text-muted-foreground", isDragModifierPressed && "hidden")}>
                                                 <GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} opticalSize={20} />
                                             </Button>
@@ -986,7 +1004,7 @@ function CollectionDropZone({ id, type, children, className }: { id: string; typ
   );
 }
 
-export function BadgeManagement({ tab, page, team, isActive }: { team: Team; tab: AppTab; page: AppPage; isActive: boolean }) {
+export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: AppPage; isActive: boolean }) {
     const { viewAsUser, users, appSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, updateUser, isDragModifierPressed, teams } = useUser();
     const { toast } = useToast();
 
