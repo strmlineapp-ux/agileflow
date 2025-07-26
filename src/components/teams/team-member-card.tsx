@@ -12,67 +12,42 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Input } from '../ui/input';
-import { DndContext, type DragEndEvent, DragOverlay, type DragStartEvent, useSensors, useSensor, PointerSensor, KeyboardSensor, closestCenter } from '@dnd-kit/core';
-import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { useDroppable } from '@dnd-kit/core';
 
-function SortableAssignedBadge({ badge, canManageRoles, member }: { badge: Badge, canManageRoles: boolean, member: User }) {
-    const { isDragModifierPressed } = useUser();
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-        id: badge.id,
-        disabled: !isDragModifierPressed,
-        data: {
-            type: 'assigned-badge',
-            badge: badge,
-            member: member,
-        },
-     });
 
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.5 : 1,
-    };
-
+function AssignedBadge({ badge }: { badge: Badge }) {
     return (
-        <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                    <button
-                        className={cn(
-                        'h-7 w-7 rounded-full border flex items-center justify-center bg-transparent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50',
-                        canManageRoles && isDragModifierPressed ? 'cursor-grabbing' : 'cursor-default'
-                        )}
-                        style={{ borderColor: badge.color }}
-                    >
-                        <GoogleSymbol
-                        name={badge.icon}
-                        style={{ fontSize: '20px', color: badge.color }}
-                        weight={100}
-                        />
-                    </button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                    <p>{badge.name}</p>
-                    </TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-        </div>
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                <div
+                    className={cn(
+                    'h-7 w-7 rounded-full border flex items-center justify-center bg-transparent'
+                    )}
+                    style={{ borderColor: badge.color }}
+                >
+                    <GoogleSymbol
+                    name={badge.icon}
+                    style={{ fontSize: '20px', color: badge.color }}
+                    weight={100}
+                    />
+                </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                <p>{badge.name}</p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
     );
 }
 
 export function TeamMemberCard({ member, team, isViewer, onSetAdmin, canManage }: { member: User, team: Team, isViewer: boolean, onSetAdmin: () => void, canManage: boolean }) {
-  const { viewAsUser, updateUser, updateTeam, allBadges, allBadgeCollections, isDragModifierPressed } = useUser();
+  const { viewAsUser, updateTeam, allBadges, allBadgeCollections, isDragModifierPressed } = useUser();
   const { toast } = useToast();
 
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const labelInputRef = useRef<HTMLInputElement>(null);
-  const [activeBadge, setActiveBadge] = useState<Badge | null>(null);
-
-  const canManageRoles = !isViewer && (viewAsUser.isAdmin || team.teamAdmins?.includes(viewAsUser.userId));
+  
   const teamBadgesLabel = team.userBadgesLabel || 'Team Badges';
 
   const userAssignableBadges = useMemo(() => {
@@ -86,8 +61,6 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, canManage }
 
     return allBadges.filter(badge => badgeIds.has(badge.id));
   }, [team.activeBadgeCollections, allBadgeCollections, allBadges]);
-
-  const teamBadgeNames = useMemo(() => new Set(userAssignableBadges.map(b => b.name)), [userAssignableBadges]);
 
   const assignedBadges = useMemo(() => {
     return (member.roles || [])
@@ -108,47 +81,14 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, canManage }
     return Object.entries(groups).map(([collectionName, badges]) => ({ collectionName, badges }));
   }, [assignedBadges, allBadgeCollections]);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor)
-  );
-
-  const handleBadgeDragStart = (event: DragStartEvent) => {
-    setActiveBadge(event.active.data.current?.badge);
-  }
-
-  const handleBadgeDragEnd = (event: DragEndEvent) => {
-    setActiveBadge(null);
-    const { active, over } = event;
-
-    if (!over || active.id === over.id) {
-        return;
-    }
-
-    const oldIndex = assignedBadges.findIndex(b => b.id === active.id);
-    const newIndex = assignedBadges.findIndex(b => b.id === over.id);
-
-    if (oldIndex !== -1 && newIndex !== -1) {
-        const newBadgeOrder = arrayMove(assignedBadges, oldIndex, newIndex);
-        const newRoles = newBadgeOrder.map(b => b.name);
-        const nonTeamRoles = (member.roles || []).filter(role => !teamBadgeNames.has(role));
-        const finalRoles = [...new Set([...nonTeamRoles, ...newRoles])];
-        updateUser(member.userId, { roles: finalRoles });
-    }
-  }
-
   const handleSaveLabel = useCallback(() => {
-    if (!canManageRoles) return;
+    if (!canManage) return;
     const newLabel = labelInputRef.current?.value.trim();
     if (newLabel && newLabel !== teamBadgesLabel) {
         updateTeam(team.id, { userBadgesLabel: newLabel });
     }
     setIsEditingLabel(false);
-  }, [canManageRoles, team.id, teamBadgesLabel, updateTeam]);
+  }, [canManage, team.id, teamBadgesLabel, updateTeam]);
 
   useEffect(() => {
     if (!isEditingLabel) return;
@@ -210,7 +150,7 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, canManage }
             <CardContent>
             <div className="mt-4 space-y-2">
                 <h4 className="text-sm font-normal">
-                    {isEditingLabel && canManageRoles ? (
+                    {isEditingLabel && canManage ? (
                         <Input
                             ref={labelInputRef}
                             defaultValue={teamBadgesLabel}
@@ -222,27 +162,24 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, canManage }
                         />
                     ) : (
                         <span
-                            className={cn(canManageRoles && "cursor-text border-b border-transparent hover:border-dashed hover:border-muted-foreground")}
-                            onClick={() => canManageRoles && setIsEditingLabel(true)}
+                            className={cn(canManage && "cursor-text border-b border-transparent hover:border-dashed hover:border-muted-foreground")}
+                            onClick={() => canManage && setIsEditingLabel(true)}
                         >
                             {teamBadgesLabel}
                         </span>
                     )}
                 </h4>
-                <DndContext sensors={sensors} onDragStart={handleBadgeDragStart} onDragEnd={handleBadgeDragEnd} collisionDetection={closestCenter}>
                 <div className="flex flex-col gap-2 min-h-[24px] rounded-md border p-2 bg-muted/20">
                 {assignedBadges.length > 0 ? (
                     <>
                        {groupedBadges.map(({ collectionName, badges }) => (
                             <div key={collectionName}>
                                 <p className="text-xs tracking-wider mb-1.5 text-muted-foreground">{collectionName}</p>
-                                <SortableContext items={badges.map(b => b.id)} strategy={verticalListSortingStrategy}>
                                 <div className="flex flex-wrap gap-1.5">
                                     {badges.map(badge => (
-                                        <SortableAssignedBadge key={badge.id} badge={badge} canManageRoles={canManageRoles} member={member} />
+                                        <AssignedBadge key={badge.id} badge={badge} />
                                     ))}
                                 </div>
-                                </SortableContext>
                             </div>
                         ))}
                     </>
@@ -250,14 +187,6 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, canManage }
                     <p className="text-xs text-muted-foreground italic w-full text-center">Drag badges from the pool to assign.</p>
                 )}
                 </div>
-                <DragOverlay modifiers={[snapCenterToCursor]}>
-                    {activeBadge ? (
-                        <div className="h-9 w-9 rounded-full border-2 flex items-center justify-center bg-card" style={{ borderColor: activeBadge.color }}>
-                            <GoogleSymbol name={activeBadge.icon} style={{ fontSize: '28px', color: activeBadge.color }} weight={100} />
-                        </div>
-                    ) : null}
-                </DragOverlay>
-                </DndContext>
             </div>
             </CardContent>
         )}

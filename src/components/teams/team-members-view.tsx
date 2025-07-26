@@ -63,17 +63,18 @@ function DraggableBadgeFromPool({ badge, canManage }: { badge: Badge; canManage:
 
 function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }: { member: User, team: Team, isViewer: boolean, onSetAdmin: () => void, onRemoveUser: () => void }) {
   const { isDragModifierPressed } = useUser();
+  
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: member.userId,
     data: { 
-        type: 'member-card', // The draggable item itself is the member card drop zone
+        type: 'member-card',
         user: member 
     },
     disabled: isViewer || !isDragModifierPressed
   });
-  
-  const { isOver } = useDroppable({
-    id: member.userId, // The droppable ID must match the sortable ID
+
+  const { isOver, setNodeRef: droppableRef } = useDroppable({
+    id: member.userId,
     data: {
         type: 'member-card',
         member: member,
@@ -90,7 +91,14 @@ function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }
   const canManage = !isViewer;
 
   return (
-    <div ref={setNodeRef} style={style} className={cn("rounded-md", isDragging && "shadow-xl", isOver && "ring-1 ring-inset ring-primary")}>
+    <div 
+        ref={(node) => {
+            setNodeRef(node);
+            droppableRef(node);
+        }} 
+        style={style} 
+        className={cn("rounded-md", isDragging && "shadow-xl", isOver && "ring-1 ring-inset ring-primary")}
+    >
       <div {...attributes} {...listeners} className="relative group">
         <TeamMemberCard member={member} team={team} isViewer={isViewer} onSetAdmin={onSetAdmin} canManage={canManage} />
         {canManage && (
@@ -193,11 +201,22 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
-            activationConstraint: {
-                distance: 8,
+            onActivation: ({ event }) => {
+                if (!isDragModifierPressed) {
+                    return false;
+                }
+                return true;
             },
         }),
-        useSensor(KeyboardSensor)
+        useSensor(KeyboardSensor, {
+          coordinateGetter: sortableKeyboardCoordinates,
+          onActivation: ({ event }) => {
+            if (!isDragModifierPressed) {
+                return false;
+            }
+            return true;
+          }
+        })
     );
 
     useEffect(() => {
@@ -346,15 +365,6 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
             return;
         }
 
-        if (activeType === 'assigned-badge' && over.id === 'badge-pool') {
-            const badge = active.data.current?.badge as Badge;
-            const sourceMember = active.data.current?.member as User;
-             if (badge && sourceMember) {
-                 handleBadgeUnassignment(badge, sourceMember.userId);
-             }
-            return;
-        }
-
         if (activeType === 'member-card') {
             const user = active.data.current?.user as User;
             const activeIsAdmin = adminIds.includes(user.userId);
@@ -388,10 +398,6 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     }
 
     const activeBadge = activeDragItem?.type?.includes('badge') ? activeDragItem.data.badge : null;
-
-    const { setNodeRef: badgePoolRef, isOver: isBadgePoolOver } = useDroppable({
-        id: 'badge-pool',
-    });
 
     const assignableBadgeIds = useMemo(() => userAssignableBadges.map(b => `pool-badge-${b.id}`), [userAssignableBadges]);
 
@@ -496,7 +502,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                         <AvatarFallback>{activeDragItem.data.user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                 ) : activeBadge ? (
-                     <div className="h-9 w-9 rounded-full border-2 flex items-center justify-center bg-card" style={{ borderColor: activeBadge.color }}>
+                    <div className="h-9 w-9 rounded-full border-2 flex items-center justify-center bg-card" style={{ borderColor: activeBadge.color }}>
                         <GoogleSymbol name={activeBadge.icon} style={{ fontSize: '28px', color: activeBadge.color }} weight={100} />
                     </div>
                 ) : null}
@@ -512,7 +518,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                         </div>
                         <CardDescription>Drag a badge onto a team member to assign it.</CardDescription>
                     </CardHeader>
-                    <CardContent ref={badgePoolRef} className={cn("flex-1 p-2 overflow-hidden min-h-0 rounded-md", isBadgePoolOver && "ring-1 ring-destructive ring-inset")}>
+                    <CardContent className="flex-1 p-2 overflow-hidden min-h-0 rounded-md">
                         <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
                             <ScrollArea className="h-full">
                                 <SortableContext items={assignableBadgeIds} strategy={verticalListSortingStrategy}>
