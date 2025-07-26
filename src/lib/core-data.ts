@@ -14,7 +14,7 @@ export const coreTabs: AppTab[] = [
   // Team Management Tabs first
   { id: 'tab-calendars', name: 'Calendars', icon: 'calendar_month', color: '#3B82F6', componentKey: 'calendars', description: 'Manage shared calendars for event creation across the application.' },
   { id: 'tab-service-teams', name: 'Teams', icon: 'group', color: '#22C55E', componentKey: 'teams', description: 'Manage all teams, their properties, and their shared status.' },
-  { id: 'tab-team-roles', name: 'Roles', icon: 'assignment_ind', color: '#6366F1', componentKey: 'team_roles', description: 'View all members of a specific team and manage their roles.' },
+  { id: 'tab-team-members', name: 'Members', icon: 'assignment_ind', color: '#6366F1', componentKey: 'team_members', description: 'View all members of a specific team and manage their roles.' },
   { id: 'tab-badges', name: 'Badges', icon: 'style', color: '#F97316', componentKey: 'badges', description: 'Create and manage reusable badges for skills, roles, or priorities.' },
   { id: 'tab-locations', name: 'Locations', icon: 'push_pin', color: '#A855F7', componentKey: 'locations', description: 'Manage pinned locations and check-in points for the team schedule.' },
   { id: 'tab-workstations', name: 'Workstations', icon: 'desktop_windows', color: '#D946EF', componentKey: 'workstations', description: 'Configure bookable workstations and edit machines for the team.' },

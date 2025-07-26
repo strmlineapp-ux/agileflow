@@ -1,3 +1,5 @@
+
+      
 'use client';
 
 import { useUser } from '@/context/user-context';
@@ -30,7 +32,7 @@ function SortableTeamMember({ member, team, isViewer }: { member: User, team: Te
 }
 
 
-export function TeamRolesView({ team, tab }: { team: Team; tab: AppTab }) {
+export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     const { viewAsUser, users, updateAppTab, updateTeam, isDragModifierPressed } = useUser();
     
     // Safeguard to prevent rendering if team data is not available.
@@ -239,3 +241,5 @@ export function TeamRolesView({ team, tab }: { team: Team; tab: AppTab }) {
       </DndContext>
     );
 }
+
+    

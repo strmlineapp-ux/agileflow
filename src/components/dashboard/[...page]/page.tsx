@@ -48,7 +48,7 @@ const componentMap: Record<string, React.ComponentType<any>> = {
   pages: PagesManagement,
   tabs: TabsManagement,
   // Team Management Tabs
-  team_roles: TeamMembersView,
+  team_members: TeamMembersView,
   badges: BadgeManagement,
   locations: PinnedLocationManagement,
   workstations: TeamWorkstationManagement,
@@ -249,4 +249,3 @@ export default function DynamicPage() {
         </div>
     );
 }
-
