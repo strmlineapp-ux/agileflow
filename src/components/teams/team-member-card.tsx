@@ -17,11 +17,10 @@ import { useDroppable } from '@dnd-kit/core';
 
 function AssignedBadge({ badge, canManage, contextId }: { badge: Badge, canManage: boolean, contextId: string }) {
     const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
-        id: `assigned-badge:${contextId}:${badge.id}`,
+        id: `badge-member:${contextId}:${badge.id}`,
         data: {
-            type: 'assigned-badge',
+            type: 'badge',
             badge: badge,
-            memberId: contextId,
         },
         disabled: !canManage,
     });
@@ -75,10 +74,10 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, isOver }: {
       .filter((b): b is Badge => !!b);
   }, [member.roles, allBadges]);
 
-  const assignedBadgeIds = useMemo(() => assignedBadges.map(b => `assigned-badge:${member.userId}:${b.id}`), [assignedBadges, member.userId]);
+  const assignedBadgeIds = useMemo(() => assignedBadges.map(b => `badge-member:${member.userId}:${b.id}`), [assignedBadges, member.userId]);
   
   const { setNodeRef } = useDroppable({
-    id: `member-card-droppable:${member.userId}`,
+    id: member.userId,
     data: { type: 'member-card', memberId: member.userId }
   });
 
