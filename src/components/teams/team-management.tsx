@@ -338,7 +338,7 @@ function TeamCard({
                                                 <button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(team.id, { color: c }); setIsColorPopoverOpen(false);}}></button>
                                             ))}
                                         </div>
-                                        <Button onClick={() => { onUpdate(team.id, { color }); setIsColorPopoverOpen(false); }} className="w-full">Set Color</Button>
+                                        <Button onClick={() => { onUpdate(team.id, { color }); setIsColorPopoverOpen(false); }} className="w-full bg-primary">Set Color</Button>
                                     </div>
                                 </PopoverContent>
                             </Popover>
@@ -449,11 +449,12 @@ function TeamCard({
 }
 
 function SortableTeamCard({team, ...props}: {team: Team, [key: string]: any}) {
-    const { isEditingName, setIsEditingName } = props;
+    const { isDragModifierPressed } = useUser();
+    const [isEditingName, setIsEditingName] = useState(false);
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: team.id,
         data: { type: 'team-card', team, isSharedPreview: props.isSharedPreview },
-        disabled: isEditingName,
+        disabled: isEditingName || !isDragModifierPressed,
     });
 
     const style = {
@@ -469,7 +470,14 @@ function SortableTeamCard({team, ...props}: {team: Team, [key: string]: any}) {
               : "basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)]",
             isDragging && "opacity-80 z-50"
         )}>
-            <TeamCard team={team} {...props} dragHandleProps={{...attributes, ...listeners}} isDragging={isDragging} />
+            <TeamCard 
+                team={team} 
+                {...props} 
+                isEditingName={isEditingName} 
+                setIsEditingName={setIsEditingName} 
+                dragHandleProps={{...attributes, ...listeners}} 
+                isDragging={isDragging} 
+            />
         </div>
     )
 }

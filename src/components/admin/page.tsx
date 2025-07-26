@@ -541,19 +541,17 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
   );
 }
 
-function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed, isEditingName, setIsEditingName, dragHandleProps }: { 
+function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, dragHandleProps }: { 
     page: AppPage; 
     onUpdate: (id: string, data: Partial<AppPage>) => void; 
     onDelete: (id: string) => void; 
     isPinned?: boolean; 
     isDragging?: boolean;
-    isCollapsed?: boolean;
-    isEditingName: boolean;
-    setIsEditingName: (isEditing: boolean) => void;
     dragHandleProps?: any;
 }) {
     const { viewAsUser, isDragModifierPressed } = useUser();
     const canManage = viewAsUser.isAdmin;
+    const [isEditingName, setIsEditingName] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
@@ -606,7 +604,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed,
     const filteredIcons = useMemo(() => googleSymbolNames.filter(icon => icon.toLowerCase().includes(iconSearch.toLowerCase())), [iconSearch]);
     
     const displayPath = page.isDynamic ? `${page.path}/[...]` : page.path;
-    const showDetails = isCollapsed ? false : isExpanded;
+    const showDetails = isExpanded;
 
 
     return (
@@ -744,13 +742,11 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed,
                     </p>
                 </CardContent>
             )}
-            {!isCollapsed && (
-                 <div className={cn("absolute -bottom-1 right-0", isDragModifierPressed && "hidden")}>
-                    <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
-                        <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} weight={100} opticalSize={20} />
-                    </Button>
-                </div>
-            )}
+             <div className={cn("absolute -bottom-1 right-0", isDragModifierPressed && "hidden")}>
+                <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
+                    <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} weight={100} opticalSize={20} />
+                </Button>
+            </div>
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <DialogContent className="max-w-md" onPointerDownCapture={(e) => e.stopPropagation()}>
                     <div className="absolute top-4 right-4">
@@ -809,8 +805,6 @@ function SortablePageCard({ id, page, onUpdate, onDelete, isPinned }: { id: stri
                     isPinned={isPinned}
                     dragHandleProps={{ ...attributes, ...listeners }}
                     isDragging={isDragging}
-                    isEditingName={isEditingName}
-                    setIsEditingName={setIsEditingName}
                  />
             </div>
         </div>
@@ -1303,3 +1297,4 @@ export const TabsManagement = () => {
     );
 };
 // #endregion
+
