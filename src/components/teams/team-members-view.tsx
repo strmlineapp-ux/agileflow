@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { useDroppable } from '@dnd-kit/core';
 
