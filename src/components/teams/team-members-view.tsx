@@ -71,15 +71,16 @@ function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }
     }
   });
 
-  const setNodeRef = (node: HTMLElement | null) => {
+  const setNodeRef = useCallback((node: HTMLElement | null) => {
     sortableRef(node);
     droppableRef(node);
-  };
+  }, [sortableRef, droppableRef]);
   
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.8 : 1,
+    zIndex: isDragging ? 10 : 'auto',
   };
   
   const canManage = !isViewer;
@@ -88,7 +89,7 @@ function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }
     <div 
         ref={setNodeRef}
         style={style} 
-        className={cn("relative rounded-md", isDragging && "shadow-xl z-10", isOver && "ring-1 ring-inset ring-primary")}
+        className={cn("relative rounded-md", isDragging && "shadow-xl", isOver && "ring-1 ring-inset ring-primary")}
     >
       <div {...attributes} {...listeners} className="relative group">
         <TeamMemberCard member={member} team={team} isViewer={isViewer} onSetAdmin={onSetAdmin} />
@@ -358,9 +359,20 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
             handleBadgeUnassignment(badge, memberId);
             return;
         }
+        
+        if (activeType === 'assigned-badge' && overType === 'member-card') {
+            const badge = active.data.current?.badge as Badge;
+            const targetMember = over.data.current?.member as User;
+            const sourceMemberId = active.data.current?.memberId as string;
+
+            if (badge && targetMember && targetMember.userId !== sourceMemberId) {
+                handleBadgeAssignment(badge, targetMember.userId);
+            }
+            return;
+        }
 
         if (activeType === 'member-card') {
-            const user = active.data.current?.user as User;
+            const user = active.data.current?.member as User;
             const activeIsAdmin = adminIds.includes(user.userId);
             const overIsAdminList = over.id === 'admins';
 
@@ -370,7 +382,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                  if (active.id === over.id) return;
                 const list = activeIsAdmin ? admins : members;
                 const oldIndex = list.findIndex(item => item.userId === active.id);
-                const overItem = over.data.current?.user as User | undefined;
+                const overItem = over.data.current?.member as User | undefined;
                 if (!overItem) return;
                 
                 const newIndex = list.findIndex(item => item.userId === overItem.userId);
