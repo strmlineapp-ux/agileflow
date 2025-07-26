@@ -22,7 +22,7 @@ import { useDroppable } from '@dnd-kit/core';
 function DroppableUserList({ id, children, className }: { id: string, children: React.ReactNode, className?: string }) {
     const { setNodeRef, isOver } = useDroppable({ id, data: { type: 'user-list-container', id } });
     return (
-        <div ref={setNodeRef} className={cn(className, "transition-colors rounded-md", isOver && "bg-primary/5")}>
+        <div ref={setNodeRef} className={cn(className, "transition-colors rounded-md", isOver && "ring-1 ring-border ring-inset")}>
             {children}
         </div>
     )
