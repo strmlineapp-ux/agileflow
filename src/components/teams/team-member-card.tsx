@@ -125,8 +125,8 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
             variant={'outline'}
             style={{
                 borderColor: badge.color,
-                color: isAssigned ? getContrastColor(badge.color) : 'hsl(var(--muted-foreground))',
-                backgroundColor: isAssigned ? badge.color : 'transparent',
+                color: isAssigned ? badge.color : 'hsl(var(--muted-foreground))',
+                backgroundColor: 'transparent',
                 borderStyle: isAssigned ? 'solid' : 'dashed',
             }}
             className={cn(
@@ -137,7 +137,7 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
           >
             <GoogleSymbol 
                 name={badge.icon} 
-                style={{ fontSize: '20px', color: isAssigned ? getContrastColor(badge.color) : badge.color }} 
+                style={{ fontSize: '20px', color: isAssigned ? badge.color : 'hsl(var(--muted-foreground))' }} 
                 weight={100} />
             {badge.name}
           </UiBadge>
