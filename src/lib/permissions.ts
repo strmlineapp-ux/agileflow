@@ -58,12 +58,12 @@ export const getAllUserRoles = (user: User, teams: Team[]): string[] => {
 
 /**
  * Checks if a user has permission to view a page based on its access rules.
+ * This is now more efficient as it no longer requires a global list of all teams.
  * @param user The user to check.
  * @param page The AppPage configuration.
- * @param teams The list of all teams.
  * @returns `true` if the user has access, `false` otherwise.
  */
-export const hasAccess = (user: User, page: AppPage, teams: Team[]): boolean => {
+export const hasAccess = (user: User, page: AppPage): boolean => {
     // System admin has universal access
     if (user.isAdmin) return true;
 
@@ -82,10 +82,10 @@ export const hasAccess = (user: User, page: AppPage, teams: Team[]): boolean => 
     // Direct user assignment
     if (access.users.includes(user.userId)) return true;
 
-    // Team-based access
+    // Team-based access using the user's list of team memberships
+    const userTeamIds = new Set(user.memberOfTeamIds || []);
     for (const teamId of access.teams) {
-        const team = teams.find(t => t.id === teamId);
-        if (team?.members.includes(user.userId)) {
+        if (userTeamIds.has(teamId)) {
             return true;
         }
     }

@@ -4,17 +4,23 @@
 
 This document provides a detailed breakdown of the data structures, entities, and their relationships within the AgileFlow application. It serves as a technical reference for understanding how data flows through the system and interacts with internal and external services.
 
-## Data Fetching Strategy: Hybrid Model
+## Data Fetching Strategy: Scalable On-Demand Model
 
-AgileFlow employs a hybrid data-fetching strategy to ensure both scalability and a responsive user experience. The approach is tailored to the type of data being handled:
+AgileFlow employs a highly scalable, on-demand data-fetching strategy that is optimized for a NoSQL database environment and a context-aware user experience. This approach ensures the application remains fast and responsive, regardless of the amount of data in the system.
 
-1.  **On-Demand Fetching (for High-Volume Data)**: For data types that can grow to thousands or millions of records, such as **Events** and **Tasks**, the application uses an on-demand fetching model.
-    *   **How it Works**: Components that need this data (e.g., the Calendar or Task List) are responsible for fetching only the specific subset of data they require. For example, the Calendar fetches events only for the visible month or week, and the Tasks page fetches the list of all tasks upon loading.
-    *   **Why**: This is a production-ready, scalable approach. It minimizes initial load times, reduces memory consumption on the client, and ensures the application remains fast and responsive even with a large amount of historical data.
+1.  **Minimal Initial Load**: When the application starts, it loads only the absolute minimum data required for the user to operate:
+    *   The current `User` object, which contains their profile, preferences, and a list of Team IDs they belong to (`memberOfTeamIds`).
+    *   The global `AppSettings` object, which defines the application's page structure and navigation.
+    *   All other data (Teams, Calendars, Events, Tasks) is **not** loaded at startup.
 
-2.  **Global Context (for Low-Volume Foundational Data)**: For foundational data that is required across the entire application and changes infrequently, such as **Users**, **Teams**, and **AppSettings**, a global context model is used.
-    *   **How it Works**: This data is loaded once when the application starts and stored in a React Context (`UserContext`). Components can then access this data instantly without needing to re-fetch it.
-    *   **Why**: This is highly efficient for small-to-medium sized configuration data. It avoids redundant fetching of the same essential information on different pages and simplifies access to user permissions and application settings.
+2.  **Context-Aware, On-Demand Fetching**: Data is fetched by components precisely when and where it is needed, driven by user navigation.
+    *   **Team Data**: When you navigate to a specific team's management page (e.g., `/dashboard/teams/team-id-123`), the component uses the ID from the URL to fetch the data for *only that specific team*. Similarly, the main Team Management page fetches a list of teams based on the IDs stored in the user's profile.
+    *   **Events & Tasks**: High-volume data like events and tasks have always been fetched on-demand. The Calendar fetches events for the visible date range, and the Tasks page fetches tasks when it loads.
+
+3.  **Benefits of this Approach**:
+    *   **Scalability**: The initial load time is constant and extremely fast, regardless of whether there are 10 or 10,000 teams in the system.
+    *   **Performance**: Memory usage is kept to a minimum by only holding the data relevant to the current view.
+    *   **NoSQL Optimization**: This model aligns perfectly with NoSQL best practices, which favor fetching specific documents by ID over performing large, complex queries.
 
 ## Multi-Tenant Architecture
 
@@ -73,6 +79,7 @@ This table details the information stored directly within each `User` object.
 | `googleCalendarLinked: boolean` | **Google Service.** A flag that is set to `true` only after the user successfully completes an OAuth consent flow via **Firebase Authentication** to grant the app permission to access their Google Calendar. |
 | `roles?: string[]` | **Internal.** An array of strings that includes the names of any `Badge`s the user has been assigned. The application determines the name's meaning and properties by looking it up in the relevant `Team` object. |
 | `directReports?: string[]` | **Internal.** An array of `userId`s for users who report directly to this user. This is currently informational. |
+| `memberOfTeamIds?: string[]` | **Internal.** An array of `teamId`s for all teams the user is a member of. This is a crucial de-normalization for efficient permission checking. |
 | `theme?: 'light' \| 'dark'` | **Internal.** A UI preference for the app's color scheme. |
 | `primaryColor?: string` | **Internal.** A user-selected hex color code that overrides the default primary color of their chosen theme. |
 | `defaultCalendarView?: 'month' \| 'week' \| 'day' \| 'production-schedule'` | **Internal.** A UI preference for the default calendar layout. |
@@ -89,7 +96,7 @@ Access to every page and content tab in the application is controlled by a dynam
 
 **How It Works:**
 
-1.  **Page Access**: Access to a page is determined by the `access` object on its `AppPage` configuration. A user can view a page if they are a system admin, if the page has no access rules (making it public), or if their `userId` or `Team` membership is listed in the corresponding access array.
+1.  **Page Access**: Access to a page is determined by the `access` object on its `AppPage` configuration. The `hasAccess` function now works more efficiently by checking the `memberOfTeamIds` array on the `User` object, removing the need to search through a large list of teams. A user can view a page if they are a system admin, if the page has no access rules (making it public), or if their `userId` or a team they belong to is listed in the page's access arrays.
 
 2.  **Tab Visibility**: A page's content is composed of one or more `AppTab`s. If a page has zero associated tabs, it is considered unconfigured and will **not** appear in the sidebar navigation, making it inaccessible. A page must have at least one tab to be rendered.
 

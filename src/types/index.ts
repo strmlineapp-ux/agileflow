@@ -59,6 +59,7 @@ export interface User {
   easyBooking?: boolean;
   timeFormat?: '12h' | '24h';
   linkedTeamIds?: string[];
+  memberOfTeamIds?: string[]; // New: List of team IDs the user is a member of
   linkedCollectionIds?: string[];
   linkedCalendarIds?: string[];
   dragActivationKey?: 'alt' | 'ctrl' | 'meta' | 'shift';
