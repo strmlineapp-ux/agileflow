@@ -23,6 +23,7 @@ import { Badge as UiBadge } from '../ui/badge';
 import { useDroppable } from '@dnd-kit/core';
 import { BadgeCollectionCard } from './badge-management';
 
+
 function DraggableUserList({ id, children, className }: { id: string, children: React.ReactNode, className?: string }) {
     const { setNodeRef, isOver } = useDroppable({ id, data: { type: 'user-list-container', id } });
     return (
@@ -86,47 +87,6 @@ function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }
   );
 }
 
-function DraggableBadgeFromPool({ badge, canManage }: { badge: Badge, canManage: boolean }) {
-    const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
-        id: `badge-pool:${badge.id}`,
-        data: {
-            type: 'badge',
-            badge: badge,
-            context: 'pool',
-        },
-        disabled: !canManage,
-    });
-
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.5 : 1,
-    };
-
-    return (
-        <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                    <UiBadge
-                        variant={'outline'}
-                        style={{ color: badge.color, borderColor: badge.color }}
-                        className="flex items-center gap-1.5 p-1 pl-2 rounded-full text-sm h-8 font-thin cursor-grab"
-                    >
-                        <GoogleSymbol name={badge.icon} style={{ fontSize: '20px' }} weight={100} opticalSize={20} />
-                        <span className="font-thin">{badge.name}</span>
-                    </UiBadge>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>{badge.description || badge.name}</p>
-                    </TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-        </div>
-    );
-}
-
-
 export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     const { viewAsUser, users, updateAppTab, updateTeam, isDragModifierPressed, allBadges, handleBadgeAssignment, handleBadgeUnassignment, allBadgeCollections, updateBadge, deleteBadge, addBadge, updateBadgeCollection, deleteBadgeCollection, predefinedColors } = useUser();
     const [activeDragItem, setActiveDragItem] = useState<{type: string, id: string, data: any} | null>(null);
@@ -140,22 +100,6 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     const [isEditingMembersLabel, setIsEditingMembersLabel] = useState(false);
     const adminsLabelInputRef = useRef<HTMLInputElement>(null);
     const membersLabelInputRef = useRef<HTMLInputElement>(null);
-
-    const [isBadgePoolOpen, setIsBadgePoolOpen] = useState(false);
-    const [badgePoolSearch, setBadgePoolSearch] = useState('');
-    const [expandedCollections, setExpandedCollections] = useState<Set<string>>(new Set());
-
-    const onToggleExpand = useCallback((collectionId: string) => {
-        setExpandedCollections(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(collectionId)) {
-                newSet.delete(collectionId);
-            } else {
-                newSet.add(collectionId);
-            }
-            return newSet;
-        });
-    }, []);
 
     const teamAdminsLabel = team.teamAdminsLabel || 'Team Admins';
     const membersLabel = team.membersLabel || 'Members';
@@ -180,23 +124,6 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     const adminIds = useMemo(() => admins.map(a => `member:${a.userId}`), [admins]);
     const memberIds = useMemo(() => members.map(m => `member:${m.userId}`), [members]);
     
-    const assignableCollections = useMemo(() => {
-        return allBadgeCollections
-            .filter(c => (team.activeBadgeCollections || []).includes(c.id) && c.applications?.includes('team members'))
-            .map(collection => {
-                const badges = collection.badgeIds
-                    .map(badgeId => allBadges.find(b => b.id === badgeId))
-                    .filter((b): b is Badge => !!b && b.name.toLowerCase().includes(badgePoolSearch.toLowerCase()));
-                return { ...collection, badges };
-            })
-            .filter(collection => collection.badges.length > 0);
-    }, [team.activeBadgeCollections, allBadgeCollections, allBadges, badgePoolSearch]);
-    
-    const { setNodeRef: badgePoolRef, isOver: isBadgePoolOver } = useDroppable({
-        id: 'badge-pool',
-        data: { type: 'badge-pool' }
-    });
-
     const sensors = useSensors(
         useSensor(PointerSensor, {
             onActivation: ({ event }) => {
@@ -349,11 +276,6 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                 handleBadgeAssignment(badge, targetMemberId);
                 return;
             }
-            
-            if (overType === 'badge-pool' && sourceContext === 'member' && sourceMemberId) {
-                handleBadgeUnassignment(badge, sourceMemberId);
-                return;
-            }
             return;
         }
     
@@ -414,18 +336,6 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                         </TooltipProvider>
                         )}
                     </div>
-                    {canManage && (
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" onClick={() => setIsBadgePoolOpen(!isBadgePoolOpen)}>
-                                        <GoogleSymbol name="style" weight={100} opticalSize={20} />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Show Assignable Badges</p></TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    )}
                 </div>
                 <div className="flex-1 overflow-y-auto pr-2 -mr-2">
                     <div className={cn("flex flex-col gap-6", admins.length > 0 && "lg:flex-row")}>
@@ -498,47 +408,6 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                 ) : null}
             </DragOverlay>
         </DndContext>
-        <div className={cn("transition-all duration-300", isBadgePoolOpen ? "w-96" : "w-0")}>
-            <div className={cn("h-full rounded-lg transition-all", isBadgePoolOpen ? "p-2" : "p-0")}>
-                <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
-                 <Card ref={badgePoolRef} className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isBadgePoolOpen ? "opacity-100" : "opacity-0", isBadgePoolOver && 'ring-1 ring-border ring-inset')}>
-                    <CardHeader>
-                        <div className="flex items-center justify-between">
-                            <CardTitle className="font-headline font-thin text-xl">Assignable Badges</CardTitle>
-                             <CompactSearchInput searchTerm={badgePoolSearch} setSearchTerm={setBadgePoolSearch} placeholder="Search badges..." />
-                        </div>
-                        <CardDescription>Drag a badge onto a team member to assign it.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex-1 p-2 overflow-hidden min-h-0 rounded-md">
-                        <ScrollArea className="h-full">
-                            <div className="space-y-4">
-                            <SortableContext items={assignableCollections.flatMap(c => c.badges.map(b => `badge-pool:${b.id}`))}>
-                                {assignableCollections.map((collection) => (
-                                    <div key={collection.id}>
-                                        <p className="text-xs tracking-wider mb-2">{collection.name}</p>
-                                        <div className="flex flex-wrap gap-2">
-                                            {collection.badges.map(badge => (
-                                                <DraggableBadgeFromPool key={badge.id} badge={badge} canManage={canManage} />
-                                            ))}
-                                        </div>
-                                    </div>
-                                ))}
-                            </SortableContext>
-                            {assignableCollections.length === 0 && <p className="text-xs text-muted-foreground text-center p-4 w-full">No badges available to assign. Activate badge collections in the "Badges" tab.</p>}
-                            </div>
-                        </ScrollArea>
-                    </CardContent>
-                </Card>
-                 <DragOverlay modifiers={[snapCenterToCursor]}>
-                    {activeBadge ? (
-                        <div className="h-7 w-7 rounded-full border-2 flex items-center justify-center bg-card" style={{ borderColor: activeBadge.color }}>
-                            <GoogleSymbol name={activeBadge.icon} style={{ fontSize: '20px', color: activeBadge.color }} weight={100} />
-                        </div>
-                    ) : null}
-                </DragOverlay>
-                </DndContext>
-            </div>
-        </div>
       </div>
     );
 }
