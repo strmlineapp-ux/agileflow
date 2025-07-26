@@ -12,6 +12,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, v
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
 import { GoogleSymbol } from '../icons/google-symbol';
+import { snapCenterToCursor } from '@dnd-kit/modifiers';
 
 function SortableTeamMember({ member, team, isViewer }: { member: User, team: Team, isViewer: boolean }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: member.userId, disabled: isViewer });
@@ -299,15 +300,15 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                 </div>
             </div>
         </div>
-        <DragOverlay>
+        <DragOverlay modifiers={[snapCenterToCursor]}>
             {activeBadge ? (
                 <div
-                    className='h-8 w-8 rounded-full border-2 flex items-center justify-center bg-card'
+                    className='h-9 w-9 rounded-full border-2 flex items-center justify-center bg-card'
                     style={{ borderColor: activeBadge.color }}
                 >
                     <GoogleSymbol
                         name={activeBadge.icon}
-                        style={{ fontSize: '24px', color: activeBadge.color }}
+                        style={{ fontSize: '28px', color: activeBadge.color }}
                         weight={100}
                     />
                 </div>

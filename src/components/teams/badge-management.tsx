@@ -574,7 +574,7 @@ function BadgeCollectionCard({
         document.addEventListener('mousedown', handleOutsideClick);
         nameInputRef.current?.focus();
         nameInputRef.current?.select();
-        return () => document.removeEventListener('mousedown', handleOutsideClick);
+        return () => document.removeEventListener('mousedown', handleSaveName);
     }, [isEditingName, handleSaveName]);
 
     useEffect(() => {
@@ -1314,10 +1314,10 @@ export function BadgeManagement({ tab, page, team, isActive }: { team: Team; tab
                         opticalSize={48}
                     />
                 ) : activeDragItem?.type === 'badge' && activeDragItem?.data?.badge ? (
-                    <div className="h-8 w-8 rounded-full border-2 flex items-center justify-center bg-card" style={{ borderColor: activeDragItem.data.badge.color }}>
+                    <div className="h-9 w-9 rounded-full border-2 flex items-center justify-center bg-card" style={{ borderColor: activeDragItem.data.badge.color }}>
                       <GoogleSymbol
                           name={activeDragItem.data.badge.icon}
-                          style={{ fontSize: '24px', color: activeDragItem.data.badge.color }}
+                          style={{ fontSize: '28px', color: activeDragItem.data.badge.color }}
                           weight={100}
                       />
                     </div>
