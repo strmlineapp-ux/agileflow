@@ -519,6 +519,7 @@ type BadgeCollectionCardProps = {
     onToggleExpand: () => void;
     dragHandleProps?: any;
     currentUserBadgeIds?: Set<string>;
+    allCollections: BadgeCollection[];
 };
 
 function BadgeCollectionCard({ 
@@ -540,6 +541,7 @@ function BadgeCollectionCard({
     onToggleExpand,
     dragHandleProps,
     currentUserBadgeIds,
+    allCollections,
     ...props
 }: BadgeCollectionCardProps) {
     const { viewAsUser, users, isDragModifierPressed } = useUser();
@@ -875,7 +877,7 @@ function BadgeCollectionCard({
                                     predefinedColors={predefinedColors}
                                     isOwner={badgeIsOwned}
                                     isLinked={!badgeIsOwned}
-                                    allCollections={allBadgeCollections}
+                                    allCollections={allCollections}
                                     isCollectionEditing={isEditingName || isEditingDescription}
                                     isSharedPreview={isSharedPreview}
                                     currentUserBadgeIds={currentUserBadgeIds}
@@ -921,7 +923,7 @@ function BadgeCollectionCard({
     );
 }
 
-function SortableCollectionCard({ collection, ...props }: { collection: BadgeCollection, [key: string]: any }) {
+function SortableCollectionCard({ collection, allCollections, ...props }: { collection: BadgeCollection, allCollections: BadgeCollection[], [key: string]: any }) {
     const { isDragModifierPressed } = useUser();
     const [isEditingName, setIsEditingName] = useState(false);
     const [isEditingDescription, setIsEditingDescription] = useState(false);
@@ -952,6 +954,7 @@ function SortableCollectionCard({ collection, ...props }: { collection: BadgeCol
         >
             <BadgeCollectionCard 
                 collection={collection} 
+                allCollections={allCollections}
                 {...props} 
                 dragHandleProps={{...attributes, ...listeners}}
                 isEditingName={isEditingName}
