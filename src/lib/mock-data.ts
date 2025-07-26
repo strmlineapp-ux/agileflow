@@ -198,11 +198,6 @@ export const mockTeams: Team[] = [
         teamAdminsLabel: 'Prod Team Leads',
         membersLabel: 'Prod Team Members',
         locationCheckManagers: ['1'],
-        allBadges: videoProdBadges,
-        badgeCollections: [
-            allMockBadgeCollections.find(c => c.id === videoProdCollectionId)!,
-            allMockBadgeCollections.find(c => c.id === liveEventsCollectionId)!
-        ],
         pinnedLocations: ['Studio', 'ACR'],
         checkLocations: ['Studio'],
         workstations: ['EDIT 1', 'EDIT 2', 'Pro Tools Machine'],
@@ -222,8 +217,6 @@ export const mockTeams: Team[] = [
         members: ['3', '8', '9', '10', '11', '12', '13', '14'],
         teamAdmins: [],
         locationCheckManagers: ['3'],
-        allBadges: liveEventsBadges,
-        badgeCollections: [allMockBadgeCollections.find(c => c.id === liveEventsCollectionId)!],
         pinnedLocations: ['Auditorium', 'ACR', 'Event Space 1 (S2)', 'Event Space 2 (S2)'],
         checkLocations: ['Auditorium'],
         eventTemplates: [
@@ -241,8 +234,6 @@ export const mockTeams: Team[] = [
         members: ['4', '15'],
         teamAdmins: [],
         locationCheckManagers: ['4'],
-        allBadges: [],
-        badgeCollections: [],
     },
     {
         id: 'service-delivery',
@@ -254,8 +245,6 @@ export const mockTeams: Team[] = [
         members: ['2'],
         teamAdmins: ['2'],
         locationCheckManagers: [],
-        allBadges: [...pScaleBadges, ...starRatingBadges, ...effortBadges],
-        badgeCollections: [allMockBadgeCollections.find(c => c.id === pScaleCollectionId)!, allMockBadgeCollections.find(c => c.id === starRatingCollectionId)!, allMockBadgeCollections.find(c => c.id === effortCollectionId)!]
     }
 ];
 

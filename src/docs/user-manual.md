@@ -61,7 +61,8 @@ This is the most detailed view, designed for production planning.
 The **Tasks** page helps you stay on top of your work.
 - **Tabs**: Switch between "My Tasks" (tasks assigned to you) and "All Tasks".
 - **Grouping**: Tasks are automatically grouped by their current status (e.g., In Progress, Awaiting Review).
-- **New Task**: Click the "New Task" button to create a new task.
+- **New Task**: Click the `add_circle` button below the tabs to create a new task.
+- **Task Actions**: Use the "more" menu (`...`) on any task row to edit or delete it.
 
 ## 6. Notifications
 

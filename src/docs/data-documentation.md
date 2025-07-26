@@ -9,7 +9,7 @@ This document provides a detailed breakdown of the data structures, entities, an
 AgileFlow employs a hybrid data-fetching strategy to ensure both scalability and a responsive user experience. The approach is tailored to the type of data being handled:
 
 1.  **On-Demand Fetching (for High-Volume Data)**: For data types that can grow to thousands or millions of records, such as **Events** and **Tasks**, the application uses an on-demand fetching model.
-    *   **How it Works**: Components that need this data (e.g., the Calendar or Task List) are responsible for fetching only the specific subset of data they require. For example, the Calendar fetches events only for the visible month or week.
+    *   **How it Works**: Components that need this data (e.g., the Calendar or Task List) are responsible for fetching only the specific subset of data they require. For example, the Calendar fetches events only for the visible month or week, and the Tasks page fetches the list of all tasks upon loading.
     *   **Why**: This is a production-ready, scalable approach. It minimizes initial load times, reduces memory consumption on the client, and ensures the application remains fast and responsive even with a large amount of historical data.
 
 2.  **Global Context (for Low-Volume Foundational Data)**: For foundational data that is required across the entire application and changes infrequently, such as **Users**, **Teams**, and **AppSettings**, a global context model is used.

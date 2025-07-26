@@ -101,7 +101,7 @@ export function TasksContent({ tab: pageConfig, isSingleTabPage }: { tab: AppPag
                         <span className="sr-only">New Task</span>
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>New Task</TooltipContent>
+                    <TooltipContent><p>New Task</p></TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
             </DialogTrigger>
