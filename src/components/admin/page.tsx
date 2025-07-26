@@ -610,7 +610,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed,
 
 
     return (
-        <Card className="group relative">
+        <Card className="group relative bg-transparent">
             <CardHeader className="p-2" {...dragHandleProps}>
                 {!isPinned && (
                 <TooltipProvider>
@@ -701,7 +701,7 @@ function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, isCollapsed,
                                                 <button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(page.id, { color: c }); setIsColorPopoverOpen(false);}} />
                                             ))}
                                         </div>
-                                        <Button onClick={() => { onUpdate(page.id, { color }); setIsColorPopoverOpen(false); }} className="w-full">Set Color</Button>
+                                        <Button onClick={() => { onUpdate(page.id, { color }); setIsColorPopoverOpen(false); }} className="w-full bg-primary">Set Color</Button>
                                     </div>
                                 </PopoverContent>
                             </Popover>
@@ -1057,7 +1057,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
         nameInputRef.current?.focus();
         nameInputRef.current?.select();
         return () => {
-            document.removeEventListener("mousedown", handleOutsideClick);
+            document.removeEventListener("mousedown", handleSaveName);
         };
     }, [isEditingName, handleSaveName]);
     
@@ -1169,7 +1169,7 @@ function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: st
                                         <button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(tab.id, { color: c }); setIsColorPopoverOpen(false);}} />
                                     ))}
                                 </div>
-                                <Button onClick={() => { onUpdate(tab.id, { color }); setIsColorPopoverOpen(false); }} className="w-full">Set Color</Button>
+                                <Button onClick={() => { onUpdate(tab.id, { color }); setIsColorPopoverOpen(false); }} className="w-full bg-primary">Set Color</Button>
                             </div>
                         </PopoverContent>
                     </Popover>
