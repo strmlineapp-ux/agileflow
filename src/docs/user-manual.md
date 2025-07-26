@@ -100,8 +100,6 @@ This page is for managing the specifics of an individual team.
 -   **Members Tab**: This tab provides a drag-and-drop interface for managing team roles and badge assignments.
     -   **Assigning Team Admins**: To designate a user as a Team Admin, hold down your drag modifier key (e.g., `Shift`) and drag their card from the "Members" list on the right to the "Team Admins" list on the left. To revoke admin status, drag their card back.
     -   **Reordering Members**: You can reorder users within the "Admins" or "Members" lists by holding down your modifier key and dragging their cards into a new position.
-    -   **Assigning Badges**: Click the `style` icon in the header to open the "Assignable Badges" panel. To assign a badge, hold your drag modifier key, drag a badge from this panel, and drop it onto a team member's card. The member's card will highlight to confirm the drop zone.
-    -   **Un-assigning Badges**: To remove a badge from a member, hold your drag modifier key, drag the icon-only badge from their card, and drop it back into the "Assignable Badges" panel. The panel will highlight to confirm it can be dropped.
     -   **Re-assigning Badges**: To quickly move a badge from one member to another, simply drag the badge from the source member's card and drop it onto the target member's card.
 - **Badge Management Tab**: Create and manage your team's badge collections. To share a collection, simply drag its card to the "Shared Collections" panel. To link a collection from another team, drag it from the shared panel onto your main board. To **activate** a collection for your team, click on its ghosted card; clicking an active card will deactivate it. To **delete** a collection you own, use the dropdown menu on its card.
 - **Pinned Locations Tab**: Pin locations to the team's Production Schedule. You can also designate locations as "check locations."
@@ -115,3 +113,4 @@ Administrators can view the application from another user's perspective.
 2.  Select "View as" from the dropdown menu.
 3.  Choose a user from the list.
 4.  A banner will appear at the top of the screen indicating whose view you are using. To return to your own view, repeat the process and select "Return to your view".
+
