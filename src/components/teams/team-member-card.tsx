@@ -12,12 +12,13 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Input } from '../ui/input';
-import { DndContext, type DragEndEvent, DragOverlay, type DragStartEvent, useSensors, useSensor, PointerSensor, KeyboardSensor, closestCenter, useDroppable } from '@dnd-kit/core';
-import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { DndContext, type DragEndEvent, DragOverlay, type DragStartEvent, useSensors, useSensor, PointerSensor, KeyboardSensor, closestCenter, sortableKeyboardCoordinates } from '@dnd-kit/core';
+import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
+import { useDroppable } from '@dnd-kit/core';
 
-function SortableAssignedBadge({ badge, canManageRoles, handleToggleRole }: { badge: Badge, canManageRoles: boolean, handleToggleRole: (badgeName: string) => void }) {
+function SortableAssignedBadge({ badge, canManageRoles, handleToggleRole, member }: { badge: Badge, canManageRoles: boolean, handleToggleRole: (badgeName: string) => void, member: User }) {
     const { isDragModifierPressed } = useUser();
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ 
         id: badge.id,
@@ -25,6 +26,7 @@ function SortableAssignedBadge({ badge, canManageRoles, handleToggleRole }: { ba
         data: {
             type: 'assigned-badge',
             badge: badge,
+            member: member,
         },
      });
     
@@ -295,7 +297,7 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
                                 <SortableContext items={badges.map(b => b.id)} strategy={verticalListSortingStrategy}>
                                 <div className="flex flex-wrap gap-1.5">
                                     {badges.map(badge => (
-                                        <SortableAssignedBadge key={badge.id} badge={badge} canManageRoles={canManageRoles} handleToggleRole={handleToggleRole} />
+                                        <SortableAssignedBadge key={badge.id} badge={badge} canManageRoles={canManageRoles} handleToggleRole={handleToggleRole} member={member} />
                                     ))}
                                 </div>
                                 </SortableContext>

@@ -369,7 +369,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                     )}
                 </div>
                 <div className="flex-1 overflow-y-auto pr-2 -mr-2">
-                    <div className="flex flex-col lg:flex-row gap-6">
+                    <div className={cn("flex flex-col gap-6", admins.length > 0 && "lg:flex-row")}>
                         {admins.length > 0 && (
                             <div className="lg:w-1/3 lg:max-w-sm space-y-4">
                                 {isEditingAdminsLabel ? (
