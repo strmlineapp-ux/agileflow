@@ -247,15 +247,15 @@ This pattern is a specialized, ultra-compact version of the standard `<Badge>` c
 
 ---
 ### 15. Team Member Badge Assignment
-This pattern describes the user interface for assigning and unassigning badges to team members.
-- **Layout**: Within each `TeamMemberCard`, badges are grouped visually by their parent `BadgeCollection`. Each collection is displayed with its name as a sub-header.
-- **Interaction**:
-    - **Click to Toggle**: A user with the correct permissions can click on any badge to toggle its state for that team member.
-    - **Reordering**: A user with permission can reorder a member's **assigned** badges by holding down their drag modifier key and dragging an icon-only badge to a new position within that member's assigned list.
-    - **Drag to Assign/Unassign**: A user can drag a badge from the "Assignable Badges" side panel and drop it on a member's card to assign it. Conversely, they can drag an assigned badge from a member card and drop it onto the side panel to unassign it.
+This pattern describes the user interface for assigning and unassigning badges to team members. The interaction is exclusively handled via drag-and-drop to ensure a clear and unambiguous workflow.
+
+- **Layout**: Within each `TeamMemberCard`, badges that are **currently assigned** to that member are displayed. The card does not show unassigned or "available" badges.
+- **Interaction (Drag-and-Drop Only)**:
+    - **Reordering**: A user with permission can reorder a member's assigned badges by holding down their drag modifier key and dragging an icon-only badge to a new position within that member's assigned list.
+    - **Assigning**: To assign a new badge, the user must drag it from the "Assignable Badges" side panel and drop it onto a team member's card.
+    - **Un-assigning**: To un-assign a badge, the user must drag an assigned badge from a member's card and drop it into the "Assignable Badges" side panel.
 - **Visual States**:
-    - **Assigned Badges**: Appear as icon-only `28px` buttons with a solid, colored border and a transparent background. The `20px` icon inside matches the border color. The name of the badge is revealed in a tooltip on hover.
-    - **Unassigned Badges (in member card)**: Appear as full pills with a dashed, muted border. The text and icon inside are also muted, using the `--muted-foreground` color. This indicates an "available" but unselected state.
+    - **Assigned Badges**: Appear as icon-only `28px` buttons with a solid, colored border and a transparent background. The `20px` icon inside matches the border color. The name of the badge is revealed in a tooltip on hover. There is no `onClick` functionality.
 - **Application**: Used on the **Team Members** tab within each team's management page.
 
 ---
@@ -334,5 +334,3 @@ This is the single source of truth for indicating user interaction state across 
       - **Ownership Status**: `absolute -top-0 -right-3`.
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Compact View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
-
-
