@@ -104,14 +104,13 @@ const SettingSelect = ({
 
 const DragActivationKeySetting = ({ user, onUpdate }: { user: User, onUpdate: (key: User['dragActivationKey']) => void }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const [keyInput, setKeyInput] = useState(user.dragActivationKey || 'shift');
+    const keyInput = user.dragActivationKey || 'shift';
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         e.preventDefault();
         const key = e.key.toLowerCase();
         if (['alt', 'control', 'meta', 'shift'].includes(key)) {
             const newKey = key === 'control' ? 'ctrl' : key as 'alt' | 'meta' | 'shift';
-            setKeyInput(newKey);
             onUpdate(newKey);
             setIsOpen(false);
         }
@@ -293,6 +292,9 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
     const [searchTerm, setSearchTerm] = useState('');
     
     const { currentUser, otherUsers } = useMemo(() => {
+        if (!viewAsUser) {
+            return { currentUser: null, otherUsers: [] };
+        }
         const currentUser = users.find(u => u.userId === viewAsUser.userId);
         
         const otherUsers = users
@@ -300,14 +302,18 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
             .filter(user => user.displayName.toLowerCase().includes(searchTerm.toLowerCase()));
 
         return { currentUser, otherUsers };
-    }, [users, viewAsUser.userId, searchTerm]);
+    }, [users, viewAsUser, searchTerm]);
 
-    const isCurrentUser = realUser.userId === viewAsUser.userId;
-    const canEditPreferences = isCurrentUser || realUser.isAdmin;
+    if (!viewAsUser || !currentUser) {
+        return null; // or a loading skeleton
+    }
+    
+    const isCurrentUser = realUser ? realUser.userId === viewAsUser.userId : false;
+    const canEditPreferences = isCurrentUser || (realUser ? realUser.isAdmin : false);
 
     return (
         <div className="space-y-6">
-          {currentUser && <UserCard user={currentUser} isCurrentUser={isCurrentUser} canEditPreferences={canEditPreferences} className="border-0" />}
+          <UserCard user={currentUser} isCurrentUser={isCurrentUser} canEditPreferences={canEditPreferences} className="border-0" />
 
           {showSearch && (
               <div className="flex justify-end mb-4">
