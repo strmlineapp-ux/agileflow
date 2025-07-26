@@ -503,6 +503,7 @@ function DuplicateBadgeZone({ collectionId, onAdd, isOwner }: { collectionId: st
 type BadgeCollectionCardProps = {
     collection: BadgeCollection;
     allBadges: Badge[];
+    allBadgeCollections: BadgeCollection[];
     predefinedColors: string[];
     onUpdateCollection: (collectionId: string, newValues: Partial<BadgeCollection>) => void;
     onDeleteCollection: (collection: BadgeCollection) => void;
@@ -524,6 +525,7 @@ type BadgeCollectionCardProps = {
 function BadgeCollectionCard({ 
     collection, 
     allBadges, 
+    allBadgeCollections,
     predefinedColors, 
     onUpdateCollection, 
     onDeleteCollection, 
@@ -1228,6 +1230,7 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
                                     key={collection.id}
                                     collection={collection}
                                     allBadges={allBadges}
+                                    allBadgeCollections={allBadgeCollections}
                                     predefinedColors={predefinedColors}
                                     onUpdateCollection={updateBadgeCollection}
                                     onDeleteCollection={handleDeleteCollection}
@@ -1262,6 +1265,7 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
                                                     key={collection.id}
                                                     collection={collection}
                                                     allBadges={allBadges}
+                                                    allBadgeCollections={allBadgeCollections}
                                                     predefinedColors={predefinedColors}
                                                     onUpdateCollection={updateBadgeCollection}
                                                     onDeleteCollection={handleDeleteCollection}
