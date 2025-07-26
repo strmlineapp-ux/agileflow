@@ -210,7 +210,7 @@ export default function DynamicPage() {
     const isSingleTabPage = pageTabs.length === 1;
     if (isSingleTabPage && !showHeader) {
         const tab = pageTabs[0];
-        const contextTeam = tab.contextTeamId ? teams.find(t => t.id === tab.contextTeamId) : dynamicTeam;
+        const contextTeam = dynamicTeam;
         const ContentComponent = componentMap[tab.componentKey];
         return ContentComponent ? <ContentComponent tab={tab} team={contextTeam} page={pageConfig} isSingleTabPage={true} isTeamSpecificPage={pageConfig.isDynamic} /> : <div>Component for {tab.name} not found.</div>;
     }
@@ -238,7 +238,7 @@ export default function DynamicPage() {
                 </DndContext>
                 {pageTabs.map(tab => {
                     const ContentComponent = componentMap[tab.componentKey];
-                    const contextTeam = tab.contextTeamId ? teams.find(t => t.id === tab.contextTeamId) : dynamicTeam;
+                    const contextTeam = dynamicTeam;
                     return (
                         <TabsContent key={tab.id} value={tab.id} className="mt-4">
                         {ContentComponent ? <ContentComponent tab={tab} team={contextTeam} page={pageConfig} isSingleTabPage={false} isActive={activeTab === tab.id} activeTab={activeTab} isTeamSpecificPage={pageConfig.isDynamic} /> : <div>Component for {tab.name} not found.</div>}

@@ -501,7 +501,6 @@ type BadgeCollectionCardProps = {
     onUpdateBadge: (badgeId: string, badgeData: Partial<Badge>) => void;
     onDeleteBadge: (badgeId: string, collectionId: string) => void;
     isSharedPreview?: boolean;
-    contextTeam?: Team;
     isViewer?: boolean;
     isEditingName: boolean;
     setIsEditingName: (isEditing: boolean) => void;
@@ -523,7 +522,6 @@ function BadgeCollectionCard({
     onUpdateBadge, 
     onDeleteBadge, 
     isSharedPreview = false, 
-    contextTeam, 
     isViewer = false, 
     isEditingName,
     setIsEditingName,
@@ -535,7 +533,7 @@ function BadgeCollectionCard({
     currentUserBadgeIds,
     ...props
 }: BadgeCollectionCardProps) {
-    const { viewAsUser, users, updateTeam, allBadgeCollections, isDragModifierPressed } = useUser();
+    const { viewAsUser, users, isDragModifierPressed } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
@@ -653,20 +651,6 @@ function BadgeCollectionCard({
         }
         onUpdateCollection(collection.id, { applications: Array.from(currentApplications) });
     };
-    
-    const handleToggleCollectionActive = () => {
-        if (!contextTeam || isViewer) return;
-        const wasActive = contextTeam.activeBadgeCollections?.includes(collection.id);
-        const currentActive = new Set(contextTeam.activeBadgeCollections || []);
-        if (wasActive) {
-            currentActive.delete(collection.id);
-        } else {
-            currentActive.add(collection.id);
-        }
-        updateTeam(contextTeam.id, { activeBadgeCollections: Array.from(currentActive) });
-    };
-    
-    const isActive = contextTeam && contextTeam.activeBadgeCollections?.includes(collection.id);
 
     const viewModeOptions: {mode: BadgeCollection['viewMode'], icon: string, label: string}[] = [
         { mode: 'compact', icon: 'view_module', label: 'Compact View' },
@@ -679,7 +663,7 @@ function BadgeCollectionCard({
         : APPLICATIONS.filter(app => collection.applications?.includes(app.key));
 
     return (
-        <Card className={cn("h-full flex flex-col bg-transparent relative", !isSharedPreview && !isActive && !!contextTeam && "opacity-50")} {...props}>
+        <Card className={cn("h-full flex flex-col bg-transparent relative")} {...props}>
             <CardHeader className="group p-2" {...dragHandleProps}>
                  {!isSharedPreview && (
                   <TooltipProvider>
@@ -907,24 +891,6 @@ function BadgeCollectionCard({
                                 </TooltipProvider>
                             ))}
                         </div>
-                        {contextTeam && !isViewer && !isSharedPreview && (
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className={cn("h-8 w-8", isActive ? 'text-primary' : 'text-muted-foreground')}
-                                            onClick={handleToggleCollectionActive}
-                                            onPointerDown={(e) => e.stopPropagation()}
-                                        >
-                                            <GoogleSymbol name={isActive ? 'check_circle' : 'circle'} weight={100} filled={isActive} opticalSize={20} />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>{isActive ? 'Deactivate' : 'Activate'} for Team</p></TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        )}
                     </CardFooter>
                 </>
              )}
@@ -1059,9 +1025,9 @@ export function BadgeManagement({ tab, page, team, isActive }: { team: Team; tab
     const sharedCollections = useMemo(() => {
         const displayedIds = new Set(displayedCollections.map(c => c.id));
         return allBadgeCollections
-            .filter(c => c.isShared && !displayedIds.has(c.id))
+            .filter(c => c.isShared && c.owner.id !== viewAsUser.userId && !displayedIds.has(c.id))
             .filter(c => c.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
-    }, [allBadgeCollections, displayedCollections, sharedSearchTerm]);
+    }, [allBadgeCollections, displayedCollections, sharedSearchTerm, viewAsUser.userId]);
 
     const currentUserBadgeIds = useMemo(() => {
         const badgeIds = new Set<string>();
@@ -1225,7 +1191,7 @@ export function BadgeManagement({ tab, page, team, isActive }: { team: Team; tab
                           <DuplicateZone id="duplicate-collection-zone" onAdd={() => addBadgeCollection(viewAsUser)} />
                       </div>
                       <div className="flex items-center gap-1">
-                          <CompactSearchInput searchTerm={mainSearchTerm} setSearchTerm={setMainSearchTerm} placeholder="Search collections..." isActive={isActive} />
+                          <CompactSearchInput searchTerm={mainSearchTerm} setSearchTerm={setMainSearchTerm} placeholder="Search collections..." autoFocus={isActive} />
                           <TooltipProvider>
                               <Tooltip>
                                   <TooltipTrigger asChild>
@@ -1252,7 +1218,6 @@ export function BadgeManagement({ tab, page, team, isActive }: { team: Team; tab
                                     onAddBadge={addBadge}
                                     onUpdateBadge={updateBadge}
                                     onDeleteBadge={handleDeleteBadge}
-                                    contextTeam={team}
                                     isExpanded={expandedCollections.has(collection.id)}
                                     onToggleExpand={() => onToggleExpand(collection.id)}
                                 />

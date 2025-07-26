@@ -406,7 +406,7 @@ function CalendarCard({
       <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
         <DialogContent className="max-w-md">
             <div className="absolute top-4 right-4">
-              <Button variant="ghost" size="icon" onClick={handleSaveGoogleCalendarId}>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSaveGoogleCalendarId}>
                   <GoogleSymbol name="check" className="text-xl" weight={100} opticalSize={20} />
                   <span className="sr-only">Link Calendar</span>
               </Button>
@@ -610,8 +610,8 @@ export function CalendarManagement({ tab, page }: { tab: AppTab; page: AppPage }
 
   const sharedCalendars = useMemo(() => {
     const displayedIds = new Set(displayedCalendars.map(c => c.id));
-    return calendars.filter(c => c.isShared && !displayedIds.has(c.id) && c.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
-  }, [calendars, displayedCalendars, sharedSearchTerm]);
+    return calendars.filter(c => c.isShared && c.owner.id !== viewAsUser.userId && !displayedIds.has(c.id) && c.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
+  }, [calendars, displayedCalendars, sharedSearchTerm, viewAsUser.userId]);
 
   const onDragStart = (event: DragStartEvent) => {
     setActiveCalendar(event.active.data.current?.calendar || null);
@@ -664,6 +664,8 @@ export function CalendarManagement({ tab, page }: { tab: AppTab; page: AppPage }
   };
   
   const calendarIds = useMemo(() => displayedCalendars.map(c => c.id), [displayedCalendars]);
+  const sharedCalendarIds = useMemo(() => sharedCalendars.map(c => c.id), [sharedCalendars]);
+
 
   return (
     <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
@@ -722,7 +724,7 @@ export function CalendarManagement({ tab, page }: { tab: AppTab; page: AppPage }
                 </CardHeader>
                 <CardContent className="flex-1 p-2 overflow-hidden">
                     <ScrollArea className="h-full">
-                    <SortableContext items={sharedCalendars.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                    <SortableContext items={sharedCalendarIds} strategy={verticalListSortingStrategy}>
                         <div className="space-y-2">
                         {sharedCalendars.map(calendar => (
                             <SortableCalendarCard
