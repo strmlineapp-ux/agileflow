@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -12,16 +11,32 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Input } from '../ui/input';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
 
 
-function AssignedBadge({ badge }: { badge: Badge }) {
+function AssignedBadge({ badge, memberId, teamId, canManage }: { badge: Badge, memberId: string, teamId: string, canManage: boolean }) {
+    const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+        id: `assigned-badge::${teamId}::${memberId}::${badge.id}`,
+        data: {
+            type: 'assigned-badge',
+            badge: badge,
+            memberId: memberId,
+        },
+        disabled: !canManage,
+    });
+    
     return (
         <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger asChild>
                 <div
+                    ref={setNodeRef}
+                    {...listeners}
+                    {...attributes}
                     className={cn(
-                    'h-7 w-7 rounded-full border flex items-center justify-center bg-transparent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50'
+                        'h-7 w-7 rounded-full border flex items-center justify-center bg-transparent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50',
+                        canManage && 'cursor-grab',
+                        isDragging && 'opacity-50'
                     )}
                     style={{ borderColor: badge.color }}
                     tabIndex={0}
@@ -48,6 +63,14 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, canManage }
   const labelInputRef = useRef<HTMLInputElement>(null);
   
   const teamBadgesLabel = team.userBadgesLabel || 'Team Badges';
+  
+  const { isOver, setNodeRef: droppableRef } = useDroppable({
+    id: member.userId,
+    data: {
+        type: 'member-card',
+        member: member,
+    },
+  });
 
   const userAssignableBadges = useMemo(() => {
     const activeAndApplicableCollections = allBadgeCollections.filter(
@@ -63,9 +86,9 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, canManage }
 
   const assignedBadges = useMemo(() => {
     return (member.roles || [])
-      .map(roleName => userAssignableBadges.find(b => b.name === roleName))
+      .map(roleName => allBadges.find(b => b.name === roleName))
       .filter((b): b is Badge => !!b);
-  }, [member.roles, userAssignableBadges]);
+  }, [member.roles, allBadges]);
 
   const groupedBadges = useMemo(() => {
     const groups: { [collectionName: string]: Badge[] } = {};
@@ -111,11 +134,11 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, canManage }
 
   return (
     <>
-      <Card className="bg-transparent">
+      <Card className={cn("bg-transparent", isOver && "ring-1 ring-inset ring-primary")} ref={droppableRef}>
         <CardHeader>
           <div className="flex items-center gap-4">
              <div 
-                className={cn("relative cursor-pointer")}
+                className={cn("relative", canManage && !isDragModifierPressed && "cursor-pointer")}
                  onClick={(e) => {
                     if (canManage && !isDragModifierPressed) {
                         e.stopPropagation();
@@ -177,7 +200,7 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, canManage }
                                 <p className="text-xs tracking-wider mb-1.5">{collectionName}</p>
                                 <div className="flex flex-wrap gap-1.5">
                                     {badges.map(badge => (
-                                        <AssignedBadge key={badge.id} badge={badge} />
+                                        <AssignedBadge key={badge.id} badge={badge} memberId={member.userId} teamId={team.id} canManage={canManage} />
                                     ))}
                                 </div>
                             </div>
