@@ -24,7 +24,7 @@ function SortableTeamMember({ member, team, isViewer }: { member: User, team: Te
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className={cn(isDragging && "shadow-xl")}>
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className={cn(isDragging && "shadow-xl", "rounded-md focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50")}>
       <TeamMemberCard member={member} team={team} isViewer={isViewer} />
     </div>
   );
@@ -87,17 +87,28 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
 
     useEffect(() => {
         if (isEditingTitle) titleInputRef.current?.focus();
-        if (isEditingAdminsLabel) adminsLabelInputRef.current?.focus();
-        if (isEditingMembersLabel) membersLabelInputRef.current?.focus();
-    }, [isEditingTitle, isEditingAdminsLabel, isEditingMembersLabel]);
+    }, [isEditingTitle]);
 
-    const handleSaveTitle = () => {
+    const handleSaveTitle = useCallback(() => {
         const newName = titleInputRef.current?.value.trim();
         if (newName && newName !== tab.name) {
             updateAppTab(tab.id, { name: newName });
         }
         setIsEditingTitle(false);
-    };
+    }, [tab.id, tab.name, updateAppTab]);
+
+    useEffect(() => {
+        if (!isEditingTitle) return;
+        const handleOutsideClick = (event: MouseEvent) => {
+            if (titleInputRef.current && !titleInputRef.current.contains(event.target as Node)) {
+                handleSaveTitle();
+            }
+        };
+        document.addEventListener("mousedown", handleOutsideClick);
+        return () => {
+            document.removeEventListener("mousedown", handleOutsideClick);
+        };
+    }, [isEditingTitle, handleSaveTitle]);
 
     const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') handleSaveTitle();
@@ -112,6 +123,22 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         setIsEditingAdminsLabel(false);
     }, [team.id, teamAdminsLabel, updateTeam]);
 
+    useEffect(() => {
+        if (!isEditingAdminsLabel) return;
+        const handleOutsideClick = (event: MouseEvent) => {
+            if (adminsLabelInputRef.current && !adminsLabelInputRef.current.contains(event.target as Node)) {
+                handleSaveAdminsLabel();
+            }
+        };
+        adminsLabelInputRef.current?.focus();
+        adminsLabelInputRef.current?.select();
+        document.addEventListener("mousedown", handleOutsideClick);
+        return () => {
+            document.removeEventListener("mousedown", handleOutsideClick);
+        };
+    }, [isEditingAdminsLabel, handleSaveAdminsLabel]);
+
+
     const handleAdminsLabelKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') handleSaveAdminsLabel();
         else if (e.key === 'Escape') setIsEditingAdminsLabel(false);
@@ -124,6 +151,21 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
         }
         setIsEditingMembersLabel(false);
     }, [team.id, membersLabel, updateTeam]);
+
+    useEffect(() => {
+        if (!isEditingMembersLabel) return;
+        const handleOutsideClick = (event: MouseEvent) => {
+            if (membersLabelInputRef.current && !membersLabelInputRef.current.contains(event.target as Node)) {
+                handleSaveMembersLabel();
+            }
+        };
+        membersLabelInputRef.current?.focus();
+        membersLabelInputRef.current?.select();
+        document.addEventListener("mousedown", handleOutsideClick);
+        return () => {
+            document.removeEventListener("mousedown", handleOutsideClick);
+        };
+    }, [isEditingMembersLabel, handleSaveMembersLabel]);
 
     const handleMembersLabelKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') handleSaveMembersLabel();

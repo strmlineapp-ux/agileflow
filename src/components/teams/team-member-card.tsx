@@ -123,18 +123,22 @@ export function TeamMemberCard({ member, team, isViewer }: { member: User, team:
         <TooltipTrigger asChild>
           <UiBadge
             variant={'outline'}
-            style={{ 
-              borderColor: badge.color, 
-              color: isAssigned ? badge.color : 'hsl(var(--muted-foreground))',
-              borderStyle: isAssigned ? 'solid' : 'dashed' 
+            style={{
+                borderColor: badge.color,
+                color: isAssigned ? getContrastColor(badge.color) : 'hsl(var(--muted-foreground))',
+                backgroundColor: isAssigned ? badge.color : 'transparent',
+                borderStyle: isAssigned ? 'solid' : 'dashed',
             }}
             className={cn(
-              'gap-1 p-1 pl-2 rounded-full h-7 text-sm font-thin bg-transparent',
+              'gap-1 p-1 pl-2 rounded-full h-7 text-sm font-thin',
               canManageRoles && 'cursor-pointer'
             )}
             onClick={() => canManageRoles && handleToggleRole(badge.name)}
           >
-            <GoogleSymbol name={badge.icon} style={{ fontSize: '20px' }} weight={100} />
+            <GoogleSymbol 
+                name={badge.icon} 
+                style={{ fontSize: '20px', color: isAssigned ? getContrastColor(badge.color) : badge.color }} 
+                weight={100} />
             {badge.name}
           </UiBadge>
         </TooltipTrigger>
