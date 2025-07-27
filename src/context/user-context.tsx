@@ -162,11 +162,20 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkAuth = async () => {
         setLoading(true);
-        const storedUserId = localStorage.getItem(AUTH_COOKIE);
-        if (storedUserId) {
-            await loadUserAndData(storedUserId);
+        try {
+            const storedUserId = localStorage.getItem(AUTH_COOKIE);
+            if (storedUserId) {
+                await loadUserAndData(storedUserId);
+            }
+        } catch (error) {
+            console.error("Failed to load user data:", error);
+            // Handle error case, e.g., clear session
+            localStorage.removeItem(AUTH_COOKIE);
+            setRealUser(null);
+            setViewAsUserId(null);
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
     checkAuth();
   }, [loadUserAndData]);
@@ -661,14 +670,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors,
     handleBadgeAssignment, handleBadgeUnassignment, linkGoogleCalendar, getPriorityDisplay, searchSharedTeams
   ]);
-
-  if (loading && !realUser) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-background">
-        <div className="h-16 w-16 animate-spin rounded-full border-4 border-dashed border-primary"></div>
-      </div>
-    );
-  }
 
   return (
     <UserContext.Provider value={contextValue}>
