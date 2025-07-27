@@ -15,18 +15,11 @@ import { hasAccess } from '@/lib/permissions';
 import { Button } from '../ui/button';
 
 export function Sidebar() {
-  const pathname = usePathname();
   const { realUser, viewAsUser, setViewAsUser, users, loading } = useUserSession();
-  const { notifications, appSettings, linkGoogleCalendar, fetchTeams } = useUserData();
-  const [teams, setTeams] = useState<any[]>([]);
+  const { notifications, appSettings, linkGoogleCalendar, teams } = useUserData();
   
   const isViewingAsSomeoneElse = realUser?.userId !== viewAsUser?.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
-
-  useEffect(() => {
-    fetchTeams().then(setTeams);
-  }, [fetchTeams]);
-
 
   const orderedNavItems = useMemo(() => {
     if (!viewAsUser) return [];
@@ -89,8 +82,8 @@ export function Sidebar() {
           {orderedNavItems.map((item) => {
               if (!item) return null;
               const isNotifications = item.id === 'page-notifications';
-              const isActive = item.path === pathname || (pathname.startsWith(item.path) && pathname.charAt(item.path.length) === '/');
-
+              const pathname = usePathname();
+              const isActive = pathname.startsWith(item.path);
 
               return (
                 <Tooltip key={item.id}>

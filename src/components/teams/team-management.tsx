@@ -522,13 +522,10 @@ function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
 }
 
 export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: AppTab; page: AppPage; isSingleTabPage?: boolean }) {
-    const { viewAsUser, users, fetchTeams, appSettings, addTeam, updateTeam, deleteTeam, reorderTeams, updateAppTab, updateUser, isDragModifierPressed } = useUser();
+    const { viewAsUser, users, teams, appSettings, addTeam, updateTeam, deleteTeam, reorderTeams, updateAppTab, updateUser, isDragModifierPressed } = useUser();
     const router = useRouter();
     const pathname = usePathname();
     const { toast } = useToast();
-
-    const [teams, setTeams] = useState<Team[]>([]);
-    const [loading, setLoading] = useState(true);
 
     const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -539,16 +536,6 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     
     const [searchTerm, setSearchTerm] = useState('');
     const [activeDragItem, setActiveDragItem] = useState<{type: string, data: any} | null>(null);
-    
-    useEffect(() => {
-        const loadTeams = async () => {
-            setLoading(true);
-            const fetchedTeams = await fetchTeams();
-            setTeams(fetchedTeams);
-            setLoading(false);
-        };
-        loadTeams();
-    }, [fetchTeams]);
     
     const pageTitle = page.isDynamic && teams.find(t => t.id === page.path.split('/')[2]) ? `${teams.find(t => t.id === page.path.split('/')[2])?.name} ${page.name}` : page.name;
     const tabTitle = appSettings.teamManagementLabel || tab.name;

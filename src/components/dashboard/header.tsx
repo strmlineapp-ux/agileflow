@@ -16,14 +16,9 @@ import { hasAccess } from '@/lib/permissions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export function Header() {
-  const { realUser, viewAsUser, notifications, appSettings, fetchTeams } = useUser();
-  const [teams, setTeams] = useState<any[]>([]);
+  const { realUser, viewAsUser, notifications, appSettings, teams } = useUser();
   const isViewingAsSomeoneElse = realUser?.userId !== viewAsUser?.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
-
-  useEffect(() => {
-    fetchTeams().then(setTeams);
-  }, [fetchTeams]);
   
   const orderedNavItems = useMemo(() => {
     if (!viewAsUser) return [];

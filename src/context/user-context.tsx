@@ -44,6 +44,7 @@ const UserSessionContext = createContext<UserSessionContextType | null>(null);
 interface UserDataContextType {
   isDragModifierPressed: boolean;
   holidays: Holiday[];
+  teams: Team[];
   fetchTeams: () => Promise<Team[]>;
   addTeam: (teamData: Omit<Team, 'id'>) => Promise<void>;
   updateTeam: (teamId: string, teamData: Partial<Team>) => Promise<void>;
@@ -102,6 +103,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [isDragModifierPressed, setIsDragModifierPressed] = useState(false);
   
   const [users, setUsers] = useState<User[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [userStatusAssignments, setUserStatusAssignments] = useState<Record<string, UserStatusAssignment[]>>({});
   const [calendars, setCalendars] = useState<SharedCalendar[]>([]);
@@ -122,6 +124,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       // Simulate API call to fetch all non-user-specific data
       await simulateApi(100);
       setUsers(mockUsers);
+      setTeams(mockTeams);
       setCalendars(mockCalendars);
       setLocations(mockLocations);
       setHolidays(mockHolidays);
@@ -260,7 +263,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const allBookableLocations = useMemo(() => {
-    const teams = mockTeams; // Use mockTeams directly as it's not changing per user.
     const globalLocations = locations.map(l => ({ id: l.id, name: l.name }));
     const workstationLocations = teams.flatMap(team => 
         (team.workstations || []).map(wsName => ({
@@ -276,7 +278,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         }
     });
     return Array.from(uniqueNames.values()).sort((a,b) => a.name.localeCompare(b.name));
-  }, [locations]);
+  }, [locations, teams]);
 
   const updateUser = useCallback(async (userId: string, userData: Partial<User>) => {
     await simulateApi();
@@ -298,26 +300,22 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const addTeam = useCallback(async (teamData: Omit<Team, 'id'>) => {
     const newTeam: Team = { ...teamData, id: crypto.randomUUID() };
     await simulateApi();
-    // This state update is temporary for UI reflection; a real DB would be the source of truth.
-    const currentTeams = await fetchTeams();
-    // In a real app, this would be a DB write, then re-fetch.
-    const newTeams = [...currentTeams, newTeam];
-    // Here we would persist `newTeams`
+    setTeams(current => [...current, newTeam]);
     toast({ title: 'Success', description: `Team "${newTeam.name}" has been created.` });
-  }, []);
+  }, [toast]);
 
   const updateTeam = useCallback(async (teamId: string, teamData: Partial<Team>) => {
     await simulateApi();
-    // This is a mock implementation. A real app would send this update to a database.
-    console.log("Updating team:", teamId, teamData);
+    setTeams(current => current.map(t => t.id === teamId ? { ...t, ...teamData } : t));
   }, []);
 
   const deleteTeam = useCallback(async (teamId: string, router: AppRouterInstance, pathname: string) => {
     await simulateApi();
      if (!viewAsUser) return;
-    const currentTeams = await fetchTeams();
+    const team = teams.find(t => t.id === teamId);
     const page = appSettings.pages.find(p => pathname.startsWith(p.path));
-    const team = currentTeams.find(t => t.id === teamId);
+
+    setTeams(current => current.filter(t => t.id !== teamId));
 
     if (page && team) {
       const userHadAccess = hasAccess(viewAsUser, page);
@@ -333,11 +331,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
     
     toast({ title: 'Success', description: `Team "${team?.name}" has been deleted.` });
-  }, [appSettings, viewAsUser, toast]);
+  }, [appSettings, viewAsUser, toast, teams, setTeams]);
 
   const reorderTeams = useCallback(async (reorderedTeams: Team[]) => {
       await simulateApi();
-      console.log("Reordering teams, this would be a DB update.", reorderedTeams.map(t => t.id));
+      // To ensure a re-render, we create a new array.
+      setTeams([...reorderedTeams]);
   }, []);
 
   const addCalendar = useCallback(async (newCalendarData: Omit<SharedCalendar, 'id'>) => {
@@ -605,14 +604,28 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const deleteBadge = useCallback((badgeId: string, collectionId: string) => {
-      setAllBadges(current => current.filter(b => b.id !== badgeId));
-      setAllBadgeCollections(current => current.map(c => {
-          if (c.id === collectionId) {
-              return { ...c, badgeIds: c.badgeIds.filter(id => id !== badgeId) };
-          }
-          return c;
-      }));
-  }, []);
+    const badge = allBadges.find(b => b.id === badgeId);
+    if (!badge) return;
+
+    if (badge.owner.id === viewAsUser?.userId) {
+        // If the user owns the badge, delete it from everywhere.
+        setAllBadges(current => current.filter(b => b.id !== badgeId));
+        setAllBadgeCollections(current => 
+            current.map(c => ({
+                ...c,
+                badgeIds: c.badgeIds.filter(id => id !== badgeId)
+            }))
+        );
+    } else {
+        // If the user does not own the badge, just unlink it from this collection.
+        setAllBadgeCollections(current => current.map(c => {
+            if (c.id === collectionId) {
+                return { ...c, badgeIds: c.badgeIds.filter(id => id !== badgeId) };
+            }
+            return c;
+        }));
+    }
+  }, [allBadges, viewAsUser]);
   
   const reorderBadges = useCallback((collectionId: string, badgeIds: string[]) => {
     setAllBadgeCollections(current => current.map(c => c.id === collectionId ? { ...c, badgeIds } : c));
@@ -681,10 +694,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }), [realUser, viewAsUser, users, login, signInWithGoogle, logout, loading]);
 
   const dataValue = useMemo(() => ({
-    isDragModifierPressed, holidays, fetchTeams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, handleBadgeAssignment, handleBadgeUnassignment, searchSharedTeams
-  }), [isDragModifierPressed, holidays, fetchTeams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, userStatusAssignments, addUser, linkGoogleCalendar, calendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, handleBadgeAssignment, handleBadgeUnassignment, searchSharedTeams]);
+    isDragModifierPressed, holidays, teams, fetchTeams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, handleBadgeAssignment, handleBadgeUnassignment, searchSharedTeams
+  }), [isDragModifierPressed, holidays, teams, fetchTeams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, userStatusAssignments, addUser, linkGoogleCalendar, calendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, handleBadgeAssignment, handleBadgeUnassignment, searchSharedTeams]);
 
-  if (!viewAsUser) {
+  if (loading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <div className="h-16 w-16 animate-spin rounded-full border-4 border-dashed border-primary"></div>
