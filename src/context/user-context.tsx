@@ -119,10 +119,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  const loadInitialData = useCallback(async (userId: string) => {
+  const loadUserAndData = useCallback(async (userId: string) => {
       await simulateApi(100);
       
       const user = mockUsers.find(u => u.userId === userId);
+      if (!user) return false;
+
+      setRealUser(user);
+      setViewAsUserId(user.userId);
       
       setUsers(mockUsers);
       setTeams(mockTeams);
@@ -153,19 +157,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         tabs: [...coreTabs, ...mockAppSettings.tabs],
       });
       
-      return !!user;
+      return true;
   }, []);
-
-  const loadUserAndData = useCallback(async (userId: string) => {
-    const user = mockUsers.find(u => u.userId === userId);
-    if (user) {
-        setRealUser(user);
-        setViewAsUserId(user.userId);
-        await loadInitialData(userId);
-        return true;
-    }
-    return false;
-  }, [loadInitialData]);
   
   useEffect(() => {
     const checkAuth = async () => {
@@ -728,4 +721,3 @@ export function useUser() {
     return { ...session, ...data };
 }
 
-    

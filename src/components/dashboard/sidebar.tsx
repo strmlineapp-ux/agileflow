@@ -8,15 +8,14 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/comp
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal, DropdownMenuLabel } from '../ui/dropdown-menu';
-import { useUserSession, useUserData } from '@/context/user-context';
+import { useUser } from '@/context/user-context';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Badge } from '../ui/badge';
 import { hasAccess } from '@/lib/permissions';
 import { Button } from '../ui/button';
 
 export function Sidebar() {
-  const { realUser, viewAsUser, setViewAsUser, users, loading } = useUserSession();
-  const { notifications, appSettings, linkGoogleCalendar, teams } = useUserData();
+  const { realUser, viewAsUser, setViewAsUser, users, loading, notifications, appSettings, linkGoogleCalendar, teams } = useUser();
   
   const isViewingAsSomeoneElse = realUser?.userId !== viewAsUser?.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -200,3 +199,4 @@ export function Sidebar() {
     </aside>
   );
 }
+
