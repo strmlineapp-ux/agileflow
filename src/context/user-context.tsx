@@ -224,14 +224,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
               localStorage.setItem(AUTH_COOKIE, user.userId);
               await loadUserAndData(user.userId);
               toast({ title: "Welcome back!" });
-              setLoading(false);
               return true;
           }
           throw new Error("Invalid credentials");
       } catch (error) {
           toast({ variant: 'destructive', title: 'Login Failed', description: (error as Error).message });
-          setLoading(false);
           return false;
+      } finally {
+        setLoading(false);
       }
   }, [loadUserAndData, toast]);
   
@@ -244,14 +244,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
               localStorage.setItem(AUTH_COOKIE, user.userId);
               await loadUserAndData(user.userId);
               toast({ title: "Welcome back!" });
-              setLoading(false);
               return true;
           }
           throw new Error("Google sign-in failed.");
       } catch (error) {
           toast({ variant: 'destructive', title: 'Login Failed', description: (error as Error).message });
-          setLoading(false);
           return false;
+      } finally {
+        setLoading(false);
       }
   }, [loadUserAndData, toast]);
   
