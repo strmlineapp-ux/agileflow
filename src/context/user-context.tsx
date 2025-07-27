@@ -11,8 +11,6 @@ import { hexToHsl } from '@/lib/utils';
 import { hasAccess, getOwnershipContext } from '@/lib/permissions';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { corePages, coreTabs } from '@/lib/core-data';
-import { syncCalendar } from '@/ai/flows/sync-calendar-flow';
-import { getFirebaseAppForTenant } from '@/lib/firebase';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
 // Helper to simulate async operations
@@ -24,59 +22,60 @@ const predefinedColors = [
     '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
 ];
 
-// --- Split Contexts for Performance ---
-
-// Context for frequently updated, session-specific data (e.g., who the user is viewing as)
-interface UserSessionContextType {
+// --- Context Definition ---
+interface UserContextType {
+  // Session
   realUser: User | null;
   viewAsUser: User | null;
   setViewAsUser: (userId: string) => void;
-  users: User[]; // Keep users here as it's needed for the "View As" dropdown
   login: (email: string, pass: string) => Promise<boolean>;
   signInWithGoogle: () => Promise<boolean>;
   logout: () => Promise<void>;
   loading: boolean;
-}
-const UserSessionContext = createContext<UserSessionContextType | null>(null);
 
-
-// Context for heavier, less frequently updated application data
-interface UserDataContextType {
+  // Data & Actions
   isDragModifierPressed: boolean;
   holidays: Holiday[];
+  users: User[];
   teams: Team[];
-  addTeam: (teamData: Omit<Team, 'id'>) => Promise<void>;
-  updateTeam: (teamId: string, teamData: Partial<Team>) => Promise<void>;
-  deleteTeam: (teamId: string, router: AppRouterInstance, pathname: string) => Promise<void>;
-  reorderTeams: (teams: Team[]) => Promise<void>;
-  updateUser: (userId: string, userData: Partial<User>) => Promise<void>;
-  deleteUser: (userId: string) => Promise<void>;
+  appSettings: AppSettings;
+  calendars: SharedCalendar[];
+  locations: BookableLocation[];
+  allBookableLocations: BookableLocation[];
   notifications: Notification[];
   setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
   userStatusAssignments: Record<string, UserStatusAssignment[]>;
   setUserStatusAssignments: React.Dispatch<React.SetStateAction<Record<string, UserStatusAssignment[]>>>;
+  
+  // CRUD functions
+  updateUser: (userId: string, userData: Partial<User>) => Promise<void>;
   addUser: (newUser: User) => Promise<void>;
-  linkGoogleCalendar: (userId: string) => Promise<void>;
-  calendars: SharedCalendar[];
+  deleteUser: (userId: string) => Promise<void>;
+  addTeam: (teamData: Omit<Team, 'id'>) => Promise<void>;
+  updateTeam: (teamId: string, teamData: Partial<Team>) => Promise<void>;
+  deleteTeam: (teamId: string, router: AppRouterInstance, pathname: string) => Promise<void>;
+  reorderTeams: (teams: Team[]) => Promise<void>;
   addCalendar: (newCalendar: Omit<SharedCalendar, 'id'>) => Promise<void>;
   updateCalendar: (calendarId: string, calendarData: Partial<SharedCalendar>) => Promise<void>;
   deleteCalendar: (calendarId: string) => Promise<void>;
+  
   fetchEvents: (start: Date, end: Date) => Promise<Event[]>;
   addEvent: (currentEvents: Event[], newEventData: Omit<Event, 'eventId'>) => Promise<Event[]>;
   updateEvent: (currentEvents: Event[], eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => Promise<Event[]>;
   deleteEvent: (currentEvents: Event[], eventId: string) => Promise<Event[]>;
+  
   fetchTasks: () => Promise<Task[]>;
   addTask: (currentTasks: Task[], newTaskData: Omit<Task, 'taskId' | 'createdAt' | 'lastUpdated'>) => Promise<Task[]>;
   updateTask: (currentTasks: Task[], taskId: string, taskData: Partial<Task>) => Promise<Task[]>;
   deleteTask: (currentTasks: Task[], taskId: string) => Promise<Task[]>;
-  locations: BookableLocation[];
-  allBookableLocations: BookableLocation[];
+
   addLocation: (locationName: string) => Promise<void>;
   deleteLocation: (locationId: string) => Promise<void>;
-  getPriorityDisplay: (badgeId: string) => { label: React.ReactNode, description?: string, color: string, icon?: string } | undefined;
-  appSettings: AppSettings;
+
   updateAppSettings: (settings: Partial<AppSettings>) => Promise<void>;
   updateAppTab: (tabId: string, tabData: Partial<AppTab>) => Promise<void>;
+  
+  // Badge and Collection Management
   allBadges: Badge[];
   allBadgeCollections: BadgeCollection[];
   addBadgeCollection: (owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => void;
@@ -86,13 +85,17 @@ interface UserDataContextType {
   updateBadge: (badgeId: string, badgeData: Partial<Badge>) => Promise<void>;
   deleteBadge: (badgeId: string, collectionId: string) => void;
   reorderBadges: (collectionId: string, badgeIds: string[]) => void;
-  predefinedColors: string[];
   handleBadgeAssignment: (badge: Badge, memberId: string) => void;
   handleBadgeUnassignment: (badge: Badge, memberId: string) => void;
+  
+  // Utilities
+  linkGoogleCalendar: (userId: string) => Promise<void>;
+  getPriorityDisplay: (badgeId: string) => { label: React.ReactNode, description?: string, color: string, icon?: string } | undefined;
   searchSharedTeams: (searchTerm: string) => Promise<Team[]>;
+  predefinedColors: string[];
 }
-const UserDataContext = createContext<UserDataContextType | null>(null);
 
+const UserContext = createContext<UserContextType | null>(null);
 const AUTH_COOKIE = 'agileflow-auth-user-id';
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
@@ -113,11 +116,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [allBadgeCollections, setAllBadgeCollections] = useState<BadgeCollection[]>([]);
 
   const { toast } = useToast();
-  
-  const tenantId = 'default'; 
-  const app = getFirebaseAppForTenant(tenantId);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
 
   const loadUserAndData = useCallback(async (userId: string) => {
       await simulateApi(100);
@@ -142,7 +140,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       });
       setAllBadges(Array.from(badgesMap.values()).filter(Boolean));
       setAllBadgeCollections(allMockBadgeCollections);
-
+      
+      // Correctly combine core and dynamic pages
       const corePageIds = new Set(corePages.map(p => p.id));
       const dynamicPages = mockAppSettings.pages.filter(p => !corePageIds.has(p.id));
       const finalPages = [...corePages];
@@ -175,7 +174,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const viewAsUser = useMemo(() => users.find(u => u.userId === viewAsUserId) || realUser, [users, viewAsUserId, realUser]);
   
   useEffect(() => {
-    if (!viewAsUser || !viewAsUser.dragActivationKey) return;
+    if (!viewAsUser) return;
     const modifier = viewAsUser.dragActivationKey || 'shift';
     
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -326,7 +325,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const reorderTeams = useCallback(async (reorderedTeams: Team[]) => {
       await simulateApi();
-      // To ensure a re-render, we create a new array.
       setTeams([...reorderedTeams]);
   }, []);
 
@@ -350,18 +348,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setCalendars(current => current.filter(c => c.id !== calendarId));
   }, [calendars.length, toast]);
 
-  const triggerGoogleCalendarSync = useCallback(async (calendarId: string) => {
-    const calendarToSync = calendars.find(c => c.id === calendarId);
-    if (calendarToSync?.googleCalendarId) {
-      try {
-        console.log(`Auto-syncing calendar: ${calendarToSync.name}`);
-        await syncCalendar({ googleCalendarId: calendarToSync.googleCalendarId });
-      } catch (error) {
-        console.error(`Auto-sync for calendar ${calendarToSync.name} failed:`, error);
-      }
-    }
-  }, [calendars]);
-  
   const fetchEvents = useCallback(async (start: Date, end: Date): Promise<Event[]> => {
     await simulateApi(); 
     const { mockEvents } = await import('@/lib/mock-data');
@@ -375,24 +361,19 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const addEvent = useCallback(async (currentEvents: Event[], newEventData: Omit<Event, 'eventId'>) => {
     const event: Event = { ...newEventData, eventId: crypto.randomUUID() };
     await simulateApi();
-    triggerGoogleCalendarSync(event.calendarId);
     return [...currentEvents, event];
-  }, [triggerGoogleCalendarSync]);
+  }, []);
   
   const updateEvent = useCallback(async (currentEvents: Event[], eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => {
       await simulateApi();
       const updatedEvent = { ...currentEvents.find(e => e.eventId === eventId)!, ...eventData, lastUpdated: new Date() } as Event;
-      triggerGoogleCalendarSync(updatedEvent.calendarId);
       return currentEvents.map(e => e.eventId === eventId ? updatedEvent : e);
-  }, [triggerGoogleCalendarSync]);
+  }, []);
   
   const deleteEvent = useCallback(async (currentEvents: Event[], eventId: string) => {
-    const eventToDelete = currentEvents.find(e => e.eventId === eventId);
-    if (!eventToDelete) return currentEvents;
     await simulateApi();
-    triggerGoogleCalendarSync(eventToDelete.calendarId);
     return currentEvents.filter(e => e.eventId !== eventId);
-  }, [triggerGoogleCalendarSync]);
+  }, []);
   
   const fetchTasks = useCallback(async (): Promise<Task[]> => {
     await simulateApi();
@@ -668,20 +649,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }, [viewAsUser]);
 
-  const sessionValue = useMemo(() => ({
-    realUser,
-    viewAsUser,
-    setViewAsUser: setViewAsUserId,
-    users,
-    login,
-    signInWithGoogle,
-    logout,
-    loading
-  }), [realUser, viewAsUser, users, login, signInWithGoogle, logout, loading]);
-
-  const dataValue = useMemo(() => ({
-    isDragModifierPressed, holidays, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, handleBadgeAssignment, handleBadgeUnassignment, searchSharedTeams
-  }), [isDragModifierPressed, holidays, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, userStatusAssignments, addUser, linkGoogleCalendar, calendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, handleBadgeAssignment, handleBadgeUnassignment, searchSharedTeams]);
+  const contextValue = useMemo(() => ({
+    realUser, viewAsUser, setViewAsUser: setViewAsUserId, login, signInWithGoogle, logout, loading,
+    isDragModifierPressed, holidays, users, teams, appSettings, calendars, locations, allBookableLocations, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments,
+    updateUser, addUser, deleteUser, addTeam, updateTeam, deleteTeam, reorderTeams, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, addLocation, deleteLocation,
+    updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors,
+    handleBadgeAssignment, handleBadgeUnassignment, linkGoogleCalendar, getPriorityDisplay, searchSharedTeams,
+  }), [
+    realUser, viewAsUser, login, signInWithGoogle, logout, loading, isDragModifierPressed, holidays, users, teams, appSettings, calendars, locations, allBookableLocations, notifications, userStatusAssignments,
+    updateUser, addUser, deleteUser, addTeam, updateTeam, deleteTeam, reorderTeams, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, addLocation, deleteLocation,
+    updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors,
+    handleBadgeAssignment, handleBadgeUnassignment, linkGoogleCalendar, getPriorityDisplay, searchSharedTeams
+  ]);
 
   if (loading && !realUser) {
     return (
@@ -692,32 +671,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <UserSessionContext.Provider value={sessionValue}>
-      <UserDataContext.Provider value={dataValue}>
+    <UserContext.Provider value={contextValue}>
         {children}
-      </UserDataContext.Provider>
-    </UserSessionContext.Provider>
+    </UserContext.Provider>
   );
 }
 
-// Custom hooks for consuming the contexts
-export function useUserSession() {
-  const context = useContext(UserSessionContext);
-  if (!context) throw new Error('useUserSession must be used within a UserProvider');
-  return context;
-}
-
-export function useUserData() {
-  const context = useContext(UserDataContext);
-  if (!context) throw new Error('useUserData must be used within a UserProvider');
-  return context;
-}
-
-// Combined hook for convenience, for components that need both.
-// Note: Components using this will re-render on both session and data changes.
 export function useUser() {
-    const session = useUserSession();
-    const data = useUserData();
-    return { ...session, ...data };
+  const context = useContext(UserContext);
+  if (!context) throw new Error('useUser must be used within a UserProvider');
+  return context;
 }
-
