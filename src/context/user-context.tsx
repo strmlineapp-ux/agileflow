@@ -1,11 +1,10 @@
 
-
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
 import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeOwner, type Task, type Holiday } from '@/types';
 import { mockUsers, mockCalendars, mockLocations, mockTeams, mockAppSettings, allMockBadgeCollections, videoProdBadges, liveEventsBadges, pScaleBadges, starRatingBadges, effortBadges, mockHolidays } from '@/lib/mock-data';
-import { GoogleAuthProvider, getAuth } from 'firebase/auth';
+import { GoogleAuthProvider, getAuth, signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import { getFirestore } from "firebase/firestore";
 import { useToast } from '@/hooks/use-toast';
 import { hexToHsl } from '@/lib/utils';
@@ -33,16 +32,18 @@ interface UserSessionContextType {
   viewAsUser: User | null;
   setViewAsUser: (userId: string) => void;
   users: User[]; // Keep users here as it's needed for the "View As" dropdown
+  login: (email: string, pass: string) => Promise<boolean>;
+  signInWithGoogle: () => Promise<boolean>;
+  logout: () => Promise<void>;
+  loading: boolean;
 }
 const UserSessionContext = createContext<UserSessionContextType | null>(null);
 
 
 // Context for heavier, less frequently updated application data
 interface UserDataContextType {
-  loading: boolean;
   isDragModifierPressed: boolean;
   holidays: Holiday[];
-  teams: Team[];
   fetchTeams: () => Promise<Team[]>;
   addTeam: (teamData: Omit<Team, 'id'>) => Promise<void>;
   updateTeam: (teamId: string, teamData: Partial<Team>) => Promise<void>;
@@ -92,15 +93,15 @@ interface UserDataContextType {
 }
 const UserDataContext = createContext<UserDataContextType | null>(null);
 
-const REAL_USER_ID = '1'; // Bernardo is the default user
+const AUTH_COOKIE = 'agileflow-auth-user-id';
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
-  const [viewAsUserId, setViewAsUserId] = useState<string>(REAL_USER_ID);
+  const [realUser, setRealUser] = useState<User | null>(null);
+  const [viewAsUserId, setViewAsUserId] = useState<string | null>(null);
   const [isDragModifierPressed, setIsDragModifierPressed] = useState(false);
   
   const [users, setUsers] = useState<User[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [userStatusAssignments, setUserStatusAssignments] = useState<Record<string, UserStatusAssignment[]>>({});
   const [calendars, setCalendars] = useState<SharedCalendar[]>([]);
@@ -117,17 +118,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  useEffect(() => {
-    const loadData = async () => {
-      // Set loading to true initially
-      setLoading(true);
-
-      // Simulate API call
-      await simulateApi(200);
-      
-      // Populate all state from mock data
+  const loadInitialData = useCallback(async () => {
+      // Simulate API call to fetch all non-user-specific data
+      await simulateApi(100);
       setUsers(mockUsers);
-      setTeams(mockTeams);
       setCalendars(mockCalendars);
       setLocations(mockLocations);
       setHolidays(mockHolidays);
@@ -138,7 +132,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
               badgesMap.set(badge.id, badge);
           }
       });
-      setAllBadges(Array.from(badgesMap.values()).filter(Boolean));
+      setAllBadges(Array.from(badgesMap.values())).filter(Boolean);
       setAllBadgeCollections(allMockBadgeCollections);
 
       const corePageIds = new Set(corePages.map(p => p.id));
@@ -154,14 +148,36 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         pages: finalPages,
         tabs: [...coreTabs, ...mockAppSettings.tabs],
       });
-      
-      // Only set loading to false after all state is initialized
-      setLoading(false);
-    };
-    loadData();
   }, []);
 
-  const realUser = useMemo(() => users.find(u => u.userId === REAL_USER_ID) || null, [users]);
+  const loadUserAndData = useCallback(async (userId: string) => {
+    setLoading(true);
+    await loadInitialData(); // Load all static data
+    
+    // Find the logged-in user
+    const user = mockUsers.find(u => u.userId === userId);
+    if (user) {
+        setRealUser(user);
+        setViewAsUserId(user.userId);
+    }
+    setLoading(false);
+    return !!user;
+  }, [loadInitialData]);
+  
+  useEffect(() => {
+    const checkAuth = async () => {
+        setLoading(true);
+        const storedUserId = localStorage.getItem(AUTH_COOKIE);
+        if (storedUserId) {
+            await loadUserAndData(storedUserId);
+        } else {
+            await loadInitialData();
+            setLoading(false);
+        }
+    };
+    checkAuth();
+  }, [loadUserAndData, loadInitialData]);
+
   const viewAsUser = useMemo(() => users.find(u => u.userId === viewAsUserId) || realUser, [users, viewAsUserId, realUser]);
   
   useEffect(() => {
@@ -197,8 +213,54 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     };
   }, [viewAsUser]);
 
+  const login = useCallback(async (email: string, pass: string): Promise<boolean> => {
+      setLoading(true);
+      try {
+          // This is a mock authentication.
+          await simulateApi(500);
+          const user = mockUsers.find(u => u.email === email);
+          if (user) {
+              localStorage.setItem(AUTH_COOKIE, user.userId);
+              await loadUserAndData(user.userId);
+              toast({ title: "Welcome back!" });
+              return true;
+          }
+          throw new Error("Invalid credentials");
+      } catch (error) {
+          toast({ variant: 'destructive', title: 'Login Failed', description: (error as Error).message });
+          setLoading(false);
+          return false;
+      }
+  }, [loadUserAndData, toast]);
+  
+  const signInWithGoogle = useCallback(async (): Promise<boolean> => {
+      setLoading(true);
+      try {
+          // This is a mock authentication, using the default real user.
+          await simulateApi(500);
+          const user = mockUsers.find(u => u.userId === '1');
+          if (user) {
+              localStorage.setItem(AUTH_COOKIE, user.userId);
+              await loadUserAndData(user.userId);
+              toast({ title: "Welcome back!" });
+              return true;
+          }
+          throw new Error("Google sign-in failed.");
+      } catch (error) {
+          toast({ variant: 'destructive', title: 'Login Failed', description: (error as Error).message });
+          setLoading(false);
+          return false;
+      }
+  }, [loadUserAndData, toast]);
+  
+  const logout = useCallback(async () => {
+      localStorage.removeItem(AUTH_COOKIE);
+      setRealUser(null);
+      setViewAsUserId(null);
+  }, []);
 
   const allBookableLocations = useMemo(() => {
+    const teams = mockTeams; // Use mockTeams directly as it's not changing per user.
     const globalLocations = locations.map(l => ({ id: l.id, name: l.name }));
     const workstationLocations = teams.flatMap(team => 
         (team.workstations || []).map(wsName => ({
@@ -214,7 +276,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         }
     });
     return Array.from(uniqueNames.values()).sort((a,b) => a.name.localeCompare(b.name));
-  }, [locations, teams]);
+  }, [locations]);
 
   const updateUser = useCallback(async (userId: string, userData: Partial<User>) => {
     await simulateApi();
@@ -231,62 +293,51 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const deleteUser = useCallback(async (userId: string) => {
       await simulateApi();
       setUsers(currentUsers => currentUsers.filter(u => u.userId !== userId));
-      // In a real app, you would also need to handle cascading deletes or clean-up,
-      // e.g., unassigning tasks, removing from teams, etc.
   }, []);
 
   const addTeam = useCallback(async (teamData: Omit<Team, 'id'>) => {
     const newTeam: Team = { ...teamData, id: crypto.randomUUID() };
     await simulateApi();
-    setTeams(current => [...current, newTeam]);
+    // This state update is temporary for UI reflection; a real DB would be the source of truth.
+    const currentTeams = await fetchTeams();
+    // In a real app, this would be a DB write, then re-fetch.
+    const newTeams = [...currentTeams, newTeam];
+    // Here we would persist `newTeams`
+    toast({ title: 'Success', description: `Team "${newTeam.name}" has been created.` });
   }, []);
 
   const updateTeam = useCallback(async (teamId: string, teamData: Partial<Team>) => {
     await simulateApi();
-    setTeams(current => current.map(t => t.id === teamId ? { ...t, ...teamData } as Team : t));
+    // This is a mock implementation. A real app would send this update to a database.
+    console.log("Updating team:", teamId, teamData);
   }, []);
 
   const deleteTeam = useCallback(async (teamId: string, router: AppRouterInstance, pathname: string) => {
-    if (!viewAsUser) return;
+    await simulateApi();
+     if (!viewAsUser) return;
+    const currentTeams = await fetchTeams();
     const page = appSettings.pages.find(p => pathname.startsWith(p.path));
-    const team = teams.find(t => t.id === teamId);
+    const team = currentTeams.find(t => t.id === teamId);
 
     if (page && team) {
       const userHadAccess = hasAccess(viewAsUser, page);
-      const teamsWithoutDeleted = teams.filter(t => t.id !== teamId);
-      
-      // We must temporarily update the user's teams to check future access
       const originalMemberOf = viewAsUser.memberOfTeamIds;
       viewAsUser.memberOfTeamIds = originalMemberOf?.filter(id => id !== teamId);
 
       const userWillLoseAccess = userHadAccess && !hasAccess(viewAsUser, page);
-      
-      // Restore the user's teams immediately after check
       viewAsUser.memberOfTeamIds = originalMemberOf;
       
       if (userWillLoseAccess) {
         router.push('/dashboard/notifications');
-        setTimeout(async () => {
-            await simulateApi();
-            setTeams(current => current.filter(t => t.id !== teamId));
-            toast({ title: 'Success', description: `Team "${team?.name}" has been deleted.` });
-        }, 50);
-        return;
       }
     }
     
-    await simulateApi();
-    setTeams(current => current.filter(t => t.id !== teamId));
     toast({ title: 'Success', description: `Team "${team?.name}" has been deleted.` });
-  }, [teams, appSettings, viewAsUser, toast]);
+  }, [appSettings, viewAsUser, toast]);
 
   const reorderTeams = useCallback(async (reorderedTeams: Team[]) => {
       await simulateApi();
-      const reorderedIds = reorderedTeams.map(t => t.id);
-      setTeams(current => {
-          const teamMap = new Map(current.map(t => [t.id, t]));
-          return reorderedIds.map(id => teamMap.get(id)).filter(t => !!t) as Team[];
-      });
+      console.log("Reordering teams, this would be a DB update.", reorderedTeams.map(t => t.id));
   }, []);
 
   const addCalendar = useCallback(async (newCalendarData: Omit<SharedCalendar, 'id'>) => {
@@ -493,18 +544,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       setAllBadges(current => current.filter(b => !badgeIdsToDelete.includes(b.id)));
     }
 
-    setTeams(currentTeams => currentTeams.map(team => ({
-        ...team,
-        activeBadgeCollections: (team.activeBadgeCollections || []).filter(id => id !== collectionId)
-    })));
-
   }, [allBadgeCollections, allBadges]);
 
   const addBadge = useCallback((collectionId: string, sourceBadge?: Badge) => {
     const collection = allBadgeCollections.find(c => c.id === collectionId);
-    if (!collection) return;
+    if (!collection || !viewAsUser) return;
     
-    if (collection.owner.id !== viewAsUser?.userId) {
+    if (collection.owner.id !== viewAsUser.userId) {
         toast({
             variant: 'destructive',
             title: 'Permission Denied',
@@ -517,7 +563,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         // If it's a duplication, create a new badge and add it.
         const newBadge: Badge = {
             id: crypto.randomUUID(),
-            owner: { type: 'user', id: viewAsUser!.userId },
+            owner: { type: 'user', id: viewAsUser.userId },
             ownerCollectionId: collectionId,
             name: `${sourceBadge.name} (Copy)`,
             icon: sourceBadge.icon,
@@ -559,8 +605,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const deleteBadge = useCallback((badgeId: string, collectionId: string) => {
-    setAllBadges(current => current.filter(b => b.id !== badgeId));
-    setAllBadgeCollections(current => current.map(c => c.id === collectionId ? { ...c, badgeIds: c.badgeIds.filter(id => id !== badgeId) } : c));
+      setAllBadges(current => current.filter(b => b.id !== badgeId));
+      setAllBadgeCollections(current => current.map(c => {
+          if (c.id === collectionId) {
+              return { ...c, badgeIds: c.badgeIds.filter(id => id !== badgeId) };
+          }
+          return c;
+      }));
   }, []);
   
   const reorderBadges = useCallback((collectionId: string, badgeIds: string[]) => {
@@ -623,13 +674,17 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     viewAsUser,
     setViewAsUser: setViewAsUserId,
     users,
-  }), [realUser, viewAsUser, users]);
+    login,
+    signInWithGoogle,
+    logout,
+    loading
+  }), [realUser, viewAsUser, users, login, signInWithGoogle, logout, loading]);
 
   const dataValue = useMemo(() => ({
-    loading, isDragModifierPressed, holidays, teams, fetchTeams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, handleBadgeAssignment, handleBadgeUnassignment, searchSharedTeams
-  }), [loading, isDragModifierPressed, holidays, teams, fetchTeams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, userStatusAssignments, addUser, linkGoogleCalendar, calendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, handleBadgeAssignment, handleBadgeUnassignment, searchSharedTeams]);
+    isDragModifierPressed, holidays, fetchTeams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, handleBadgeAssignment, handleBadgeUnassignment, searchSharedTeams
+  }), [isDragModifierPressed, holidays, fetchTeams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, userStatusAssignments, addUser, linkGoogleCalendar, calendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, handleBadgeAssignment, handleBadgeUnassignment, searchSharedTeams]);
 
-  if (loading || !realUser || !viewAsUser) {
+  if (!viewAsUser) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <div className="h-16 w-16 animate-spin rounded-full border-4 border-dashed border-primary"></div>

@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -16,14 +16,20 @@ import { Button } from '../ui/button';
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { realUser, viewAsUser, setViewAsUser, users } = useUserSession();
-  const { loading, teams, notifications, appSettings, allBadges, linkGoogleCalendar } = useUserData();
+  const { realUser, viewAsUser, setViewAsUser, users, loading } = useUserSession();
+  const { notifications, appSettings, linkGoogleCalendar, fetchTeams } = useUserData();
+  const [teams, setTeams] = useState<any[]>([]);
   
-  const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
+  const isViewingAsSomeoneElse = realUser?.userId !== viewAsUser?.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
 
+  useEffect(() => {
+    fetchTeams().then(setTeams);
+  }, [fetchTeams]);
+
+
   const orderedNavItems = useMemo(() => {
-    if (loading) return [];
+    if (!viewAsUser) return [];
 
     const visiblePages = appSettings.pages
         .filter(page => page.id !== 'page-settings') // Explicitly hide Settings from main nav
@@ -35,7 +41,6 @@ export function Sidebar() {
       }
       
       if (page.isDynamic) {
-        // For dynamic pages, we now rely on the user's team memberships stored on their object
         const relevantTeams = (viewAsUser.memberOfTeamIds || [])
           .map(teamId => teams.find(t => t.id === teamId))
           .filter((t): t is NonNullable<typeof t> => !!t)
@@ -61,9 +66,9 @@ export function Sidebar() {
         tooltip: page.name,
       };
     }).filter((item): item is NonNullable<typeof item> => !!item);
-  }, [appSettings.pages, viewAsUser, teams, loading]);
+  }, [appSettings.pages, viewAsUser, teams]);
   
-  if (loading) {
+  if (loading || !viewAsUser || !realUser) {
     return (
         <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col border-r bg-card sm:flex" />
     );

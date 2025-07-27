@@ -18,7 +18,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 export function Header() {
   const { realUser, viewAsUser, notifications, appSettings, fetchTeams } = useUser();
   const [teams, setTeams] = useState<any[]>([]);
-  const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
+  const isViewingAsSomeoneElse = realUser?.userId !== viewAsUser?.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   useEffect(() => {
@@ -28,7 +28,7 @@ export function Header() {
   const orderedNavItems = useMemo(() => {
     if (!viewAsUser) return [];
 
-    const visiblePages = appSettings.pages.filter(page => hasAccess(viewAsUser, page, teams));
+    const visiblePages = appSettings.pages.filter(page => hasAccess(viewAsUser, page));
 
     return visiblePages.flatMap(page => {
       if (!page.associatedTabs || page.associatedTabs.length === 0) {
@@ -36,7 +36,6 @@ export function Header() {
       }
       
       if (page.isDynamic) {
-        // For dynamic pages, we now rely on the user's team memberships stored on their object
         const relevantTeams = (viewAsUser.memberOfTeamIds || [])
           .map(teamId => teams.find(t => t.id === teamId))
           .filter((t): t is NonNullable<typeof t> => !!t)
@@ -67,7 +66,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card px-4 sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 sm:py-4">
-      {isViewingAsSomeoneElse && (
+      {isViewingAsSomeoneElse && viewAsUser && (
         <div className="flex items-center gap-2 text-sm font-normal text-orange-600 bg-orange-100 dark:bg-orange-900/50 p-2 rounded-md absolute left-1/2 -translate-x-1/2">
           <GoogleSymbol name="compare_arrows" weight={100} />
           <span>Viewing as {viewAsUser.displayName}</span>

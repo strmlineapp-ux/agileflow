@@ -24,9 +24,8 @@ export function OverviewContent({ tab: pageConfig, isSingleTabPage }: { tab: App
   useEffect(() => {
     const loadTasks = async () => {
       setLoading(true);
-      // Fetch all tasks and then slice, a real app might have a dedicated endpoint for recent tasks
       const fetchedTasks = await fetchTasks();
-      setTasks(fetchedTasks || []); // Ensure tasks is always an array
+      setTasks(fetchedTasks || []);
       setLoading(false);
     };
     loadTasks();
