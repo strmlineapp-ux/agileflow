@@ -45,7 +45,6 @@ interface UserDataContextType {
   isDragModifierPressed: boolean;
   holidays: Holiday[];
   teams: Team[];
-  fetchTeams: () => Promise<Team[]>;
   addTeam: (teamData: Omit<Team, 'id'>) => Promise<void>;
   updateTeam: (teamId: string, teamData: Partial<Team>) => Promise<void>;
   deleteTeam: (teamId: string, router: AppRouterInstance, pathname: string) => Promise<void>;
@@ -120,9 +119,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  const loadInitialData = useCallback(async () => {
-      // Simulate API call to fetch all non-user-specific data
+  const loadInitialData = useCallback(async (userId: string) => {
       await simulateApi(100);
+      
+      const user = mockUsers.find(u => u.userId === userId);
+      
       setUsers(mockUsers);
       setTeams(mockTeams);
       setCalendars(mockCalendars);
@@ -135,7 +136,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
               badgesMap.set(badge.id, badge);
           }
       });
-      setAllBadges(Array.from(badgesMap.values())).filter(Boolean);
+      setAllBadges(Array.from(badgesMap.values()).filter(Boolean));
       setAllBadgeCollections(allMockBadgeCollections);
 
       const corePageIds = new Set(corePages.map(p => p.id));
@@ -151,20 +152,19 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         pages: finalPages,
         tabs: [...coreTabs, ...mockAppSettings.tabs],
       });
+      
+      return !!user;
   }, []);
 
   const loadUserAndData = useCallback(async (userId: string) => {
-    setLoading(true);
-    await loadInitialData(); // Load all static data
-    
-    // Find the logged-in user
     const user = mockUsers.find(u => u.userId === userId);
     if (user) {
         setRealUser(user);
         setViewAsUserId(user.userId);
+        await loadInitialData(userId);
+        return true;
     }
-    setLoading(false);
-    return !!user;
+    return false;
   }, [loadInitialData]);
   
   useEffect(() => {
@@ -173,18 +173,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         const storedUserId = localStorage.getItem(AUTH_COOKIE);
         if (storedUserId) {
             await loadUserAndData(storedUserId);
-        } else {
-            await loadInitialData();
-            setLoading(false);
         }
+        setLoading(false);
     };
     checkAuth();
-  }, [loadUserAndData, loadInitialData]);
+  }, [loadUserAndData]);
 
   const viewAsUser = useMemo(() => users.find(u => u.userId === viewAsUserId) || realUser, [users, viewAsUserId, realUser]);
   
   useEffect(() => {
-    if (!viewAsUser) return;
+    if (!viewAsUser || !viewAsUser.dragActivationKey) return;
     const modifier = viewAsUser.dragActivationKey || 'shift';
     
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -219,13 +217,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (email: string, pass: string): Promise<boolean> => {
       setLoading(true);
       try {
-          // This is a mock authentication.
           await simulateApi(500);
           const user = mockUsers.find(u => u.email === email);
           if (user) {
               localStorage.setItem(AUTH_COOKIE, user.userId);
               await loadUserAndData(user.userId);
               toast({ title: "Welcome back!" });
+              setLoading(false);
               return true;
           }
           throw new Error("Invalid credentials");
@@ -239,13 +237,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const signInWithGoogle = useCallback(async (): Promise<boolean> => {
       setLoading(true);
       try {
-          // This is a mock authentication, using the default real user.
           await simulateApi(500);
           const user = mockUsers.find(u => u.userId === '1');
           if (user) {
               localStorage.setItem(AUTH_COOKIE, user.userId);
               await loadUserAndData(user.userId);
               toast({ title: "Welcome back!" });
+              setLoading(false);
               return true;
           }
           throw new Error("Google sign-in failed.");
@@ -370,11 +368,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
     }
   }, [calendars]);
-
-  const fetchTeams = useCallback(async (): Promise<Team[]> => {
-      await simulateApi();
-      return mockTeams;
-  }, []);
   
   const fetchEvents = useCallback(async (start: Date, end: Date): Promise<Event[]> => {
     await simulateApi(); 
@@ -694,10 +687,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }), [realUser, viewAsUser, users, login, signInWithGoogle, logout, loading]);
 
   const dataValue = useMemo(() => ({
-    isDragModifierPressed, holidays, teams, fetchTeams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, handleBadgeAssignment, handleBadgeUnassignment, searchSharedTeams
-  }), [isDragModifierPressed, holidays, teams, fetchTeams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, userStatusAssignments, addUser, linkGoogleCalendar, calendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, handleBadgeAssignment, handleBadgeUnassignment, searchSharedTeams]);
+    isDragModifierPressed, holidays, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, handleBadgeAssignment, handleBadgeUnassignment, searchSharedTeams
+  }), [isDragModifierPressed, holidays, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, userStatusAssignments, addUser, linkGoogleCalendar, calendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, handleBadgeAssignment, handleBadgeUnassignment, searchSharedTeams]);
 
-  if (loading) {
+  if (loading && !realUser) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <div className="h-16 w-16 animate-spin rounded-full border-4 border-dashed border-primary"></div>
@@ -734,3 +727,5 @@ export function useUser() {
     const data = useUserData();
     return { ...session, ...data };
 }
+
+    

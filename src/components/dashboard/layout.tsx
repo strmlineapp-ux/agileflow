@@ -5,7 +5,8 @@ import { Sidebar } from '@/components/dashboard/sidebar';
 import { Header } from '@/components/dashboard/header';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useUserData } from '@/context/user-context';
+import { useUser } from '@/context/user-context';
+import { redirect } from 'next/navigation';
 
 export default function DashboardLayout({
   children,
@@ -14,17 +15,19 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const isCalendarPage = pathname.startsWith('/dashboard/calendar');
-  const { loading } = useUserData();
+  const { loading, realUser } = useUser();
 
-  // The loading state from the context will now correctly gate the rendering
-  // of the main layout, preventing components from attempting to render with
-  // undefined data.
   if (loading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <div className="h-16 w-16 animate-spin rounded-full border-4 border-dashed border-primary"></div>
       </div>
     );
+  }
+  
+  if (!realUser) {
+    redirect('/login');
+    return null; // Return null to prevent rendering anything while redirecting
   }
 
   return (
@@ -44,3 +47,5 @@ export default function DashboardLayout({
       </div>
   );
 }
+
+    
