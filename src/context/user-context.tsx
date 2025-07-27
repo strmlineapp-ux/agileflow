@@ -43,9 +43,11 @@ interface UserDataContextType {
   isDragModifierPressed: boolean;
   holidays: Holiday[];
   teams: Team[];
+  fetchTeams: () => Promise<Team[]>;
   addTeam: (teamData: Omit<Team, 'id'>) => Promise<void>;
   updateTeam: (teamId: string, teamData: Partial<Team>) => Promise<void>;
   deleteTeam: (teamId: string, router: AppRouterInstance, pathname: string) => Promise<void>;
+  reorderTeams: (teams: Team[]) => Promise<void>;
   updateUser: (userId: string, userData: Partial<User>) => Promise<void>;
   deleteUser: (userId: string) => Promise<void>;
   notifications: Notification[];
@@ -81,7 +83,7 @@ interface UserDataContextType {
   deleteBadgeCollection: (collectionId: string) => void;
   addBadge: (collectionId: string, sourceBadge?: Badge) => void;
   updateBadge: (badgeId: string, badgeData: Partial<Badge>) => Promise<void>;
-  deleteBadge: (badgeId: string) => void;
+  deleteBadge: (badgeId: string, collectionId: string) => void;
   reorderBadges: (collectionId: string, badgeIds: string[]) => void;
   predefinedColors: string[];
   handleBadgeAssignment: (badge: Badge, memberId: string) => void;
@@ -167,12 +169,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const modifier = viewAsUser.dragActivationKey || 'shift';
     
     const handleKeyDown = (e: KeyboardEvent) => {
+        if (!e.key) return;
         if (e.key.toLowerCase() === modifier) {
             setIsDragModifierPressed(true);
         }
     };
     
     const handleKeyUp = (e: KeyboardEvent) => {
+        if (!e.key) return;
         if (e.key.toLowerCase() === modifier) {
             setIsDragModifierPressed(false);
         }
@@ -248,9 +252,17 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const team = teams.find(t => t.id === teamId);
 
     if (page && team) {
-      const userHadAccess = hasAccess(viewAsUser, page, teams);
+      const userHadAccess = hasAccess(viewAsUser, page);
       const teamsWithoutDeleted = teams.filter(t => t.id !== teamId);
-      const userWillLoseAccess = userHadAccess && !hasAccess(viewAsUser, page, teamsWithoutDeleted);
+      
+      // We must temporarily update the user's teams to check future access
+      const originalMemberOf = viewAsUser.memberOfTeamIds;
+      viewAsUser.memberOfTeamIds = originalMemberOf?.filter(id => id !== teamId);
+
+      const userWillLoseAccess = userHadAccess && !hasAccess(viewAsUser, page);
+      
+      // Restore the user's teams immediately after check
+      viewAsUser.memberOfTeamIds = originalMemberOf;
       
       if (userWillLoseAccess) {
         router.push('/dashboard/notifications');
@@ -267,6 +279,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setTeams(current => current.filter(t => t.id !== teamId));
     toast({ title: 'Success', description: `Team "${team?.name}" has been deleted.` });
   }, [teams, appSettings, viewAsUser, toast]);
+
+  const reorderTeams = useCallback(async (reorderedTeams: Team[]) => {
+      await simulateApi();
+      const reorderedIds = reorderedTeams.map(t => t.id);
+      setTeams(current => {
+          const teamMap = new Map(current.map(t => [t.id, t]));
+          return reorderedIds.map(id => teamMap.get(id)).filter(t => !!t) as Team[];
+      });
+  }, []);
 
   const addCalendar = useCallback(async (newCalendarData: Omit<SharedCalendar, 'id'>) => {
     const newCalendar: SharedCalendar = { ...newCalendarData, id: crypto.randomUUID() };
@@ -300,6 +321,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }, [calendars]);
 
+  const fetchTeams = useCallback(async (): Promise<Team[]> => {
+      await simulateApi();
+      return mockTeams;
+  }, []);
+  
   const fetchEvents = useCallback(async (start: Date, end: Date): Promise<Event[]> => {
     await simulateApi(); 
     const { mockEvents } = await import('@/lib/mock-data');
@@ -532,9 +558,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setAllBadges(current => current.map(b => b.id === badgeId ? { ...b, ...badgeData } : b));
   }, []);
 
-  const deleteBadge = useCallback((badgeId: string) => {
+  const deleteBadge = useCallback((badgeId: string, collectionId: string) => {
     setAllBadges(current => current.filter(b => b.id !== badgeId));
-    setAllBadgeCollections(current => current.map(c => ({ ...c, badgeIds: c.badgeIds.filter(id => id !== badgeId) })));
+    setAllBadgeCollections(current => current.map(c => c.id === collectionId ? { ...c, badgeIds: c.badgeIds.filter(id => id !== badgeId) } : c));
   }, []);
   
   const reorderBadges = useCallback((collectionId: string, badgeIds: string[]) => {
@@ -600,8 +626,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }), [realUser, viewAsUser, users]);
 
   const dataValue = useMemo(() => ({
-    loading, isDragModifierPressed, holidays, teams, addTeam, updateTeam, deleteTeam, updateUser, deleteUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, handleBadgeAssignment, handleBadgeUnassignment, searchSharedTeams
-  }), [loading, isDragModifierPressed, holidays, teams, addTeam, updateTeam, deleteTeam, updateUser, deleteUser, notifications, userStatusAssignments, addUser, linkGoogleCalendar, calendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, handleBadgeAssignment, handleBadgeUnassignment, searchSharedTeams]);
+    loading, isDragModifierPressed, holidays, teams, fetchTeams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, addUser, linkGoogleCalendar, calendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, handleBadgeAssignment, handleBadgeUnassignment, searchSharedTeams
+  }), [loading, isDragModifierPressed, holidays, teams, fetchTeams, addTeam, updateTeam, deleteTeam, reorderTeams, updateUser, deleteUser, notifications, userStatusAssignments, addUser, linkGoogleCalendar, calendars, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, locations, allBookableLocations, addLocation, deleteLocation, getPriorityDisplay, appSettings, updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, handleBadgeAssignment, handleBadgeUnassignment, searchSharedTeams]);
 
   if (loading || !realUser || !viewAsUser) {
     return (
