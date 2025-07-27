@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -16,12 +16,19 @@ import { hasAccess } from '@/lib/permissions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export function Header() {
-  const { realUser, viewAsUser, teams, notifications, appSettings } = useUser();
+  const { realUser, viewAsUser, notifications, appSettings, fetchTeams } = useUser();
+  const [teams, setTeams] = useState<any[]>([]);
   const isViewingAsSomeoneElse = realUser.userId !== viewAsUser.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
+
+  useEffect(() => {
+    fetchTeams().then(setTeams);
+  }, [fetchTeams]);
   
   const orderedNavItems = useMemo(() => {
-    const visiblePages = appSettings.pages.filter(page => hasAccess(viewAsUser, page));
+    if (!viewAsUser) return [];
+
+    const visiblePages = appSettings.pages.filter(page => hasAccess(viewAsUser, page, teams));
 
     return visiblePages.flatMap(page => {
       if (!page.associatedTabs || page.associatedTabs.length === 0) {

@@ -85,11 +85,17 @@ function SortableTabsTrigger({ id, children, className, ...props }: { id: string
 
 export default function DynamicPage() {
     const params = useParams();
-    const { loading, appSettings, teams, viewAsUser, updateAppSettings, isDragModifierPressed } = useUser();
+    const { loading, appSettings, fetchTeams, viewAsUser, updateAppSettings, isDragModifierPressed } = useUser();
     const [activeTab, setActiveTab] = useState<string | undefined>(undefined);
+    const [teams, setTeams] = useState<any[]>([]);
     
     const slug = Array.isArray(params.page) ? params.page.join('/') : (params.page || '');
     const currentPath = `/dashboard/${slug}`;
+    
+    useEffect(() => {
+        fetchTeams().then(setTeams);
+    }, [fetchTeams]);
+
 
     const { pageConfig, dynamicTeam } = useMemo(() => {
         const page = [...appSettings.pages]
