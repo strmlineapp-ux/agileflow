@@ -419,7 +419,7 @@ function TeamCard(props: TeamCardProps) {
                     </div>
                 </div>
             </CardHeader>
-            {!isDragging && (
+            {isExpanded && !isDragging && (
                 <CardContent className="flex-grow p-2 pt-0 flex flex-col min-h-0">
                     <ScrollArea className="max-h-48 pr-2 flex-grow">
                         <SortableContext items={teamMembers.map(m => `user-sort:${team.id}:${m.userId}`)} strategy={verticalListSortingStrategy}>
