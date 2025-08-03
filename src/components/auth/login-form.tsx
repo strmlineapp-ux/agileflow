@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from "react";
@@ -20,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { GoogleSymbol } from "../icons/google-symbol";
 import { cn } from "@/lib/utils";
 import { Separator } from "../ui/separator";
+import { useUser } from "@/context/user-context";
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -28,6 +28,7 @@ const formSchema = z.object({
 
 export function LoginForm() {
   const router = useRouter();
+  const { login, signInWithGoogle } = useUser();
   const [isLoading, setIsLoading] = React.useState(false);
   const [isEmailEditing, setIsEmailEditing] = React.useState(false);
   const [isPasswordEditing, setIsPasswordEditing] = React.useState(false);
@@ -51,16 +52,24 @@ export function LoginForm() {
     if (isPasswordEditing) passwordInputRef.current?.focus();
   }, [isPasswordEditing]);
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
-    console.log(values);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      router.push('/dashboard/calendar');
-    }, 1000);
+    const success = await login(values.email, values.password);
+    if (success) {
+      router.push('/dashboard/overview');
+    }
+    setIsLoading(false);
   };
   
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    const success = await signInWithGoogle();
+    if (success) {
+      router.push('/dashboard/overview');
+    }
+    setIsLoading(false);
+  };
+
   const handleEmailKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' || e.key === 'Tab') {
       e.preventDefault();
@@ -147,7 +156,7 @@ export function LoginForm() {
         />
         
         <div className="space-y-0.5 pt-2">
-          <Button variant="ghost" type="button" disabled={isLoading} className="w-full justify-center text-muted-foreground hover:text-primary hover:bg-transparent">
+          <Button variant="ghost" type="button" disabled={isLoading} className="w-full justify-center text-muted-foreground hover:text-primary hover:bg-transparent" onClick={handleGoogleSignIn}>
               <svg role="img" viewBox="0 0 24 24" className="mr-2 h-4 w-4">
               <path
                   fill="currentColor"
