@@ -135,18 +135,7 @@ function DraggableUserCard({ user, onRemove, isTeamAdmin, onSetAdmin, canManage,
   );
 }
 
-
-function TeamCard({ 
-    team, 
-    users,
-    onUpdate, 
-    onDelete,
-    onRemoveUser,
-    onAddUser,
-    onSetAdmin,
-    isSharedPreview = false,
-    ...props
-}: { 
+interface TeamCardProps extends React.ComponentPropsWithoutRef<typeof Card> {
     team: Team; 
     users: User[];
     onUpdate: (id: string, data: Partial<Team>) => void;
@@ -160,11 +149,24 @@ function TeamCard({
     isDragging?: boolean;
     isExpanded: boolean;
     onToggleExpand: () => void;
-    [key: string]: any;
-}) {
+    dragHandleProps?: any;
+}
+
+function TeamCard(props: TeamCardProps) {
+    const { 
+        team, 
+        users,
+        onUpdate, 
+        onDelete,
+        onRemoveUser,
+        onAddUser,
+        onSetAdmin,
+        isSharedPreview = false,
+        ...otherProps
+    } = props;
     const { viewAsUser, isDragModifierPressed } = useUser();
     const nameInputRef = useRef<HTMLInputElement>(null);
-    const { isEditingName, setIsEditingName, isDragging, isExpanded, onToggleExpand } = props;
+    const { isEditingName, setIsEditingName, isDragging, isExpanded, onToggleExpand, ...cardProps } = otherProps;
     
     const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
     const [iconSearch, setIconSearch] = useState('');
@@ -257,7 +259,7 @@ function TeamCard({
     };
 
     return (
-        <Card className="flex flex-col h-full bg-transparent relative" {...props}>
+        <Card className="flex flex-col h-full bg-transparent relative" {...cardProps}>
             <CardHeader className="group p-2" {...props.dragHandleProps}>
                  {!isSharedPreview && (
                     <TooltipProvider>
@@ -417,7 +419,7 @@ function TeamCard({
                     </div>
                 </div>
             </CardHeader>
-            {!isDragging && isExpanded && (
+            {!isDragging && (
                 <CardContent className="flex-grow p-2 pt-0 flex flex-col min-h-0">
                     <ScrollArea className="max-h-48 pr-2 flex-grow">
                         <SortableContext items={teamMembers.map(m => `user-sort:${team.id}:${m.userId}`)} strategy={verticalListSortingStrategy}>
@@ -439,7 +441,7 @@ function TeamCard({
                     </ScrollArea>
                 </CardContent>
             )}
-             <div className={cn("absolute -bottom-1 right-0", isDragModifierPressed && "hidden")}>
+             <div className={cn("absolute -bottom-1 right-0 z-10", isDragModifierPressed && "hidden")}>
                 <Button variant="ghost" size="icon" onClick={onToggleExpand} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
                     <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} opticalSize={20} />
                 </Button>
