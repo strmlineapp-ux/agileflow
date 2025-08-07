@@ -5,3 +5,10 @@ runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
   maxInstances: 1
+# Allowlist your dev environment's domains for Firebase Auth.
+# https://firebase.google.com/docs/app-hosting/configure#auth
+auth:
+  allowedDomains:
+    - "*.cloudworkstations.dev"
+    - "*.web.app"
+    - "*.firebaseapp.com"
