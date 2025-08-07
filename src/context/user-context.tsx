@@ -2,10 +2,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
-import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeOwner, type Task, type Holiday } from '@/types';
-import { mockUsers, mockCalendars, mockLocations, mockTeams, mockAppSettings, allMockBadgeCollections, videoProdBadges, liveEventsBadges, pScaleBadges, starRatingBadges, effortBadges, mockHolidays } from '@/lib/mock-data';
-import { GoogleAuthProvider, getAuth, signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
-import { getFirestore } from "firebase/firestore";
+import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeOwner, type Task, type Holiday, mockUsers, mockCalendars, mockLocations, mockTeams, mockAppSettings, allMockBadgeCollections, videoProdBadges, liveEventsBadges, pScaleBadges, starRatingBadges, effortBadges, mockHolidays } from '@/lib/mock-data';
+import { doc, getDoc, getFirestore } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { hexToHsl } from '@/lib/utils';
 import { hasAccess, getOwnershipContext } from '@/lib/permissions';
@@ -28,7 +26,7 @@ interface UserContextType {
   realUser: User | null;
   viewAsUser: User | null;
   setViewAsUser: (userId: string) => void;
-  login: (email: string, pass: string) => Promise<boolean>;
+  login: (email: string, pass: string, googleUser?: any) => Promise<boolean>;
   logout: () => Promise<void>;
   loading: boolean;
 
@@ -45,7 +43,7 @@ interface UserContextType {
   setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
   userStatusAssignments: Record<string, UserStatusAssignment[]>;
   setUserStatusAssignments: React.Dispatch<React.SetStateAction<Record<string, UserStatusAssignment[]>>>;
-  
+
   // CRUD functions
   updateUser: (userId: string, userData: Partial<User>) => Promise<void>;
   addUser: (newUser: User) => Promise<void>;
@@ -57,12 +55,12 @@ interface UserContextType {
   addCalendar: (newCalendar: Omit<SharedCalendar, 'id'>) => Promise<void>;
   updateCalendar: (calendarId: string, calendarData: Partial<SharedCalendar>) => Promise<void>;
   deleteCalendar: (calendarId: string) => Promise<void>;
-  
+
   fetchEvents: (start: Date, end: Date) => Promise<Event[]>;
   addEvent: (currentEvents: Event[], newEventData: Omit<Event, 'eventId'>) => Promise<Event[]>;
   updateEvent: (currentEvents: Event[], eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => Promise<Event[]>;
   deleteEvent: (currentEvents: Event[], eventId: string) => Promise<Event[]>;
-  
+
   fetchTasks: () => Promise<Task[]>;
   addTask: (currentTasks: Task[], newTaskData: Omit<Task, 'taskId' | 'createdAt' | 'lastUpdated'>) => Promise<Task[]>;
   updateTask: (currentTasks: Task[], taskId: string, taskData: Partial<Task>) => Promise<Task[]>;
@@ -73,7 +71,7 @@ interface UserContextType {
 
   updateAppSettings: (settings: Partial<AppSettings>) => Promise<void>;
   updateAppTab: (tabId: string, tabData: Partial<AppTab>) => Promise<void>;
-  
+
   // Badge and Collection Management
   allBadges: Badge[];
   allBadgeCollections: BadgeCollection[];
@@ -86,7 +84,7 @@ interface UserContextType {
   reorderBadges: (collectionId: string, badgeIds: string[]) => void;
   handleBadgeAssignment: (badge: Badge, memberId: string) => void;
   handleBadgeUnassignment: (badge: Badge, memberId: string) => void;
-  
+
   // Utilities
   linkGoogleCalendar: (userId: string) => Promise<void>;
   getPriorityDisplay: (badgeId: string) => { label: React.ReactNode, description?: string, color: string, icon?: string } | undefined;
@@ -102,7 +100,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [realUser, setRealUser] = useState<User | null>(null);
   const [viewAsUserId, setViewAsUserId] = useState<string | null>(null);
   const [isDragModifierPressed, setIsDragModifierPressed] = useState(false);
-  
+
   const [users, setUsers] = useState<User[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -117,15 +115,21 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
   const loadUserAndData = useCallback(async (userId: string) => {
-      await simulateApi(100);
-      
-      const user = mockUsers.find(u => u.userId === userId);
+      const db = getFirestore();
+      const userDocRef = doc(db, 'users', userId);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (!userDocSnap.exists()) return false;
+
+      const user = userDocSnap.data() as User;
+
       if (!user) return false;
 
       setRealUser(user);
-      setViewAsUserId(user.userId);
-      
-      setUsers(mockUsers);
+      if (!users.find(u => u.userId === userId)) {
+        setUsers(currentUsers => [...currentUsers, user]);
+      }
+
       setTeams(mockTeams);
       setCalendars(mockCalendars);
       setLocations(mockLocations);
@@ -139,7 +143,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       });
       setAllBadges(Array.from(badgesMap.values()).filter(Boolean));
       setAllBadgeCollections(allMockBadgeCollections);
-      
+
       // Correctly combine core and dynamic pages
       const corePageIds = new Set(corePages.map(p => p.id));
       const dynamicPages = mockAppSettings.pages.filter(p => !corePageIds.has(p.id));
@@ -154,10 +158,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         pages: finalPages,
         tabs: [...coreTabs, ...mockAppSettings.tabs],
       });
-      
+
       return true;
-  }, []);
-  
+  }, [users]);
+
   useEffect(() => {
     const checkAuth = async () => {
         setLoading(true);
@@ -180,33 +184,33 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, [loadUserAndData]);
 
   const viewAsUser = useMemo(() => users.find(u => u.userId === viewAsUserId) || realUser, [users, viewAsUserId, realUser]);
-  
+
   useEffect(() => {
     if (!viewAsUser) return;
     const modifier = viewAsUser.dragActivationKey || 'shift';
-    
+
     const handleKeyDown = (e: KeyboardEvent) => {
         if (!e.key) return;
         if (e.key.toLowerCase() === modifier) {
             setIsDragModifierPressed(true);
         }
     };
-    
+
     const handleKeyUp = (e: KeyboardEvent) => {
         if (!e.key) return;
         if (e.key.toLowerCase() === modifier) {
             setIsDragModifierPressed(false);
         }
     };
-    
+
     const handleWindowBlur = () => {
         setIsDragModifierPressed(false);
     };
-    
+
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
     window.addEventListener('blur', handleWindowBlur);
-    
+
     return () => {
         window.removeEventListener('keydown', handleKeyDown);
         window.removeEventListener('keyup', handleKeyUp);
@@ -214,21 +218,44 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     };
   }, [viewAsUser]);
 
-  const login = useCallback(async (email: string, pass: string): Promise<boolean> => {
+  const login = useCallback(async (email: string, pass: string, googleUser?: any): Promise<boolean> => {
       setLoading(true);
       try {
           await simulateApi(500);
-          const user = mockUsers.find(u => u.email === email);
-          if (user || pass === 'google-sso') { // Bypass password check for Google SSO
-              const userToLogin = user || mockUsers.find(u => u.email === email);
-              if (userToLogin) {
-                  localStorage.setItem(AUTH_COOKIE, userToLogin.userId);
-                  await loadUserAndData(userToLogin.userId);
-                  toast({ title: "Welcome back!" });
-                  return true;
-              }
+          let userToLogin = mockUsers.find(u => u.email === email);
+
+          if (pass === 'google-sso' && googleUser) {
+            if (!userToLogin) {
+                // Create a new user object if not found in mockUsers
+                const newUser: User = {
+                    userId: googleUser.uid, // Use Firebase User ID as internal userId
+                    displayName: googleUser.displayName || 'New User',
+                    email: googleUser.email!,
+                    avatarUrl: googleUser.photoURL || undefined,
+                    isAdmin: false, // Default to non-admin for new users
+                    accountType: 'Full', // Assume full account type for Google SSO
+                    memberOfTeamIds: [],
+                    roles: [],
+                    googleCalendarLinked: false, // Will be linked separately
+                    theme: 'light',
+                    dragActivationKey: 'shift',
+                };
+                userToLogin = newUser;
+                // In a real app, you'd save this new user to your database (e.g., Firestore)
+            }
+          } else if (!userToLogin || userToLogin.password !== pass) { // Standard email/password check
+              throw new Error("Invalid credentials");
           }
-          throw new Error("Invalid credentials");
+
+          if (userToLogin) {
+              localStorage.setItem(AUTH_COOKIE, userToLogin.userId);
+              await loadUserAndData(userToLogin.userId);
+              toast({ title: "Welcome back!" });
+              return true;
+          } else {
+              throw new Error("User not found after login attempt");
+          }
+
       } catch (error) {
           toast({ variant: 'destructive', title: 'Login Failed', description: (error as Error).message });
           return false;
@@ -236,6 +263,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
       }
   }, [loadUserAndData, toast]);
+  
   
   const logout = useCallback(async () => {
       localStorage.removeItem(AUTH_COOKIE);
@@ -245,7 +273,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const allBookableLocations = useMemo(() => {
     const globalLocations = locations.map(l => ({ id: l.id, name: l.name }));
-    const workstationLocations = teams.flatMap(team => 
+    const workstationLocations = teams.flatMap(team =>
         (team.workstations || []).map(wsName => ({
             id: `${team.id}-${wsName.toLowerCase().replace(/\s+/g, '-')}`,
             name: wsName,
@@ -272,7 +300,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     await simulateApi();
     setUsers(currentUsers => [...currentUsers, newUser]);
   }, []);
-  
+
   const deleteUser = useCallback(async (userId: string) => {
       await simulateApi();
       setUsers(currentUsers => currentUsers.filter(u => u.userId !== userId));
@@ -305,12 +333,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
       const userWillLoseAccess = userHadAccess && !hasAccess(viewAsUser, page);
       viewAsUser.memberOfTeamIds = originalMemberOf;
-      
+
       if (userWillLoseAccess) {
         router.push('/dashboard/notifications');
       }
     }
-    
+
     toast({ title: 'Success', description: `Team "${team?.name}" has been deleted.` });
   }, [appSettings, viewAsUser, toast, teams, setTeams]);
 
@@ -340,7 +368,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, [calendars.length, toast]);
 
   const fetchEvents = useCallback(async (start: Date, end: Date): Promise<Event[]> => {
-    await simulateApi(); 
+    await simulateApi();
     const { mockEvents } = await import('@/lib/mock-data');
     const filteredEvents = mockEvents.filter(event => {
         const eventTime = event.startTime.getTime();
@@ -354,18 +382,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     await simulateApi();
     return [...currentEvents, event];
   }, []);
-  
+
   const updateEvent = useCallback(async (currentEvents: Event[], eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => {
       await simulateApi();
       const updatedEvent = { ...currentEvents.find(e => e.eventId === eventId)!, ...eventData, lastUpdated: new Date() } as Event;
       return currentEvents.map(e => e.eventId === eventId ? updatedEvent : e);
   }, []);
-  
+
   const deleteEvent = useCallback(async (currentEvents: Event[], eventId: string) => {
     await simulateApi();
     return currentEvents.filter(e => e.eventId !== eventId);
   }, []);
-  
+
   const fetchTasks = useCallback(async (): Promise<Task[]> => {
     await simulateApi();
     const { mockTasks } = await import('@/lib/mock-data');
@@ -384,14 +412,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     };
     return [newTask, ...currentTasks];
   }, [realUser]);
-  
+
   const updateTask = useCallback(async (currentTasks: Task[], taskId: string, taskData: Partial<Task>): Promise<Task[]> => {
     await simulateApi();
     return currentTasks.map(task =>
       task.taskId === taskId ? { ...task, ...taskData, lastUpdated: new Date() } : task
     );
   }, []);
-  
+
   const deleteTask = useCallback(async (currentTasks: Task[], taskId: string): Promise<Task[]> => {
     await simulateApi();
     return currentTasks.filter(task => task.taskId !== taskId);
@@ -438,46 +466,46 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             const newBadgeId = crypto.randomUUID();
             return { ...originalBadge, id: newBadgeId, owner: ownerContext, ownerCollectionId: newCollectionId, name: `${originalBadge.name} (Copy)` };
         }).filter((b): b is Badge => b !== null);
-        
-        newCollection = { 
-            ...JSON.parse(JSON.stringify(sourceCollection)), 
-            id: newCollectionId, 
-            name: `${sourceCollection.name} (Copy)`, 
-            owner: ownerContext, 
+
+        newCollection = {
+            ...JSON.parse(JSON.stringify(sourceCollection)),
+            id: newCollectionId,
+            name: `${sourceCollection.name} (Copy)`,
+            owner: ownerContext,
             isShared: false,
             description: sourceCollection.description || '',
-            badgeIds: newBadges.map(b => b.id) 
+            badgeIds: newBadges.map(b => b.id)
         };
     } else {
         const newBadgeId = crypto.randomUUID();
-        const newBadge: Badge = { 
-            id: newBadgeId, 
+        const newBadge: Badge = {
+            id: newBadgeId,
             owner: ownerContext,
-            ownerCollectionId: newCollectionId, 
-            name: `New Badge`, 
+            ownerCollectionId: newCollectionId,
+            name: `New Badge`,
             icon: 'star',
             color: '#64748B'
         };
         newBadges.push(newBadge);
-        newCollection = { 
-            id: newCollectionId, 
-            name: `New Collection`, 
-            owner: ownerContext, 
-            icon: 'category', 
-            color: '#64748B', 
-            viewMode: 'compact', 
-            badgeIds: [newBadgeId], 
-            applications: [], 
-            description: '', 
-            isShared: false 
+        newCollection = {
+            id: newCollectionId,
+            name: `New Collection`,
+            owner: ownerContext,
+            icon: 'category',
+            color: '#64748B',
+            viewMode: 'compact',
+            badgeIds: [newBadgeId],
+            applications: [],
+            description: '',
+            isShared: false
         };
     }
-    
+
     setAllBadgeCollections(prev => [...prev, newCollection]);
     if (newBadges.length > 0) {
         setAllBadges(prev => [...prev, ...newBadges]);
     }
-    
+
     toast({ title: 'Collection Added', description: `"${newCollection.name}" has been created.` });
 
   }, [allBadges, toast]);
@@ -506,7 +534,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const addBadge = useCallback((collectionId: string, sourceBadge?: Badge) => {
     const collection = allBadgeCollections.find(c => c.id === collectionId);
     if (!collection || !viewAsUser) return;
-    
+
     if (collection.owner.id !== viewAsUser.userId) {
         toast({
             variant: 'destructive',
@@ -568,7 +596,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     if (badge.owner.id === viewAsUser?.userId) {
         // If the user owns the badge, delete it from everywhere.
         setAllBadges(current => current.filter(b => b.id !== badgeId));
-        setAllBadgeCollections(current => 
+        setAllBadgeCollections(current =>
             current.map(c => ({
                 ...c,
                 badgeIds: c.badgeIds.filter(id => id !== badgeId)
@@ -584,7 +612,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         }));
     }
   }, [allBadges, viewAsUser]);
-  
+
   const reorderBadges = useCallback((collectionId: string, badgeIds: string[]) => {
     setAllBadgeCollections(current => current.map(c => c.id === collectionId ? { ...c, badgeIds } : c));
   }, []);
