@@ -1,0 +1,1314 @@
+
+'use client';
+
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import { useUser } from '@/context/user-context';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import { type Team, type Badge, type BadgeCollection, type User, type BadgeApplication, type AppPage, type AppTab } from '@/types';
+import { GoogleSymbol } from '../icons/google-symbol';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { ScrollArea } from '../ui/scroll-area';
+import { cn, getContrastColor } from '@/lib/utils';
+import { Textarea } from '../ui/textarea';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
+import { Badge as UiBadge } from '../ui/badge';
+import { HexColorPicker, HexColorInput } from 'react-colorful';
+import { CompactSearchInput } from '@/components/common/compact-search-input';
+import { googleSymbolNames } from '@/lib/google-symbols';
+
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  useDroppable,
+  DragOverlay,
+  type DragStartEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  rectSortingStrategy,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { snapCenterToCursor } from '@dnd-kit/modifiers';
+
+function BadgeDisplayItem({ 
+    badge, 
+    viewMode, 
+    onUpdateBadge, 
+    onDelete,
+    isViewer = false, 
+    predefinedColors,
+    isOwner,
+    isLinked,
+    isSharedPreview,
+    allCollections,
+    isEditingName,
+    setIsEditingName,
+    isEditingDescription,
+    setIsEditingDescription,
+    isCollectionEditing,
+    dragHandleProps,
+    currentUserBadgeIds
+}: { 
+    badge: Badge;
+    viewMode: BadgeCollection['viewMode'];
+    onUpdateBadge: (badgeId: string, badgeData: Partial<Badge>) => void;
+    onDelete: (badgeId: string) => void;
+    isViewer?: boolean;
+    predefinedColors: string[];
+    isOwner: boolean;
+    isLinked: boolean;
+    isSharedPreview?: boolean;
+    allCollections: BadgeCollection[];
+    isEditingName: boolean;
+    setIsEditingName: (isEditing: boolean) => void;
+    isEditingDescription: boolean;
+    setIsEditingDescription: (isEditing: boolean) => void;
+    isCollectionEditing: boolean;
+    dragHandleProps?: any;
+    currentUserBadgeIds?: Set<string>;
+}) {
+    const { users, isDragModifierPressed } = useUser();
+    const nameInputRef = useRef<HTMLInputElement>(null);
+    const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
+    const [iconSearch, setIconSearch] = useState('');
+    const iconSearchInputRef = useRef<HTMLInputElement>(null);
+    const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
+    const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
+    const [color, setColor] = useState(badge.color);
+
+    const handleUpdate = useCallback((data: Partial<Badge>) => {
+        onUpdateBadge(badge.id, data);
+    }, [badge.id, onUpdateBadge]);
+
+    const handleSaveName = useCallback(() => {
+        const newName = nameInputRef.current?.value.trim() || '';
+        if (newName && newName !== badge.name) {
+            handleUpdate({ name: newName });
+        }
+        setIsEditingName(false);
+    }, [badge.name, handleUpdate, setIsEditingName]);
+    
+    const handleSaveDescription = useCallback(() => {
+        const newDescription = descriptionTextareaRef.current?.value.trim();
+        if (newDescription !== (badge.description || '')) {
+            handleUpdate({ description: newDescription });
+        }
+        setIsEditingDescription(false);
+    }, [badge.description, handleUpdate, setIsEditingDescription]);
+
+    useEffect(() => {
+        if (!isEditingName) return;
+        const handleOutsideClick = (event: MouseEvent) => {
+            if (nameInputRef.current && !nameInputRef.current.contains(event.target as Node)) {
+                handleSaveName();
+            }
+        };
+        document.addEventListener('mousedown', handleOutsideClick);
+        nameInputRef.current?.focus();
+        nameInputRef.current?.select();
+        return () => document.removeEventListener('mousedown', handleSaveName);
+    }, [isEditingName, handleSaveName]);
+    
+    useEffect(() => {
+        if (!isEditingDescription) return;
+        const handleOutsideClick = (event: MouseEvent) => {
+            if (descriptionTextareaRef.current && !descriptionTextareaRef.current.contains(event.target as Node)) {
+                handleSaveDescription();
+            }
+        };
+        document.addEventListener('mousedown', handleOutsideClick);
+        descriptionTextareaRef.current?.focus();
+        descriptionTextareaRef.current?.select();
+        return () => document.removeEventListener('mousedown', handleSaveDescription);
+    }, [isEditingDescription, handleSaveDescription]);
+
+    useEffect(() => {
+        if (isIconPopoverOpen) {
+          setTimeout(() => iconSearchInputRef.current?.focus(), 100);
+        } else {
+          setIconSearch('');
+        }
+    }, [isIconPopoverOpen]);
+    
+    const handleNameKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') { e.preventDefault(); handleSaveName(); }
+        else if (e.key === 'Escape') { e.preventDefault(); setIsEditingName(false); }
+    };
+    
+    const handleDescriptionKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Escape') { e.preventDefault(); handleSaveDescription(); }
+    };
+    
+    const ownerUser = users.find(u => u.userId === badge.owner.id);
+
+    const filteredIcons = useMemo(() => {
+        if (!iconSearch) return googleSymbolNames;
+        return googleSymbolNames.filter(name => name.toLowerCase().includes(iconSearch.toLowerCase()));
+    }, [iconSearch]);
+    
+    const colorPickerContent = (
+        <PopoverContent className="w-auto p-4" onPointerDown={(e) => e.stopPropagation()}>
+            <div className="space-y-4">
+                <HexColorPicker color={color} onChange={setColor} className="!w-full" />
+                <div className="flex items-center gap-2">
+                    <span className="p-2 border rounded-md" style={{ backgroundColor: color }} />
+                    <HexColorInput prefixed alpha color={color} onChange={setColor} className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50" />
+                </div>
+                <div className="grid grid-cols-8 gap-1">
+                    {predefinedColors.map(c => (
+                        <button
+                            key={c}
+                            className="h-6 w-6 rounded-full border"
+                            style={{ backgroundColor: c }}
+                            onClick={() => {
+                                handleUpdate({ color: c });
+                                setColor(c);
+                                setIsColorPopoverOpen(false);
+                            }}
+                        />
+                    ))}
+                </div>
+                <Button onClick={() => { handleUpdate({ color }); setIsColorPopoverOpen(false); }} className="w-full bg-primary">Set Color</Button>
+            </div>
+        </PopoverContent>
+    );
+
+    const iconPickerContent = (
+         <PopoverContent className="w-80 p-0" onPointerDown={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-1 p-2 border-b">
+                <CompactSearchInput
+                    searchTerm={iconSearch}
+                    setSearchTerm={setIconSearch}
+                    placeholder="Search icons..."
+                    inputRef={iconSearchInputRef}
+                />
+            </div>
+            <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{googleSymbolNames.slice(0, 300).map((iconName) => (
+            <TooltipProvider key={iconName}>
+                <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button
+                    variant={badge.icon === iconName ? "default" : "ghost"}
+                    size="icon"
+                    onClick={() => {
+                        handleUpdate({ icon: iconName });
+                        setIsIconPopoverOpen(false);
+                    }}
+                    className="h-8 w-8 p-0"
+                    >
+                    <GoogleSymbol name={iconName} className="text-4xl" weight={100} opticalSize={20} />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent><p>{iconName}</p></TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+            ))}</div></ScrollArea>
+        </PopoverContent>
+    );
+        
+    const nameEditorElement = (
+         <div onClick={(e) => { if(isOwner && !isDragModifierPressed) {e.stopPropagation(); setIsEditingName(true);}}}>
+            {isEditingName && isOwner ? (
+                <Input
+                    ref={nameInputRef}
+                    defaultValue={badge.name}
+                    onKeyDown={handleNameKeyDown}
+                    onBlur={handleSaveName}
+                    className={cn(
+                        "h-auto p-0 border-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words",
+                         viewMode === 'grid' ? "text-base font-normal font-headline font-thin" : "text-sm font-thin"
+                    )}
+                />
+            ) : (
+                <span className={cn("break-words", viewMode === 'grid' ? "text-base font-normal font-headline font-thin" : "font-thin text-sm", isOwner && !isDragModifierPressed && "cursor-text")}>
+                    {badge.name}
+                </span>
+            )}
+        </div>
+    );
+
+     const descriptionEditorElement = (
+         <div onClick={(e) => { if(isOwner && !isDragModifierPressed) {e.stopPropagation(); setIsEditingDescription(true);}}}>
+            {isEditingDescription && isOwner ? (
+                <Textarea 
+                    ref={descriptionTextareaRef} 
+                    defaultValue={badge.description} 
+                    onBlur={handleSaveDescription}
+                    onKeyDown={handleDescriptionKeyDown} 
+                    className="p-0 text-sm text-muted-foreground border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none" 
+                    placeholder="Click to add a description." 
+                />
+             ) : (
+                 <p className={cn("text-sm text-muted-foreground min-h-[20px] break-words")}>
+                    {badge.description || (isLinked ? <span className="italic text-muted-foreground/50">No description</span> : isOwner ? 'Click to add description.' : '')}
+                </p>
+             )}
+       </div>
+   );
+   
+    const shouldShowLinkIcon = isLinked && (!isSharedPreview || (currentUserBadgeIds && currentUserBadgeIds.has(badge.id)));
+    
+    if (viewMode === 'grid' || viewMode === 'list') {
+      return (
+        <div className="flex items-start gap-4 p-2" {...dragHandleProps}>
+            <div className="relative">
+                <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                    <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                        <PopoverTrigger asChild disabled={!isOwner || isDragModifierPressed} onPointerDown={(e) => e.stopPropagation()}>
+                            <Button variant="ghost" className="h-10 w-12 flex items-center justify-center p-0">
+                                <GoogleSymbol name={badge.icon} weight={100} grade={-25} opticalSize={20} style={{ fontSize: '36px', color: badge.color }} />
+                            </Button>
+                        </PopoverTrigger>
+                        </TooltipTrigger>
+                        <TooltipContent><p>Change Icon</p></TooltipContent>
+                    </Tooltip>
+                    </TooltipProvider>
+                    {iconPickerContent}
+                </Popover>
+                {!isViewer && isOwner && (
+                    <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                         <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <PopoverTrigger asChild disabled={!isOwner || isDragModifierPressed} onPointerDown={(e) => e.stopPropagation()}>
+                                        <div className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", !isOwner || isDragModifierPressed ? "cursor-not-allowed" : "cursor-pointer", isDragModifierPressed && "hidden")} style={{ backgroundColor: badge.color }} aria-label="Change badge color" />
+                                    </PopoverTrigger>
+                                </TooltipTrigger>
+                                <TooltipContent><p>Change Color</p></TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                        {colorPickerContent}
+                    </Popover>
+                )}
+                 {shouldShowLinkIcon && (
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: '#64748B' }}>
+                                    <GoogleSymbol name="link" style={{fontSize: '16px'}} weight={100} opticalSize={20}/>
+                                </div>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Owned by {ownerUser?.displayName}</p></TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                )}
+            </div>
+            <div className="flex-1 space-y-1">
+                {nameEditorElement}
+                {descriptionEditorElement}
+            </div>
+        </div>
+      );
+    }
+    
+    // Compact View
+    return (
+        <div className="p-1.5" {...dragHandleProps}>
+             <UiBadge
+                variant={'outline'}
+                style={{ color: badge.color, borderColor: badge.color }}
+                className="flex items-center gap-1.5 p-1 pl-2 rounded-full text-sm h-8 font-thin"
+            >
+                <div className="relative">
+                    <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                        <PopoverTrigger asChild disabled={!isOwner || isDragModifierPressed} onPointerDown={(e) => e.stopPropagation()}>
+                             <Button
+                                variant="ghost"
+                                className="h-auto p-0 hover:bg-transparent"
+                                style={{ color: badge.color }}
+                            >
+                                <GoogleSymbol name={badge.icon} style={{ fontSize: '28px' }} weight={100} opticalSize={20} />
+                            </Button>
+                        </PopoverTrigger>
+                        {iconPickerContent}
+                    </Popover>
+                     {!isViewer && isOwner && (
+                        <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                            <PopoverTrigger asChild disabled={!isOwner || isDragModifierPressed} onPointerDown={(e) => e.stopPropagation()}>
+                                <div
+                                    className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", !isOwner || isDragModifierPressed ? "cursor-not-allowed" : "cursor-pointer", isDragModifierPressed && "hidden")}
+                                    style={{ backgroundColor: badge.color }}
+                                    aria-label="Change badge color"
+                                />
+                            </PopoverTrigger>
+                            {colorPickerContent}
+                        </Popover>
+                     )}
+                     {shouldShowLinkIcon && (
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <div className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: '#64748B' }}>
+                                        <GoogleSymbol name="link" style={{fontSize: '16px'}} weight={100} opticalSize={20} />
+                                    </div>
+                                </TooltipTrigger>
+                                <TooltipContent><p>Owned by {ownerUser?.displayName}</p></TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    )}
+                </div>
+                {nameEditorElement}
+            </UiBadge>
+        </div>
+    );
+}
+
+function SortableBadgeItem({ badge, collection, onDelete, ...props }: { badge: Badge, collection: BadgeCollection, onDelete: (badgeId: string, collectionId: string) => void, [key: string]: any }) {
+    const { isDragModifierPressed } = useUser();
+    const [isEditingName, setIsEditingName] = useState(false);
+    const [isEditingDescription, setIsEditingDescription] = useState(false);
+    
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+        id: `badge::${badge.id}::${collection.id}`,
+        data: { type: 'badge', badge, collectionId: collection.id, isSharedPreview: props.isSharedPreview },
+        disabled: !isDragModifierPressed,
+    });
+    
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+        zIndex: isDragging ? 10 : 'auto',
+    };
+    
+    const canManage = !props.isViewer;
+
+    return (
+        <div ref={setNodeRef} style={style} className={cn(props.viewMode === 'grid' && "p-1 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0")}>
+            <div className="group relative flex w-full" {...listeners} {...attributes}>
+                <div className="flex-grow">
+                    <BadgeDisplayItem 
+                        badge={badge} 
+                        isEditingName={isEditingName} 
+                        setIsEditingName={setIsEditingName}
+                        isEditingDescription={isEditingDescription}
+                        setIsEditingDescription={setIsEditingDescription}
+                        onDelete={onDelete}
+                        {...props} 
+                    />
+                </div>
+                {!props.isSharedPreview && canManage && (
+                    <div className={cn("absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity z-10", isDragModifierPressed && "hidden")}>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                                        onPointerDown={(e) => { e.stopPropagation(); onDelete(badge.id, collection.id); }}
+                                    >
+                                        <GoogleSymbol name="cancel" className="text-lg" weight={100} opticalSize={20} />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent><p>{props.isOwner ? "Delete Badge" : "Unlink Badge"}</p></TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function DroppableCollectionContent({ collection, children }: { collection: BadgeCollection, children: React.ReactNode }) {
+    const { setNodeRef, isOver } = useDroppable({ id: collection.id, data: { type: 'collection', collection }});
+    
+    let strategy;
+    switch(collection.viewMode) {
+      case 'list':
+        strategy = verticalListSortingStrategy;
+        break;
+      case 'grid':
+      case 'compact':
+        strategy = rectSortingStrategy;
+        break;
+      default:
+        strategy = rectSortingStrategy;
+        break;
+    }
+    
+    return (
+        <div 
+            ref={setNodeRef}
+            className={cn(
+                "min-h-[60px] rounded-md p-2 transition-all",
+                isOver && "ring-1 ring-border ring-inset",
+                collection.viewMode === 'compact' && "flex flex-wrap gap-2 items-start",
+                collection.viewMode === 'list' && "flex flex-col gap-1",
+                collection.viewMode === 'grid' && "flex flex-wrap -m-1"
+            )}
+        >
+            <SortableContext items={collection.badgeIds.map(id => `badge::${id}::${collection.id}`)} strategy={strategy}>
+                {children}
+            </SortableContext>
+        </div>
+    );
+}
+
+function DuplicateBadgeZone({ collectionId, onAdd, isOwner }: { collectionId: string, onAdd: () => void, isOwner: boolean }) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `duplicate-badge-zone-${collectionId}`,
+    data: { type: 'duplicate-badge-zone', collectionId },
+    disabled: !isOwner,
+  });
+  
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "rounded-full transition-all h-8 w-8 flex items-center justify-center",
+        isOver && isOwner && "ring-1 ring-border ring-inset"
+      )}
+    >
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onAdd}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="h-8 w-8 text-muted-foreground"
+            >
+              <GoogleSymbol name="add_circle" weight={100} opticalSize={20} />
+              <span className="sr-only">New Badge or Drop to Duplicate</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{isOver && isOwner ? 'Drop to Duplicate Badge' : 'Add New Badge'}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>
+  );
+}
+
+
+type BadgeCollectionCardProps = {
+    collection: BadgeCollection;
+    allBadges: Badge[];
+    predefinedColors: string[];
+    onUpdateCollection: (collectionId: string, newValues: Partial<BadgeCollection>) => void;
+    onDeleteCollection: (collection: BadgeCollection) => void;
+    onAddBadge: (collectionId: string, sourceBadge?: Badge) => void;
+    onUpdateBadge: (badgeId: string, badgeData: Partial<Badge>) => void;
+    onDeleteBadge: (badgeId: string, collectionId: string) => void;
+    isSharedPreview?: boolean;
+    isViewer?: boolean;
+    isEditingName: boolean;
+    setIsEditingName: (isEditing: boolean) => void;
+    isEditingDescription: boolean;
+    setIsEditingDescription: (isEditing: boolean) => void;
+    isExpanded: boolean;
+    onToggleExpand: () => void;
+    dragHandleProps?: any;
+    currentUserBadgeIds?: Set<string>;
+    allCollections: BadgeCollection[];
+};
+
+function BadgeCollectionCard({ 
+    collection, 
+    allBadges, 
+    predefinedColors, 
+    onUpdateCollection, 
+    onDeleteCollection, 
+    onAddBadge, 
+    onUpdateBadge, 
+    onDeleteBadge, 
+    isSharedPreview = false, 
+    isViewer = false, 
+    isEditingName,
+    setIsEditingName,
+    isEditingDescription,
+    setIsEditingDescription,
+    isExpanded,
+    onToggleExpand,
+    dragHandleProps,
+    currentUserBadgeIds,
+    allCollections,
+    ...props
+}: BadgeCollectionCardProps) {
+    const { viewAsUser, users, isDragModifierPressed } = useUser();
+    const nameInputRef = useRef<HTMLInputElement>(null);
+    const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
+    const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
+    const [isViewModePopoverOpen, setIsViewModePopoverOpen] = useState(false);
+    const [iconSearch, setIconSearch] = useState('');
+    const iconSearchInputRef = useRef<HTMLInputElement>(null);
+    const [color, setColor] = useState(collection.color);
+    const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
+    
+    const isOwner = useMemo(() => collection.owner.id === viewAsUser.userId, [collection.owner.id, viewAsUser.userId]);
+    const showDetails = isExpanded || (isSharedPreview && isExpanded);
+
+    const handleSaveName = useCallback(() => {
+        const newName = nameInputRef.current?.value.trim() || '';
+        if (newName && newName !== collection.name) {
+            onUpdateCollection(collection.id, { name: newName });
+        }
+        setIsEditingName(false);
+    }, [collection.name, collection.id, onUpdateCollection, setIsEditingName]);
+
+    const handleSaveDescription = useCallback(() => {
+        const newDescription = descriptionTextareaRef.current?.value.trim();
+        if (newDescription !== (collection.description || '')) {
+            onUpdateCollection(collection.id, { description: newDescription });
+        }
+        setIsEditingDescription(false);
+    }, [collection, onUpdateCollection, setIsEditingDescription]);
+    
+    useEffect(() => {
+        if (!isEditingName) return;
+        const handleOutsideClick = (event: MouseEvent) => {
+            if (nameInputRef.current && !nameInputRef.current.contains(event.target as Node)) {
+                handleSaveName();
+            }
+        };
+        document.addEventListener('mousedown', handleOutsideClick);
+        nameInputRef.current?.focus();
+        nameInputRef.current?.select();
+        return () => document.removeEventListener('mousedown', handleSaveName);
+    }, [isEditingName, handleSaveName]);
+
+    useEffect(() => {
+        if (!isEditingDescription) return;
+        const handleOutsideClick = (event: MouseEvent) => {
+            if (descriptionTextareaRef.current && !descriptionTextareaRef.current.contains(event.target as Node)) {
+                handleSaveDescription();
+            }
+        };
+        document.addEventListener('mousedown', handleOutsideClick);
+        descriptionTextareaRef.current?.focus();
+        descriptionTextareaRef.current?.select();
+        return () => document.removeEventListener('mousedown', handleSaveDescription);
+    }, [isEditingDescription, handleSaveDescription]);
+
+    useEffect(() => {
+        if (isIconPopoverOpen) {
+          setTimeout(() => iconSearchInputRef.current?.focus(), 100);
+        } else {
+          setIconSearch('');
+        }
+      }, [isIconPopoverOpen]);
+    
+    const filteredIcons = useMemo(() => {
+        if (!iconSearch) return googleSymbolNames;
+        return googleSymbolNames.filter(name => name.toLowerCase().includes(iconSearch.toLowerCase()));
+    }, [iconSearch]);
+
+    const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') { e.preventDefault(); handleSaveName(); }
+        else if (e.key === 'Escape') { e.preventDefault(); setIsEditingName(false); }
+    };
+
+    const handleDescriptionKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSaveDescription(); }
+        else if (e.key === 'Escape') { e.preventDefault(); setIsEditingDescription(false); }
+    };
+    
+    const collectionBadges = useMemo(() => {
+        return collection.badgeIds
+            .map(id => allBadges.find(b => b?.id === id))
+            .filter((b): b is Badge => !!b);
+    }, [collection.badgeIds, allBadges]);
+    
+    const APPLICATIONS: { key: BadgeApplication, icon: string, label: string }[] = [
+        { key: 'team members', icon: 'group', label: 'Team Members' },
+        { key: 'events', icon: 'calendar_month', label: 'Events' },
+        { key: 'tasks', icon: 'checklist', label: 'Tasks' },
+        { key: 'badges', icon: 'style', label: 'Badges' },
+    ];
+
+    let shareIcon: string | null = null;
+    let shareIconTitle: string = '';
+    const shareIconColor = '#64748B'; // Consistent muted color
+    
+    if (isOwner && collection.isShared) {
+        shareIcon = 'change_circle';
+        shareIconTitle = `Owned & Shared by You`;
+    } else if (!isOwner && !isSharedPreview) { // Is a linked collection on main board
+        const ownerUser = users.find(u => u.userId === collection.owner.id);
+        shareIcon = 'link';
+        shareIconTitle = `Owned by ${ownerUser?.displayName || 'System'}`;
+    }
+
+    const handleToggleApplication = (application: BadgeApplication) => {
+        const currentApplications = new Set(collection.applications || []);
+        if (currentApplications.has(application)) {
+            currentApplications.delete(application);
+        } else {
+            currentApplications.add(application);
+        }
+        onUpdateCollection(collection.id, { applications: Array.from(currentApplications) });
+    };
+
+    const viewModeOptions: {mode: BadgeCollection['viewMode'], icon: string, label: string}[] = [
+        { mode: 'compact', icon: 'view_module', label: 'Compact View' },
+        { mode: 'grid', icon: 'view_comfy_alt', label: 'Grid View' },
+        { mode: 'list', icon: 'view_list', label: 'List View' }
+    ];
+
+    const associationsToRender = isOwner
+        ? APPLICATIONS
+        : APPLICATIONS.filter(app => collection.applications?.includes(app.key));
+
+    return (
+        <Card className="h-full flex flex-col bg-transparent relative">
+            <CardHeader className="group p-2" {...dragHandleProps}>
+                 {!isSharedPreview && (
+                  <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className={cn("absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity z-10", isDragModifierPressed && "hidden")}
+                                onPointerDown={(e) => { e.stopPropagation(); onDeleteCollection(collection); }}
+                            >
+                                <GoogleSymbol name="cancel" className="text-lg" weight={100} opticalSize={20} />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>{isOwner ? "Delete Collection" : "Unlink Collection"}</p></TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="relative">
+                            <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
+                                <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                    <PopoverTrigger asChild disabled={!isOwner || isDragModifierPressed} onPointerDown={(e) => e.stopPropagation()}>
+                                        <Button variant="ghost" className="h-10 w-12 flex items-center justify-center p-0 text-muted-foreground">
+                                        <GoogleSymbol name={collection.icon} weight={100} grade={-25} opticalSize={20} style={{ fontSize: '36px' }} />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>Change Icon</p></TooltipContent>
+                                </Tooltip>
+                                </TooltipProvider>
+                                <PopoverContent className="w-80 p-0" onPointerDown={(e) => e.stopPropagation()}>
+                                <div className="flex items-center gap-1 p-2 border-b">
+                                    <CompactSearchInput
+                                    searchTerm={iconSearch}
+                                    setSearchTerm={setIconSearch}
+                                    placeholder="Search icons..."
+                                    inputRef={iconSearchInputRef}
+                                    />
+                                </div>
+                                <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (
+                                        <TooltipProvider key={iconName}>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                            <Button
+                                                variant={collection.icon === iconName ? "default" : "ghost"}
+                                                size="icon"
+                                                onClick={() => {
+                                                    onUpdateCollection(collection.id, { icon: iconName });
+                                                    setIsIconPopoverOpen(false);
+                                                }}
+                                                className="h-8 w-8 p-0"
+                                            >
+                                                <GoogleSymbol name={iconName} className="text-4xl" weight={100} opticalSize={20} />
+                                            </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent><p>{iconName}</p></TooltipContent>
+                                        </Tooltip>
+                                        </TooltipProvider>
+                                    ))}</div></ScrollArea>
+                                </PopoverContent>
+                            </Popover>
+                            {!isViewer && isOwner && (
+                                <>
+                                    <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <PopoverTrigger asChild disabled={!isOwner || isDragModifierPressed} onPointerDown={(e) => e.stopPropagation()}>
+                                                        <div className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", !isOwner || isDragModifierPressed ? "cursor-not-allowed" : "cursor-pointer", isDragModifierPressed && "hidden")} style={{ backgroundColor: collection.color }} />
+                                                    </PopoverTrigger>
+                                                </TooltipTrigger>
+                                                <TooltipContent><p>Change Color</p></TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                        <PopoverContent className="w-auto p-4" onPointerDown={(e) => e.stopPropagation()}>
+                                            <div className="space-y-4">
+                                                <HexColorPicker color={color} onChange={setColor} className="!w-full" />
+                                                <div className="flex items-center gap-2">
+                                                    <span className="p-2 border rounded-md" style={{ backgroundColor: color }} />
+                                                    <HexColorInput prefixed alpha color={color} onChange={setColor} className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50" />
+                                                </div>
+                                                <div className="grid grid-cols-8 gap-1">
+                                                    {predefinedColors.map(c => (
+                                                        <button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdateCollection(collection.id, { color: c }); setIsColorPopoverOpen(false);}}></button>
+                                                    ))}
+                                                </div>
+                                                <Button onClick={() => { onUpdateCollection(collection.id, { color }); setIsColorPopoverOpen(false); }} className="w-full bg-primary">Set Color</Button>
+                                            </div>
+                                        </PopoverContent>
+                                    </Popover>
+                                    {shareIcon && (
+                                        <TooltipProvider><Tooltip><TooltipTrigger asChild><div className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: shareIconColor }}><GoogleSymbol name={shareIcon} style={{fontSize: '16px'}} opticalSize={20} /></div></TooltipTrigger><TooltipContent><p>{shareIconTitle}</p></TooltipContent></Tooltip></TooltipProvider>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                         <div className="flex-1 min-w-0">
+                            <div onClick={() => { if(isOwner && !isDragModifierPressed) setIsEditingName(true);}} onPointerDown={(e) => { if(isOwner && !isDragModifierPressed) e.stopPropagation(); }} className={cn("font-headline text-xl font-thin break-words", isOwner && !isDragModifierPressed && "cursor-pointer")}>
+                            {isEditingName ? (
+                                <Input
+                                    ref={nameInputRef}
+                                    defaultValue={collection.name}
+                                    onBlur={handleSaveName}
+                                    onKeyDown={handleNameKeyDown}
+                                    className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
+                                />
+                            ) : (
+                                <CardTitle>{collection.name}</CardTitle>
+                            )}
+                            </div>
+                        </div>
+                    </div>
+                    <div className={cn("flex items-center", isDragModifierPressed && "hidden")} onPointerDown={(e) => e.stopPropagation()}>
+                       {!isSharedPreview && isOwner && (
+                            <div className={cn(isDragModifierPressed && "opacity-0 pointer-events-none")}>
+                                <DuplicateBadgeZone
+                                    collectionId={collection.id}
+                                    onAdd={() => onAddBadge(collection.id)}
+                                    isOwner={isOwner}
+                                />
+                            </div>
+                       )}
+                        <Popover open={isViewModePopoverOpen} onOpenChange={setIsViewModePopoverOpen}>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
+                                            <Button variant="ghost" size="icon" className={cn("h-8 w-8 text-muted-foreground", isDragModifierPressed && "hidden")}>
+                                                <GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} opticalSize={20} />
+                                            </Button>
+                                        </PopoverTrigger>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>Change View Mode</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                            <PopoverContent className="w-auto p-1 flex items-center gap-1" onPointerDown={(e) => e.stopPropagation()}>
+                                {viewModeOptions.map(({mode, icon, label}) => (
+                                    <TooltipProvider key={mode}>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => {
+                                                        onUpdateCollection(collection.id, { viewMode: mode });
+                                                        setIsViewModePopoverOpen(false);
+                                                    }}
+                                                    className={cn(
+                                                        "h-8 w-8",
+                                                        collection.viewMode === mode && "text-primary"
+                                                    )}
+                                                >
+                                                    <GoogleSymbol name={icon} weight={100} opticalSize={20} />
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent><p>{label}</p></TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                ))}
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+                </div>
+            </CardHeader>
+             {showDetails && (
+                <>
+                    <CardContent className="flex-grow pt-0 p-2 flex flex-col min-h-0">
+                         <div className={cn(isOwner && !isDragModifierPressed && "cursor-text")} onClick={() => { if(isOwner && !isDragModifierPressed) setIsEditingDescription(true);}} onPointerDown={(e) => { if(isOwner && !isDragModifierPressed) e.stopPropagation(); }}>
+                            {isEditingDescription ? (
+                            <Textarea 
+                                ref={descriptionTextareaRef} 
+                                defaultValue={collection.description} 
+                                onBlur={handleSaveDescription} 
+                                onKeyDown={handleDescriptionKeyDown}
+                                className="p-0 text-sm text-muted-foreground border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none" 
+                                placeholder="Click to add a description." 
+                            />
+                            ) : (
+                                <p className={cn("text-sm text-muted-foreground min-h-[20px] break-words")}>
+                                {collection.description || (isOwner ? 'Click to add a description.' : '')}
+                            </p>
+                            )}
+                        </div>
+                        <DroppableCollectionContent collection={collection}>
+                            {collectionBadges.map((badge) => {
+                                const badgeIsOwned = badge.owner.id === viewAsUser.userId;
+                                return (
+                                <SortableBadgeItem
+                                    key={badge.id}
+                                    badge={badge}
+                                    collection={collection}
+                                    viewMode={collection.viewMode}
+                                    onUpdateBadge={onUpdateBadge}
+                                    onDelete={onDeleteBadge}
+                                    isViewer={isViewer}
+                                    predefinedColors={predefinedColors}
+                                    isOwner={badgeIsOwned}
+                                    isLinked={!badgeIsOwned}
+                                    allCollections={allCollections}
+                                    isCollectionEditing={isEditingName || isEditingDescription}
+                                    isSharedPreview={isSharedPreview}
+                                    currentUserBadgeIds={currentUserBadgeIds}
+                                />
+                                )
+                            })}
+                        </DroppableCollectionContent>
+                    </CardContent>
+                    <CardFooter className={cn("flex items-center justify-between gap-2 p-2 mt-auto", isDragModifierPressed && "hidden")}>
+                        <div className="flex items-center gap-2">
+                           {associationsToRender.map(app => (
+                                <TooltipProvider key={app.key}>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className={cn("h-8 w-8", 
+                                                    isOwner ? (collection.applications?.includes(app.key) ? 'text-primary' : 'text-muted-foreground')
+                                                            : 'text-muted-foreground'
+                                                )}
+                                                onClick={() => isOwner && handleToggleApplication(app.key)}
+                                                onPointerDown={(e) => e.stopPropagation()}
+                                                disabled={!isOwner}
+                                            >
+                                                <GoogleSymbol name={app.icon} weight={100} opticalSize={20} />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Associated with {app.label}</TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            ))}
+                        </div>
+                    </CardFooter>
+                </>
+             )}
+            <div className={cn("absolute -bottom-1 right-0", isDragModifierPressed && "hidden", (isViewer && !isSharedPreview) && 'hidden' )}>
+                <Button variant="ghost" size="icon" onClick={onToggleExpand} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
+                    <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} opticalSize={20} />
+                </Button>
+            </div>
+        </Card>
+    );
+}
+
+function SortableCollectionCard({ collection, allCollections, ...props }: { collection: BadgeCollection, allCollections: BadgeCollection[], [key: string]: any }) {
+    const { isDragModifierPressed } = useUser();
+    const [isEditingName, setIsEditingName] = useState(false);
+    const [isEditingDescription, setIsEditingDescription] = useState(false);
+    
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+        id: collection.id,
+        data: { type: 'collection-card', collection, isSharedPreview: props.isSharedPreview },
+        disabled: !isDragModifierPressed,
+    });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+    };
+    
+    return (
+        <div 
+            ref={setNodeRef} 
+            style={style}
+            className={cn(
+                "p-2 flex-grow-0 flex-shrink-0 transition-all duration-300",
+                props.isSharedPreview 
+                    ? "w-full" 
+                    : "basis-full sm:basis-1/2 md:basis-1/3",
+                isDragging && "opacity-80 z-50"
+            )}
+        >
+            <BadgeCollectionCard 
+                collection={collection} 
+                allCollections={allCollections}
+                {...props} 
+                dragHandleProps={{...attributes, ...listeners}}
+                isEditingName={isEditingName}
+                setIsEditingName={setIsEditingName}
+                isEditingDescription={isEditingDescription}
+                setIsEditingDescription={setIsEditingDescription}
+            />
+        </div>
+    );
+}
+
+
+function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
+  const { setNodeRef, isOver } = useDroppable({ id });
+  
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "rounded-full transition-all p-0.5",
+        isOver && "ring-1 ring-border ring-inset"
+      )}
+    >
+      <TooltipProvider>
+          <Tooltip>
+              <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={onAdd} onPointerDown={(e) => e.stopPropagation()}>
+                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} opticalSize={20} />
+                    <span className="sr-only">New Collection or Drop to Duplicate</span>
+                  </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                  <p>{isOver ? 'Drop to Duplicate' : 'Add New Collection'}</p>
+              </TooltipContent>
+          </Tooltip>
+      </TooltipProvider>
+    </div>
+  );
+}
+
+function CollectionDropZone({ id, type, children, className }: { id: string; type: string; children: React.ReactNode; className?: string; }) {
+  const { setNodeRef, isOver } = useDroppable({ id, data: { type } });
+  
+  return (
+    <div ref={setNodeRef} className={cn(className, isOver && "ring-1 ring-border ring-inset", "transition-all rounded-lg")}>
+      {children}
+    </div>
+  );
+}
+
+export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: AppPage; isActive: boolean }) {
+    const { viewAsUser, users, appSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, updateUser, isDragModifierPressed, teams } = useUser();
+    const { toast } = useToast();
+
+    const [activeDragItem, setActiveDragItem] = useState<{type: string, data: any} | null>(null);
+    
+    const [mainSearchTerm, setMainSearchTerm] = useState('');
+    const [sharedSearchTerm, setSharedSearchTerm] = useState('');
+    const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
+    const [expandedCollections, setExpandedCollections] = useState<Set<string>>(new Set());
+    
+    const onToggleExpand = useCallback((collectionId: string) => {
+        setExpandedCollections(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(collectionId)) {
+                newSet.delete(collectionId);
+            } else {
+                newSet.add(collectionId);
+            }
+            return newSet;
+        });
+    }, []);
+
+    const title = tab.name;
+
+    const displayedCollections = useMemo(() => {
+        if (!viewAsUser) return [];
+        const owned = allBadgeCollections.filter(c => c.owner.id === viewAsUser.userId);
+        const linked = (viewAsUser.linkedCollectionIds || [])
+            .map(id => allBadgeCollections.find(c => c.id === id))
+            .filter((c): c is BadgeCollection => !!c);
+        
+        return [...owned, ...linked].filter(c => c.name.toLowerCase().includes(mainSearchTerm.toLowerCase()));
+    }, [allBadgeCollections, viewAsUser, mainSearchTerm]);
+
+    const sharedCollections = useMemo(() => {
+        if (!viewAsUser) return [];
+        const displayedIds = new Set(displayedCollections.map(c => c.id));
+        return allBadgeCollections
+            .filter(c => c.isShared && c.owner.id !== viewAsUser.userId && !displayedIds.has(c.id))
+            .filter(c => c.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
+    }, [allBadgeCollections, displayedCollections, sharedSearchTerm, viewAsUser]);
+
+    const currentUserBadgeIds = useMemo(() => {
+        const badgeIds = new Set<string>();
+        displayedCollections.forEach(collection => {
+            collection.badgeIds.forEach(id => badgeIds.add(id));
+        });
+        return badgeIds;
+    }, [displayedCollections]);
+
+
+    const handleDeleteCollection = useCallback((collection: BadgeCollection) => {
+        if (!viewAsUser) return;
+        const isOwner = collection.owner.id === viewAsUser.userId;
+        if (isOwner) {
+            deleteBadgeCollection(collection.id);
+            toast({ title: 'Collection Deleted' });
+        } else {
+            const updatedLinkedIds = (viewAsUser.linkedCollectionIds || []).filter(id => id !== collection.id);
+            updateUser(viewAsUser.userId, { linkedCollectionIds: updatedLinkedIds });
+            toast({ title: 'Collection Unlinked' });
+        }
+    }, [viewAsUser, deleteBadgeCollection, updateUser, toast]);
+
+    const handleDeleteBadge = useCallback((badgeId: string, collectionId: string) => {
+        if (!viewAsUser) return;
+        const badge = allBadges.find(b => b.id === badgeId);
+        const isOwner = badge?.owner.id === viewAsUser.userId;
+        
+        if (isOwner) {
+            deleteBadge(badgeId);
+            toast({ title: 'Badge Deleted' });
+        } else {
+            const newBadgeIds = allBadgeCollections.find(c => c.id === collectionId)?.badgeIds.filter(id => id !== badgeId);
+            if (newBadgeIds) {
+                updateBadgeCollection(collectionId, { badgeIds: newBadgeIds });
+                toast({ title: 'Badge Unlinked' });
+            }
+        }
+    }, [allBadges, allBadgeCollections, viewAsUser, deleteBadge, updateBadgeCollection, toast]);
+
+    const onDragEnd = useCallback((event: DragEndEvent) => {
+        setActiveDragItem(null);
+        if (!viewAsUser) return;
+
+        const { active, over } = event;
+        if (!over) return;
+        
+        const activeData = active.data.current || {};
+        const activeType = active.data.current?.type;
+        const overData = over.data.current || {};
+        const overType = over.data.current?.type;
+
+        if (activeType === 'badge' && overType === 'duplicate-badge-zone') {
+            const collectionId = overData.collectionId;
+            const sourceBadge = activeData.badge;
+            const targetCollection = allBadgeCollections.find(c => c.id === collectionId);
+            if (!targetCollection || targetCollection.owner.id !== viewAsUser.userId) {
+                toast({ variant: 'default', title: 'Permission Denied', description: 'You can only add badges to collections you own.' });
+                return;
+            }
+            if (collectionId && sourceBadge) {
+                addBadge(collectionId, sourceBadge);
+            }
+            return;
+        }
+
+        if (over.id === 'duplicate-collection-zone') {
+            const collection = activeData.collection as BadgeCollection;
+            if (collection) {
+                addBadgeCollection(viewAsUser, collection);
+                const isLinked = (viewAsUser.linkedCollectionIds || []).includes(collection.id);
+                if (isLinked) {
+                    const updatedLinkedIds = (viewAsUser.linkedCollectionIds || []).filter(id => id !== collection.id);
+                    updateUser(viewAsUser.userId, { linkedCollectionIds: updatedLinkedIds });
+                    toast({ title: 'Collection Copied', description: 'A new, independent collection has been created.' });
+                }
+            }
+            return;
+        }
+        
+        if (activeType === 'collection-card' && over.id === 'collections-list' && activeData.isSharedPreview) {
+             const collection = activeData.collection as BadgeCollection;
+             if (collection) {
+                 const updatedLinkedIds = [...(viewAsUser.linkedCollectionIds || []), collection.id];
+                 updateUser(viewAsUser.userId, { linkedCollectionIds: Array.from(new Set(updatedLinkedIds)) });
+                 toast({ title: 'Collection Linked' });
+             }
+            return;
+        }
+        
+        if (activeType === 'badge') {
+            const badge = activeData.badge as Badge;
+            const sourceCollectionId = activeData.collectionId;
+            const targetCollectionId = overData.collection?.id || overData.collectionId;
+            const targetCollection = allBadgeCollections.find(c => c.id === targetCollectionId);
+
+            if (targetCollection && targetCollection.owner.id !== viewAsUser.userId) {
+                toast({ variant: "destructive", title: 'Permission Denied', description: 'Cannot move badges to a collection you do not own.'});
+                return;
+            }
+
+            if (targetCollectionId && sourceCollectionId !== targetCollectionId) {
+                 if (targetCollection && !targetCollection.badgeIds.includes(badge.id)) {
+                    // LINKING: Add badge to new collection, but DO NOT remove from source if it's a shared preview
+                    if (!activeData.isSharedPreview) {
+                        updateBadgeCollection(sourceCollectionId, { badgeIds: allBadgeCollections.find(c => c.id === sourceCollectionId)!.badgeIds.filter(id => id !== badge.id) });
+                    }
+                    updateBadgeCollection(targetCollectionId, { badgeIds: [badge.id, ...targetCollection.badgeIds] });
+                    toast({title: "Badge Moved/Linked", description: `"${badge.name}" added to "${targetCollection.name}".`});
+                 }
+            } else if (targetCollectionId && sourceCollectionId === targetCollectionId) {
+                const collection = allBadgeCollections.find(c => c.id === sourceCollectionId);
+                const oldIndex = collection!.badgeIds.indexOf(badge.id);
+                const overBadgeId = over.data.current?.badge.id;
+                const newIndex = collection!.badgeIds.indexOf(overBadgeId);
+                if (oldIndex !== -1 && newIndex !== -1) {
+                    reorderBadges(sourceCollectionId, arrayMove(collection!.badgeIds, oldIndex, newIndex));
+                }
+            }
+            return;
+        }
+
+        if (activeType === 'collection-card' && over.id === 'shared-collections-panel') {
+            const collection = activeData.collection as BadgeCollection;
+            const isOwner = collection.owner.id === viewAsUser.userId;
+            
+            if (isOwner) {
+                updateBadgeCollection(collection.id, { isShared: !collection.isShared });
+                toast({ title: collection.isShared ? 'Collection Unshared' : 'Collection Shared' });
+            } else { // Is a linked collection, so unlink it
+                const updatedLinkedIds = (viewAsUser.linkedCollectionIds || []).filter(id => id !== collection.id);
+                updateUser(viewAsUser.userId, { linkedCollectionIds: updatedLinkedIds });
+                toast({ title: 'Collection Unlinked' });
+            }
+        }
+    }, [viewAsUser, teams, addBadgeCollection, updateUser, toast, updateBadgeCollection, allBadgeCollections, reorderBadges, addBadge]);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            onActivation: ({ event }) => {
+                if (!isDragModifierPressed) {
+                    return false;
+                }
+                return true;
+            },
+        }),
+        useSensor(KeyboardSensor, {
+          coordinateGetter: sortableKeyboardCoordinates,
+          onActivation: ({ event }) => {
+            if (!isDragModifierPressed) {
+                return false;
+            }
+            return true;
+          }
+        })
+    );
+
+    if (!viewAsUser) return null;
+
+    return (
+        <DndContext sensors={sensors} onDragStart={(e) => setActiveDragItem({ type: e.active.data.current?.type, id: e.active.id as string, data: e.active.data.current || {} })} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
+           <div className="flex h-full gap-4">
+                <div className="flex-1 flex flex-col overflow-hidden">
+                  <div className="flex items-center justify-between mb-6 shrink-0">
+                      <div className="flex items-center gap-2">
+                          <h2 className="font-headline text-2xl font-thin tracking-tight">{title}</h2>
+                          <DuplicateZone id="duplicate-collection-zone" onAdd={() => addBadgeCollection(viewAsUser)} />
+                      </div>
+                      <div className="flex items-center gap-1">
+                          <CompactSearchInput searchTerm={mainSearchTerm} setSearchTerm={setMainSearchTerm} placeholder="Search collections..." autoFocus={isActive} />
+                          <TooltipProvider>
+                              <Tooltip>
+                                  <TooltipTrigger asChild>
+                                      <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
+                                          <GoogleSymbol name="dynamic_feed" weight={100} opticalSize={20} />
+                                      </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent><p>Show Shared Collections</p></TooltipContent>
+                              </Tooltip>
+                          </TooltipProvider>
+                      </div>
+                  </div>
+                  <ScrollArea className="flex-1 min-h-0">
+                    <CollectionDropZone id="collections-list" type="collection" className="flex flex-wrap content-start -m-2 min-h-full">
+                        <SortableContext items={displayedCollections.map(c => c.id)} strategy={rectSortingStrategy}>
+                            {displayedCollections.map(collection => (
+                                <SortableCollectionCard
+                                    key={collection.id}
+                                    collection={collection}
+                                    allBadges={allBadges}
+                                    allCollections={allBadgeCollections}
+                                    predefinedColors={predefinedColors}
+                                    onUpdateCollection={updateBadgeCollection}
+                                    onDeleteCollection={handleDeleteCollection}
+                                    onAddBadge={addBadge}
+                                    onUpdateBadge={updateBadge}
+                                    onDeleteBadge={handleDeleteBadge}
+                                    isExpanded={expandedCollections.has(collection.id)}
+                                    onToggleExpand={() => onToggleExpand(collection.id)}
+                                />
+                            ))}
+                        </SortableContext>
+                    </CollectionDropZone>
+                  </ScrollArea>
+                </div>
+                 <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96" : "w-0")}>
+                    <div className={cn("h-full rounded-lg transition-all", isSharedPanelOpen ? "p-2" : "p-0")}>
+                        <CollectionDropZone id="shared-collections-panel" type="collection-panel" className="h-full">
+                            <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
+                            <CardHeader>
+                                <div className="flex items-center justify-between">
+                                    <CardTitle className="font-headline font-thin text-xl">Shared Collections</CardTitle>
+                                    <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." tooltipText="Search Shared Collections" />
+                                </div>
+                                <CardDescription>Drag a collection you own here to share it. Drag a collection to your board to link it.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="flex-1 p-2 overflow-hidden min-h-[150px]">
+                                <ScrollArea className="h-full">
+                                    <SortableContext items={sharedCollections.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                                        <div className="space-y-2">
+                                            {sharedCollections.map(collection => (
+                                                <SortableCollectionCard
+                                                    key={collection.id}
+                                                    collection={collection}
+                                                    allBadges={allBadges}
+                                                    allCollections={allBadgeCollections}
+                                                    predefinedColors={predefinedColors}
+                                                    onUpdateCollection={updateBadgeCollection}
+                                                    onDeleteCollection={handleDeleteCollection}
+                                                    onAddBadge={addBadge}
+                                                    onUpdateBadge={updateBadge}
+                                                    onDeleteBadge={handleDeleteBadge}
+                                                    isSharedPreview={true}
+                                                    isViewer={true}
+                                                    currentUserBadgeIds={currentUserBadgeIds}
+                                                    isExpanded={expandedCollections.has(collection.id)}
+                                                    onToggleExpand={() => onToggleExpand(collection.id)}
+                                                />
+                                            ))}
+                                            {sharedCollections.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No other collections are currently shared.</p>}
+                                        </div>
+                                    </SortableContext>
+                                </ScrollArea>
+                            </CardContent>
+                            </Card>
+                        </CollectionDropZone>
+                    </div>
+                </div>
+            </div>
+             <DragOverlay modifiers={[snapCenterToCursor]}>
+                {activeDragItem?.type === 'collection-card' && activeDragItem?.data?.collection ? (
+                     <GoogleSymbol
+                        name={activeDragItem.data.collection.icon}
+                        style={{ color: activeDragItem.data.collection.color, fontSize: '48px' }}
+                        weight={100}
+                        grade={-25}
+                        opticalSize={48}
+                    />
+                ) : activeDragItem?.type === 'badge' && activeDragItem?.data?.badge ? (
+                    <div className="h-9 w-9 rounded-full border-2 flex items-center justify-center bg-card" style={{ borderColor: activeDragItem.data.badge.color }}>
+                      <GoogleSymbol
+                          name={activeDragItem.data.badge.icon}
+                          style={{ fontSize: '28px', color: activeDragItem.data.badge.color }}
+                          weight={100}
+                      />
+                    </div>
+                ) : null}
+            </DragOverlay>
+        </DndContext>
+    );
+}
