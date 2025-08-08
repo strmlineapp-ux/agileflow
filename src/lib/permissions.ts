@@ -64,9 +64,6 @@ export const getAllUserRoles = (user: User, teams: Team[]): string[] => {
  * @returns `true` if the user has access, `false` otherwise.
  */
 export const hasAccess = (user: User, page: AppPage): boolean => {
-    // System admin has universal access
-    if (user.isAdmin) return true;
-
     // Special case for the admin management page, which is only for admins
     if (page.id === 'page-admin-management') {
         return user.isAdmin;

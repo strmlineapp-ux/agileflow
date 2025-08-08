@@ -37,8 +37,9 @@ export function Sidebar() {
           .map(teamId => teams.find(t => t.id === teamId))
           .filter((t): t is NonNullable<typeof t> => !!t)
           .filter(team => {
-            const teamHasAccessToThisPage = page.access.teams.includes(team.id);
-            return teamHasAccessToThisPage;
+            const pageAccessTeams = page.access?.teams || [];
+            if (pageAccessTeams.length === 0) return true;
+            return pageAccessTeams.includes(team.id);
         });
 
         return relevantTeams.map(team => ({
@@ -199,4 +200,3 @@ export function Sidebar() {
     </aside>
   );
 }
-

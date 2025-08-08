@@ -26,6 +26,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
+import { hasAccess } from '@/lib/permissions';
 
 // Import all possible tab components
 import { AdminsManagement, PagesManagement, TabsManagement } from '@/components/admin/page';
@@ -99,6 +100,10 @@ export default function DynamicPage() {
         if (!page) {
             return { pageConfig: null, dynamicTeam: null };
         }
+        
+        if (!viewAsUser || !hasAccess(viewAsUser, page)) {
+            return { pageConfig: null, dynamicTeam: null };
+        }
 
         if (page.isDynamic) {
             const pathSegments = page.path.split('/').filter(Boolean);
@@ -112,7 +117,7 @@ export default function DynamicPage() {
         }
         
         return { pageConfig: page, dynamicTeam: undefined };
-    }, [appSettings.pages, currentPath, teams]);
+    }, [appSettings.pages, currentPath, teams, viewAsUser]);
 
     useEffect(() => {
         if (pageConfig) {
@@ -178,12 +183,12 @@ export default function DynamicPage() {
     };
 
 
-    if (loading) {
+    if (loading || !viewAsUser) {
         return <Skeleton className="h-full w-full" />;
     }
 
     if (!pageConfig || (pageConfig.isDynamic && pageConfig.path !== currentPath && !dynamicTeam)) {
-        return <div className="p-4">404 - Page not found or team data is missing for path: {currentPath}</div>;
+        return <div className="p-4">404 - Page not found or you do not have permission to view it. Path: {currentPath}</div>;
     }
     
     const showHeader = !SEAMLESS_PAGES.includes(pageConfig.id);
@@ -199,7 +204,7 @@ export default function DynamicPage() {
                 </div>
                 <div className="p-4 border-2 border-dashed rounded-lg text-center text-muted-foreground">
                     <p>This page has no content configured.</p>
-                    {viewAsUser?.isAdmin && <p>An administrator can add tabs to this page in the Admin section.</p>}
+                    {viewAsUser.isAdmin && <p>An administrator can add tabs to this page in the Admin section.</p>}
                 </div>
             </div>
         );
@@ -249,5 +254,3 @@ export default function DynamicPage() {
         </div>
     );
 }
-
-    
