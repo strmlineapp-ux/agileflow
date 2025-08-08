@@ -64,6 +64,8 @@ export function LoginForm() {
     const success = await login(values.email, values.password);
     if (success) {
       router.push('/dashboard/overview');
+    } else {
+        // The context handles showing the toast on failure
     }
     setIsLoading(false);
   };
@@ -73,20 +75,13 @@ export function LoginForm() {
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      
-      // Manually trigger the login logic from the user context
-      const success = await login(user.email!, 'google-sso'); // The password isn't used for Google SSO
+      // Pass the full Google User object to the context for processing
+      const success = await login(result.user.email!, 'google-sso', result.user);
       
       if (success) {
         router.push('/dashboard/overview');
-      } else {
-        toast({
-          title: "Login Failed",
-          description: "Could not sign you in with Google. Please check with your administrator.",
-          variant: "destructive",
-        });
       }
+      // The context now handles the toast for a failed login.
 
     } catch (error: any) {
       console.error("Error during Google Sign-In:", error);

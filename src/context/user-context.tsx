@@ -249,28 +249,27 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         let userToLogin: User | null = null;
         if (!querySnapshot.empty) {
             userToLogin = { ...querySnapshot.docs[0].data(), userId: querySnapshot.docs[0].id } as User;
-        }
-
-        if (pass === 'google-sso' && googleUser) {
-          if (!userToLogin) {
-              const newUser: User = {
-                  userId: googleUser.uid,
-                  displayName: googleUser.displayName || 'New User',
-                  email: googleUser.email!,
-                  avatarUrl: googleUser.photoURL || undefined,
-                  isAdmin: false,
-                  accountType: 'Full',
-                  memberOfTeamIds: [],
-                  roles: [],
-                  googleCalendarLinked: false,
-                  theme: 'light',
-                  dragActivationKey: 'shift',
-              };
-              await setDoc(doc(firestore, 'users', newUser.userId), newUser);
-              userToLogin = newUser;
-          }
-        } else if (!userToLogin) { 
-            throw new Error("Invalid credentials");
+        } else if (pass === 'google-sso' && googleUser) {
+            // User doesn't exist, create a new one from Google data
+            const newUserId = crypto.randomUUID();
+            const newUser: User = {
+                userId: newUserId,
+                displayName: googleUser.displayName || 'New User',
+                email: googleUser.email!,
+                avatarUrl: googleUser.photoURL || `https://placehold.co/40x40.png`,
+                isAdmin: false,
+                accountType: 'Full', // Default to Full for Google users
+                memberOfTeamIds: [],
+                roles: [],
+                googleCalendarLinked: true, // Assume linked on Google sign-up
+                theme: 'light',
+                dragActivationKey: 'shift',
+            };
+            await setDoc(doc(firestore, 'users', newUserId), newUser);
+            setUsers(current => [...current, newUser]); // Add to local state
+            userToLogin = newUser;
+        } else {
+             throw new Error("Invalid credentials or user not found.");
         }
 
         if (userToLogin) {
@@ -279,7 +278,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             toast({ title: "Welcome back!" });
             return true;
         } else {
-            throw new Error("User not found after login attempt or creation.");
+            throw new Error("User authentication failed.");
         }
 
     } catch (error) {
@@ -289,7 +288,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-}, [loadUserAndData, toast]);
+  }, [loadUserAndData, toast]);
   
   
   const logout = useCallback(async () => {
