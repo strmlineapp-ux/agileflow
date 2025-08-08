@@ -14,7 +14,7 @@ export default function LoginPage() {
             />
             <CardDescription>Sign in to your AgileFlow workspace</CardDescription>
           </CardHeader>
-          <CardContent className="p-2">
+          <CardContent className="p-4">
             <LoginForm />
           </CardContent>
         </Card>

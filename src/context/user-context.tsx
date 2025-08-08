@@ -10,7 +10,8 @@ import { hasAccess, getOwnershipContext } from '@/lib/permissions';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { corePages, coreTabs } from '@/lib/core-data';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import { getFirebaseAppForTenant } from '@/lib/firebase';
+import { getFirebaseAppForTenant, getAuth, GoogleAuthProvider } from '@/lib/firebase';
+import { signInWithPopup, signOut, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, type User as FirebaseUser } from 'firebase/auth';
 import { mockEvents, mockTasks, mockNotifications } from '@/lib/mock-data';
 
 // Helper to simulate async operations
@@ -28,7 +29,7 @@ interface UserContextType {
   realUser: User | null;
   viewAsUser: User | null;
   setViewAsUser: (userId: string) => void;
-  login: (email: string, pass: string, googleUser?: any) => Promise<boolean>;
+  googleLogin: () => Promise<boolean>;
   logout: () => Promise<void>;
   loading: boolean;
 
@@ -95,7 +96,6 @@ interface UserContextType {
 }
 
 const UserContext = createContext<UserContextType | null>(null);
-const AUTH_COOKIE = 'agileflow-auth-user-id';
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
@@ -125,14 +125,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const allUsers = usersSnapshot.docs.map(doc => ({ ...doc.data(), userId: doc.id } as User));
     setUsers(allUsers);
     
-    const user = allUsers.find(u => u.userId === userId);
+    const userDoc = await getDoc(doc(firestore, "users", userId));
 
-    if (!user) {
-        console.error(`No user found with userId: ${userId}`);
-        // Clear local storage if the user isn't found in the database
-        localStorage.removeItem(AUTH_COOKIE);
+    if (!userDoc.exists()) {
+        console.error(`No user profile found in Firestore for userId: ${userId}`);
         return false;
     }
+    const user = userDoc.data() as User;
     
     setRealUser(user);
     if (!viewAsUserId) {
@@ -178,26 +177,19 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     return true;
 }, [viewAsUserId]);
 
-
   useEffect(() => {
-    const checkAuth = async () => {
-        setLoading(true);
-        try {
-            const storedUserId = localStorage.getItem(AUTH_COOKIE);
-            if (storedUserId) {
-                await loadUserAndData(storedUserId);
-            }
-        } catch (error) {
-            console.error("Failed to load user data:", error);
-            // Handle error case, e.g., clear session
-            localStorage.removeItem(AUTH_COOKIE);
+    const app = getFirebaseAppForTenant('default');
+    const auth = getAuth(app);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        if (firebaseUser) {
+            await loadUserAndData(firebaseUser.uid);
+        } else {
             setRealUser(null);
             setViewAsUserId(null);
-        } finally {
-            setLoading(false);
         }
-    };
-    checkAuth();
+        setLoading(false);
+    });
+    return () => unsubscribe();
   }, [loadUserAndData]);
 
   const viewAsUser = useMemo(() => users.find(u => u.userId === viewAsUserId) || realUser, [users, viewAsUserId, realUser]);
@@ -235,64 +227,50 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     };
   }, [viewAsUser]);
 
-  const login = useCallback(async (email: string, pass: string, googleUser?: any): Promise<boolean> => {
-    setLoading(true);
-    const db = getFirebaseAppForTenant('default');
-    const firestore = getFirestore(db);
-    
+  const googleLogin = useCallback(async (): Promise<boolean> => {
+    const app = getFirebaseAppForTenant('default');
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
     try {
-        await simulateApi(500);
-        const usersRef = collection(firestore, 'users');
-        const q = query(usersRef, where("email", "==", email));
-        const querySnapshot = await getDocs(q);
+        const result = await signInWithPopup(auth, provider);
+        const gUser = result.user;
 
-        let userToLogin: User | null = null;
-        if (!querySnapshot.empty) {
-            userToLogin = { ...querySnapshot.docs[0].data(), userId: querySnapshot.docs[0].id } as User;
-        } else if (pass === 'google-sso' && googleUser) {
-            // User doesn't exist, create a new one from Google data
-            const newUserId = crypto.randomUUID();
+        const db = getFirebaseAppForTenant('default');
+        const firestore = getFirestore(db);
+        const userRef = doc(firestore, 'users', gUser.uid);
+        const userDoc = await getDoc(userRef);
+        
+        if (!userDoc.exists()) {
             const newUser: User = {
-                userId: newUserId,
-                displayName: googleUser.displayName || 'New User',
-                email: googleUser.email!,
-                avatarUrl: googleUser.photoURL || `https://placehold.co/40x40.png`,
+                userId: gUser.uid,
+                displayName: gUser.displayName || 'New User',
+                email: gUser.email!,
+                avatarUrl: gUser.photoURL || `https://placehold.co/40x40.png`,
                 isAdmin: false,
-                accountType: 'Full', // Default to Full for Google users
+                accountType: 'Full',
                 memberOfTeamIds: [],
                 roles: [],
-                googleCalendarLinked: true, // Assume linked on Google sign-up
+                googleCalendarLinked: true,
                 theme: 'light',
                 dragActivationKey: 'shift',
             };
-            await setDoc(doc(firestore, 'users', newUserId), newUser);
-            setUsers(current => [...current, newUser]); // Add to local state
-            userToLogin = newUser;
-        } else {
-             throw new Error("Invalid credentials or user not found.");
+            await setDoc(userRef, newUser);
+            setUsers(current => [...current, newUser]);
         }
-
-        if (userToLogin) {
-            localStorage.setItem(AUTH_COOKIE, userToLogin.userId);
-            await loadUserAndData(userToLogin.userId);
-            toast({ title: "Welcome back!" });
-            return true;
-        } else {
-            throw new Error("User authentication failed.");
-        }
-
-    } catch (error) {
-        toast({ variant: 'destructive', title: 'Login Failed', description: (error as Error).message });
-        console.error("Login failed:", error);
+        
+        toast({ title: "Welcome back!" });
+        return true;
+    } catch (error: any) {
+        console.error("Google Sign-In failed:", error);
+        toast({ variant: 'destructive', title: 'Login Failed', description: error.message });
         return false;
-    } finally {
-      setLoading(false);
     }
-  }, [loadUserAndData, toast]);
-  
+  }, [toast]);
   
   const logout = useCallback(async () => {
-      localStorage.removeItem(AUTH_COOKIE);
+      const app = getFirebaseAppForTenant('default');
+      const auth = getAuth(app);
+      await signOut(auth);
       setRealUser(null);
       setViewAsUserId(null);
   }, []);
@@ -747,13 +725,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, [viewAsUser]);
 
   const contextValue = useMemo(() => ({
-    realUser, viewAsUser, setViewAsUser: setViewAsUserId, login, logout, loading,
+    realUser, viewAsUser, setViewAsUser: setViewAsUserId, googleLogin, logout, loading,
     isDragModifierPressed, holidays, users, teams, appSettings, calendars, locations, allBookableLocations, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments,
     updateUser, addUser, deleteUser, addTeam, updateTeam, deleteTeam, reorderTeams, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, addLocation, deleteLocation,
     updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors,
     handleBadgeAssignment, handleBadgeUnassignment, linkGoogleCalendar, getPriorityDisplay, searchSharedTeams,
   }), [
-    realUser, viewAsUser, login, logout, loading, isDragModifierPressed, holidays, users, teams, appSettings, calendars, locations, allBookableLocations, notifications, userStatusAssignments,
+    realUser, viewAsUser, googleLogin, logout, loading, isDragModifierPressed, holidays, users, teams, appSettings, calendars, locations, allBookableLocations, notifications, userStatusAssignments,
     updateUser, addUser, deleteUser, addTeam, updateTeam, deleteTeam, reorderTeams, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, addLocation, deleteLocation,
     updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges,
     handleBadgeAssignment, handleBadgeUnassignment, linkGoogleCalendar, getPriorityDisplay, searchSharedTeams
