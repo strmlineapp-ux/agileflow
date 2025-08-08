@@ -1,35 +1,79 @@
 # AgileFlow: Authentication Blueprint
 
-This document provides a clear, non-technical overview of how user authentication is handled within the AgileFlow application.
+This document provides a clear, non-technical overview of how user authentication is handled within the AgileFlow application, incorporating a robust, administrator-controlled access model.
 
 ---
 
-## 1. Authentication Flow: The Sign-In Journey
+## 1. Authentication & Onboarding Flow
 
-The application uses Google Sign-In as its sole method of authentication, providing a secure and streamlined experience. Here is a step-by-step breakdown of what happens when a user signs in:
+The application uses Google Sign-In as its sole method of authentication. Access is strictly controlled by administrators to ensure workspace security. A user can gain access in one of three ways:
 
-**Step 1: The User Clicks "Sign in with Google"**
-On the login screen, the user initiates the process by clicking the "Sign in with Google" button.
+*   **Method A: Administrator Invitation (Recommended)**
+*   **Method B: Administrator Pre-Authorization**
+*   **Method C: User-Initiated Access Request**
 
-**Step 2: The Google Sign-In Window**
-The application immediately opens a secure pop-up window managed by Google. The user enters their Google account credentials (email and password) directly into Google's interface. **Crucially, the AgileFlow application never sees or handles the user's password.**
+---
 
-**Step 3: Firebase Authentication Verifies Identity**
-Once the user successfully signs in with Google, Google's servers send a secure token back to the application. This token is passed to **Firebase Authentication**, a specialized Google service for managing user identities. Firebase verifies this token to confirm the user is who they say they are. This service acts as the application's secure gatekeeper.
+### Method A: Administrator Invitation (Recommended Flow)
 
-**Step 4: Checking for an Existing User**
-Firebase Authentication now recognizes the user and assigns them a unique, permanent User ID (UID). The application then uses this UID to check the **Firestore Database**, which is where application-specific data is stored.
+This is the most secure and user-friendly method for adding new team members.
 
-*   **If it's a returning user:** The system finds their existing profile document in the `/users` collection in Firestore and loads their specific data and preferences (like their professional title, assigned roles, and theme choice).
-*   **If it's a new user:** The system does not find an existing profile. It proceeds to create one.
+**Step 1: Admin Sends an Invitation**
+An existing administrator uses a dedicated "Invite User" form within the application to enter the email address of the new user. This action securely adds the email to an "invited" list in the database.
 
-**Step 5: Creating a New User Profile (First-Time Sign-In Only)**
-For a new user, the application creates a new document in the `/users` collection in Firestore. It populates this new profile with:
-*   Basic information from their Google account (Full Name, Email, Profile Picture).
-*   A set of default application settings (e.g., a standard 'light' theme, a default calendar view).
+**Step 2: User Receives an Email**
+The application sends a welcome email to the new user with a link to the AgileFlow login page.
 
-**Step 6: Loading the Application**
-With the user's identity confirmed by Firebase Authentication and their profile data loaded from Firestore, the application is now fully loaded and customized for that specific user. The user's session is securely managed by Firebase, keeping them logged in until they explicitly sign out.
+**Step 3: User Clicks "Sign in with Google"**
+The new user clicks the link and uses the "Sign in with Google" button. They complete the secure sign-in process directly with Google.
+
+**Step 4: System Verifies Invitation**
+Firebase Authentication confirms the user's identity and returns their verified email address to the application. The system checks this email against the "invited" list.
+
+**Step 5: Profile Creation & Access Granted**
+Upon finding a match, the system creates a new user profile in the Firestore `/users` collection, populating it with their Google account details (Name, Email, Profile Picture) and granting them full access immediately.
+
+---
+
+### Method B: Administrator Pre-Authorization (Manual Flow)
+
+This method allows an administrator to grant access without sending an invitation email, useful for setting up multiple users at once.
+
+**Step 1: Admin Creates a User Profile**
+An administrator manually creates a new document in the `/users` collection in Firestore. They must include the user's `email` and set the `accountType` to `'Full'`.
+
+**Step 2: User Signs In**
+The new user, having been notified by the admin separately, navigates to the login page and signs in with their Google account.
+
+**Step 3: System Finds Pre-Authorized Profile**
+Firebase authenticates the user. The application then searches Firestore for a user document with a matching email address. It finds the pre-created profile.
+
+**Step 4: Access Granted**
+Because the `accountType` is already set to `'Full'`, the user is immediately granted access to the application.
+
+---
+
+### Method C: User-Initiated Access Request (Reactive Flow)
+
+This flow handles "walk-up" attempts, where a user who has not been invited tries to access the application.
+
+**Step 1: New User Signs In**
+A new, uninvited user navigates to the application URL and clicks "Sign in with Google."
+
+**Step 2: System Creates a "Pending" Profile**
+Firebase authenticates the user. The application checks Firestore, finds no existing user, and creates a new user document. **Crucially, it sets the `accountType` to `'Viewer'`, which restricts all access.**
+
+**Step 3: Administrator Notification**
+*   **In-App:** A notification appears in the administrator's notification list, stating that a new user has requested access.
+*   **Via Email (Recommended Backend):** A **Cloud Function** (a backend process) is automatically triggered. This function sends an email to all system administrators, alerting them of the new request and providing a direct link to the approval page.
+
+**Step 4: Administrator Action**
+The administrator reviews the request in the in-app notification list. They have two options:
+*   **Approve:** The administrator clicks "Approve." The system updates the user's `accountType` in Firestore from `'Viewer'` to `'Full'`.
+*   **Reject:** The administrator clicks "Reject." The system deletes the user's document from Firestore and revokes their authentication token.
+
+**Step 5: Access Granted or Denied**
+The user will be granted full access the next time they refresh the application (if approved) or will be unable to log in (if rejected).
 
 ---
 
@@ -44,18 +88,18 @@ All information related to a user's application experience is stored in a dedica
 | `email` | The user's email address, used for identification and notifications. |
 | `avatarUrl` | A direct link to the user's profile picture, shown in the sidebar, team lists, and user menus. |
 | `isAdmin` | A simple `true` or `false` flag that determines if the user has access to administrative pages and features. |
-| `accountType` | Defines the user's access level. Currently defaults to 'Full'. |
+| `accountType` | Defines the user's access level. `Viewer` is a pending state. `Full` has access. |
 | `googleCalendarLinked` | A `true` or `false` flag indicating if the user has successfully linked their Google Calendar. |
 | `title` | The user's professional title (e.g., "Video Editor"), displayed under their name. |
 | `roles` | A list of Badge IDs assigned to the user, defining their skills or responsibilities. |
 | `memberOfTeamIds` | A list of Team IDs the user belongs to. This is crucial for controlling access to team-specific pages. |
 | `theme` | A UI preference for the app's color scheme (`light` or `dark`). |
 | `primaryColor` | A user-selected color that overrides the theme's default accent color. |
-| `defaultCalendarView` | The user's preferred view (Month, Week, Day, etc.) that the calendar will load by default. |
+| `defaultCalendarView`| The user's preferred view (Month, Week, Day, etc.) that the calendar will load by default. |
 | `easyBooking` | A `true` or `false` flag for enabling the "click-to-create-event" feature on the calendar. |
 | `timeFormat` | A UI preference for displaying time in 12-hour or 24-hour format. |
 | `linked...Ids` | Lists of IDs for shared Teams, Badge Collections, or Calendars that the user has chosen to link to their personal management boards. |
-| `dragActivationKey` | The keyboard key (`Shift`, `Alt`, etc.) the user must hold down to perform drag-and-drop actions. |
+| `dragActivationKey`| The keyboard key (`Shift`, `Alt`, etc.) the user must hold down to perform drag-and-drop actions. |
 
 ---
 
@@ -71,7 +115,7 @@ When a new user signs in for the first time, their profile is created from a mix
 | `avatarUrl` | **Google:** The URL of their Google profile picture. |
 | --- | --- |
 | `isAdmin` | **Application:** Defaults to `false` for all new users. |
-| `accountType` | **Application:** Defaults to `Full`. |
+| `accountType` | **Application:** Defaults to `Viewer` for user-initiated requests, or `Full` for invited users. |
 | `googleCalendarLinked`| **Application:** Defaults to `true` upon first Google Sign-in. |
 | `title` | **Application:** This is empty by default and must be set by an admin or the user. |
 | `roles` | **Application:** This is empty by default. Roles are assigned within the app. |
@@ -88,10 +132,11 @@ When a new user signs in for the first time, their profile is created from a mix
 
 ## 4. Security and Best Practices
 
-This new authentication system is significantly more secure and robust than the previous mock-data system for several key reasons:
+This authentication system is significantly more secure and robust than the previous mock-data system for several key reasons:
 
 *   **No Password Handling:** The most critical improvement is that our application **never handles or stores user passwords**. The entire sign-in process is delegated to Google and Firebase, which are built to handle this securely.
 *   **Trusted Identity Provider:** By using Google Sign-In, we are leveraging a globally trusted identity provider. Users can sign in with an account they already know and trust.
+*   **Centralized, Controlled Access**: The approval workflow ensures that only authorized individuals can access the workspace, preventing unauthorized sign-ups.
 *   **Secure Session Management:** Firebase's `onAuthStateChanged` listener securely manages the user's session. It uses industry-standard tokens, which are automatically refreshed and secured, protecting against unauthorized access.
 *   **Centralized Authentication Logic:** All authentication logic is now centralized within the `user-context.tsx` file and uses the official Firebase SDK. This reduces complexity and eliminates the risk of inconsistent or insecure implementations elsewhere in the app.
 *   **Single Source of Truth:** Using Firebase Auth as the single source of truth for a user's identity prevents the creation of duplicate accounts, which was a key issue with the previous system.
