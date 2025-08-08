@@ -14,8 +14,8 @@ export default function SignUpPage() {
         <Card>
           <CardHeader className="items-center text-center">
             <Logo className="mb-4" />
-            <CardTitle className="font-headline text-3xl">Request Access to Workspace</CardTitle>
-            <CardDescription>Enter your email to request access to this AgileFlow workspace.</CardDescription>
+            <CardTitle className="font-headline text-3xl">Create an Account</CardTitle>
+            <CardDescription>Enter your details below to create your AgileFlow account.</CardDescription>
           </CardHeader>
           <CardContent>
             <SignUpForm />
@@ -25,7 +25,7 @@ export default function SignUpPage() {
              <Button asChild variant="ghost" className="text-sm font-normal text-muted-foreground hover:text-primary hover:bg-transparent">
                 <Link href="/login">
                     <GoogleSymbol name="login" opticalSize={20} />
-                    Sign in
+                    Already have an account? Sign in
                 </Link>
               </Button>
           </CardFooter>

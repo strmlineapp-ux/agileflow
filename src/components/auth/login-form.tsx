@@ -2,7 +2,6 @@
 "use client";
 
 import * as React from "react";
-import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -21,11 +20,6 @@ import { GoogleSymbol } from "../icons/google-symbol";
 import { cn } from "@/lib/utils";
 import { Separator } from "../ui/separator";
 import { useUser } from "@/context/user-context";
-import { useToast } from "@/hooks/use-toast";
-import { getFirebaseAppForTenant } from "@/lib/firebase"; 
-
-const app = getFirebaseAppForTenant();
-const auth = getAuth(app);
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -34,7 +28,7 @@ const formSchema = z.object({
 
 export function LoginForm() {
   const router = useRouter();
-  const { login } = useUser();
+  const { login, googleLogin } = useUser();
   const [isLoading, setIsLoading] = React.useState(false);
   const [isEmailEditing, setIsEmailEditing] = React.useState(false);
   const [isPasswordEditing, setIsPasswordEditing] = React.useState(false);
@@ -49,7 +43,6 @@ export function LoginForm() {
       password: "",
     },
   });
-  const { toast } = useToast();
 
   React.useEffect(() => {
     if (isEmailEditing) emailInputRef.current?.focus();
@@ -64,32 +57,15 @@ export function LoginForm() {
     const success = await login(values.email, values.password);
     if (success) {
       router.push('/dashboard/overview');
-    } else {
-        // The context handles showing the toast on failure
     }
     setIsLoading(false);
   };
   
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
-    const provider = new GoogleAuthProvider();
-    try {
-      const result = await signInWithPopup(auth, provider);
-      // Pass the full Google User object to the context for processing
-      const success = await login(result.user.email!, 'google-sso', result.user);
-      
-      if (success) {
-        router.push('/dashboard/overview');
-      }
-      // The context now handles the toast for a failed login.
-
-    } catch (error: any) {
-      console.error("Error during Google Sign-In:", error);
-      toast({
-        title: "Google Sign-In Failed",
-        description: error.message || "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      });
+    const success = await googleLogin();
+    if (success) {
+      router.push('/dashboard/overview');
     }
     setIsLoading(false);
   };

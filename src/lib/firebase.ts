@@ -1,3 +1,4 @@
+
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp, type FirebaseApp, type FirebaseOptions } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
@@ -5,12 +6,12 @@ import { getFirestore } from "firebase/firestore";
 
 // --- Single-Tenant Configuration (Current) ---
 const firebaseConfig: FirebaseOptions = {
-  apiKey: "AIzaSyASpq9jPniTZ57woD0_7imptyJqwiP_JRc",
-  authDomain: "agileflow-mlf18.firebaseapp.com",
-  projectId: "agileflow-mlf18",
-  storageBucket: "agileflow-mlf18.firebasestorage.app",
-  messagingSenderId: "503172782024",
-  appId: "1:503172782024:web:fac88a2658db33dc8512fd"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
 // --- Multi-Tenant Configuration (New Approach) ---
@@ -53,4 +54,4 @@ export function getFirebaseAppForTenant(tenantId: string = 'default'): FirebaseA
 
 // To enforce the new multi-tenant pattern, we only export the dynamic function
 // and the provider. Components must now call getFirebaseAppForTenant() themselves.
-export { GoogleAuthProvider };
+export { GoogleAuthProvider, getAuth };
