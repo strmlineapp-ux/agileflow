@@ -1,7 +1,8 @@
+
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
-import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeOwner, type Task, type Holiday } from '@/lib/mock-data';
+import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeOwner, type Task, type Holiday } from '@/types';
 import { doc, getDoc, getFirestore, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, writeBatch, query, where } from 'firebase/firestore'; // Added setDoc
 import { useToast } from '@/hooks/use-toast';
 import { hexToHsl } from '@/lib/utils';
@@ -118,25 +119,27 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const loadUserAndData = useCallback(async (userId: string) => {
     const db = getFirebaseAppForTenant('default');
     const firestore = getFirestore(db);
-
-    const userQuery = query(collection(firestore, 'users'), where('userId', '==', userId));
-    const userSnapshot = await getDocs(userQuery);
     
-    if (userSnapshot.empty) {
+    // Fetch all users first to populate the context
+    const usersSnapshot = await getDocs(collection(firestore, 'users'));
+    const allUsers = usersSnapshot.docs.map(doc => ({ ...doc.data(), userId: doc.id } as User));
+    setUsers(allUsers);
+    
+    const user = allUsers.find(u => u.userId === userId);
+
+    if (!user) {
         console.error(`No user found with userId: ${userId}`);
+        // Clear local storage if the user isn't found in the database
+        localStorage.removeItem(AUTH_COOKIE);
         return false;
     }
     
-    const user = { id: userSnapshot.docs[0].id, ...userSnapshot.docs[0].data() } as User;
-
-    if (!user) return false;
-
     setRealUser(user);
-    if (!users.find(u => u.userId === userId)) {
-      setUsers(currentUsers => [...currentUsers, user]);
+    if (!viewAsUserId) {
+        setViewAsUserId(userId);
     }
     
-    // Fetch all data from firestore
+    // Fetch all other data from firestore
     const [teamsSnap, calendarsSnap, locationsSnap, badgesSnap, collectionsSnap, appSettingsSnap] = await Promise.all([
       getDocs(collection(firestore, 'teams')),
       getDocs(collection(firestore, 'calendars')),
@@ -173,7 +176,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
 
     return true;
-}, [users]);
+}, [viewAsUserId]);
 
 
   useEffect(() => {
@@ -233,7 +236,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, [viewAsUser]);
 
   const login = useCallback(async (email: string, pass: string, googleUser?: any): Promise<boolean> => {
-    console.log("Attempting login with email:", email, "and pass:", pass);
     setLoading(true);
     const db = getFirebaseAppForTenant('default');
     const firestore = getFirestore(db);
@@ -246,7 +248,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
         let userToLogin: User | null = null;
         if (!querySnapshot.empty) {
-            userToLogin = { id: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() } as User;
+            userToLogin = { ...querySnapshot.docs[0].data(), userId: querySnapshot.docs[0].id } as User;
         }
 
         if (pass === 'google-sso' && googleUser) {
@@ -264,10 +266,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                   theme: 'light',
                   dragActivationKey: 'shift',
               };
+              await setDoc(doc(firestore, 'users', newUser.userId), newUser);
               userToLogin = newUser;
-              await addDoc(collection(firestore, 'users'), newUser);
           }
-        } else if (!userToLogin) { // Standard email/password check
+        } else if (!userToLogin) { 
             throw new Error("Invalid credentials");
         }
 
@@ -327,7 +329,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const addUser = useCallback(async (newUser: User) => {
     const db = getFirebaseAppForTenant('default');
     const firestore = getFirestore(db);
-    await addDoc(collection(firestore, 'users'), newUser);
+    await setDoc(doc(firestore, 'users', newUser.userId), newUser);
     setUsers(currentUsers => [...currentUsers, newUser]);
   }, []);
 
