@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import { GoogleSymbol } from '../icons/google-symbol';
 
 export function NotificationList() {
-  const { realUser, notifications, setNotifications } = useUser();
+  const { realUser, notifications, setNotifications, handleApproveAccessRequest } = useUser();
   const isAdmin = realUser?.isAdmin;
   
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -45,8 +45,17 @@ export function NotificationList() {
                 <p className="text-xs text-muted-foreground">
                   {formatDistanceToNow(notification.time, { addSuffix: true })}
                 </p>
+                {notification.type === 'access_request' && notification.status === 'pending' && isAdmin && (
+                  <div className="flex gap-2 mt-2">
+                    <Button size="sm" onClick={() => handleApproveAccessRequest(notification.id, true)}>Approve</Button>
+                    <Button size="sm" variant="destructive" onClick={() => handleApproveAccessRequest(notification.id, false)}>Reject</Button>
+                  </div>
+                )}
+                 {notification.type === 'access_request' && notification.status !== 'pending' && (
+                  <p className="text-xs font-semibold text-muted-foreground">{notification.status === 'approved' ? 'Access Approved' : 'Access Rejected'}</p>
+                )}
               </div>
-              {!notification.read && (
+              {!notification.read && notification.type === 'standard' && (
                 <Button variant="outline" size="sm" onClick={() => handleMarkAsRead(notification.id)}>Mark as read</Button>
               )}
             </div>

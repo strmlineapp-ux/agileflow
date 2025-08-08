@@ -11,8 +11,8 @@ import { googleSymbolNames } from '@/lib/google-symbols';
 import { corePages, coreTabs } from '@/lib/core-data';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { getFirebaseAppForTenant, getAuth, GoogleAuthProvider } from '@/lib/firebase';
-import { signInWithPopup, signOut, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, type User as FirebaseUser } from 'firebase/auth';
-import { mockEvents, mockTasks, mockNotifications } from '@/lib/mock-data';
+import { signInWithPopup, signOut, onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
+import { mockEvents, mockTasks, mockNotifications as initialMockNotifications } from '@/lib/mock-data';
 
 // Helper to simulate async operations
 const simulateApi = (delay = 50) => new Promise(res => setTimeout(res, delay));
@@ -46,6 +46,7 @@ interface UserContextType {
   setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
   userStatusAssignments: Record<string, UserStatusAssignment[]>;
   setUserStatusAssignments: React.Dispatch<React.SetStateAction<Record<string, UserStatusAssignment[]>>>;
+  handleApproveAccessRequest: (notificationId: string, approved: boolean) => Promise<void>;
 
   // CRUD functions
   updateUser: (userId: string, userData: Partial<User>) => Promise<void>;
@@ -105,7 +106,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const [users, setUsers] = useState<User[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>(initialMockNotifications);
   const [userStatusAssignments, setUserStatusAssignments] = useState<Record<string, UserStatusAssignment[]>>({});
   const [calendars, setCalendars] = useState<SharedCalendar[]>([]);
   const [locations, setLocations] = useState<BookableLocation[]>([]);
@@ -247,7 +248,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 email: gUser.email!,
                 avatarUrl: gUser.photoURL || `https://placehold.co/40x40.png`,
                 isAdmin: false,
-                accountType: 'Full',
+                accountType: 'Viewer', // Start as Viewer pending approval
                 memberOfTeamIds: [],
                 roles: [],
                 googleCalendarLinked: true,
@@ -256,9 +257,28 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             };
             await setDoc(userRef, newUser);
             setUsers(current => [...current, newUser]);
+            // Notify admins about the new request
+            setNotifications(prev => [{
+                id: `access-${Date.now()}`,
+                type: 'access_request',
+                status: 'pending',
+                user: { displayName: newUser.displayName, avatarUrl: newUser.avatarUrl, userId: newUser.userId },
+                content: 'has requested access to the workspace.',
+                time: new Date(),
+                read: false,
+                data: { email: newUser.email, displayName: newUser.displayName }
+            }, ...prev]);
+            toast({ title: "Request Sent", description: "Your access request has been sent to an administrator for approval." });
+
+        } else {
+             const userData = userDoc.data() as User;
+             if (userData.accountType === 'Viewer') {
+                 toast({ title: "Pending Approval", description: "Your account is still awaiting administrator approval." });
+             } else {
+                toast({ title: "Welcome back!" });
+             }
         }
         
-        toast({ title: "Welcome back!" });
         return true;
     } catch (error: any) {
         console.error("Google Sign-In failed:", error);
@@ -266,6 +286,27 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         return false;
     }
   }, [toast]);
+  
+  const handleApproveAccessRequest = async (notificationId: string, approved: boolean) => {
+    const notification = notifications.find(n => n.id === notificationId);
+    if (!notification || !notification.data) return;
+
+    const userToUpdate = users.find(u => u.email === notification.data!.email);
+    if (!userToUpdate) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not find user to update.' });
+        return;
+    }
+
+    if (approved) {
+        await updateUser(userToUpdate.userId, { accountType: 'Full' });
+        toast({ title: 'User Approved', description: `${userToUpdate.displayName} has been granted access.` });
+    } else {
+        await deleteUser(userToUpdate.userId);
+        toast({ title: 'User Rejected', description: `${userToUpdate.displayName}'s access request has been rejected.` });
+    }
+
+    setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, status: approved ? 'approved' : 'rejected' } : n));
+  };
   
   const logout = useCallback(async () => {
       const app = getFirebaseAppForTenant('default');
@@ -726,12 +767,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const contextValue = useMemo(() => ({
     realUser, viewAsUser, setViewAsUser: setViewAsUserId, googleLogin, logout, loading,
-    isDragModifierPressed, holidays, users, teams, appSettings, calendars, locations, allBookableLocations, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments,
+    isDragModifierPressed, holidays, users, teams, appSettings, calendars, locations, allBookableLocations, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, handleApproveAccessRequest,
     updateUser, addUser, deleteUser, addTeam, updateTeam, deleteTeam, reorderTeams, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, addLocation, deleteLocation,
     updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors,
     handleBadgeAssignment, handleBadgeUnassignment, linkGoogleCalendar, getPriorityDisplay, searchSharedTeams,
   }), [
-    realUser, viewAsUser, googleLogin, logout, loading, isDragModifierPressed, holidays, users, teams, appSettings, calendars, locations, allBookableLocations, notifications, userStatusAssignments,
+    realUser, viewAsUser, googleLogin, logout, loading, isDragModifierPressed, holidays, users, teams, appSettings, calendars, locations, allBookableLocations, notifications, userStatusAssignments, handleApproveAccessRequest,
     updateUser, addUser, deleteUser, addTeam, updateTeam, deleteTeam, reorderTeams, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, addLocation, deleteLocation,
     updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges,
     handleBadgeAssignment, handleBadgeUnassignment, linkGoogleCalendar, getPriorityDisplay, searchSharedTeams

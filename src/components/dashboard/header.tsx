@@ -18,7 +18,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 export function Header() {
   const { realUser, viewAsUser, notifications, appSettings, teams } = useUser();
   const isViewingAsSomeoneElse = realUser?.userId !== viewAsUser?.userId;
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read && n.type === 'standard').length;
   
   const orderedNavItems = useMemo(() => {
     if (!viewAsUser) return [];
@@ -128,4 +128,3 @@ export function Header() {
     </header>
   );
 }
-
