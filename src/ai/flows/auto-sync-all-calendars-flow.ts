@@ -9,9 +9,10 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import {syncCalendar, SyncCalendarInput} from './sync-calendar-flow';
-// In a real app, you would have a service to fetch data from your database.
-// For this prototype, we will simulate this by importing the mock data here.
-import {mockCalendars} from '@/lib/mock-data'; 
+import { getFirebaseAppForTenant } from '@/lib/firebase';
+import { getFirestore, collection, getDocs, query, where } from 'firebase/firestore';
+import { type SharedCalendar } from '@/types';
+
 
 const AutoSyncOutputSchema = z.object({
   totalCalendarsToSync: z.number(),
@@ -39,13 +40,14 @@ const autoSyncAllCalendarsFlow = ai.defineFlow(
   async () => {
     console.log('Starting automatic synchronization for all calendars...');
 
-    // 1. In a real app, you would fetch this data from your database (e.g., Firestore).
-    // For this prototype, we simulate that by using the mock data.
-    const allCalendars = mockCalendars; 
-    
-    // 2. Filter for calendars that are actually linked to a Google Calendar.
-    const linkedCalendars = allCalendars.filter(c => c.googleCalendarId);
-    
+    // 1. Fetch calendar data from Firestore.
+    const app = getFirebaseAppForTenant('default');
+    const db = getFirestore(app);
+    const calendarsRef = collection(db, 'calendars');
+    const q = query(calendarsRef, where('googleCalendarId', '!=', null));
+    const querySnapshot = await getDocs(q);
+    const linkedCalendars = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SharedCalendar));
+
     console.log(`Found ${linkedCalendars.length} calendars to sync.`);
 
     const syncPromises = linkedCalendars.map(async (calendar) => {

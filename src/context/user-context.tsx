@@ -1,15 +1,16 @@
-
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
-import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeOwner, type Task, type Holiday, mockUsers, mockCalendars, mockLocations, mockTeams, mockAppSettings, allMockBadgeCollections, videoProdBadges, liveEventsBadges, pScaleBadges, starRatingBadges, effortBadges, mockHolidays } from '@/lib/mock-data';
-import { doc, getDoc, getFirestore } from 'firebase/firestore';
+import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeOwner, type Task, type Holiday } from '@/lib/mock-data';
+import { doc, getDoc, getFirestore, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, writeBatch, query, where } from 'firebase/firestore'; // Added setDoc
 import { useToast } from '@/hooks/use-toast';
 import { hexToHsl } from '@/lib/utils';
 import { hasAccess, getOwnershipContext } from '@/lib/permissions';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { corePages, coreTabs } from '@/lib/core-data';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import { getFirebaseAppForTenant } from '@/lib/firebase';
+import { mockEvents, mockTasks, mockNotifications } from '@/lib/mock-data';
 
 // Helper to simulate async operations
 const simulateApi = (delay = 50) => new Promise(res => setTimeout(res, delay));
@@ -115,52 +116,65 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
   const loadUserAndData = useCallback(async (userId: string) => {
-      const db = getFirestore();
-      const userDocRef = doc(db, 'users', userId);
-      const userDocSnap = await getDoc(userDocRef);
+    const db = getFirebaseAppForTenant('default');
+    const firestore = getFirestore(db);
 
-      if (!userDocSnap.exists()) return false;
+    const userQuery = query(collection(firestore, 'users'), where('userId', '==', userId));
+    const userSnapshot = await getDocs(userQuery);
+    
+    if (userSnapshot.empty) {
+        console.error(`No user found with userId: ${userId}`);
+        return false;
+    }
+    
+    const user = { id: userSnapshot.docs[0].id, ...userSnapshot.docs[0].data() } as User;
 
-      const user = userDocSnap.data() as User;
+    if (!user) return false;
 
-      if (!user) return false;
+    setRealUser(user);
+    if (!users.find(u => u.userId === userId)) {
+      setUsers(currentUsers => [...currentUsers, user]);
+    }
+    
+    // Fetch all data from firestore
+    const [teamsSnap, calendarsSnap, locationsSnap, badgesSnap, collectionsSnap, appSettingsSnap] = await Promise.all([
+      getDocs(collection(firestore, 'teams')),
+      getDocs(collection(firestore, 'calendars')),
+      getDocs(collection(firestore, 'locations')),
+      getDocs(collection(firestore, 'badges')),
+      getDocs(collection(firestore, 'badgeCollections')),
+      getDoc(doc(firestore, 'app-settings', 'global')),
+    ]);
 
-      setRealUser(user);
-      if (!users.find(u => u.userId === userId)) {
-        setUsers(currentUsers => [...currentUsers, user]);
-      }
+    setTeams(teamsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Team)));
+    setCalendars(calendarsSnap.docs.map(d => ({ id: d.id, ...d.data() } as SharedCalendar)));
+    setLocations(locationsSnap.docs.map(d => ({ id: d.id, ...d.data() } as BookableLocation)));
+    setAllBadges(badgesSnap.docs.map(d => ({ id: d.id, ...d.data() } as Badge)));
+    setAllBadgeCollections(collectionsSnap.docs.map(d => ({ id: d.id, ...d.data() } as BadgeCollection)));
+    
+    if (appSettingsSnap.exists()) {
+        const settingsData = appSettingsSnap.data() as AppSettings;
+        const corePageIds = new Set(corePages.map(p => p.id));
+        const dynamicPages = settingsData.pages.filter(p => !corePageIds.has(p.id));
+        const finalPages = [...corePages];
+        const tasksIndex = corePages.findIndex(p => p.id === 'page-tasks');
 
-      setTeams(mockTeams);
-      setCalendars(mockCalendars);
-      setLocations(mockLocations);
-      setHolidays(mockHolidays);
+        if (tasksIndex !== -1) {
+            finalPages.splice(tasksIndex + 1, 0, ...dynamicPages);
+        } else {
+            finalPages.push(...dynamicPages);
+        }
 
-      const badgesMap = new Map<string, Badge>();
-      [...videoProdBadges, ...liveEventsBadges, ...pScaleBadges, ...starRatingBadges, ...effortBadges].forEach(badge => {
-          if (badge && !badgesMap.has(badge.id)) {
-              badgesMap.set(badge.id, badge);
-          }
-      });
-      setAllBadges(Array.from(badgesMap.values()).filter(Boolean));
-      setAllBadgeCollections(allMockBadgeCollections);
+        setAppSettings({
+            ...settingsData,
+            pages: finalPages,
+            tabs: [...coreTabs, ...settingsData.tabs],
+        });
+    }
 
-      // Correctly combine core and dynamic pages
-      const corePageIds = new Set(corePages.map(p => p.id));
-      const dynamicPages = mockAppSettings.pages.filter(p => !corePageIds.has(p.id));
-      const finalPages = [...corePages];
-      const tasksIndex = corePages.findIndex(p => p.id === 'page-tasks');
-      if (tasksIndex !== -1) {
-          finalPages.splice(tasksIndex + 1, 0, ...dynamicPages);
-      } else {
-          finalPages.push(...dynamicPages);
-      }
-      setAppSettings({
-        pages: finalPages,
-        tabs: [...coreTabs, ...mockAppSettings.tabs],
-      });
+    return true;
+}, [users]);
 
-      return true;
-  }, [users]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -219,50 +233,61 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, [viewAsUser]);
 
   const login = useCallback(async (email: string, pass: string, googleUser?: any): Promise<boolean> => {
-      setLoading(true);
-      try {
-          await simulateApi(500);
-          let userToLogin = mockUsers.find(u => u.email === email);
+    console.log("Attempting login with email:", email, "and pass:", pass);
+    setLoading(true);
+    const db = getFirebaseAppForTenant('default');
+    const firestore = getFirestore(db);
+    
+    try {
+        await simulateApi(500);
+        const usersRef = collection(firestore, 'users');
+        const q = query(usersRef, where("email", "==", email));
+        const querySnapshot = await getDocs(q);
 
-          if (pass === 'google-sso' && googleUser) {
-            if (!userToLogin) {
-                // Create a new user object if not found in mockUsers
-                const newUser: User = {
-                    userId: googleUser.uid, // Use Firebase User ID as internal userId
-                    displayName: googleUser.displayName || 'New User',
-                    email: googleUser.email!,
-                    avatarUrl: googleUser.photoURL || undefined,
-                    isAdmin: false, // Default to non-admin for new users
-                    accountType: 'Full', // Assume full account type for Google SSO
-                    memberOfTeamIds: [],
-                    roles: [],
-                    googleCalendarLinked: false, // Will be linked separately
-                    theme: 'light',
-                    dragActivationKey: 'shift',
-                };
-                userToLogin = newUser;
-                // In a real app, you'd save this new user to your database (e.g., Firestore)
-            }
-          } else if (!userToLogin || userToLogin.password !== pass) { // Standard email/password check
-              throw new Error("Invalid credentials");
+        let userToLogin: User | null = null;
+        if (!querySnapshot.empty) {
+            userToLogin = { id: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() } as User;
+        }
+
+        if (pass === 'google-sso' && googleUser) {
+          if (!userToLogin) {
+              const newUser: User = {
+                  userId: googleUser.uid,
+                  displayName: googleUser.displayName || 'New User',
+                  email: googleUser.email!,
+                  avatarUrl: googleUser.photoURL || undefined,
+                  isAdmin: false,
+                  accountType: 'Full',
+                  memberOfTeamIds: [],
+                  roles: [],
+                  googleCalendarLinked: false,
+                  theme: 'light',
+                  dragActivationKey: 'shift',
+              };
+              userToLogin = newUser;
+              await addDoc(collection(firestore, 'users'), newUser);
           }
+        } else if (!userToLogin) { // Standard email/password check
+            throw new Error("Invalid credentials");
+        }
 
-          if (userToLogin) {
-              localStorage.setItem(AUTH_COOKIE, userToLogin.userId);
-              await loadUserAndData(userToLogin.userId);
-              toast({ title: "Welcome back!" });
-              return true;
-          } else {
-              throw new Error("User not found after login attempt");
-          }
+        if (userToLogin) {
+            localStorage.setItem(AUTH_COOKIE, userToLogin.userId);
+            await loadUserAndData(userToLogin.userId);
+            toast({ title: "Welcome back!" });
+            return true;
+        } else {
+            throw new Error("User not found after login attempt or creation.");
+        }
 
-      } catch (error) {
-          toast({ variant: 'destructive', title: 'Login Failed', description: (error as Error).message });
-          return false;
-      } finally {
-        setLoading(false);
-      }
-  }, [loadUserAndData, toast]);
+    } catch (error) {
+        toast({ variant: 'destructive', title: 'Login Failed', description: (error as Error).message });
+        console.error("Login failed:", error);
+        return false;
+    } finally {
+      setLoading(false);
+    }
+}, [loadUserAndData, toast]);
   
   
   const logout = useCallback(async () => {
@@ -290,37 +315,52 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, [locations, teams]);
 
   const updateUser = useCallback(async (userId: string, userData: Partial<User>) => {
-    await simulateApi();
+    const db = getFirebaseAppForTenant('default');
+    const firestore = getFirestore(db);
+    const userRef = doc(firestore, 'users', userId);
+    await updateDoc(userRef, userData);
     setUsers(currentUsers =>
       currentUsers.map(u => (u.userId === userId ? { ...u, ...userData } : u))
     );
   }, []);
 
   const addUser = useCallback(async (newUser: User) => {
-    await simulateApi();
+    const db = getFirebaseAppForTenant('default');
+    const firestore = getFirestore(db);
+    await addDoc(collection(firestore, 'users'), newUser);
     setUsers(currentUsers => [...currentUsers, newUser]);
   }, []);
 
   const deleteUser = useCallback(async (userId: string) => {
-      await simulateApi();
-      setUsers(currentUsers => currentUsers.filter(u => u.userId !== userId));
+    const db = getFirebaseAppForTenant('default');
+    const firestore = getFirestore(db);
+    await deleteDoc(doc(firestore, 'users', userId));
+    setUsers(currentUsers => currentUsers.filter(u => u.userId !== userId));
   }, []);
 
   const addTeam = useCallback(async (teamData: Omit<Team, 'id'>) => {
-    const newTeam: Team = { ...teamData, id: crypto.randomUUID() };
-    await simulateApi();
+    const db = getFirebaseAppForTenant('default');
+    const firestore = getFirestore(db);
+    const docRef = await addDoc(collection(firestore, 'teams'), teamData);
+    const newTeam = { ...teamData, id: docRef.id };
     setTeams(current => [...current, newTeam]);
     toast({ title: 'Success', description: `Team "${newTeam.name}" has been created.` });
   }, [toast]);
 
   const updateTeam = useCallback(async (teamId: string, teamData: Partial<Team>) => {
-    await simulateApi();
+    const db = getFirebaseAppForTenant('default');
+    const firestore = getFirestore(db);
+    const teamRef = doc(firestore, 'teams', teamId);
+    await updateDoc(teamRef, teamData);
     setTeams(current => current.map(t => t.id === teamId ? { ...t, ...teamData } : t));
   }, []);
 
   const deleteTeam = useCallback(async (teamId: string, router: AppRouterInstance, pathname: string) => {
-    await simulateApi();
-     if (!viewAsUser) return;
+    if (!viewAsUser) return;
+    const db = getFirebaseAppForTenant('default');
+    const firestore = getFirestore(db);
+    await deleteDoc(doc(firestore, 'teams', teamId));
+
     const team = teams.find(t => t.id === teamId);
     const page = appSettings.pages.find(p => pathname.startsWith(p.path));
 
@@ -340,21 +380,26 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
 
     toast({ title: 'Success', description: `Team "${team?.name}" has been deleted.` });
-  }, [appSettings, viewAsUser, toast, teams, setTeams]);
+  }, [appSettings, viewAsUser, toast, teams]);
 
   const reorderTeams = useCallback(async (reorderedTeams: Team[]) => {
+      // In a real app, you might save the order to a user preference document.
       await simulateApi();
       setTeams([...reorderedTeams]);
   }, []);
 
   const addCalendar = useCallback(async (newCalendarData: Omit<SharedCalendar, 'id'>) => {
-    const newCalendar: SharedCalendar = { ...newCalendarData, id: crypto.randomUUID() };
-    await simulateApi();
+    const db = getFirebaseAppForTenant('default');
+    const firestore = getFirestore(db);
+    const docRef = await addDoc(collection(firestore, 'calendars'), newCalendarData);
+    const newCalendar = { ...newCalendarData, id: docRef.id };
     setCalendars(current => [...current, newCalendar]);
   }, []);
 
   const updateCalendar = useCallback(async (calendarId: string, calendarData: Partial<SharedCalendar>) => {
-    await simulateApi();
+    const db = getFirebaseAppForTenant('default');
+    const firestore = getFirestore(db);
+    await updateDoc(doc(firestore, 'calendars', calendarId), calendarData);
     setCalendars(current => current.map(c => (c.id === calendarId ? { ...c, ...calendarData } : c)));
   }, []);
 
@@ -363,13 +408,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       toast({ variant: 'destructive', title: 'Cannot Delete Calendar', description: 'You cannot delete the last remaining calendar.' });
       return;
     }
-    await simulateApi();
+    const db = getFirebaseAppForTenant('default');
+    const firestore = getFirestore(db);
+    await deleteDoc(doc(firestore, 'calendars', calendarId));
     setCalendars(current => current.filter(c => c.id !== calendarId));
   }, [calendars.length, toast]);
 
   const fetchEvents = useCallback(async (start: Date, end: Date): Promise<Event[]> => {
     await simulateApi();
-    const { mockEvents } = await import('@/lib/mock-data');
     const filteredEvents = mockEvents.filter(event => {
         const eventTime = event.startTime.getTime();
         return eventTime >= start.getTime() && eventTime < end.getTime();
@@ -396,7 +442,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const fetchTasks = useCallback(async (): Promise<Task[]> => {
     await simulateApi();
-    const { mockTasks } = await import('@/lib/mock-data');
     return mockTasks;
   }, []);
 
@@ -444,16 +489,23 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, [allBadges]);
 
   const updateAppSettings = useCallback(async (settings: Partial<AppSettings>) => {
-    await simulateApi();
+    const db = getFirebaseAppForTenant('default');
+    const firestore = getFirestore(db);
+    const settingsRef = doc(firestore, 'app-settings', 'global');
+    await updateDoc(settingsRef, settings);
     setAppSettings(current => ({ ...current, ...settings }));
   }, []);
 
   const updateAppTab = useCallback(async (tabId: string, tabData: Partial<AppTab>) => {
-    await simulateApi();
-    setAppSettings(current => ({ ...current, tabs: current.tabs.map(t => t.id === tabId ? { ...t, ...tabData } : t) }));
-  }, []);
+     const newTabs = appSettings.tabs.map(t => t.id === tabId ? { ...t, ...tabData } : t);
+     await updateAppSettings({ tabs: newTabs });
+  }, [appSettings.tabs, updateAppSettings]);
 
-  const addBadgeCollection = useCallback((owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => {
+  const addBadgeCollection = useCallback(async (owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => {
+    const db = getFirebaseAppForTenant('default');
+    const firestore = getFirestore(db);
+    const batch = writeBatch(firestore);
+
     const newCollectionId = crypto.randomUUID();
     let newBadges: Badge[] = [];
     let newCollection: BadgeCollection;
@@ -464,7 +516,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             const originalBadge = allBadges.find(b => b.id === bId);
             if (!originalBadge) return null;
             const newBadgeId = crypto.randomUUID();
-            return { ...originalBadge, id: newBadgeId, owner: ownerContext, ownerCollectionId: newCollectionId, name: `${originalBadge.name} (Copy)` };
+            const newBadge = { ...originalBadge, id: newBadgeId, owner: ownerContext, ownerCollectionId: newCollectionId, name: `${originalBadge.name} (Copy)` };
+            batch.set(doc(firestore, 'badges', newBadgeId), newBadge);
+            return newBadge;
         }).filter((b): b is Badge => b !== null);
 
         newCollection = {
@@ -487,6 +541,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             color: '#64748B'
         };
         newBadges.push(newBadge);
+        batch.set(doc(firestore, 'badges', newBadgeId), newBadge);
         newCollection = {
             id: newCollectionId,
             name: `New Collection`,
@@ -500,53 +555,66 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             isShared: false
         };
     }
+    batch.set(doc(firestore, 'badgeCollections', newCollectionId), newCollection);
+    await batch.commit();
 
     setAllBadgeCollections(prev => [...prev, newCollection]);
     if (newBadges.length > 0) {
         setAllBadges(prev => [...prev, ...newBadges]);
     }
-
     toast({ title: 'Collection Added', description: `"${newCollection.name}" has been created.` });
 
   }, [allBadges, toast]);
 
-  const updateBadgeCollection = useCallback((collectionId: string, data: Partial<BadgeCollection>, teamId?: string) => {
+  const updateBadgeCollection = useCallback(async (collectionId: string, data: Partial<BadgeCollection>, teamId?: string) => {
+    const db = getFirebaseAppForTenant('default');
+    const firestore = getFirestore(db);
+    await updateDoc(doc(firestore, 'badgeCollections', collectionId), data);
     setAllBadgeCollections(current => current.map(c => (c.id === collectionId ? { ...c, ...data } : c)));
   }, []);
 
+  const deleteBadgeCollection = useCallback(async (collectionId: string) => {
+    const db = getFirebaseAppForTenant('default');
+    const firestore = getFirestore(db);
+    const batch = writeBatch(firestore);
 
-  const deleteBadgeCollection = useCallback((collectionId: string) => {
     const collectionToDelete = allBadgeCollections.find(c => c.id === collectionId);
     if (!collectionToDelete) return;
+    
+    batch.delete(doc(firestore, 'badgeCollections', collectionId));
 
     const badgeIdsToDelete = allBadges
       .filter(b => b.ownerCollectionId === collectionId)
       .map(b => b.id);
+      
+    badgeIdsToDelete.forEach(badgeId => {
+      batch.delete(doc(firestore, 'badges', badgeId));
+    });
+
+    await batch.commit();
 
     setAllBadgeCollections(current => current.filter(c => c.id !== collectionId));
-
     if (badgeIdsToDelete.length > 0) {
       setAllBadges(current => current.filter(b => !badgeIdsToDelete.includes(b.id)));
     }
-
   }, [allBadgeCollections, allBadges]);
 
-  const addBadge = useCallback((collectionId: string, sourceBadge?: Badge) => {
+  const addBadge = useCallback(async (collectionId: string, sourceBadge?: Badge) => {
+    const db = getFirebaseAppForTenant('default');
+    const firestore = getFirestore(db);
     const collection = allBadgeCollections.find(c => c.id === collectionId);
     if (!collection || !viewAsUser) return;
 
     if (collection.owner.id !== viewAsUser.userId) {
-        toast({
-            variant: 'destructive',
-            title: 'Permission Denied',
-            description: "You can only add badges to collections you own."
-        });
+        toast({ variant: 'destructive', title: 'Permission Denied', description: "You can only add badges to collections you own."});
         return;
     }
 
+    const batch = writeBatch(firestore);
+    let newBadge: Badge;
+
     if (sourceBadge) {
-        // If it's a duplication, create a new badge and add it.
-        const newBadge: Badge = {
+        newBadge = {
             id: crypto.randomUUID(),
             owner: { type: 'user', id: viewAsUser.userId },
             ownerCollectionId: collectionId,
@@ -555,17 +623,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             color: sourceBadge.color,
             description: sourceBadge.description,
         };
-        setAllBadges(prev => [...prev, newBadge]);
-        setAllBadgeCollections(prevCollections =>
-            prevCollections.map(c =>
-                c.id === collectionId
-                    ? { ...c, badgeIds: [newBadge.id, ...c.badgeIds] }
-                    : c
-            )
-        );
     } else {
-        // If it's a new badge from scratch
-        const newBadge: Badge = {
+        newBadge = {
             id: crypto.randomUUID(),
             owner: collection.owner,
             ownerCollectionId: collectionId,
@@ -573,51 +632,68 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             icon: googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
             color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)]
         };
-        setAllBadges(prev => [newBadge, ...prev]);
-        setAllBadgeCollections(prevCollections =>
-            prevCollections.map(c =>
-                c.id === collectionId
-                    ? { ...c, badgeIds: [newBadge.id, ...c.badgeIds] }
-                    : c
-            )
-        );
     }
+    
+    batch.set(doc(firestore, 'badges', newBadge.id), newBadge);
+    const newBadgeIds = [newBadge.id, ...collection.badgeIds];
+    batch.update(doc(firestore, 'badgeCollections', collectionId), { badgeIds: newBadgeIds });
+    
+    await batch.commit();
+
+    setAllBadges(prev => [...prev, newBadge]);
+    setAllBadgeCollections(prevCollections =>
+        prevCollections.map(c =>
+            c.id === collectionId ? { ...c, badgeIds: newBadgeIds } : c
+        )
+    );
 }, [allBadgeCollections, viewAsUser, toast]);
 
   const updateBadge = useCallback(async (badgeId: string, badgeData: Partial<Badge>) => {
-    await simulateApi();
+    const db = getFirebaseAppForTenant('default');
+    const firestore = getFirestore(db);
+    await updateDoc(doc(firestore, 'badges', badgeId), badgeData);
     setAllBadges(current => current.map(b => b.id === badgeId ? { ...b, ...badgeData } : b));
   }, []);
 
-  const deleteBadge = useCallback((badgeId: string, collectionId: string) => {
+  const deleteBadge = useCallback(async (badgeId: string, collectionId: string) => {
+    if (!viewAsUser) return;
+    const db = getFirebaseAppForTenant('default');
+    const firestore = getFirestore(db);
     const badge = allBadges.find(b => b.id === badgeId);
     if (!badge) return;
 
-    if (badge.owner.id === viewAsUser?.userId) {
-        // If the user owns the badge, delete it from everywhere.
-        setAllBadges(current => current.filter(b => b.id !== badgeId));
-        setAllBadgeCollections(current =>
-            current.map(c => ({
-                ...c,
-                badgeIds: c.badgeIds.filter(id => id !== badgeId)
-            }))
-        );
-    } else {
-        // If the user does not own the badge, just unlink it from this collection.
-        setAllBadgeCollections(current => current.map(c => {
-            if (c.id === collectionId) {
-                return { ...c, badgeIds: c.badgeIds.filter(id => id !== badgeId) };
+    if (badge.owner.id === viewAsUser.userId) {
+        await deleteDoc(doc(firestore, 'badges', badgeId));
+        const batch = writeBatch(firestore);
+        allBadgeCollections.forEach(c => {
+            if (c.badgeIds.includes(badgeId)) {
+                batch.update(doc(firestore, 'badgeCollections', c.id), {
+                    badgeIds: c.badgeIds.filter(id => id !== badgeId)
+                });
             }
-            return c;
-        }));
-    }
-  }, [allBadges, viewAsUser]);
+        });
+        await batch.commit();
 
-  const reorderBadges = useCallback((collectionId: string, badgeIds: string[]) => {
+        setAllBadges(current => current.filter(b => b.id !== badgeId));
+        setAllBadgeCollections(current => current.map(c => ({...c, badgeIds: c.badgeIds.filter(id => id !== badgeId)})));
+    } else {
+        const collectionRef = doc(firestore, 'badgeCollections', collectionId);
+        await updateDoc(collectionRef, {
+            badgeIds: allBadgeCollections.find(c => c.id === collectionId)!.badgeIds.filter(id => id !== badgeId)
+        });
+        setAllBadgeCollections(current => current.map(c => c.id === collectionId ? { ...c, badgeIds: c.badgeIds.filter(id => id !== badgeId) } : c));
+    }
+    toast({ title: 'Badge removed' });
+  }, [allBadges, viewAsUser, allBadgeCollections, toast]);
+
+  const reorderBadges = useCallback(async (collectionId: string, badgeIds: string[]) => {
+    const db = getFirebaseAppForTenant('default');
+    const firestore = getFirestore(db);
+    await updateDoc(doc(firestore, 'badgeCollections', collectionId), { badgeIds });
     setAllBadgeCollections(current => current.map(c => c.id === collectionId ? { ...c, badgeIds } : c));
   }, []);
 
-  const handleBadgeAssignment = useCallback((badge: Badge, memberId: string) => {
+  const handleBadgeAssignment = useCallback(async (badge: Badge, memberId: string) => {
     const member = users.find(u => u.userId === memberId);
     if (!member) return;
 
@@ -625,29 +701,30 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     if (currentRoles.has(badge.id)) return; // Already has it
 
     const updatedRoles = [...currentRoles, badge.id];
-    updateUser(memberId, { roles: updatedRoles });
+    await updateUser(memberId, { roles: updatedRoles });
     toast({ title: "Badge Assigned", description: `"${badge.name}" assigned to ${member.displayName}.` });
   }, [users, updateUser, toast]);
 
-  const handleBadgeUnassignment = useCallback((badge: Badge, memberId: string) => {
+  const handleBadgeUnassignment = useCallback(async (badge: Badge, memberId: string) => {
     const member = users.find(u => u.userId === memberId);
     if (!member) return;
 
     const updatedRoles = (member.roles || []).filter(roleId => roleId !== badge.id);
-    updateUser(memberId, { roles: updatedRoles });
+    await updateUser(memberId, { roles: updatedRoles });
     toast({ title: 'Badge Un-assigned', description: `"${badge.name}" removed from ${member.displayName}.`});
   }, [users, updateUser, toast]);
 
   const linkGoogleCalendar = useCallback(async (userId: string) => {
     await simulateApi(1000);
-    updateUser(userId, { googleCalendarLinked: true, accountType: 'Full' });
+    await updateUser(userId, { googleCalendarLinked: true, accountType: 'Full' });
     toast({ title: "Success!", description: "Your Google Calendar has been successfully connected." });
   }, [updateUser, toast]);
 
   const searchSharedTeams = useCallback(async (searchTerm: string): Promise<Team[]> => {
     await simulateApi();
-    return mockTeams.filter(team => team.isShared && team.name.toLowerCase().includes(searchTerm.toLowerCase()));
-  }, []);
+    // In a real app, this would query a database. For now, filter local state.
+    return teams.filter(team => team.isShared && team.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  }, [teams]);
 
   useEffect(() => {
     if (viewAsUser) {
@@ -677,7 +754,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }), [
     realUser, viewAsUser, login, logout, loading, isDragModifierPressed, holidays, users, teams, appSettings, calendars, locations, allBookableLocations, notifications, userStatusAssignments,
     updateUser, addUser, deleteUser, addTeam, updateTeam, deleteTeam, reorderTeams, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, addLocation, deleteLocation,
-    updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors,
+    updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges,
     handleBadgeAssignment, handleBadgeUnassignment, linkGoogleCalendar, getPriorityDisplay, searchSharedTeams
   ]);
 
