@@ -1,9 +1,8 @@
-
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -15,7 +14,7 @@ import { hasAccess } from '@/lib/permissions';
 import { Button } from '../ui/button';
 
 export function Sidebar() {
-  const { realUser, viewAsUser, setViewAsUser, users, loading, notifications, appSettings, linkGoogleCalendar, teams } = useUser();
+  const { realUser, viewAsUser, users, loading, notifications, appSettings, linkGoogleCalendar, teams } = useUser();
   
   const isViewingAsSomeoneElse = realUser?.userId !== viewAsUser?.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -23,9 +22,19 @@ export function Sidebar() {
   const orderedNavItems = useMemo(() => {
     if (!viewAsUser) return [];
 
-    const visiblePages = appSettings.pages
-        .filter(page => page.id !== 'page-settings') // Explicitly hide Settings from main nav
-        .filter(page => hasAccess(viewAsUser, page));
+    const globalPages = ['page-overview', 'page-calendar', 'page-tasks', 'page-notifications'];
+    const visiblePages = appSettings.pages.filter(page => {
+      // 1. Always include global pages for authenticated users
+      if (globalPages.includes(page.id)) {
+        return true;
+      }
+      // 2. Only show admin page if the user is an admin
+      if (page.id === 'page-admin-management') {
+          return viewAsUser.isAdmin;
+      }
+      // 3. For all other pages, use the existing hasAccess check
+      return hasAccess(viewAsUser, page);
+    });
 
     return visiblePages.flatMap(page => {
       if (!page.associatedTabs || page.associatedTabs.length === 0) {
@@ -59,7 +68,7 @@ export function Sidebar() {
         tooltip: page.name,
       };
     }).filter((item): item is NonNullable<typeof item> => !!item);
-  }, [appSettings.pages, viewAsUser, teams]);
+  }, [appSettings.pages, viewAsUser, teams, hasAccess]);
   
   if (loading || !viewAsUser || !realUser) {
     return (
