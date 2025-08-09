@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 
+=======
+>>>>>>> 97c66c14eca440a7b964a97f24bfdbdd3b7de234
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {

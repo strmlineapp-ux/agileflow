@@ -26,7 +26,6 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
-import { hasAccess } from '@/lib/permissions';
 
 // Import all possible tab components
 import { AdminsManagement, PagesManagement, TabsManagement } from '@/components/admin/page';
@@ -100,10 +99,13 @@ export default function DynamicPage() {
         if (!page) {
             return { pageConfig: null, dynamicTeam: null };
         }
+<<<<<<< HEAD
         
         if (!viewAsUser || !hasAccess(viewAsUser, page)) {
             return { pageConfig: null, dynamicTeam: null };
         }
+=======
+>>>>>>> 97c66c14eca440a7b964a97f24bfdbdd3b7de234
 
         if (page.isDynamic) {
             const pathSegments = page.path.split('/').filter(Boolean);
@@ -117,7 +119,11 @@ export default function DynamicPage() {
         }
         
         return { pageConfig: page, dynamicTeam: undefined };
+<<<<<<< HEAD
     }, [appSettings.pages, currentPath, teams, viewAsUser]);
+=======
+    }, [appSettings.pages, currentPath, teams]);
+>>>>>>> 97c66c14eca440a7b964a97f24bfdbdd3b7de234
 
     useEffect(() => {
         if (pageConfig) {
@@ -183,12 +189,20 @@ export default function DynamicPage() {
     };
 
 
+<<<<<<< HEAD
     if (loading || !viewAsUser) {
+=======
+    if (loading) {
+>>>>>>> 97c66c14eca440a7b964a97f24bfdbdd3b7de234
         return <Skeleton className="h-full w-full" />;
     }
 
     if (!pageConfig || (pageConfig.isDynamic && pageConfig.path !== currentPath && !dynamicTeam)) {
+<<<<<<< HEAD
         return <div className="p-4">404 - Page not found or you do not have permission to view it. Path: {currentPath}</div>;
+=======
+        return <div className="p-4">404 - Page not found or team data is missing for path: {currentPath}</div>;
+>>>>>>> 97c66c14eca440a7b964a97f24bfdbdd3b7de234
     }
     
     const showHeader = !SEAMLESS_PAGES.includes(pageConfig.id);
@@ -204,7 +218,11 @@ export default function DynamicPage() {
                 </div>
                 <div className="p-4 border-2 border-dashed rounded-lg text-center text-muted-foreground">
                     <p>This page has no content configured.</p>
+<<<<<<< HEAD
                     {viewAsUser.isAdmin && <p>An administrator can add tabs to this page in the Admin section.</p>}
+=======
+                    {viewAsUser?.isAdmin && <p>An administrator can add tabs to this page in the Admin section.</p>}
+>>>>>>> 97c66c14eca440a7b964a97f24bfdbdd3b7de234
                 </div>
             </div>
         );
@@ -254,3 +272,8 @@ export default function DynamicPage() {
         </div>
     );
 }
+<<<<<<< HEAD
+=======
+
+    
+>>>>>>> 97c66c14eca440a7b964a97f24bfdbdd3b7de234
