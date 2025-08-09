@@ -1,17 +1,17 @@
-
 'use client';
 
+// Add this import statement to your user-context.tsx file
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
 import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeOwner, type Task, type Holiday } from '@/types';
-import { doc, getDoc, getFirestore, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, writeBatch, query, where } from 'firebase/firestore'; // Added setDoc
+import { doc, getDoc, getFirestore, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, writeBatch, query, where } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { hexToHsl } from '@/lib/utils';
 import { hasAccess, getOwnershipContext } from '@/lib/permissions';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { corePages, coreTabs } from '@/lib/core-data';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import { getFirebaseAppForTenant, getAuth, GoogleAuthProvider } from '@/lib/firebase';
-import { signInWithPopup, signOut, onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
+import { getFirebaseAppForTenant, auth } from '@/lib/firebase';
+import { signInWithPopup, signOut, onAuthStateChanged, type User as FirebaseUser, GoogleAuthProvider, getAuth } from 'firebase/auth';
 import { mockEvents, mockTasks, mockNotifications as initialMockNotifications } from '@/lib/mock-data';
 
 // Helper to simulate async operations
@@ -557,8 +557,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             owner: ownerContext,
             ownerCollectionId: newCollectionId,
             name: `New Badge`,
-            icon: 'star',
-            color: '#64748B'
+            icon: googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
+            color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)]
         };
         newBadges.push(newBadge);
         batch.set(doc(firestore, 'badges', newBadgeId), newBadge);
