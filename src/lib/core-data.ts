@@ -75,7 +75,7 @@ export const corePages: AppPage[] = [
         path: '/dashboard/tasks',
         isDynamic: false,
         associatedTabs: ['tab-tasks'],
-        access: { users: [], teams: [] } // Public
+        access: { users: [], teams: [] }
     },
     {
         id: 'page-notifications',
