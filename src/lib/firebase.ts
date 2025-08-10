@@ -5,7 +5,7 @@ import { getFirestore } from "firebase/firestore";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyASpq9jPniTZ57woD0_7imptyJqwiP_JRc",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,,
   authDomain: "agileflow-mlf18.firebaseapp.com",
   projectId: "agileflow-mlf18",
   storageBucket: "agileflow-mlf18.firebasestorage.app",
