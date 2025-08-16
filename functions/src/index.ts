@@ -1,40 +1,48 @@
 // Import the necessary libraries
 import * as admin from "firebase-admin";
 import {google} from "googleapis";
-import firebaseFrameworks from "firebase-frameworks";
-import {onDocumentCreated, type QueryDocumentSnapshot}
-  from "firebase-functions/v2/firestore";
-const SERVICE_ACCOUNT_KEY = {type: "service_account",
+import {onDocumentCreated} from "firebase-functions/v2/firestore";
+import {QueryDocumentSnapshot} from "firebase-functions/v2/firestore";
+
+admin.initializeApp();
+const db = admin.firestore();
+
+/**
+ * The private key and client email from your downloaded JSON file.
+ * This is formatted to adhere to the max-len rule.
+ */
+const SERVICE_ACCOUNT_KEY = {
+  type: "service_account",
   project_id: "agileflow-mlf18",
   private_key_id: "86497d211e88b849659532bbb1653b58060699a5",
-  private_key: "-----BEGIN PRIVATE KEY-----\n" +
-    "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC7IWKbX/4YFSxL\n" +
-    "9Tp4ZL4BTKtBG0kUtjZngamlAOuvAtyCDDUI/aSWkJ9C8+0xp8uBj0SOTAI/8OKH\n" +
-    "cF41GDXq77ikCo9KN9sLsO2JFzDL2GzvUT3nBW/MVeWop1K32cU5TyJyEBBPTwqh\n" +
-    "XFriC0J1myIlAIjTNdS0D0EdWjHY1WDWg9sBQJ8BM+Ma6PCqEeZgMsm+tRSW1HxH\n" +
-    "1oq0ZOIx0M8DPdi9uEB+8ylYM4EYnv2ciHCbr8MFlbdYfk15Ex0tBhsBhU7ekxVj\n" +
-    "DkfTK4j8ctx3IdEfaXgTbqVZymspRbG59n4SaszBrjjXKZsYB3rIIxN5q7VS4Yzz\n" +
-    "+K0EtSLBAgMBAAECggEADgHZnVcGAHQ8RrrGW8rxsIv2QTc7RRA/GggaBFqBac4h\n" +
-    "ZqAmi6Pd0THl4/d5jKcaW/o3B94/aF0d/cSe3qNPbOSxCeFq+KOd8z31B9cbLVUH\n" +
-    "0XGfvDZbWByhZlqQ/edQhKHMaqSSbfdVDL9Ko8MzQDWirImh1EqCH5DJP1rYIpp0\n" +
-    "gRcfwMl1oS6WqawaL/SBtheju3brtPMT0QHXuV34vcSrSCJWz8BBD9fbRryshWN5\n" +
-    "O94HtCdH5XR8yhpR9CIBpksm7/ms5reIMQuwEo0Mf8IK8etdrP8n0vExA5EaF89P\n" +
-    "1vGRbiEPmzLSC+Lt1HJCdqLuvQAzE5VLF6gfYXUSmQKBgQDfk5mbd9hWvJPNJeHe\n" +
-    "tktIpv3Kdrd35IrFmK9QJmLBvFI1LCzpRkhK0UoD7zFvWNwgSZBt6mBgBDIz/ojl\n" +
-    "DWhtQ88UjylBPYN1fQRPsyaoQg1ld3v/dHO83+PBlGUYpmEE9OfJrnfHD52bk9OH\n" +
-    "tUHAuKf1r3Tz5XRbLqdnCeJFCQKBgQDWRLPDHowoRXLr1jYq+n22JbvGKnPXX0eH\n" +
-    "DETglwNXSU4XphjnKhiDkHRV0DuLTeF6SrQJLhkoTEzBEzP+i9Pstd5lgGXiLX6M\n" +
-    "b6GHIdHTRJfTaDx/itX1v2/IK9rfq3ctK68dZwWsMPg2KSkEB8bSJIsBt8UNsbD5\n" +
-    "Ox7SUhRV+QKBgC5OnfQrgG2GpX5KKFw+mZ00qUA0EpAMkAmZNEZ/jNjfro9A1RSD\n" +
-    "8Bk++/uQoUaUuxMc6YM6ljeM5vEJ+USn4EcxUkTJ2hufKAk/mZMAYjNbavbnJpGk\n" +
-    "hwxJuxyvJblTTKkAKLoHHtvmChjdJ2TmT/YgyPkEHE8f6VexdA7NZ0YxAoGAa53N\n" +
-    "+64YDxHyimjog+WTxixlhz5DOGTuc/HBllvCndB/nHkcAN6vuUSQaZlQjsLrAJUM\n" +
-    "n5+7mvXXhxGyB6MLKdSegrRed58J9FcM9eYSkN3es5ui5xxAIlGoPw1nvPdNwC40\n" +
-    "obvgqX9e6zT5GMEfJuSbvJ0kJ6CbllIPROtcs2ECgYEAttD9pS1eG3D93KTFN34s\n" +
-    "OkRpNNiyajDeWigiRgTs8BzMwbncUnYSI5h7HbfxubzsAUTjyKG2YOYJDA61RTPK\n" +
-    "jux0PpO4JuYVSXhUyFUJBTGfo8tuFBrX2/5RiKSPI9spYjsCpwAKzis1vuwBLHZF\n" +
-    "CHKVOFlp2zUtRQpKKDUAyT4=\n" +
-    "-----END PRIVATE KEY-----",
+  private_key: `-----BEGIN PRIVATE KEY-----\n` +
+    `MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC7IWKbX/4YFSxL\n` +
+    `9Tp4ZL4BTKtBG0kUtjZngamlAOuvAtyCDDUI/aSWkJ9C8+0xp8uBj0SOTAI/8OKH\n` +
+    `cF41GDXq77ikCo9KN9sLsO2JFzDL2GzvUT3nBW/MVeWop1K32cU5TyJyEBBPTwqh\n` +
+    `XFriC0J1myIlAIjTNdS0D0EdWjHY1WDWg9sBQJ8BM+Ma6PCqEeZgMsm+tRSW1HxH\n` +
+    `1oq0ZOIx0M8DPdi9uEB+8ylYM4EYnv2ciHCbr8MFlbdYfk15Ex0tBhsBhU7ekxVj\n` +
+    `DkfTK4j8ctx3IdEfaXgTbqVZymspRbG59n4SaszBrjjXKZsYB3rIIxN5q7VS4Yzz\n` +
+    `+K0EtSLBAgMBAAECggEADgHZnVcGAHQ8RrrGW8rxsIv2QTc7RRA/GggaBFqBac4h\n` +
+    `ZqAmi6Pd0THl4/d5jKcaW/o3B94/aF0d/cSe3qNPbOSxCeFq+KOd8z31B9cbLVUH\n` +
+    `0XGfvDZbWByhZlqQ/edQhKHMaqSSbfdVDL9Ko8MzQDWirImh1EqCH5DJP1rYIpp0\n` +
+    `gRcfwMl1oS6WqawaL/SBtheju3brtPMT0QHXuV34vcSrSCJWz8BBD9fbRryshWN5\n` +
+    `O94HtCdH5XR8yhpR9CIBpksm7/ms5reIMQuwEo0Mf8IK8etdrP8n0vExA5EaF89P\n` +
+    `1vGRbiEPmzLSC+Lt1HJCdqLuvQAzE5VLF6gfYXUSmQKBgQDfk5mbd9hWvJPNJeHe\n` +
+    `tktIpv3Kdrd35IrFmK9QJmLBvFI1LCzpRkhK0UoD7zFvWNwgSZBt6mBgBDIz/ojl\n` +
+    `DWhtQ88UjylBPYN1fQRPsyaoQg1ld3v/dHO83+PBlGUYpmEE9OfJrnfHD52bk9OH\n` +
+    `tUHAuKf1r3Tz5XRbLqdnCeJFCQKBgQDWRLPDHowoRXLr1jYq+n22JbvGKnPXX0eH\n` +
+    `DETglwNXSU4XphjnKhiDkHRV0DuLTeF6SrQJLhkoTEzBEzP+i9Pstd5lgGXiLX6M\n` +
+    `b6GHIdHTRJfTaDx/itX1v2/IK9rfq3ctK68dZwWsMPg2KSkEB8bSJIsBt8UNsbD5\n` +
+    `Ox7SUhRV+QKBgC5OnfQrgG2GpX5KKFw+mZ00qUA0EpAMkAmZNEZ/jNjfro9A1RSD\n` +
+    `8Bk++/uQoUaUuxMc6YM6ljeM5vEJ+USn4EcxUkTJ2hufKAk/mZMAYjNbavbnJpGk\n` +
+    `hwxJuxyvJblTTKkAKLoHHtvmChjdJ2TmT/YgyPkEHE8f6VexdA7NZ0YxAoGAa53N\n` +
+    `+64YDxHyimjog+WTxixlhz5DOGTuc/HBllvCndB/nHkcAN6vuUSQaZlQjsLrAJUM\n` +
+    `n5+7mvXXhxGyB6MLKdSegrRed58J9FcM9eYSkN3es5ui5xxAIlGoPw1nvPdNwC40\n` +
+    `obvgqX9e6zT5GMEfJuSbvJ0kJ6CbllIPROtcs2ECgYEAttD9pS1eG3D93KTFN34s\n` +
+    `OkRpNNiyajDeWigiRgTs8BzMwbncUnYSI5h7HbfxubzsAUTjyKG2YOYJDA61RTPK\n` +
+    `jux0PpO4JuYVSXhUyFUJBTGfo8tuFBrX2/5RiKSPI9spYjsCpwAKzis1vuwBLHZF\n` +
+    `CHKVOFlp2zUtRQpKKDUAyT4=\n` +
+    `-----END PRIVATE KEY-----`,
   client_email: "strmline-email-sender@agileflow-mlf18.iam.gserviceaccount.com",
   client_id: "117112573584632465012",
   auth_uri: "https://accounts.google.com/o/oauth2/auth",
@@ -46,13 +54,9 @@ const SERVICE_ACCOUNT_KEY = {type: "service_account",
 
 /**
  * Helper function to get all administrator emails from Firestore.
-* @return {Promise<string[]>}
-    *          A promise that resolves to an array of admin emails.
+ * @return {Promise<string[]>} A promise that resolves to an array of admin emails.
  */
 async function getAdminEmails(): Promise<string[]> {
-  const db = admin.firestore();
-  console.log(db); // Dummy usage to satisfy compiler
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const adminsRef = db.collection("users").where("isAdmin", "==", true);
   const snapshot = await adminsRef.get();
   const adminEmails: string[] = [];
@@ -77,14 +81,12 @@ async function sendGmail(
   subject: string,
   htmlBody: string,
 ) {
-  const db = admin.firestore();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  console.log(db); // Dummy usage to satisfy compiler
-  const jwtClient = new google.auth.JWT({
-    email: SERVICE_ACCOUNT_KEY.client_email,
-    key: SERVICE_ACCOUNT_KEY.private_key,
-    scopes: ["https://www.googleapis.com/auth/gmail.send"],
-  });
+  const jwtClient = new google.auth.JWT(
+    SERVICE_ACCOUNT_KEY.client_email,
+    SERVICE_ACCOUNT_KEY.private_key,
+    ["https://www.googleapis.com/auth/gmail.send"],
+    SERVICE_ACCOUNT_KEY.client_email,
+  );
 
   await jwtClient.authorize();
 
@@ -113,19 +115,12 @@ async function sendGmail(
 
 /**
  * Firestore trigger that sends an email to admins when a new user signs up.
-* @param {QueryDocumentSnapshot} snapshot
-    *          The snapshot of the document that triggered the function.
-* @return {Promise<void>}
-    *          A promise that resolves when the function is complete.
+ * @param {QueryDocumentSnapshot} snapshot The snapshot of the document that triggered the function.
+ * @return {Promise<void>} A promise that resolves when the function is complete.
  */
 export const onNewUserCreated = onDocumentCreated(
   "users/{userId}", async (event) => {
     const newUser = event.data?.data();
-    const dummy: QueryDocumentSnapshot |
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      undefined = event.data;
-    console.log(dummy); // Dummy usage to satisfy compiler
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     if (!newUser || newUser.accountType !== "Pending") {
       console.log("User does not require approval. Exiting function.");
       return null;
@@ -161,24 +156,4 @@ export const onNewUserCreated = onDocumentCreated(
     }
 
     return null;
-  },
-);
-// Add the nextServer function code here:
-/**
- * HTTP trigger for serving the Next.js application.
- */
-
-// Import the http trigger and types from v2/https
-import {onRequest, Request} from "firebase-functions/v2/https";
-
-export const nextServer = onRequest(async (req: Request, res: HttpResponse) => {
-  // Call the imported firebase-frameworks function directly
-  const nextAppHandler = handleNextApp({
-    // Options for firebase-frameworks
-    dir: "../",
-    dev: false,
   });
-
-  // Handle the incoming request using the returned handler
-  await nextAppHandler(req, res); // Use await here
-});
