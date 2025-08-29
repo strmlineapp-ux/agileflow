@@ -359,3 +359,5 @@ export let mockNotifications: Notification[] = [
     { id: 'notif-3', type: 'standard', user: mockUsers[0], content: 'completed the task "Finalize audio mix for All-Hands".', time: new Date(Date.now() - 1000 * 60 * 60 * 24), read: true },
     { id: 'notif-4', type: 'access_request', status: 'pending', user: { displayName: 'new.user@example.com', avatarUrl: '', userId: '' }, content: 'has requested access to the workspace.', time: new Date(Date.now() - 1000 * 60 * 60 * 48), read: false, data: { email: 'new.user@example.com', displayName: 'New User' }},
 ];
+
+    
