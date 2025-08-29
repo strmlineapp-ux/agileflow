@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider, type User as FirebaseUser } from 'firebase/auth';
@@ -41,7 +40,7 @@ export function useAuth() {
                 // If user doc doesn't exist, check for pre-approval or first user status
                 const appSettingsRef = doc(db, 'app-settings', 'global');
                 const appSettingsDoc = await getDoc(appSettingsRef);
-                const preApprovedEmails = appSettingsDoc.data()?.preApprovedEmails || [];
+                const preApprovedEmails = (appSettingsDoc.data()?.preApprovedEmails || []).map((item: {email: string}) => item.email);
                 const isPreApproved = preApprovedEmails.includes(firebaseUser.email!);
                 
                 const usersCollectionRef = collection(db, 'users');

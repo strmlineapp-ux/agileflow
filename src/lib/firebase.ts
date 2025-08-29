@@ -34,30 +34,13 @@ const authInstances = new Map<string, Auth>();
 const firestoreInstances = new Map<string, Firestore>();
 
 /**
- * Determines the current tenant ID based on the window's hostname.
- * In a server context or during build, it safely falls back to 'default'.
- * @returns The current tenant ID.
+ * Determines the current tenant ID. For this application, we always return 'default'
+ * as it operates in a single-tenant mode. In a multi-tenant setup, this function would
+ * determine the tenant from the hostname.
+ * @returns The tenant ID, which is always 'default'.
  */
 function getCurrentTenantId(): string {
-  // Check if we are running in a browser environment
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    // Handle localhost for development
-    if (hostname === 'localhost') {
-      return 'default';
-    }
-    // Extract subdomain (e.g., 'acme' from 'acme.agileflow.app')
-    const parts = hostname.split('.');
-    if (parts.length > 2 && parts[0] !== 'www') {
-      const tenantId = parts[0];
-      // Check if a configuration exists for this tenant
-      if (tenantConfigs[tenantId]) {
-        return tenantId;
-      }
-    }
-  }
-  
-  // Fallback for server-side rendering or non-subdomain access
+  // This application is single-tenant, so we always use the default configuration.
   return 'default';
 }
 
