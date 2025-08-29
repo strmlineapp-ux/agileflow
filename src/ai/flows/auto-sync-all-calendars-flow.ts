@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A "master" flow to automatically sync all linked Google Calendars.
@@ -9,7 +10,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import {syncCalendar, SyncCalendarInput} from './sync-calendar-flow';
-import { getFirebaseAppForTenant } from '@/lib/firebase';
+import { getDb } from '@/lib/firebase';
 import { getFirestore, collection, getDocs, query, where } from 'firebase/firestore';
 import { type SharedCalendar } from '@/types';
 
@@ -41,8 +42,7 @@ const autoSyncAllCalendarsFlow = ai.defineFlow(
     console.log('Starting automatic synchronization for all calendars...');
 
     // 1. Fetch calendar data from Firestore.
-    const app = getFirebaseAppForTenant('default');
-    const db = getFirestore(app);
+    const db = getDb();
     const calendarsRef = collection(db, 'calendars');
     const q = query(calendarsRef, where('googleCalendarId', '!=', null));
     const querySnapshot = await getDocs(q);

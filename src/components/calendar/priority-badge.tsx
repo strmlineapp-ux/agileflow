@@ -6,8 +6,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/
 import { GoogleSymbol } from '../icons/google-symbol';
 
 export function PriorityBadge({ priorityId, className }: { priorityId: string; className?: string }) {
-  const { getPriorityDisplay } = useUser();
-  const priorityInfo = getPriorityDisplay(priorityId);
+  const { allBadges } = useUser();
+  const priorityInfo = allBadges.find(b => b.id === priorityId);
 
   if (!priorityInfo) {
     return <Badge className={cn('bg-muted text-muted-foreground', className)}>{priorityId}</Badge>;
@@ -18,7 +18,7 @@ export function PriorityBadge({ priorityId, className }: { priorityId: string; c
   const badgeContent = (
     <>
       {priorityInfo.icon && <GoogleSymbol name={priorityInfo.icon} className="text-sm mr-1" />}
-      {priorityInfo.label}
+      {priorityInfo.name}
     </>
   );
 

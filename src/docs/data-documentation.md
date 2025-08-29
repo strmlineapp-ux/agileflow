@@ -11,14 +11,14 @@ AgileFlow employs a highly scalable, on-demand data-fetching strategy that is op
 1.  **Minimal Initial Load**: When the application starts, it loads only the absolute minimum data required for the user to operate:
     *   The current `User` object, which contains their profile, preferences, and a list of Team IDs they belong to (`memberOfTeamIds`).
     *   The global `AppSettings` object, which defines the application's page structure and navigation.
-    *   All other data (Teams, Calendars, Events, Tasks) is **not** loaded at startup.
+    *   All other data (Projects, Teams, Calendars, Events, Tasks) is **not** loaded at startup.
 
 2.  **Context-Aware, On-Demand Fetching**: Data is fetched by components precisely when and where it is needed, driven by user navigation.
-    *   **Team Data**: When you navigate to a specific team's management page (e.g., `/dashboard/teams/team-id-123`), the component uses the ID from the URL to fetch the data for *only that specific team*. Similarly, the main Team Management page fetches a list of teams based on the IDs stored in the user's profile.
-    *   **Events & Tasks**: High-volume data like events and tasks have always been fetched on-demand. The Calendar fetches events for the visible date range, and the Tasks page fetches tasks when it loads.
+    *   **Project & Team Data**: When you navigate to a specific project or team's management page (e.g., `/dashboard/project/project-id-123`), the component uses the ID from the URL to fetch the data for *only that specific entity*.
+    *   **Events & Tasks**: High-volume data like events and tasks are fetched on-demand. The Calendar fetches events for the visible date range, and the Tasks page fetches tasks when it loads. A project's "Events" tab fetches only the events within that project's sub-collection.
 
 3.  **Benefits of this Approach**:
-    *   **Scalability**: The initial load time is constant and extremely fast, regardless of whether there are 10 or 10,000 teams in the system.
+    *   **Scalability**: The initial load time is constant and extremely fast, regardless of whether there are 10 or 10,000 projects in the system.
     *   **Performance**: Memory usage is kept to a minimum by only holding the data relevant to the current view.
     *   **NoSQL Optimization**: This model aligns perfectly with NoSQL best practices, which favor fetching specific documents by ID over performing large, complex queries.
 
@@ -86,54 +86,83 @@ This table details the information stored directly within each `User` object.
 | `easyBooking?: boolean` | **Internal.** A UI preference for enabling quick event creation from the calendar. |
 | `timeFormat?: '12h' \| '24h'` | **Internal.** A UI preference for displaying time in 12-hour or 24-hour time format. |
 | `linkedTeamIds?: string[]` | **Internal.** An array of `teamId`s for shared teams that the user has chosen to display on their management board. |
-| `linkedCollectionIds?: string[]` | **Internal.** An array of `collectionId`s for shared Badge Collections that the user has chosen to display on their management board. |
+| `linkedBadgeCollectionIds?: string[]` | **Internal.** An array of `collectionId`s for shared Badge Collections that the user has chosen to display on their management board. |
 | `linkedCalendarIds?: string[]` | **Internal.** An array of `calendarId`s for shared calendars that the user has chosen to display on their management board. |
 | `dragActivationKey?: 'alt' \| 'ctrl' \| 'meta' \| 'shift'` | **Internal.** A user-selected modifier key that must be held down to initiate drag-and-drop operations on complex components. |
 
-### Dynamic Access Control for Pages & Tabs
-
-Access to every page and content tab in the application is controlled by a dynamic ruleset. The logic for this is primarily handled in `/src/lib/permissions.ts` and the page renderer at `/src/app/dashboard/[...page]/page.tsx`.
-
-**How It Works:**
-
-1.  **Page Access**: Access to a page is determined by the `access` object on its `AppPage` configuration. The `hasAccess` function now works more efficiently by checking the `memberOfTeamIds` array on the `User` object, removing the need to search through a large list of teams. A user can view a page if they are a system admin, if the page has no access rules (making it public), or if their `userId` or a team they belong to is listed in the page's access arrays.
-
-2.  **Tab Visibility**: A page's content is composed of one or more `AppTab`s. If a page has zero associated tabs, it is considered unconfigured and will **not** appear in the sidebar navigation, making it inaccessible. A page must have at least one tab to be rendered.
-
-**Example Configurations (`mock-data.ts`):**
-
-```typescript
-// Example of a page restricted by team
-{
-  id: 'page-tasks',
-  // ... other properties
-  access: {
-    users: [],
-    teams: ['live-events'], // ONLY members of the "Live Events" team can see this
-  }
-}
-```
-
 ### Simplified Ownership of Created Items
 
-When a user creates a new shareable item (like a **Team** or **Badge Collection**), ownership is assigned directly to that user. This simplified model ensures that every item has a single, clear owner responsible for its management. The `getOwnershipContext` function in `/src/lib/permissions.ts` contains the logic for this rule.
+When a user creates a new shareable item (like a **Team** or **BadgeCollection**), ownership is assigned directly to that user. This simplified model ensures that every item has a single, clear owner responsible for its management. The `getOwnershipContext` function in `/src/lib/permissions.ts` contains the logic for this rule.
 
+---
+
+## Project Entity
+**Firestore Collection**: `/projects/{projectId}`
+
+The `Project` is a top-level container for organizing work. It holds its own sub-collections for `Events` and `Tasks`.
+
+| Data Point | Description |
+| :--- | :--- |
+| `id: string` | A unique identifier for the project. |
+| `name: string` | The display name of the project. |
+| `owner: { type: 'user', id: string }` | An object that defines which `User` owns the project. |
+| `isShared: boolean` | A flag to determine if the project is visible to other users. |
+| `icon: string` | The Google Symbol name for the project's icon. |
+| `color: string` | The hex color for the project's icon. |
+
+---
+
+## Event Entity
+**Firestore Sub-Collection**: `/projects/{projectId}/events/{eventId}`
+
+Events are always associated with a parent `Project`.
+
+| Data Point | Description |
+| :--- | :--- |
+| `eventId: string` | **Internal.** A unique identifier for the event. |
+| `title: string` | The name of the event. |
+| `projectId: string` | **Crucial.** The ID of the parent project. |
+| `calendarId: string` | The ID of the calendar used for color-coding and default settings. |
+| `googleEventId?: string` | **External (Google Calendar).** The ID for the corresponding event in Google Calendar, used for synchronization. |
+| `startTime: Date` | The start date and time of the event. |
+| `endTime: Date` | The end date and time of the event. |
+| `location?: string` | The physical or virtual location of the event. |
+| `attendees: Attendee[]` | An array of `Attendee` objects representing invited guests. |
+| `roleAssignments?: Record<string, string \| null>` | A map of requested badge names to the `userId` of the person assigned to that role. |
+| `priority: string` | The `badgeId` of the badge used to signify the event's priority. |
+| `description?: string` | A detailed description of the event. |
+| `attachments: Attachment[]` | A list of files or links attached to the event. |
+| `createdBy: string` | The `userId` of the user who created the event. |
+| `createdAt: Date` | The timestamp when the event was created. |
+| `lastUpdated: Date` | The timestamp when the event was last modified. |
+
+---
+
+## Task Entity
+**Firestore Sub-Collection**: `/projects/{projectId}/tasks/{taskId}`
+
+Tasks are always associated with a parent `Project`.
+
+| Data Point | Description |
+| :--- | :--- |
+| `taskId: string` | **Internal.** A unique identifier for the task. |
+| `title: string` | The name of the task. |
+| `projectId: string` | **Crucial.** The ID of the parent project. |
+| `googleTaskId?: string` | **External (Google Tasks).** The ID for the corresponding task in Google Tasks, used for synchronization. |
+| `description?: string` | A detailed description of the task. |
+| `assignedTo: User[]` | An array of `User` objects assigned to the task. |
+| `dueDate: Date` | The date the task is due. |
+| `status: 'not_started' \| 'in_progress' \| ...` | The current status of the task. |
+| `badges?: Record<string, string>` | A map where the key is a `badgeCollectionId` and the value is the `badgeId` of the selected badge from that collection. |
+| `createdBy: string` | The `userId` of the user who created the task. |
+| `createdAt: Date` | The timestamp when the task was created. |
+| `lastUpdated: Date` | The timestamp when the task was last modified. |
+
+---
 ## Shared Calendar Entity
 **Firestore Collection**: `/calendars/{calendarId}`
 
 This entity represents an internal AgileFlow calendar. These are managed on a dynamically configured page by an administrator (e.g., a page with a "Calendars" tab).
-
-### Future-State Calendar Linking
-
-The current implementation uses a simple `googleCalendarId` text field for developers to manually link an internal calendar to an external Google Calendar. The final, user-facing implementation will be more robust and intuitive. The ideal workflow will be:
-
-1.  **Onboarding**: During the initial sign-in or from their user settings, a user will grant the application permission to access their Google Calendar account.
-2.  **Calendar Management UI**: When creating or editing an AgileFlow calendar, an administrator will be presented with two options:
-    *   **"Create New Google Calendar"**: This action will trigger a flow that programmatically creates a new, corresponding calendar in the administrator's connected Google account.
-    *   **"Link Existing Google Calendar"**: This will trigger a flow that fetches and displays a list of all calendars the administrator owns or has permission to manage in their Google account. They can then select the appropriate calendar from this list to create the link.
-3.  **Synchronization**: Once linked, event synchronization will be handled automatically by a background process, ensuring both calendars stay up-to-date.
-
-This approach abstracts away the complexity of calendar IDs and provides a seamless, secure experience for the administrator.
 
 ### SharedCalendar Data
 
@@ -149,47 +178,7 @@ This approach abstracts away the complexity of calendar IDs and provides a seaml
 | `defaultEventTitle?: string` | **Internal.** A placeholder string for the title of new events created on this calendar. |
 | `roleAssignmentsLabel?: string` | **Internal.** A custom label for the "Role Assignments" section in the event details view. |
 
-
-## Application-Wide Settings
-**Firestore Document**: `/app-settings/global` (A singleton document)
-
-This entity, `AppSettings`, holds global configuration data that allows for customization of the application's terminology and appearance without altering the core codebase. These settings are managed on the **Admin Management** page.
-
-### AppSettings Data
-
-| Data Point | Description |
-| :--- | :--- |
-| `pages: AppPage[]` | **The core of the dynamic navigation.** This is an array of objects defining every page in the application. The order of pages in this array directly corresponds to their order in the sidebar navigation. The order is managed on the **Admin Management** page using the "Draggable Card Management" UI pattern. Each page object includes its name, icon, URL path, access control rules, and a list of associated `tab.id`s that should be rendered on it. |
-| `tabs: AppTab[]` | **The core of the dynamic content.** This is an array of objects defining all reusable content tabs. The order of tabs in this array defines their default order in popovers (like "Manage Tabs") and can be reordered by an admin on the "Tabs" management page. Each object includes the tab's name, icon, and a `componentKey` that maps it to a specific React component. |
-| `calendarManagementLabel?: string` | An alias for the "Manage Calendars" tab on a dynamically created management page. |
-| `teamManagementLabel?: string` | An alias for the "Team Management" tab on a dynamically created management page. |
-
-### AppPage Entity
-A sub-entity of `AppSettings`, `AppPage` defines a single entry in the application's navigation.
-
-| Data Point | Description |
-| :--- | :--- |
-| `id: string` | A unique identifier for the page. |
-| `name: string` | The display name for the page. |
-| `icon: string` | The Google Symbol name for the page's icon. |
-| `color: string` | The hex color for the page's icon. |
-| `path: string` | The base URL path for the page (e.g., `/dashboard/projects` or `/dashboard/teams`). |
-| `isDynamic: boolean` | If `false`, `path` is a fixed URL. If `true`, the `path` acts as a template, and the system will append an entity ID (e.g., a team ID) to create unique URLs like `/dashboard/teams/team-id-1`. |
-| `associatedTabs: string[]` | An array of `AppTab` IDs that define the content to be rendered on this page. A page must have at least one tab to be visible. |
-| `access: { users: string[], teams: string[] }` | An object containing arrays of `userId`s and `teamId`s who can access this page. |
-
-### AppTab Entity
-A sub-entity of `AppSettings`, `AppTab` defines a single, reusable content block.
-
-| Data Point | Description |
-| :--- | :--- |
-| `id: string` | A unique identifier for the tab. |
-| `name: string` | The display name for the tab. |
-| `icon: string` | The Google Symbol name for the tab's icon. |
-| `color: string` | The hex color for the tab's icon. |
-| `description?: string` | An optional description for the tab, often used for tooltips. |
-| `componentKey: string` | A key that maps this tab to a specific React component to render its content. |
-
+---
 
 ## Team Entity
 **Firestore Collection**: `/teams/{teamId}`
@@ -219,28 +208,12 @@ The `Team` entity is a functional unit that groups users together for collaborat
 | `locationCheckManagers?: string[]` | An array of `userId`s who can manage check locations for this team. |
 | `eventTemplates?: EventTemplate[]` | An array of reusable templates for common events. |
 
+---
 
-## Badge & Badge Collection Entities
-
-This section outlines the simplified and robust ownership model for badges and their collections. This model ensures clarity and prevents data conflicts.
-
-### Core Principle: Direct User Ownership
-
-The system is built on a simple principle: **the user who creates an item is its owner.** Both `Badge` and `BadgeCollection` entities have an explicit `owner` field that links them directly to a `User`.
-
--   **Permissions**: Only the user designated in an item's `owner` field can edit or delete that item. This rule applies universally.
--   **Creating Items**: When a user creates a new `Badge` or `BadgeCollection`, its `owner` field is automatically set to that user's ID.
-
-### Linking vs. Owning
-
-This clear ownership model simplifies how "linking" works:
-
--   **Linked Badges**: A user can add any badge to a collection they own. If a badge's `owner` is different from the collection's `owner`, that badge is considered "linked." The collection owner can **unlink** the badge (remove it from their `badgeIds` array), but they **cannot** edit or delete the original badge.
--   **Linked Collections**: When a user adds a shared `BadgeCollection` to their management view, they are creating a link. If the collection's `owner` is another user, the current user can **unlink** the collection (remove it from their view), but they **cannot** edit or delete the original collection.
-
-This approach eliminates ambiguity. An item's edit and delete permissions are always determined by a direct check of its `owner` property.
+## Badge & BadgeCollection Entities
 
 ### BadgeCollection Entity Data
+**Firestore Collection**: `/badgeCollections/{collectionId}`
 
 | Data Point | Description |
 | :--- | :--- |
@@ -257,8 +230,9 @@ This approach eliminates ambiguity. An item's edit and delete permissions are al
 
 
 ### Badge Entity Data
+**Firestore Collection**: `/badges/{badgeId}`
 
-This represents a specific, functional role or skill. The single source of truth for a badge is the instance owned by its creator.
+This represents a specific, functional role or skill.
 
 | Data Point | Description |
 | :--- | :--- |
@@ -269,3 +243,4 @@ This represents a specific, functional role or skill. The single source of truth
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
+

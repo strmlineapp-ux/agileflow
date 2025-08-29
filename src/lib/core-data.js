@@ -1,3 +1,4 @@
+
 "use strict";
 /**
  * @fileoverview This file contains the hardcoded, core definitions for the application's
@@ -80,16 +81,6 @@ exports.corePages = [
         path: '/dashboard/notifications',
         isDynamic: false,
         associatedTabs: ['tab-notifications'],
-        access: { users: [], teams: [] } // Public
-    },
-    {
-        id: 'page-settings',
-        name: 'Settings',
-        icon: 'settings',
-        color: '#64748B',
-        path: '/dashboard/settings',
-        isDynamic: false,
-        associatedTabs: ['tab-settings'],
         access: { users: [], teams: [] } // Public
     },
 ];

@@ -43,7 +43,7 @@ const CustomColorPicker = ({ user, onUpdate, onClose }: { user: User, onUpdate: 
                     <button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => onUpdate(c)} />
                 ))}
             </div>
-            <Button onClick={handleSave} className="w-full">Set Color</Button>
+            <Button onClick={handleSave} className="w-full bg-primary">Set Color</Button>
         </div>
     );
 };
@@ -76,7 +76,7 @@ const SettingSelect = ({
                 <TooltipTrigger asChild>
                     <PopoverTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:bg-transparent hover:text-foreground" disabled={disabled}>
-                            <GoogleSymbol name={icon} className="text-xl" grade={-25} weight={100} />
+                            <GoogleSymbol name={icon} className="text-xl" grade={-25} weight={100} opticalSize={20} />
                         </Button>
                     </PopoverTrigger>
                 </TooltipTrigger>
@@ -106,14 +106,13 @@ const SettingSelect = ({
 
 const DragActivationKeySetting = ({ user, onUpdate }: { user: User, onUpdate: (key: User['dragActivationKey']) => void }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const [keyInput, setKeyInput] = useState(user.dragActivationKey || 'shift');
+    const keyInput = user.dragActivationKey || 'shift';
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         e.preventDefault();
         const key = e.key.toLowerCase();
         if (['alt', 'control', 'meta', 'shift'].includes(key)) {
             const newKey = key === 'control' ? 'ctrl' : key as 'alt' | 'meta' | 'shift';
-            setKeyInput(newKey);
             onUpdate(newKey);
             setIsOpen(false);
         }
@@ -126,7 +125,7 @@ const DragActivationKeySetting = ({ user, onUpdate }: { user: User, onUpdate: (k
                     <TooltipTrigger asChild>
                         <PopoverTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:bg-transparent hover:text-foreground">
-                                <GoogleSymbol name="smart_button" className="text-xl" grade={-25} weight={100} />
+                                <GoogleSymbol name="smart_button" className="text-xl" grade={-25} weight={100} opticalSize={20} />
                             </Button>
                         </PopoverTrigger>
                     </TooltipTrigger>
@@ -161,7 +160,11 @@ function UserCard({ user, isCurrentUser, canEditPreferences, className }: { user
     
     const handleThemeChange = () => {
         const newTheme = user.theme === 'dark' ? 'light' : 'dark';
-        updateUser(user.userId, { theme: newTheme, primaryColor: undefined });
+        const updateData: Partial<User> = { theme: newTheme };
+        if (user.primaryColor) {
+            updateData.primaryColor = null; // Use null to remove the field in Firestore
+        }
+        updateUser(user.userId, updateData);
     }
     
     return (
@@ -197,7 +200,7 @@ function UserCard({ user, isCurrentUser, canEditPreferences, className }: { user
                             </Tooltip>
                         </TooltipProvider>
                         <div>
-                            <p className="font-semibold text-lg">{user.displayName}</p>
+                            <p className="font-semibold text-lg text-muted-foreground">{user.displayName}</p>
                             <p className="text-sm text-muted-foreground">{user.title || <span className="italic">Not provided</span>}</p>
                             <p className="text-sm text-muted-foreground">{user.email}</p>
                         </div>
@@ -210,7 +213,7 @@ function UserCard({ user, isCurrentUser, canEditPreferences, className }: { user
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
                                                 <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" style={{ color: 'hsl(var(--primary))' }}>
-                                                    <GoogleSymbol name="palette" grade={-25} weight={100} />
+                                                    <GoogleSymbol name="palette" grade={-25} weight={100} opticalSize={20} />
                                                 </Button>
                                             </PopoverTrigger>
                                         </TooltipTrigger>
@@ -234,7 +237,7 @@ function UserCard({ user, isCurrentUser, canEditPreferences, className }: { user
                                             onClick={handleThemeChange}
                                             className="h-9 w-9 text-muted-foreground hover:bg-transparent hover:text-foreground"
                                         >
-                                            <GoogleSymbol name={user.theme === 'dark' ? 'dark_mode' : 'light_mode'} className="text-lg" grade={-25} weight={100} />
+                                            <GoogleSymbol name={user.theme === 'dark' ? 'dark_mode' : 'light_mode'} className="text-lg" grade={-25} weight={100} opticalSize={20} />
                                         </Button>
                                     </TooltipTrigger>
                                     <TooltipContent><p>Switch to {user.theme === 'dark' ? 'Light' : 'Dark'} Theme</p></TooltipContent>
@@ -269,7 +272,7 @@ function UserCard({ user, isCurrentUser, canEditPreferences, className }: { user
                                 <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button variant="ghost" size="icon" onClick={() => updateUser(user.userId, { easyBooking: !user.easyBooking })} className="h-9 w-9 text-muted-foreground hover:bg-transparent hover:text-foreground">
-                                        <GoogleSymbol name={user.easyBooking ? 'toggle_on' : 'toggle_off'} className="text-2xl" grade={-25} weight={100} />
+                                        <GoogleSymbol name={user.easyBooking ? 'toggle_on' : 'toggle_off'} className="text-2xl" grade={-25} weight={100} opticalSize={20} />
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
@@ -294,15 +297,11 @@ export function UserManagement({ showSearch = false }: { showSearch?: boolean })
     const { realUser, viewAsUser, users } = useUser();
     const [searchTerm, setSearchTerm] = useState('');
     
-    const { currentUser, otherUsers } = useMemo(() => {
-        const currentUser = users.find(u => u.userId === viewAsUser.userId);
+    const currentUser = users.find(u => u.userId === viewAsUser.userId);
         
-        const otherUsers = users
-            .filter(user => user.userId !== viewAsUser.userId)
-            .filter(user => user.displayName.toLowerCase().includes(searchTerm.toLowerCase()));
-
-        return { currentUser, otherUsers };
-    }, [users, viewAsUser.userId, searchTerm]);
+    const otherUsers = users
+        .filter(user => user.userId !== viewAsUser.userId)
+        .filter(user => user.displayName.toLowerCase().includes(searchTerm.toLowerCase()));
 
     const isCurrentUser = realUser.userId === viewAsUser.userId;
     const canEditPreferences = isCurrentUser || realUser.isAdmin;

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -15,7 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { corePages, coreTabs } from '@/lib/core-data';
-import { cn, getContrastColor } from '@/lib/utils';
+import { cn, getContrastColor, isHueInRange, getHueFromHsl } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
@@ -23,6 +24,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { CompactSearchInput } from '@/components/common/compact-search-input';
+import { CardTemplate } from '@/components/common/card-template';
 import {
   DndContext,
   closestCenter,
@@ -33,7 +35,6 @@ import {
   type DragEndEvent,
   type DragStartEvent,
   useDroppable,
-  useDraggable,
   DragOverlay,
 } from '@dnd-kit/core';
 import {
@@ -45,46 +46,14 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { HexColorPicker, HexColorInput } from 'react-colorful';
+import { HslStringColorPicker } from 'react-colorful';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
+import { UserCard } from '@/components/common/user-card';
+import { DraggableGrid } from '../common/draggable-grid';
+import { SortableItem } from '../common/sortable-item';
+import { IconColorPicker } from '../common/icon-color-picker';
 
 // #region Admin Groups Management Tab
-
-function UserCard({ user, isDeletable, onDelete }: { user: User, isDeletable?: boolean, onDelete?: (user: User) => void }) {
-    const { isDragModifierPressed } = useUser();
-    return (
-        <div className="group p-2 flex items-center justify-between rounded-md transition-colors bg-card">
-            <div className="flex items-center gap-2">
-                <Avatar>
-                  <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                  <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div>
-                    <p className="font-thin text-muted-foreground">{user.displayName}</p>
-                    <p className="text-sm text-muted-foreground font-thin">{user.title || 'No title provided'}</p>
-                </div>
-            </div>
-            {isDeletable && onDelete && (
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className={cn("h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100", isDragModifierPressed && "hidden")}
-                                onClick={(e) => { e.stopPropagation(); onDelete(user); }}
-                                onPointerDown={(e) => e.stopPropagation()}
-                            >
-                                <GoogleSymbol name="cancel" className="text-lg" weight={100} opticalSize={20}/>
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent><p>Delete User</p></TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            )}
-        </div>
-    );
-}
 
 function SortableUserCard({ user, listId, onDeleteRequest }: { user: User, listId: string, onDeleteRequest?: (user: User) => void }) {
     const draggableId = `user-dnd-${user.userId}-${listId}`;
@@ -100,7 +69,7 @@ function SortableUserCard({ user, listId, onDeleteRequest }: { user: User, listI
     };
 
     return (
-        <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="break-inside-avoid p-2">
             <UserCard 
               user={user} 
               isDeletable={listId === 'user-list'} 
@@ -121,18 +90,20 @@ function UserDropZone({ id, users, children, onDeleteRequest }: { id: string, us
         isOver && "ring-1 ring-border ring-inset"
     )}>
         <SortableContext items={sortableUserIds} strategy={verticalListSortingStrategy}>
-            {users.map((user) => (
-                <SortableUserCard key={user.userId} user={user} listId={id} onDeleteRequest={onDeleteRequest} />
-            ))}
+            <div className="gap-4 [column-fill:_balance] columns-1 sm:columns-2 md:columns-1 lg:columns-2 xl:columns-3 2xl:columns-4">
+                {users.map((user) => (
+                    <SortableUserCard key={user.userId} user={user} listId={id} onDeleteRequest={onDeleteRequest} />
+                ))}
+            </div>
         </SortableContext>
         {children}
     </div>
   )
 }
 
-export const AdminsManagement = () => {
+export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
   const { toast } = useToast();
-  const { viewAsUser, users, updateUser, deleteUser, isDragModifierPressed } = useUser();
+  const { viewAsUser, users, updateUser, deleteUser, reorderUsers, appSettings, updateAppSettings } = useUser();
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
   const [pendingUserMove, setPendingUserMove] = useState<{ user: User; fromListId: string; destListId: string } | null>(null);
   const [pendingUserDelete, setPendingUserDelete] = useState<User | null>(null);
@@ -145,7 +116,26 @@ export const AdminsManagement = () => {
   const [adminSearch, setAdminSearch] = useState('');
   const [userSearch, setUserSearch] = useState('');
   
+  const [activeAdminSearch, setActiveAdminSearch] = useState(false);
+
   const [activeDragUser, setActiveDragUser] = useState<User | null>(null);
+  const [isAddUserPopoverOpen, setIsAddUserPopoverOpen] = useState(false);
+  const [newUserEmail, setNewUserEmail] = useState('');
+  
+  const preApprovedEmails = useMemo(() => appSettings.preApprovedEmails || [], [appSettings]);
+
+  const handleAddPreApprovedEmail = () => {
+    if (newUserEmail.trim() && !preApprovedEmails.includes(newUserEmail.trim())) {
+      const updatedEmails = [...preApprovedEmails, newUserEmail.trim()];
+      updateAppSettings({ preApprovedEmails: updatedEmails });
+      setNewUserEmail('');
+    }
+  };
+
+  const handleRemovePreApprovedEmail = (emailToRemove: string) => {
+    const updatedEmails = preApprovedEmails.filter(email => email !== emailToRemove);
+    updateAppSettings({ preApprovedEmails: updatedEmails });
+  };
 
   const adminUsers = useMemo(() => users.filter(u => u.isAdmin), [users]);
   const nonAdminUsers = useMemo(() => users.filter(u => !u.isAdmin), [users]);
@@ -232,6 +222,20 @@ export const AdminsManagement = () => {
 
         if (sourceListId && destListId && sourceListId !== destListId) {
             handleAdminToggleRequest(userToMove, sourceListId, destListId);
+        } else if (sourceListId && destListId && sourceListId === destListId) {
+            const list = sourceListId === 'admin-list' ? adminUsers : nonAdminUsers;
+            const oldIndex = list.findIndex(u => `user-dnd-${u.userId}-${sourceListId}` === active.id);
+            const overUser = over.data.current?.user as User;
+            const newIndex = list.findIndex(u => u.userId === overUser.userId);
+            
+            if (oldIndex !== -1 && newIndex !== -1) {
+                const reorderedSubList = arrayMove(list, oldIndex, newIndex);
+                const reorderedFullList = sourceListId === 'admin-list' 
+                    ? [...reorderedSubList, ...nonAdminUsers] 
+                    : [...adminUsers, ...reorderedSubList];
+                const finalOrder = users.map(u => reorderedFullList.find(r => r.userId === u.userId)).filter(Boolean) as User[];
+                reorderUsers(finalOrder);
+            }
         }
     }
   };
@@ -241,22 +245,9 @@ export const AdminsManagement = () => {
   };
   
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-        onActivation: ({ event }) => {
-            if (!isDragModifierPressed) {
-                return false;
-            }
-            return true;
-        },
-    }),
+    useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-      onActivation: ({ event }) => {
-        if (!isDragModifierPressed) {
-            return false;
-        }
-        return true;
-      }
     })
   );
 
@@ -268,9 +259,14 @@ export const AdminsManagement = () => {
                 <Card className="flex flex-col h-full bg-transparent border-0 shadow-none">
                     <CardHeader>
                         <div className="flex items-center justify-between gap-4">
-                            <CardTitle className="font-thin text-base">Admins ({filteredAdminUsers.length})</CardTitle>
+                            <CardTitle className="text-muted-foreground">Admins ({filteredAdminUsers.length})</CardTitle>
                              <div className="flex items-center gap-1">
-                                <CompactSearchInput searchTerm={adminSearch} setSearchTerm={setAdminSearch} placeholder="Search admins..." tooltipText="Search Admins" />
+                                <CompactSearchInput
+                                  searchTerm={adminSearch}
+                                  setSearchTerm={setAdminSearch}
+                                  placeholder="Search admins..."
+                                  tooltipText="Search Admins"
+                                />
                             </div>
                         </div>
                     </CardHeader>
@@ -281,9 +277,57 @@ export const AdminsManagement = () => {
                   <Card className="flex flex-col h-full bg-transparent border-0 shadow-none">
                     <CardHeader>
                         <div className="flex items-center justify-between gap-4">
-                            <CardTitle className="font-thin text-base">Users ({filteredNonAdminUsers.length})</CardTitle>
+                             <div className="flex items-center gap-2">
+                                <CardTitle className="text-muted-foreground">Users ({filteredNonAdminUsers.length})</CardTitle>
+                                <Popover open={isAddUserPopoverOpen} onOpenChange={setIsAddUserPopoverOpen}>
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <PopoverTrigger asChild>
+                                              <Button variant="ghost" size="icon" className="p-0 text-muted-foreground">
+                                                  <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+                                              </Button>
+                                          </PopoverTrigger>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Pre-approve User</p></TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                    <PopoverContent className="w-80 p-0" align="start">
+                                        <div className="flex items-center gap-1 p-2">
+                                            <Input
+                                                placeholder="user@example.com"
+                                                value={newUserEmail}
+                                                onChange={(e) => setNewUserEmail(e.target.value)}
+                                                onKeyDown={(e) => e.key === 'Enter' && handleAddPreApprovedEmail()}
+                                                className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 h-9 p-0 flex-1"
+                                            />
+                                            <Button variant="ghost" size="icon" onClick={handleAddPreApprovedEmail} className="h-8 w-8"><GoogleSymbol name="add" /></Button>
+                                        </div>
+                                        {preApprovedEmails.length > 0 && (
+                                            <ScrollArea className="max-h-40 mt-2">
+                                                <div className="p-2 space-y-1">
+                                                {preApprovedEmails.map(email => (
+                                                    <div key={email} className="flex items-center justify-between text-sm p-1 rounded-md">
+                                                        <span>{email}</span>
+                                                        <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => handleRemovePreApprovedEmail(email)}>
+                                                            <GoogleSymbol name="close" className="text-xs" />
+                                                        </Button>
+                                                    </div>
+                                                ))}
+                                                </div>
+                                            </ScrollArea>
+                                        )}
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
                              <div className="flex items-center gap-1">
-                                <CompactSearchInput searchTerm={userSearch} setSearchTerm={setUserSearch} placeholder="Search users..." tooltipText="Search Users" />
+                                <CompactSearchInput
+                                  searchTerm={userSearch}
+                                  setSearchTerm={setUserSearch}
+                                  placeholder="Search users..."
+                                  tooltipText="Search Users"
+                                  autoFocus={isActive}
+                                />
                             </div>
                         </div>
                     </CardHeader>
@@ -309,7 +353,7 @@ export const AdminsManagement = () => {
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Button variant="ghost" size="icon" onClick={handleVerify2fa}>
-                                    <GoogleSymbol name="check" className="text-xl" weight={100} opticalSize={20} />
+                                    <GoogleSymbol name="check" />
                                     <span className="sr-only">Verify Code</span>
                                 </Button>
                             </TooltipTrigger>
@@ -318,7 +362,7 @@ export const AdminsManagement = () => {
                     </TooltipProvider>
                 </div>
                 <DialogHeader>
-                    <UIDialogTitle>Two-Factor Authentication</UIDialogTitle>
+                    <UIDialogTitle className="font-headline font-thin text-muted-foreground">Two-Factor Authentication</UIDialogTitle>
                     <DialogDescription>Enter the 6-digit code from your authenticator app to proceed.</DialogDescription>
                 </DialogHeader>
                 <div
@@ -327,7 +371,7 @@ export const AdminsManagement = () => {
                     )}
                     onClick={() => {if (!isEditing2fa) setIsEditing2fa(true)}}
                     >
-                    <GoogleSymbol name="password" className="text-xl" weight={100} opticalSize={20} />
+                    <GoogleSymbol name="password" />
                     {isEditing2fa ? (
                         <Input
                             id="2fa-code"
@@ -336,12 +380,12 @@ export const AdminsManagement = () => {
                             onChange={(e) => setTwoFactorCode(e.target.value)}
                             onBlur={() => { if (!twoFactorCode) setIsEditing2fa(false); }}
                             onKeyDown={(e) => e.key === 'Enter' && handleVerify2fa()}
-                            className="w-full text-center tracking-[0.5em] h-auto p-0 border-0 shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground font-thin"
+                            className="w-full text-center tracking-[0.5em] h-auto p-0 border-0 shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground"
                             maxLength={6}
                             placeholder="••••••"
                         />
                     ) : (
-                        <span className="flex-1 text-center text-sm tracking-[0.5em] font-thin">
+                        <span className="flex-1 text-center text-sm tracking-[0.5em]">
                             {twoFactorCode ? '••••••' : '6-digit code'}
                         </span>
                     )}
@@ -355,14 +399,36 @@ export const AdminsManagement = () => {
 
 // #region Pages Management Tab
 
-const PREDEFINED_COLORS = [
-    '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
-    '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
-    '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
-];
+function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
+  const { setNodeRef, isOver } = useDroppable({ id });
+  
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "rounded-full transition-all p-0.5",
+        isOver && "ring-1 ring-border ring-inset"
+      )}
+    >
+      <TooltipProvider>
+          <Tooltip>
+              <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={onAdd} onPointerDown={(e) => e.stopPropagation()}>
+                    <GoogleSymbol name="add_circle" className="text-4xl text-muted-foreground" weight={100} />
+                    <span className="sr-only">New Page or Drop to Duplicate</span>
+                  </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                  <p>{isOver ? 'Drop to Duplicate' : 'Add New Page'}</p>
+              </TooltipContent>
+          </Tooltip>
+      </TooltipProvider>
+    </div>
+  );
+}
 
 function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: Partial<AppPage>) => void }) {
-    const { users, teams, appSettings, isDragModifierPressed } = useUser();
+    const { users, teams, appSettings } = useUser();
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const searchInputRef = useRef<HTMLInputElement>(null);
@@ -397,13 +463,13 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
     const renderSearchControl = () => (
          <div className="p-2 border-b">
             <div className="flex items-center gap-1 w-full">
-              <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} opticalSize={20} />
+              <GoogleSymbol name="search" className="text-muted-foreground" />
               <input
                   ref={searchInputRef}
                   placeholder="Search..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 font-thin"
+                  className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
               />
           </div>
         </div>
@@ -415,7 +481,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <PopoverTrigger asChild>
-                            <Button variant="ghost" size="icon" onPointerDown={(e) => e.stopPropagation()} className={cn(isDragModifierPressed && "hidden")}><GoogleSymbol name="group_add" className="text-4xl" weight={100} opticalSize={20} /></Button>
+                            <Button variant="ghost" size="icon" onPointerDown={(e) => e.stopPropagation()} className="h-8 w-8 text-muted-foreground"><GoogleSymbol name="group_add" /></Button>
                         </PopoverTrigger>
                     </TooltipTrigger>
                     <TooltipContent><p>Manage Page Access</p></TooltipContent>
@@ -435,7 +501,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                           return (
                             <div key={user.userId} className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer" style={{ color: isSelected ? 'hsl(var(--primary))' : undefined }} onClick={() => handleToggle('users', user.userId)}>
                               <Avatar className="h-7 w-7"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
-                              <span className="font-thin">{user.displayName}</span>
+                              <span>{user.displayName}</span>
                             </div>
                           )
                         })}</div></ScrollArea>
@@ -446,8 +512,8 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                           const isSelected = access.teams.includes(team.id);
                           return (
                             <div key={team.id} className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer" style={{ color: isSelected ? team.color : undefined }} onClick={() => handleToggle('teams', team.id)}>
-                              <GoogleSymbol name={team.icon} className="text-xl" weight={100} opticalSize={20} />
-                              <span className="font-thin">{team.name}</span>
+                              <GoogleSymbol name={team.icon} />
+                              <span>{team.name}</span>
                             </div>
                           )
                         })}</div></ScrollArea>
@@ -459,20 +525,11 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
 }
 
 function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: Partial<AppPage>) => void }) {
-  const { appSettings, isDragModifierPressed } = useUser();
+  const { appSettings } = useUser();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const searchInputRef = useRef<HTMLInputElement>(null);
   
   const systemTabIds = ['tab-admins', 'tab-settings'];
-
-  useEffect(() => {
-    if (isOpen) {
-        setTimeout(() => searchInputRef.current?.focus(), 100);
-    } else {
-        setSearchTerm('');
-    }
-  }, [isOpen]);
 
   const filteredTabs = useMemo(() => {
     const allTabs = appSettings.tabs.filter(tab => !systemTabIds.includes(tab.id));
@@ -498,7 +555,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
           <Tooltip>
               <TooltipTrigger asChild>
                   <PopoverTrigger asChild>
-                      <Button variant="ghost" size="icon" onPointerDown={(e) => e.stopPropagation()} className={cn(isDragModifierPressed && "hidden")}><GoogleSymbol name="layers" className="text-4xl" weight={100} opticalSize={20} /></Button>
+                      <Button variant="ghost" size="icon" onPointerDown={(e) => e.stopPropagation()} className="h-8 w-8 text-muted-foreground"><GoogleSymbol name="layers" /></Button>
                   </PopoverTrigger>
               </TooltipTrigger>
               <TooltipContent><p>Manage Associated Tabs</p></TooltipContent>
@@ -506,16 +563,12 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
       </TooltipProvider>
       <PopoverContent className="w-80 p-0" onPointerDownCapture={(e) => { e.stopPropagation(); }}>
         <div className="p-2 border-b">
-          <div className="flex items-center gap-1 w-full">
-            <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} opticalSize={20} />
-            <input
-                ref={searchInputRef}
-                placeholder="Search tabs..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 font-thin"
-            />
-          </div>
+          <CompactSearchInput
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            placeholder="Search tabs..."
+            autoFocus={isOpen}
+          />
         </div>
         <ScrollArea className="h-64">
           <div className="p-1 space-y-1">
@@ -529,8 +582,8 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
                     style={{ color: isAssociated ? tab.color : undefined }}
                     onClick={() => handleToggle(tab.id)}
                 >
-                    <GoogleSymbol name={tab.icon} className="text-xl" weight={100} opticalSize={20} />
-                    <span className="font-thin">{tab.name}</span>
+                    <GoogleSymbol name={tab.icon} />
+                    <span>{tab.name}</span>
                 </div>
               );
             })}
@@ -541,309 +594,73 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
   );
 }
 
-function PageCard({ page, onUpdate, onDelete, isPinned, isDragging, dragHandleProps }: { 
+function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand }: { 
     page: AppPage; 
     onUpdate: (id: string, data: Partial<AppPage>) => void; 
     onDelete: (id: string) => void; 
-    isPinned?: boolean; 
-    isDragging?: boolean;
-    dragHandleProps?: any;
+    isExpanded: boolean;
+    onToggleExpand: () => void;
 }) {
-    const { viewAsUser, isDragModifierPressed } = useUser();
+    const { viewAsUser } = useUser();
     const canManage = viewAsUser.isAdmin;
-    const [isEditingName, setIsEditingName] = useState(false);
-    const [isExpanded, setIsExpanded] = useState(false);
-    const nameInputRef = useRef<HTMLInputElement>(null);
-    const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
-    const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
-    
-    const [iconSearch, setIconSearch] = useState('');
-    const iconSearchInputRef = useRef<HTMLInputElement>(null);
-    
-    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-    const [color, setColor] = useState(page.color);
-    
-    const handleSaveName = useCallback(() => {
-        const newName = nameInputRef.current?.value;
-        if (newName && newName.trim() && newName !== page.name) {
-            onUpdate(page.id, { name: newName });
-        }
-        setIsEditingName(false);
-    }, [page.id, page.name, onUpdate, setIsEditingName]);
+    const isPinned = corePages.some(p => p.id === page.id);
 
-    useEffect(() => {
-        if (!isEditingName) return;
-        const handleOutsideClick = (event: MouseEvent) => {
-            if (nameInputRef.current && !nameInputRef.current.contains(event.target as Node)) {
-                handleSaveName();
-            }
-        };
-        document.addEventListener("mousedown", handleOutsideClick);
-        nameInputRef.current?.focus();
-        nameInputRef.current?.select();
-        return () => {
-            document.removeEventListener("mousedown", handleOutsideClick);
-        };
-    }, [isEditingName, handleSaveName]);
-    
-    useEffect(() => {
-        if (isIconPopoverOpen) {
-            setTimeout(() => iconSearchInputRef.current?.focus(), 100);
-        } else {
-            setIconSearch('');
-        }
-    }, [isIconPopoverOpen]);
-
-    const handlePathClick = (e: React.MouseEvent) => {
-      e.stopPropagation();
-      if (!isPinned && canManage && !isDragModifierPressed) {
-        onUpdate(page.id, { isDynamic: !page.isDynamic });
-      }
-    };
-
-    const filteredIcons = useMemo(() => googleSymbolNames.filter(icon => icon.toLowerCase().includes(iconSearch.toLowerCase())), [iconSearch]);
-    
     const displayPath = page.isDynamic ? `${page.path}/[...]` : page.path;
-    const showDetails = isExpanded;
 
-
-    return (
-        <Card className="group relative bg-transparent">
-            <CardHeader className="p-2" {...dragHandleProps}>
-                {!isPinned && (
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className={cn("absolute -top-2 -right-2 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity z-10", isDragModifierPressed && "hidden")}
-                                onPointerDown={(e) => {
-                                    e.stopPropagation();
-                                    setIsDeleteDialogOpen(true);
-                                }}
-                            >
-                                <GoogleSymbol name="cancel" className="text-lg" weight={100} opticalSize={20} />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent><p>Delete Page</p></TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
+    const entityWithDescription = {
+        ...page,
+        description: (
+             <button
+                disabled={isPinned}
+                onClick={() => !isPinned && onUpdate(page.id, { isDynamic: !page.isDynamic })}
+                className={cn(
+                    "text-sm text-left",
+                    !isPinned && "cursor-pointer hover:text-primary",
+                    isPinned ? "text-muted-foreground/50" : "text-muted-foreground"
                 )}
-                <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <div className="relative">
-                            <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={isDragModifierPressed}>
-                                                <Button variant="ghost" className="h-10 w-12 flex items-center justify-center p-0 text-muted-foreground hover:text-foreground">
-                                                    <GoogleSymbol name={page.icon} weight={100} grade={-25} opticalSize={20} style={{ fontSize: '36px' }}/>
-                                                </Button>
-                                            </PopoverTrigger>
-                                        </TooltipTrigger>
-                                        <TooltipContent><p>Change Icon</p></TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                                <PopoverContent className="w-80 p-0" onPointerDown={(e) => e.stopPropagation()}>
-                                    <div className="flex items-center gap-1 p-2 border-b">
-                                        <GoogleSymbol name="search" className="text-muted-foreground text-xl" weight={100} opticalSize={20} />
-                                        <input
-                                            ref={iconSearchInputRef}
-                                            placeholder="Search icons..."
-                                            value={iconSearch}
-                                            onChange={(e) => setIconSearch(e.target.value)}
-                                            className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 font-thin"
-                                        />
-                                    </div>
-                                    <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (
-                                    <TooltipProvider key={iconName}>
-                                        <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button
-                                            variant={page.icon === iconName ? "default" : "ghost"}
-                                            size="icon"
-                                            onClick={() => { onUpdate(page.id, { icon: iconName }); setIsIconPopoverOpen(false);}}
-                                            className="h-8 w-8 p-0"
-                                            >
-                                            <GoogleSymbol name={iconName} weight={100} className="text-4xl" opticalSize={20} />
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent><p>{iconName}</p></TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                    ))}</div></ScrollArea>
-                                </PopoverContent>
-                            </Popover>
-                             <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={isDragModifierPressed}>
-                                                <button className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", !isDragModifierPressed && "cursor-pointer", isDragModifierPressed && "hidden")} style={{ backgroundColor: page.color }} />
-                                            </PopoverTrigger>
-                                        </TooltipTrigger>
-                                        <TooltipContent><p>Change Color</p></TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                                <PopoverContent className="w-auto p-4" onPointerDown={(e) => e.stopPropagation()}>
-                                     <div className="space-y-4">
-                                        <HexColorPicker color={color} onChange={setColor} className="!w-full" />
-                                        <div className="flex items-center gap-2">
-                                            <span className="p-2 border rounded-md" style={{ backgroundColor: color }} />
-                                            <HexColorInput prefixed alpha color={color} onChange={setColor} className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50" />
-                                        </div>
-                                        <div className="grid grid-cols-8 gap-1">
-                                            {PREDEFINED_COLORS.map(c => (
-                                                <button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(page.id, { color: c }); setIsColorPopoverOpen(false);}} />
-                                            ))}
-                                        </div>
-                                        <Button onClick={() => { onUpdate(page.id, { color }); setIsColorPopoverOpen(false); }} className="w-full bg-primary">Set Color</Button>
-                                    </div>
-                                </PopoverContent>
-                            </Popover>
-                        </div>
-                        <div onPointerDown={(e) => { if(!isDragModifierPressed) e.stopPropagation(); }}>
-                            {isEditingName ? (
-                                <Input 
-                                  ref={nameInputRef} 
-                                  defaultValue={page.name} 
-                                  className="h-auto p-0 font-headline text-base font-thin border-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words"
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') handleSaveName();
-                                    else if (e.key === 'Escape') setIsEditingName(false);
-                                  }}
-                                />
-                            ) : (
-                                <CardTitle 
-                                  className={cn("font-headline text-base break-words font-thin", canManage && !isDragModifierPressed && "cursor-pointer")}
-                                  onClick={() => {if(canManage && !isDragging && !isDragModifierPressed) setIsEditingName(true)}}
-                                >
-                                    {page.name}
-                                </CardTitle>
-                            )}
-                        </div>
-                    </div>
-                     <div className="flex items-center" onPointerDown={(e) => e.stopPropagation()}>
-                        {!isPinned && (
-                            <>
-                                <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
-                                <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />
-                            </>
-                        )}
-                    </div>
-                </div>
-            </CardHeader>
-            {showDetails && (
-                <CardContent className="p-2 pt-0">
-                    <p className={cn("text-xs text-muted-foreground truncate font-thin", !isPinned && !isDragModifierPressed && "cursor-pointer")} onClick={handlePathClick}>
-                      {displayPath}
-                    </p>
-                </CardContent>
-            )}
-             <div className={cn("absolute -bottom-1 right-0", isDragModifierPressed && "hidden")}>
-                <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
-                    <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} weight={100} opticalSize={20} />
-                </Button>
-            </div>
-            <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-                <DialogContent className="max-w-md" onPointerDownCapture={(e) => e.stopPropagation()}>
-                    <div className="absolute top-4 right-4">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="hover:text-destructive p-0 hover:bg-transparent" onClick={() => onDelete(page.id)}>
-                              <GoogleSymbol name="delete" className="text-4xl" weight={100} opticalSize={20} />
-                              <span className="sr-only">Delete Page</span>
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent><p>Delete Page</p></TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                    <DialogHeader>
-                        <UIDialogTitle>Delete "{page.name}"?</UIDialogTitle>
-                        <DialogDescription>
-                            This will permanently delete the page and its configuration. This action cannot be undone.
-                        </DialogDescription>
-                    </DialogHeader>
-                </DialogContent>
-            </Dialog>
-        </Card>
-    );
-}
-
-function SortablePageCard({ id, page, onUpdate, onDelete, isPinned }: { id: string, page: AppPage, onUpdate: (id: string, data: Partial<AppPage>) => void; onDelete: (id: string) => void; isPinned?: boolean }) {
-    const [isEditingName, setIsEditingName] = useState(false);
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-        isDragging,
-    } = useSortable({id: id, disabled: isPinned || isEditingName });
-
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        zIndex: isDragging ? 10 : 'auto',
+            >
+                {displayPath}
+            </button>
+        )
     };
-
+    
     return (
-        <div 
-            ref={setNodeRef} 
-            style={style}
-            className="p-2 basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)] flex-grow-0 flex-shrink-0"
-        >
-             <div className={cn(isDragging && "opacity-75")}>
-                 <PageCard 
-                    page={page} 
-                    onUpdate={onUpdate} 
-                    onDelete={onDelete} 
-                    isPinned={isPinned}
-                    dragHandleProps={{ ...attributes, ...listeners }}
-                    isDragging={isDragging}
-                 />
-            </div>
-        </div>
+        <CardTemplate
+            entity={entityWithDescription}
+            onUpdate={onUpdate}
+            onDelete={onDelete}
+            canManage={canManage}
+            isPinned={isPinned}
+            isExpanded={isExpanded}
+            onToggleExpand={onToggleExpand}
+            headerControls={
+                <div className="flex items-center">
+                    {!isPinned && <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />}
+                    {!isPinned && <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />}
+                </div>
+            }
+        />
     );
 }
 
-function DuplicateZone({ onAdd }: { onAdd: () => void; }) {
-  const { isOver, setNodeRef } = useDroppable({ id: 'duplicate-page-zone' });
-  
-  return (
-    <div
-      ref={setNodeRef}
-      className={cn(
-        "rounded-full transition-all p-0.5",
-        isOver && "ring-1 ring-border ring-inset"
-      )}
-    >
-      <TooltipProvider>
-          <Tooltip>
-              <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={onAdd} onPointerDown={(e) => e.stopPropagation()}>
-                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} opticalSize={20} />
-                    <span className="sr-only">New Page or Drop to Duplicate</span>
-                  </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                  <p>{isOver ? 'Drop to Duplicate' : 'Add New Page'}</p>
-              </TooltipContent>
-          </Tooltip>
-      </TooltipProvider>
-    </div>
-  );
-}
-
-export const PagesManagement = () => {
-    const { viewAsUser, appSettings, updateAppSettings, isDragModifierPressed } = useUser();
+export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
+    const { appSettings, updateAppSettings } = useUser();
     const { toast } = useToast();
     const [searchTerm, setSearchTerm] = useState('');
-    const [activePage, setActivePage] = useState<AppPage | null>(null);
+    const [colorFilter, setColorFilter] = useState<string | null>(null);
+    const [expandedPages, setExpandedPages] = useState<Set<string>>(new Set());
+
+    const onToggleExpand = useCallback((pageId: string) => {
+        setExpandedPages(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(pageId)) {
+                newSet.delete(pageId);
+            } else {
+                newSet.add(pageId);
+            }
+            return newSet;
+        });
+    }, []);
     
     const pinnedIds = useMemo(() => new Set(corePages.map(p => p.id)), []);
     
@@ -877,7 +694,7 @@ export const PagesManagement = () => {
             id: crypto.randomUUID(),
             name: newName,
             icon: 'web',
-            color: '#64748B',
+            color: 'hsl(220, 13%, 47%)',
             path: `/dashboard/${newName.toLowerCase().replace(/\s/g, '-')}-${crypto.randomUUID().slice(0,4)}`,
             isDynamic: false,
             associatedTabs: [],
@@ -900,400 +717,199 @@ export const PagesManagement = () => {
         updateAppSettings({ pages: appSettings.pages.filter(p => p.id !== pageId) });
         toast({ title: 'Page Deleted' });
     };
-    
-    const sensors = useSensors(
-        useSensor(PointerSensor, {
-            onActivation: ({ event }) => {
-                if (!isDragModifierPressed) {
-                    return false;
-                }
-                return true;
-            },
-        }),
-        useSensor(KeyboardSensor, {
-          coordinateGetter: sortableKeyboardCoordinates,
-          onActivation: ({ event }) => {
-            if (!isDragModifierPressed) {
-                return false;
-            }
-            return true;
-          }
-        })
-    );
 
-    const handleDragStart = (event: DragStartEvent) => {
-        const { active } = event;
-        const page = appSettings.pages.find(p => p.id === active.id);
-        if (page) {
-            setActivePage(page);
-        }
-    };
-    
-    const handleDragEnd = (event: DragEndEvent) => {
-        setActivePage(null);
-        const { active, over } = event;
-        
-        if (over?.id === 'duplicate-page-zone') {
-            const pageId = active.id.toString();
-            const pageToDuplicate = appSettings.pages.find(p => p.id === pageId);
-            if (pageToDuplicate) {
-                handleDuplicatePage(pageToDuplicate);
-            }
-            return;
-        }
-
-        if (over && active.id !== over.id) {
-            const oldIndex = appSettings.pages.findIndex(p => p.id === active.id);
-            const newIndex = appSettings.pages.findIndex(p => p.id === over.id);
-
-            const activeIsPinned = pinnedIds.has(active.id.toString());
-            const overIsPinned = pinnedIds.has(over.id.toString());
-            
-            // Prevent reordering pinned items among themselves
-            if (activeIsPinned && overIsPinned) return;
-            
-            // Prevent dragging a custom page into the pinned section or a pinned one out
-            if (activeIsPinned !== overIsPinned) return;
-            
-            const reorderedPages = arrayMove(appSettings.pages, oldIndex, newIndex);
-            updateAppSettings({ pages: reorderedPages });
-        }
-    };
-    
     const filteredPages = useMemo(() => {
-        if (!searchTerm) return appSettings.pages;
-        return appSettings.pages.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    }, [appSettings.pages, searchTerm]);
-
-    const pageIds = useMemo(() => filteredPages.map(p => p.id), [filteredPages]);
+        let pages = appSettings.pages;
+        if (searchTerm) {
+          pages = pages.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+        }
+        if (colorFilter) {
+          const targetHue = getHueFromHsl(colorFilter);
+          if (targetHue !== null) {
+            pages = pages.filter(p => {
+              const itemHue = getHueFromHsl(p.color);
+              return itemHue !== null && isHueInRange(targetHue, itemHue);
+            });
+          }
+        }
+        return pages;
+    }, [appSettings.pages, searchTerm, colorFilter]);
+    
+    const renderPageCard = useCallback((page: AppPage) => (
+        <SortablePageCard
+            key={page.id}
+            page={page}
+            onUpdate={handleUpdatePage}
+            onDelete={handleDeletePage}
+            isExpanded={expandedPages.has(page.id)}
+            onToggleExpand={() => onToggleExpand(page.id)}
+        />
+    ), [handleUpdatePage, handleDeletePage, expandedPages, onToggleExpand]);
 
     return (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-            <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                    <DuplicateZone onAdd={handleAddPage} />
-                    <div className="flex items-center">
-                        <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search pages..." />
-                    </div>
-                </div>
+        <DraggableGrid
+            items={filteredPages}
+            setItems={(newPages) => updateAppSettings({ pages: newPages })}
+            onDragEnd={(event) => {
+                const { active, over } = event;
+                if (over?.id === 'duplicate-page-zone') {
+                    const pageToDuplicate = appSettings.pages.find(p => p.id === active.id);
+                    if (pageToDuplicate) {
+                        handleDuplicatePage(pageToDuplicate);
+                    }
+                    return;
+                }
                 
-                <SortableContext items={pageIds} strategy={rectSortingStrategy}>
-                    <div className="flex flex-wrap -m-2">
-                        {filteredPages.map((page) => (
-                            <SortablePageCard
-                                key={page.id}
-                                id={page.id}
-                                page={page}
-                                onUpdate={handleUpdatePage}
-                                onDelete={handleDeletePage}
-                                isPinned={pinnedIds.has(page.id)}
-                            />
-                        ))}
-                    </div>
-                </SortableContext>
-                <DragOverlay modifiers={[snapCenterToCursor]}>
-                    {activePage ? (
-                        <GoogleSymbol
-                            name={activePage.icon}
-                            style={{ color: activePage.color, fontSize: '48px' }}
-                            weight={100}
-                            grade={-25}
-                            opticalSize={48}
-                        />
-                    ) : null}
-                </DragOverlay>
+                if (over && active.id !== over.id) {
+                    const oldIndex = appSettings.pages.findIndex(p => p.id === active.id);
+                    const newIndex = appSettings.pages.findIndex(p => p.id === over.id);
+
+                    const activeIsPinned = pinnedIds.has(active.id.toString());
+                    const overIsPinned = pinnedIds.has(over.id.toString());
+                    
+                    if (activeIsPinned !== overIsPinned) return;
+                    
+                    const reorderedPages = arrayMove(appSettings.pages, oldIndex, newIndex);
+                    updateAppSettings({ pages: reorderedPages });
+                }
+            }}
+            renderItem={(item, isDragging) => renderPageCard(item as AppPage)}
+            renderDragOverlay={(item) => <GoogleSymbol name={item.icon} style={{ color: item.color, fontSize: '48px' }} />}
+            className="space-y-4"
+        >
+            <div className="flex items-center justify-between">
+                <DuplicateZone onAdd={handleAddPage} id="duplicate-page-zone" />
+                <div className="flex items-center">
+                    <CompactSearchInput
+                      searchTerm={searchTerm}
+                      setSearchTerm={setSearchTerm}
+                      placeholder="Search pages..."
+                      autoFocus={isActive}
+                      showColorFilter={true}
+                      onColorSelect={setColorFilter}
+                      activeColorFilter={colorFilter}
+                    />
+                </div>
             </div>
-        </DndContext>
+        </DraggableGrid>
     );
 };
 // #endregion
 
 // #region Tabs Management Tab
 
-function TabCard({ tab, onUpdate, isDragging }: { tab: AppTab; onUpdate: (id: string, data: Partial<AppTab>) => void; isDragging?: boolean; }) {
-    const { viewAsUser, isDragModifierPressed } = useUser();
-    const [isEditingName, setIsEditingName] = useState(false);
-    const nameInputRef = useRef<HTMLInputElement>(null);
-    const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
-    const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
+function SortableTabCard({ tab, onUpdate, isExpanded, onToggleExpand }: {
+    tab: AppTab;
+    onUpdate: (id: string, data: Partial<AppTab>) => void;
+    isExpanded: boolean;
+    onToggleExpand: () => void;
+}) {
+    const { viewAsUser } = useUser();
+    const canManage = viewAsUser.isAdmin;
     
-    const [iconSearch, setIconSearch] = useState('');
-    const iconSearchInputRef = useRef<HTMLInputElement>(null);
-
-    const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
-    const [isEditingDescription, setIsEditingDescription] = useState(false);
-    const [color, setColor] = useState(tab.color);
-
-    const handleSaveName = useCallback(() => {
-        const newName = nameInputRef.current?.value.trim();
-        if (newName && newName !== tab.name) {
-            onUpdate(tab.id, { name: newName });
-        }
-        setIsEditingName(false);
-    }, [tab.id, tab.name, onUpdate]);
-    
-    const handleSaveDescription = useCallback(() => {
-        const newDescription = descriptionTextareaRef.current?.value.trim();
-        if (newDescription !== tab.description) {
-            onUpdate(tab.id, { description: newDescription });
-        }
-        setIsEditingDescription(false);
-    }, [tab.id, tab.description, onUpdate]);
-
-    useEffect(() => {
-        if (!isEditingName) return;
-        const handleOutsideClick = (event: MouseEvent) => {
-            if (nameInputRef.current && !nameInputRef.current.contains(event.target as Node)) {
-                handleSaveName();
-            }
-        };
-        document.addEventListener("mousedown", handleOutsideClick);
-        nameInputRef.current?.focus();
-        nameInputRef.current?.select();
-        return () => {
-            document.removeEventListener("mousedown", handleSaveName);
-        };
-    }, [isEditingName, handleSaveName]);
-    
-    useEffect(() => {
-        if (!isEditingDescription) return;
-        const handleOutsideClick = (event: MouseEvent) => {
-            if (descriptionTextareaRef.current && !descriptionTextareaRef.current.contains(event.target as Node)) {
-                handleSaveDescription();
-            }
-        };
-        document.addEventListener("mousedown", handleOutsideClick);
-        descriptionTextareaRef.current?.focus();
-        descriptionTextareaRef.current?.select();
-        return () => {
-            document.removeEventListener("mousedown", handleSaveDescription);
-        };
-    }, [isEditingDescription, handleSaveDescription]);
-
-    const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          handleSaveName();
-        } else if (e.key === 'Escape') {
-          setIsEditingName(false);
-        }
+    const entityWithDescription = {
+        ...tab,
+        description: tab.description || 'No description provided.'
     };
-
-    const handleDescriptionKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSaveDescription();
-        } else if (e.key === 'Escape') {
-            setIsEditingDescription(false);
-        }
-    };
-
-    const filteredIcons = useMemo(() => {
-        if (!iconSearch) return googleSymbolNames;
-        return googleSymbolNames.filter(icon => icon.toLowerCase().includes(iconSearch.toLowerCase()));
-    }, [iconSearch]);
 
     return (
-        <Card className={cn("bg-transparent", isDragging && "opacity-80")}>
-            <CardContent className="p-2 flex items-center gap-4">
-                <div className="relative">
-                     <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <PopoverTrigger asChild disabled={isDragModifierPressed}>
-                                        <button className={cn("h-10 w-12 flex items-center justify-center")}>
-                                            <GoogleSymbol name={tab.icon} className="text-4xl" weight={100} opticalSize={20} />
-                                        </button>
-                                    </PopoverTrigger>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Change Icon</p></TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                        <PopoverContent className="w-80 p-0">
-                            <div className="flex items-center gap-1 p-2 border-b">
-                                <GoogleSymbol name="search" className="text-muted-foreground text-xl" opticalSize={20} weight={100} />
-                                <input
-                                    ref={iconSearchInputRef}
-                                    placeholder="Search icons..."
-                                    value={iconSearch}
-                                    onChange={(e) => setIconSearch(e.target.value)}
-                                    className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 font-thin"
-                                />
-                            </div>
-                            <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{filteredIcons.slice(0, 300).map((iconName) => (
-                            <TooltipProvider key={iconName}>
-                                <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                    variant={tab.icon === iconName ? "default" : "ghost"}
-                                    size="icon"
-                                    onClick={() => { onUpdate(tab.id, { icon: iconName }); setIsIconPopoverOpen(false);}}
-                                    className="h-8 w-8 p-0"
-                                    >
-                                    <GoogleSymbol name={iconName} style={{fontSize: '24px'}} weight={100} opticalSize={20} />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent><p>{iconName}</p></TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                            ))}</div></ScrollArea>
-                        </PopoverContent>
-                    </Popover>
-                    <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <PopoverTrigger asChild disabled={isDragModifierPressed}>
-                                        <button className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", !isDragModifierPressed && "cursor-pointer", isDragModifierPressed && "hidden")} style={{ backgroundColor: tab.color }} />
-                                    </PopoverTrigger>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Change Color</p></TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                        <PopoverContent className="w-auto p-4">
-                             <div className="space-y-4">
-                                <HexColorPicker color={color} onChange={setColor} className="!w-full" />
-                                <div className="flex items-center gap-2">
-                                    <span className="p-2 border rounded-md" style={{ backgroundColor: color }} />
-                                    <HexColorInput prefixed alpha color={color} onChange={setColor} className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50" />
-                                </div>
-                                <div className="grid grid-cols-8 gap-1">
-                                    {PREDEFINED_COLORS.map(c => (
-                                        <button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => {onUpdate(tab.id, { color: c }); setIsColorPopoverOpen(false);}} />
-                                    ))}
-                                </div>
-                                <Button onClick={() => { onUpdate(tab.id, { color }); setIsColorPopoverOpen(false); }} className="w-full bg-primary">Set Color</Button>
-                            </div>
-                        </PopoverContent>
-                    </Popover>
-                </div>
-                <div className="flex-1 min-w-0 space-y-1">
-                    <div className="flex items-center justify-between">
-                         {isEditingName ? (
-                            <Input ref={nameInputRef} defaultValue={tab.name} onKeyDown={handleNameKeyDown} onBlur={handleSaveName} className="h-auto p-0 font-thin border-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 font-headline" />
-                        ) : (
-                            <h3 className={cn("font-headline cursor-text text-base font-thin", !isDragModifierPressed && "cursor-pointer")} onClick={() => !isDragModifierPressed && setIsEditingName(true)}>{tab.name}</h3>
-                        )}
-                        <Badge variant="outline">{tab.componentKey}</Badge>
-                    </div>
-                    {isEditingDescription ? (
-                        <Textarea 
-                            ref={descriptionTextareaRef}
-                            defaultValue={tab.description}
-                            onBlur={handleSaveDescription}
-                            onKeyDown={handleDescriptionKeyDown}
-                            className="p-0 text-sm text-muted-foreground border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none font-thin"
-                            placeholder="Click to add a description."
-                        />
-                    ) : (
-                        <p className={cn("text-sm text-muted-foreground min-h-[20px] font-thin", !isDragModifierPressed && "cursor-pointer")} onClick={() => !isDragModifierPressed && setIsEditingDescription(true)}>
-                            {tab.description || 'Click to add a description.'}
-                        </p>
-                    )}
-                </div>
-            </CardContent>
-        </Card>
+        <CardTemplate
+            entity={entityWithDescription}
+            onUpdate={onUpdate}
+            onDelete={() => {}} // Tabs cannot be deleted
+            canManage={canManage}
+            isPinned={false}
+            isExpanded={isExpanded}
+            onToggleExpand={onToggleExpand}
+            body={<Badge variant="outline">{tab.componentKey}</Badge>}
+        />
     );
 }
 
-function SortableTabCard({ id, tab, onUpdate }: { id: string, tab: AppTab, onUpdate: (id: string, data: Partial<AppTab>) => void; }) {
-    const { viewAsUser, isDragModifierPressed } = useUser();
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-        isDragging,
-    } = useSortable({id, disabled: !viewAsUser.isAdmin});
-
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-    };
-    
-    return (
-        <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-            <TabCard tab={tab} onUpdate={onUpdate} isDragging={isDragging} />
-        </div>
-    );
-}
-
-
-export const TabsManagement = () => {
-    const { viewAsUser, appSettings, updateAppSettings, updateAppTab, isDragModifierPressed } = useUser();
+export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
+    const { appSettings, updateAppSettings, reorderTabs } = useUser();
     const [searchTerm, setSearchTerm] = useState('');
+    const [colorFilter, setColorFilter] = useState<string | null>(null);
+    const [expandedTabs, setExpandedTabs] = useState<Set<string>>(new Set());
+
+    const onToggleExpand = useCallback((tabId: string) => {
+        setExpandedTabs(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(tabId)) {
+                newSet.delete(tabId);
+            } else {
+                newSet.add(tabId);
+            }
+            return newSet;
+        });
+    }, []);
 
     const handleUpdateTab = useCallback((tabId: string, data: Partial<AppTab>) => {
         const newTabs = appSettings.tabs.map(t => t.id === tabId ? { ...t, ...data } : t);
         updateAppSettings({ tabs: newTabs });
     }, [appSettings.tabs, updateAppSettings]);
-
+    
     const filteredTabs = useMemo(() => {
-        if (!searchTerm) return appSettings.tabs;
-        return appSettings.tabs.filter(tab => 
-            tab.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            tab.description?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    }, [appSettings.tabs, searchTerm]);
-
-    const tabIds = useMemo(() => filteredTabs.map(t => t.id), [filteredTabs]);
-    
-    const sensors = useSensors(
-        useSensor(PointerSensor, {
-            onActivation: ({ event }) => {
-                if (!isDragModifierPressed) {
-                    return false;
-                }
-                return true;
-            },
-        }),
-        useSensor(KeyboardSensor, {
-          coordinateGetter: sortableKeyboardCoordinates,
-          onActivation: ({ event }) => {
-            if (!isDragModifierPressed) {
-                return false;
-            }
-            return true;
-          }
-        })
-    );
-    
-    const handleDragEnd = (event: DragEndEvent) => {
-        const { active, over } = event;
-        if (over && active.id !== over.id) {
-            const oldIndex = appSettings.tabs.findIndex(t => t.id === active.id);
-            const newIndex = appSettings.tabs.findIndex(t => t.id === over.id);
-            const reorderedTabs = arrayMove(appSettings.tabs, oldIndex, newIndex);
-            updateAppSettings({ tabs: reorderedTabs });
+        let results = appSettings.tabs;
+        
+        if (searchTerm) {
+            results = results.filter(t => 
+                t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (t.description || '').toLowerCase().includes(searchTerm.toLowerCase())
+            );
         }
-    };
+    
+        if (colorFilter) {
+            const targetHue = getHueFromHsl(colorFilter);
+            if (targetHue !== null) {
+                results = results.filter(t => {
+                    const itemHue = getHueFromHsl(t.color);
+                    return itemHue !== null && isHueInRange(targetHue, itemHue);
+                });
+            }
+        }
+    
+        return results;
+    }, [appSettings.tabs, searchTerm, colorFilter]);
+
+    const renderTabCard = useCallback((tab: AppTab) => (
+        <SortableTabCard
+            key={tab.id}
+            tab={tab}
+            onUpdate={handleUpdateTab}
+            isExpanded={expandedTabs.has(tab.id)}
+            onToggleExpand={() => onToggleExpand(tab.id)}
+        />
+    ), [handleUpdateTab, expandedTabs, onToggleExpand]);
 
     return (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <div className="space-y-8">
-                <div className="flex items-center justify-end">
-                     <div className="flex items-center">
-                        <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search by name or desc..." />
-                    </div>
+        <DraggableGrid
+            items={filteredTabs}
+            setItems={reorderTabs}
+            renderItem={(item) => renderTabCard(item as AppTab)}
+            renderDragOverlay={(item) => <GoogleSymbol name={item.icon} style={{ color: item.color, fontSize: '48px' }} />}
+            className="space-y-4"
+        >
+            <div className="flex items-center justify-end">
+                 <div className="flex items-center">
+                    <CompactSearchInput
+                      searchTerm={searchTerm}
+                      setSearchTerm={setSearchTerm}
+                      placeholder="Search by name or desc..."
+                      autoFocus={isActive}
+                      showColorFilter={true}
+                      onColorSelect={setColorFilter}
+                      activeColorFilter={colorFilter}
+                    />
                 </div>
-                <SortableContext items={tabIds} strategy={verticalListSortingStrategy}>
-                    <div className="space-y-4">
-                        {filteredTabs.length > 0 &&
-                            filteredTabs.map((appTab) => (
-                                <SortableTabCard
-                                    key={appTab.id}
-                                    id={appTab.id}
-                                    tab={appTab}
-                                    onUpdate={handleUpdateTab}
-                                />
-                            ))
-                        }
-                    </div>
-                </SortableContext>
             </div>
-        </DndContext>
+        </DraggableGrid>
     );
 };
 // #endregion
+
+    
+
+
+
+

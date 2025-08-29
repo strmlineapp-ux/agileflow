@@ -19,9 +19,9 @@ import { EventDetailsDialog } from '@/components/calendar/event-details-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
-  const { realUser, viewAsUser, calendars, fetchEvents, addEvent, updateEvent, deleteEvent } = useUser();
+  const { viewAsUser, calendars, fetchEvents, addEvent, updateEvent, deleteEvent } = useUser();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>(realUser.defaultCalendarView || 'day');
+  const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>(viewAsUser.defaultCalendarView || 'day');
   const [zoomLevel, setZoomLevel] = useState<'normal' | 'fit'>('normal');
   const [dayViewAxis, setDayViewAxis] = useState<'standard' | 'reversed'>('standard');
   const [isNewEventOpen, setIsNewEventOpen] = useState(false);
@@ -107,9 +107,8 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
     const endTime = new Date(data.startTime.getTime() + 60 * 60 * 1000); // Default to 1 hour
 
     setInitialEventData({
-        date: data.startTime,
-        startTime: format(data.startTime, 'HH:mm'),
-        endTime: format(endTime, 'HH:mm'),
+        startTime: data.startTime,
+        endTime: endTime,
         location: data.location,
     });
     setIsNewEventOpen(true);
@@ -196,8 +195,8 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                          <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+                        <Button variant="circle" size="icon">
+                          <GoogleSymbol name="add_circle" className="text-4xl" />
                           <span className="sr-only">New Event</span>
                         </Button>
                       </TooltipTrigger>
@@ -215,9 +214,9 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
               </Dialog>
             )}
              <div className="flex items-center gap-1 border-r pr-2">
-                <Button variant="ghost" size="icon" onClick={handlePrev}><GoogleSymbol name="chevron_left" weight={100} /></Button>
+                <Button variant="ghost" size="icon" onClick={handlePrev}><GoogleSymbol name="chevron_left" /></Button>
                 <Button variant="ghost" size="sm" onClick={goToToday}>Today</Button>
-                <Button variant="ghost" size="icon" onClick={handleNext}><GoogleSymbol name="chevron_right" weight={100} /></Button>
+                <Button variant="ghost" size="icon" onClick={handleNext}><GoogleSymbol name="chevron_right" /></Button>
             </div>
             <p className="text-muted-foreground text-sm font-normal">{dateRange}</p>
           </div>
@@ -227,7 +226,7 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button variant="ghost" size="icon" onClick={() => setZoomLevel(zoomLevel === 'normal' ? 'fit' : 'normal')}>
-                          {zoomLevel === 'normal' ? <GoogleSymbol name="close_fullscreen" weight={100} /> : <GoogleSymbol name="open_in_full" weight={100} />}
+                          {zoomLevel === 'normal' ? <GoogleSymbol name="close_fullscreen" /> : <GoogleSymbol name="open_in_full" />}
                           <span className="sr-only">{zoomLevel === 'normal' ? 'Fit to view' : 'Reset view'}</span>
                       </Button>
                     </TooltipTrigger>
@@ -238,7 +237,7 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
                   <Tooltip>
                     <TooltipTrigger asChild>
                         <Button variant="ghost" size="icon" onClick={() => setDayViewAxis(dayViewAxis === 'standard' ? 'reversed' : 'standard')}>
-                            <GoogleSymbol name="swap_horiz" weight={100} />
+                            <GoogleSymbol name="swap_horiz" />
                             <span className="sr-only">{dayViewAxis === 'standard' ? 'Switch to reversed axis view' : 'Switch to standard view'}</span>
                         </Button>
                     </TooltipTrigger>

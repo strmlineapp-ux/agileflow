@@ -2,7 +2,6 @@
 'use client';
 
 import * as React from 'react';
-import { format, isToday } from 'date-fns';
 import { type Task, type Badge } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -39,6 +38,21 @@ const statusLabels: Record<Task['status'], string> = {
   completed: 'Completed',
 };
 
+// Helper function to check if a date is today
+const isToday = (someDate: Date | string) => {
+    const d = new Date(someDate);
+    const today = new Date();
+    return d.getDate() === today.getDate() &&
+           d.getMonth() === today.getMonth() &&
+           d.getFullYear() === today.getFullYear();
+};
+
+// Helper function to format date
+const formatDate = (date: Date | string): string => {
+    return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(date));
+};
+
+
 export function TaskList({ tasks, limit, onEdit, onDelete }: { tasks: Task[], limit?: number, onEdit?: (task: Task) => void, onDelete?: (taskId: string) => void }) {
   const { allBadgeCollections, allBadges } = useUser();
 
@@ -57,7 +71,7 @@ export function TaskList({ tasks, limit, onEdit, onDelete }: { tasks: Task[], li
               <TableHead>
                 <Button variant="ghost" className="-ml-4 text-muted-foreground">
                   Task
-                  <GoogleSymbol name="swap_vert" className="ml-2" weight={100} />
+                  <GoogleSymbol name="swap_vert" className="ml-2" />
                 </Button>
               </TableHead>
               <TableHead>Assigned To</TableHead>
@@ -72,9 +86,9 @@ export function TaskList({ tasks, limit, onEdit, onDelete }: { tasks: Task[], li
           <TableBody>
             {tasksToRender.map((task) => (
               <TableRow key={task.taskId}>
-                <TableCell className="font-light text-muted-foreground">{task.title}</TableCell>
+                <TableCell className="text-muted-foreground">{task.title}</TableCell>
                 <TableCell>
-                  <div className="text-muted-foreground font-light">
+                  <div className="text-muted-foreground">
                     {task.assignedTo.map((user) => {
                       const nameParts = user.displayName.split(' ');
                       const formattedName = nameParts.length > 1 ? `${nameParts[0]} ${nameParts[1].charAt(0)}.` : nameParts[0];
@@ -88,12 +102,12 @@ export function TaskList({ tasks, limit, onEdit, onDelete }: { tasks: Task[], li
                 <TableCell>
                   <PriorityBadge priorityId={task.priority} />
                 </TableCell>
-                <TableCell className="text-muted-foreground font-light">{isToday(task.dueDate) ? 'Today' : format(task.dueDate, 'MMM dd, yyyy')}</TableCell>
+                <TableCell className="text-muted-foreground">{isToday(task.dueDate) ? 'Today' : formatDate(new Date(task.dueDate))}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button aria-haspopup="true" size="icon" variant="ghost">
-                        <GoogleSymbol name="more_horiz" weight={100} />
+                        <GoogleSymbol name="more_horiz" />
                         <span className="sr-only">Toggle menu</span>
                       </Button>
                     </DropdownMenuTrigger>
@@ -131,17 +145,19 @@ export function TaskList({ tasks, limit, onEdit, onDelete }: { tasks: Task[], li
                 if (!tasksInGroup || tasksInGroup.length === 0) return null;
                 
                 tasksInGroup = tasksInGroup.sort((a, b) => {
-                    const aIsToday = isToday(a.dueDate);
-                    const bIsToday = isToday(b.dueDate);
+                    const aDate = new Date(a.dueDate);
+                    const bDate = new Date(b.dueDate);
+                    const aIsToday = isToday(aDate);
+                    const bIsToday = isToday(bDate);
                     if (aIsToday && !bIsToday) return -1;
                     if (!aIsToday && bIsToday) return 1;
             
-                    return a.dueDate.getTime() - b.dueDate.getTime();
+                    return aDate.getTime() - bDate.getTime();
                 });
 
                 return (
                     <div key={status}>
-                        <h3 className="text-xl font-light mb-4 flex items-center gap-2 text-muted-foreground">
+                        <h3 className="text-xl mb-4 flex items-center gap-2 text-muted-foreground">
                            <span>{statusLabels[status]}</span>
                            <UiBadge variant="secondary">{tasksInGroup.length}</UiBadge>
                         </h3>
@@ -155,8 +171,10 @@ export function TaskList({ tasks, limit, onEdit, onDelete }: { tasks: Task[], li
   
   if(limit) {
     const sortedTasks = [...tasks].sort((a, b) => {
-        const aIsToday = isToday(a.dueDate);
-        const bIsToday = isToday(b.dueDate);
+        const aDate = new Date(a.dueDate);
+        const bDate = new Date(b.dueDate);
+        const aIsToday = isToday(aDate);
+        const bIsToday = isToday(bDate);
 
         if (aIsToday && !bIsToday) return -1;
         if (!aIsToday && bIsToday) return 1;
@@ -168,7 +186,7 @@ export function TaskList({ tasks, limit, onEdit, onDelete }: { tasks: Task[], li
             return statusAIndex - statusBIndex;
         }
 
-        return a.dueDate.getTime() - b.dueDate.getTime();
+        return aDate.getTime() - bDate.getTime();
     });
     return renderTable(sortedTasks.slice(0, limit));
   }

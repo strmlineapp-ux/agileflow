@@ -1,27 +1,16 @@
+
+
 'use client';
 
-// Add this import statement to your user-context.tsx file
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
-import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeOwner, type Task, type Holiday } from '@/types';
-import { doc, getDoc, getFirestore, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, writeBatch, query, where } from 'firebase/firestore';
+import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeOwner, type Task, type Holiday, type Project } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { hexToHsl } from '@/lib/utils';
-import { hasAccess, getOwnershipContext } from '@/lib/permissions';
-import { googleSymbolNames } from '@/lib/google-symbols';
-import { corePages, coreTabs } from '@/lib/core-data';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import { getFirebaseAppForTenant, auth } from '@/lib/firebase';
-import { signInWithPopup, signOut, onAuthStateChanged, type User as FirebaseUser, GoogleAuthProvider, getAuth } from 'firebase/auth';
-import { mockEvents, mockTasks, mockNotifications as initialMockNotifications } from '@/lib/mock-data';
-
-// Helper to simulate async operations
-const simulateApi = (delay = 50) => new Promise(res => setTimeout(res, delay));
-
-const predefinedColors = [
-    '#EF4444', '#F97316', '#FBBF24', '#84CC16', '#22C55E', '#10B981',
-    '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6',
-    '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
-];
+import { useAuth } from '@/hooks/useAuth';
+import { useData } from '@/hooks/useData';
+import { useTheme } from 'next-themes';
+import { hexToHsl } from '@/lib/utils';
+import { arrayMove } from '@dnd-kit/sortable';
 
 // --- Context Definition ---
 interface UserContextType {
@@ -32,12 +21,13 @@ interface UserContextType {
   googleLogin: () => Promise<boolean>;
   logout: () => Promise<void>;
   loading: boolean;
+  isFirebaseReady: boolean;
 
   // Data & Actions
-  isDragModifierPressed: boolean;
   holidays: Holiday[];
   users: User[];
   teams: Team[];
+  projects: Project[];
   appSettings: AppSettings;
   calendars: SharedCalendar[];
   locations: BookableLocation[];
@@ -49,22 +39,33 @@ interface UserContextType {
   handleApproveAccessRequest: (notificationId: string, approved: boolean) => Promise<void>;
 
   // CRUD functions
+  seedDatabase: () => Promise<void>;
   updateUser: (userId: string, userData: Partial<User>) => Promise<void>;
   addUser: (newUser: User) => Promise<void>;
   deleteUser: (userId: string) => Promise<void>;
+  reorderUsers: (reorderedUsers: User[]) => Promise<void>;
   addTeam: (teamData: Omit<Team, 'id'>) => Promise<void>;
   updateTeam: (teamId: string, teamData: Partial<Team>) => Promise<void>;
   deleteTeam: (teamId: string, router: AppRouterInstance, pathname: string) => Promise<void>;
   reorderTeams: (teams: Team[]) => Promise<void>;
+  addProject: (projectData: Partial<Project>) => Promise<void>;
+  updateProject: (projectId: string, projectData: Partial<Project>) => Promise<void>;
+  deleteProject: (projectId: string) => Promise<void>;
   addCalendar: (newCalendar: Omit<SharedCalendar, 'id'>) => Promise<void>;
   updateCalendar: (calendarId: string, calendarData: Partial<SharedCalendar>) => Promise<void>;
   deleteCalendar: (calendarId: string) => Promise<void>;
+  reorderCalendars: (calendars: SharedCalendar[]) => Promise<void>;
 
   fetchEvents: (start: Date, end: Date) => Promise<Event[]>;
   addEvent: (currentEvents: Event[], newEventData: Omit<Event, 'eventId'>) => Promise<Event[]>;
   updateEvent: (currentEvents: Event[], eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => Promise<Event[]>;
   deleteEvent: (currentEvents: Event[], eventId: string) => Promise<Event[]>;
 
+  fetchProjectEvents: (projectId: string, start: Date, end: Date) => Promise<Event[]>;
+  addProjectEvent: (projectId: string, currentEvents: Event[], newEventData: Omit<Event, 'eventId'>) => Promise<Event[]>;
+  updateProjectEvent: (projectId: string, currentEvents: Event[], eventId: string, eventData: Partial<Event>) => Promise<Event[]>;
+  deleteProjectEvent: (projectId: string, currentEvents: Event[], eventId: string) => Promise<Event[]>;
+  
   fetchTasks: () => Promise<Task[]>;
   addTask: (currentTasks: Task[], newTaskData: Omit<Task, 'taskId' | 'createdAt' | 'lastUpdated'>) => Promise<Task[]>;
   updateTask: (currentTasks: Task[], taskId: string, taskData: Partial<Task>) => Promise<Task[]>;
@@ -75,13 +76,16 @@ interface UserContextType {
 
   updateAppSettings: (settings: Partial<AppSettings>) => Promise<void>;
   updateAppTab: (tabId: string, tabData: Partial<AppTab>) => Promise<void>;
+  reorderTabs: (reorderedTabs: AppTab[]) => Promise<void>;
 
   // Badge and Collection Management
   allBadges: Badge[];
   allBadgeCollections: BadgeCollection[];
+  setAllBadgeCollections: React.Dispatch<React.SetStateAction<BadgeCollection[]>>;
   addBadgeCollection: (owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => void;
   updateBadgeCollection: (collectionId: string, data: Partial<BadgeCollection>) => void;
   deleteBadgeCollection: (collectionId: string) => void;
+  reorderBadgeCollections: (collections: BadgeCollection[]) => void;
   addBadge: (collectionId: string, sourceBadge?: Badge) => void;
   updateBadge: (badgeId: string, badgeData: Partial<Badge>) => Promise<void>;
   deleteBadge: (badgeId: string, collectionId: string) => void;
@@ -91,7 +95,6 @@ interface UserContextType {
 
   // Utilities
   linkGoogleCalendar: (userId: string) => Promise<void>;
-  getPriorityDisplay: (badgeId: string) => { label: React.ReactNode, description?: string, color: string, icon?: string } | undefined;
   searchSharedTeams: (searchTerm: string) => Promise<Team[]>;
   predefinedColors: string[];
 }
@@ -99,683 +102,65 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | null>(null);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  const [loading, setLoading] = useState(true);
-  const [realUser, setRealUser] = useState<User | null>(null);
+  const { realUser, loading: authLoading, isFirebaseReady, googleLogin, logout } = useAuth();
+  const dataHook = useData(realUser, authLoading);
+  
   const [viewAsUserId, setViewAsUserId] = useState<string | null>(null);
-  const [isDragModifierPressed, setIsDragModifierPressed] = useState(false);
+  const { setTheme, theme: currentTheme } = useTheme();
 
-  const [users, setUsers] = useState<User[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [notifications, setNotifications] = useState<Notification[]>(initialMockNotifications);
-  const [userStatusAssignments, setUserStatusAssignments] = useState<Record<string, UserStatusAssignment[]>>({});
-  const [calendars, setCalendars] = useState<SharedCalendar[]>([]);
-  const [locations, setLocations] = useState<BookableLocation[]>([]);
-  const [holidays, setHolidays] = useState<Holiday[]>([]);
-  const [appSettings, setAppSettings] = useState<AppSettings>({ pages: [], tabs: [] });
-  const [allBadges, setAllBadges] = useState<Badge[]>([]);
-  const [allBadgeCollections, setAllBadgeCollections] = useState<BadgeCollection[]>([]);
-
-  const { toast } = useToast();
-
-  const loadUserAndData = useCallback(async (userId: string) => {
-    const db = getFirebaseAppForTenant('default');
-    const firestore = getFirestore(db);
-    
-    // Fetch all users first to populate the context
-    const usersSnapshot = await getDocs(collection(firestore, 'users'));
-    const allUsers = usersSnapshot.docs.map(doc => ({ ...doc.data(), userId: doc.id } as User));
-    setUsers(allUsers);
-    
-    const userDoc = await getDoc(doc(firestore, "users", userId));
-
-    if (!userDoc.exists()) {
-        console.error(`No user profile found in Firestore for userId: ${userId}`);
-        return false;
-    }
-    const user = userDoc.data() as User;
-    
-    setRealUser(user);
-    if (!viewAsUserId) {
-        setViewAsUserId(userId);
-    }
-    
-    // Fetch all other data from firestore
-    const [teamsSnap, calendarsSnap, locationsSnap, badgesSnap, collectionsSnap, appSettingsSnap] = await Promise.all([
-      getDocs(collection(firestore, 'teams')),
-      getDocs(collection(firestore, 'calendars')),
-      getDocs(collection(firestore, 'locations')),
-      getDocs(collection(firestore, 'badges')),
-      getDocs(collection(firestore, 'badgeCollections')),
-      getDoc(doc(firestore, 'app-settings', 'global')),
-    ]);
-
-    setTeams(teamsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Team)));
-    setCalendars(calendarsSnap.docs.map(d => ({ id: d.id, ...d.data() } as SharedCalendar)));
-    setLocations(locationsSnap.docs.map(d => ({ id: d.id, ...d.data() } as BookableLocation)));
-    setAllBadges(badgesSnap.docs.map(d => ({ id: d.id, ...d.data() } as Badge)));
-    setAllBadgeCollections(collectionsSnap.docs.map(d => ({ id: d.id, ...d.data() } as BadgeCollection)));
-    
-    if (appSettingsSnap.exists()) {
-        const settingsData = appSettingsSnap.data() as AppSettings;
-        const corePageIds = new Set(corePages.map(p => p.id));
-        const dynamicPages = settingsData.pages.filter(p => !corePageIds.has(p.id));
-        const finalPages = [...corePages];
-        const tasksIndex = corePages.findIndex(p => p.id === 'page-tasks');
-
-        if (tasksIndex !== -1) {
-            finalPages.splice(tasksIndex + 1, 0, ...dynamicPages);
-        } else {
-            finalPages.push(...dynamicPages);
-        }
-
-        setAppSettings({
-            ...settingsData,
-            pages: finalPages,
-            tabs: [...coreTabs, ...settingsData.tabs],
-        });
-    }
-
-    return true;
-}, [viewAsUserId]);
+  const loading = authLoading || dataHook.loading;
 
   useEffect(() => {
-    const app = getFirebaseAppForTenant('default');
-    const auth = getAuth(app);
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-        if (firebaseUser) {
-            await loadUserAndData(firebaseUser.uid);
-        } else {
-            setRealUser(null);
-            setViewAsUserId(null);
-        }
-        setLoading(false);
-    });
-    return () => unsubscribe();
-  }, [loadUserAndData]);
-
-  const viewAsUser = useMemo(() => users.find(u => u.userId === viewAsUserId) || realUser, [users, viewAsUserId, realUser]);
-
-  useEffect(() => {
-    if (!viewAsUser) return;
-    const modifier = viewAsUser.dragActivationKey || 'shift';
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-        if (!e.key) return;
-        if (e.key.toLowerCase() === modifier) {
-            setIsDragModifierPressed(true);
-        }
-    };
-
-    const handleKeyUp = (e: KeyboardEvent) => {
-        if (!e.key) return;
-        if (e.key.toLowerCase() === modifier) {
-            setIsDragModifierPressed(false);
-        }
-    };
-
-    const handleWindowBlur = () => {
-        setIsDragModifierPressed(false);
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-    window.addEventListener('blur', handleWindowBlur);
-
-    return () => {
-        window.removeEventListener('keydown', handleKeyDown);
-        window.removeEventListener('keyup', handleKeyUp);
-        window.removeEventListener('blur', handleWindowBlur);
-    };
-  }, [viewAsUser]);
-
-  const googleLogin = useCallback(async (): Promise<boolean> => {
-    const app = getFirebaseAppForTenant('default');
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
-    try {
-        const result = await signInWithPopup(auth, provider);
-        const gUser = result.user;
-
-        const db = getFirebaseAppForTenant('default');
-        const firestore = getFirestore(db);
-        const userRef = doc(firestore, 'users', gUser.uid);
-        const userDoc = await getDoc(userRef);
-        
-        if (!userDoc.exists()) {
-            const newUser: User = {
-                userId: gUser.uid,
-                displayName: gUser.displayName || 'New User',
-                email: gUser.email!,
-                avatarUrl: gUser.photoURL || `https://placehold.co/40x40.png`,
-                isAdmin: false,
-                accountType: 'Viewer', // Start as Viewer pending approval
-                memberOfTeamIds: [],
-                roles: [],
-                googleCalendarLinked: true,
-                theme: 'light',
-                dragActivationKey: 'shift',
-            };
-            await setDoc(userRef, newUser);
-            setUsers(current => [...current, newUser]);
-            // Notify admins about the new request
-            setNotifications(prev => [{
-                id: `access-${Date.now()}`,
-                type: 'access_request',
-                status: 'pending',
-                user: { displayName: newUser.displayName, avatarUrl: newUser.avatarUrl, userId: newUser.userId },
-                content: 'has requested access to the workspace.',
-                time: new Date(),
-                read: false,
-                data: { email: newUser.email, displayName: newUser.displayName }
-            }, ...prev]);
-            toast({ title: "Request Sent", description: "Your access request has been sent to an administrator for approval." });
-
-        } else {
-             const userData = userDoc.data() as User;
-             if (userData.accountType === 'Viewer') {
-                 toast({ title: "Pending Approval", description: "Your account is still awaiting administrator approval." });
-             } else {
-                toast({ title: "Welcome back!" });
-             }
-        }
-        
-        return true;
-    } catch (error: any) {
-        console.error("Google Sign-In failed:", error);
-        toast({ variant: 'destructive', title: 'Login Failed', description: error.message });
-        return false;
+    if (realUser && !viewAsUserId) {
+      setViewAsUserId(realUser.userId);
     }
-  }, [toast]);
-  
-  const handleApproveAccessRequest = async (notificationId: string, approved: boolean) => {
-    const notification = notifications.find(n => n.id === notificationId);
-    if (!notification || !notification.data) return;
+  }, [realUser, viewAsUserId]);
 
-    const userToUpdate = users.find(u => u.email === notification.data!.email);
-    if (!userToUpdate) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Could not find user to update.' });
-        return;
-    }
+  const viewAsUser = useMemo(() => {
+    if (!viewAsUserId) return realUser;
+    return dataHook.users.find(u => u.userId === viewAsUserId) || realUser;
+  }, [dataHook.users, viewAsUserId, realUser]);
 
-    if (approved) {
-        await updateUser(userToUpdate.userId, { accountType: 'Full' });
-        toast({ title: 'User Approved', description: `${userToUpdate.displayName} has been granted access.` });
-    } else {
-        await deleteUser(userToUpdate.userId);
-        toast({ title: 'User Rejected', description: `${userToUpdate.displayName}'s access request has been rejected.` });
-    }
-
-    setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, status: approved ? 'approved' : 'rejected' } : n));
-  };
-  
-  const logout = useCallback(async () => {
-      const app = getFirebaseAppForTenant('default');
-      const auth = getAuth(app);
-      await signOut(auth);
-      setRealUser(null);
-      setViewAsUserId(null);
-  }, []);
-
-  const allBookableLocations = useMemo(() => {
-    const globalLocations = locations.map(l => ({ id: l.id, name: l.name }));
-    const workstationLocations = teams.flatMap(team =>
-        (team.workstations || []).map(wsName => ({
-            id: `${team.id}-${wsName.toLowerCase().replace(/\s+/g, '-')}`,
-            name: wsName,
-        }))
-    );
-    const combined = [...globalLocations, ...workstationLocations];
-    const uniqueNames = new Map();
-    combined.forEach(loc => {
-        if (!uniqueNames.has(loc.name)) {
-            uniqueNames.set(loc.name, loc);
-        }
-    });
-    return Array.from(uniqueNames.values()).sort((a,b) => a.name.localeCompare(b.name));
-  }, [locations, teams]);
-
-  const updateUser = useCallback(async (userId: string, userData: Partial<User>) => {
-    const db = getFirebaseAppForTenant('default');
-    const firestore = getFirestore(db);
-    const userRef = doc(firestore, 'users', userId);
-    await updateDoc(userRef, userData);
-    setUsers(currentUsers =>
-      currentUsers.map(u => (u.userId === userId ? { ...u, ...userData } : u))
-    );
-  }, []);
-
-  const addUser = useCallback(async (newUser: User) => {
-    const db = getFirebaseAppForTenant('default');
-    const firestore = getFirestore(db);
-    await setDoc(doc(firestore, 'users', newUser.userId), newUser);
-    setUsers(currentUsers => [...currentUsers, newUser]);
-  }, []);
-
-  const deleteUser = useCallback(async (userId: string) => {
-    const db = getFirebaseAppForTenant('default');
-    const firestore = getFirestore(db);
-    await deleteDoc(doc(firestore, 'users', userId));
-    setUsers(currentUsers => currentUsers.filter(u => u.userId !== userId));
-  }, []);
-
-  const addTeam = useCallback(async (teamData: Omit<Team, 'id'>) => {
-    const db = getFirebaseAppForTenant('default');
-    const firestore = getFirestore(db);
-    const docRef = await addDoc(collection(firestore, 'teams'), teamData);
-    const newTeam = { ...teamData, id: docRef.id };
-    setTeams(current => [...current, newTeam]);
-    toast({ title: 'Success', description: `Team "${newTeam.name}" has been created.` });
-  }, [toast]);
-
-  const updateTeam = useCallback(async (teamId: string, teamData: Partial<Team>) => {
-    const db = getFirebaseAppForTenant('default');
-    const firestore = getFirestore(db);
-    const teamRef = doc(firestore, 'teams', teamId);
-    await updateDoc(teamRef, teamData);
-    setTeams(current => current.map(t => t.id === teamId ? { ...t, ...teamData } : t));
-  }, []);
-
-  const deleteTeam = useCallback(async (teamId: string, router: AppRouterInstance, pathname: string) => {
-    if (!viewAsUser) return;
-    const db = getFirebaseAppForTenant('default');
-    const firestore = getFirestore(db);
-    await deleteDoc(doc(firestore, 'teams', teamId));
-
-    const team = teams.find(t => t.id === teamId);
-    const page = appSettings.pages.find(p => pathname.startsWith(p.path));
-
-    setTeams(current => current.filter(t => t.id !== teamId));
-
-    if (page && team) {
-      const userHadAccess = hasAccess(viewAsUser, page);
-      const originalMemberOf = viewAsUser.memberOfTeamIds;
-      viewAsUser.memberOfTeamIds = originalMemberOf?.filter(id => id !== teamId);
-
-      const userWillLoseAccess = userHadAccess && !hasAccess(viewAsUser, page);
-      viewAsUser.memberOfTeamIds = originalMemberOf;
-
-      if (userWillLoseAccess) {
-        router.push('/dashboard/notifications');
-      }
-    }
-
-    toast({ title: 'Success', description: `Team "${team?.name}" has been deleted.` });
-  }, [appSettings, viewAsUser, toast, teams]);
-
-  const reorderTeams = useCallback(async (reorderedTeams: Team[]) => {
-      // In a real app, you might save the order to a user preference document.
-      await simulateApi();
-      setTeams([...reorderedTeams]);
-  }, []);
-
-  const addCalendar = useCallback(async (newCalendarData: Omit<SharedCalendar, 'id'>) => {
-    const db = getFirebaseAppForTenant('default');
-    const firestore = getFirestore(db);
-    const docRef = await addDoc(collection(firestore, 'calendars'), newCalendarData);
-    const newCalendar = { ...newCalendarData, id: docRef.id };
-    setCalendars(current => [...current, newCalendar]);
-  }, []);
-
-  const updateCalendar = useCallback(async (calendarId: string, calendarData: Partial<SharedCalendar>) => {
-    const db = getFirebaseAppForTenant('default');
-    const firestore = getFirestore(db);
-    await updateDoc(doc(firestore, 'calendars', calendarId), calendarData);
-    setCalendars(current => current.map(c => (c.id === calendarId ? { ...c, ...calendarData } : c)));
-  }, []);
-
-  const deleteCalendar = useCallback(async (calendarId: string) => {
-    if (calendars.length <= 1) {
-      toast({ variant: 'destructive', title: 'Cannot Delete Calendar', description: 'You cannot delete the last remaining calendar.' });
-      return;
-    }
-    const db = getFirebaseAppForTenant('default');
-    const firestore = getFirestore(db);
-    await deleteDoc(doc(firestore, 'calendars', calendarId));
-    setCalendars(current => current.filter(c => c.id !== calendarId));
-  }, [calendars.length, toast]);
-
-  const fetchEvents = useCallback(async (start: Date, end: Date): Promise<Event[]> => {
-    await simulateApi();
-    const filteredEvents = mockEvents.filter(event => {
-        const eventTime = event.startTime.getTime();
-        return eventTime >= start.getTime() && eventTime < end.getTime();
-    });
-    return filteredEvents;
-  }, []);
-
-  const addEvent = useCallback(async (currentEvents: Event[], newEventData: Omit<Event, 'eventId'>) => {
-    const event: Event = { ...newEventData, eventId: crypto.randomUUID() };
-    await simulateApi();
-    return [...currentEvents, event];
-  }, []);
-
-  const updateEvent = useCallback(async (currentEvents: Event[], eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => {
-      await simulateApi();
-      const updatedEvent = { ...currentEvents.find(e => e.eventId === eventId)!, ...eventData, lastUpdated: new Date() } as Event;
-      return currentEvents.map(e => e.eventId === eventId ? updatedEvent : e);
-  }, []);
-
-  const deleteEvent = useCallback(async (currentEvents: Event[], eventId: string) => {
-    await simulateApi();
-    return currentEvents.filter(e => e.eventId !== eventId);
-  }, []);
-
-  const fetchTasks = useCallback(async (): Promise<Task[]> => {
-    await simulateApi();
-    return mockTasks;
-  }, []);
-
-  const addTask = useCallback(async (currentTasks: Task[], newTaskData: Omit<Task, 'taskId' | 'createdAt' | 'lastUpdated'>): Promise<Task[]> => {
-    await simulateApi();
-    if (!realUser) throw new Error("User not found");
-    const newTask: Task = {
-      ...newTaskData,
-      taskId: crypto.randomUUID(),
-      createdAt: new Date(),
-      lastUpdated: new Date(),
-      createdBy: realUser.userId,
-    };
-    return [newTask, ...currentTasks];
-  }, [realUser]);
-
-  const updateTask = useCallback(async (currentTasks: Task[], taskId: string, taskData: Partial<Task>): Promise<Task[]> => {
-    await simulateApi();
-    return currentTasks.map(task =>
-      task.taskId === taskId ? { ...task, ...taskData, lastUpdated: new Date() } : task
-    );
-  }, []);
-
-  const deleteTask = useCallback(async (currentTasks: Task[], taskId: string): Promise<Task[]> => {
-    await simulateApi();
-    return currentTasks.filter(task => task.taskId !== taskId);
-  }, []);
-
-  const addLocation = useCallback(async (locationName: string) => {
-      const newLocation: BookableLocation = { id: crypto.randomUUID(), name: locationName };
-      await simulateApi();
-      setLocations(current => [...current, newLocation]);
-  }, []);
-
-  const deleteLocation = useCallback(async (locationId: string) => {
-      await simulateApi();
-      setLocations(current => current.filter(loc => loc.id !== locationId));
-  }, []);
-
-  const getPriorityDisplay = useCallback((badgeId: string): { label: React.ReactNode, description?: string, color: string, icon?: string } | undefined => {
-    if (!badgeId) return undefined;
-    const badge = allBadges.find(b => b.id === badgeId);
-    if (badge) return { label: badge.name, description: badge.description, color: badge.color, icon: badge.icon };
-    return undefined;
-  }, [allBadges]);
-
-  const updateAppSettings = useCallback(async (settings: Partial<AppSettings>) => {
-    const db = getFirebaseAppForTenant('default');
-    const firestore = getFirestore(db);
-    const settingsRef = doc(firestore, 'app-settings', 'global');
-    await updateDoc(settingsRef, settings);
-    setAppSettings(current => ({ ...current, ...settings }));
-  }, []);
-
-  const updateAppTab = useCallback(async (tabId: string, tabData: Partial<AppTab>) => {
-     const newTabs = appSettings.tabs.map(t => t.id === tabId ? { ...t, ...tabData } : t);
-     await updateAppSettings({ tabs: newTabs });
-  }, [appSettings.tabs, updateAppSettings]);
-
-  const addBadgeCollection = useCallback(async (owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => {
-    const db = getFirebaseAppForTenant('default');
-    const firestore = getFirestore(db);
-    const batch = writeBatch(firestore);
-
-    const newCollectionId = crypto.randomUUID();
-    let newBadges: Badge[] = [];
-    let newCollection: BadgeCollection;
-    const ownerContext: BadgeOwner = { type: 'user', id: owner.userId };
-
-    if (sourceCollection) {
-        newBadges = sourceCollection.badgeIds.map(bId => {
-            const originalBadge = allBadges.find(b => b.id === bId);
-            if (!originalBadge) return null;
-            const newBadgeId = crypto.randomUUID();
-            const newBadge = { ...originalBadge, id: newBadgeId, owner: ownerContext, ownerCollectionId: newCollectionId, name: `${originalBadge.name} (Copy)` };
-            batch.set(doc(firestore, 'badges', newBadgeId), newBadge);
-            return newBadge;
-        }).filter((b): b is Badge => b !== null);
-
-        newCollection = {
-            ...JSON.parse(JSON.stringify(sourceCollection)),
-            id: newCollectionId,
-            name: `${sourceCollection.name} (Copy)`,
-            owner: ownerContext,
-            isShared: false,
-            description: sourceCollection.description || '',
-            badgeIds: newBadges.map(b => b.id)
-        };
-    } else {
-        const newBadgeId = crypto.randomUUID();
-        const newBadge: Badge = {
-            id: newBadgeId,
-            owner: ownerContext,
-            ownerCollectionId: newCollectionId,
-            name: `New Badge`,
-            icon: googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
-            color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)]
-        };
-        newBadges.push(newBadge);
-        batch.set(doc(firestore, 'badges', newBadgeId), newBadge);
-        newCollection = {
-            id: newCollectionId,
-            name: `New Collection`,
-            owner: ownerContext,
-            icon: 'category',
-            color: '#64748B',
-            viewMode: 'compact',
-            badgeIds: [newBadgeId],
-            applications: [],
-            description: '',
-            isShared: false
-        };
-    }
-    batch.set(doc(firestore, 'badgeCollections', newCollectionId), newCollection);
-    await batch.commit();
-
-    setAllBadgeCollections(prev => [...prev, newCollection]);
-    if (newBadges.length > 0) {
-        setAllBadges(prev => [...prev, ...newBadges]);
-    }
-    toast({ title: 'Collection Added', description: `"${newCollection.name}" has been created.` });
-
-  }, [allBadges, toast]);
-
-  const updateBadgeCollection = useCallback(async (collectionId: string, data: Partial<BadgeCollection>, teamId?: string) => {
-    const db = getFirebaseAppForTenant('default');
-    const firestore = getFirestore(db);
-    await updateDoc(doc(firestore, 'badgeCollections', collectionId), data);
-    setAllBadgeCollections(current => current.map(c => (c.id === collectionId ? { ...c, ...data } : c)));
-  }, []);
-
-  const deleteBadgeCollection = useCallback(async (collectionId: string) => {
-    const db = getFirebaseAppForTenant('default');
-    const firestore = getFirestore(db);
-    const batch = writeBatch(firestore);
-
-    const collectionToDelete = allBadgeCollections.find(c => c.id === collectionId);
-    if (!collectionToDelete) return;
-    
-    batch.delete(doc(firestore, 'badgeCollections', collectionId));
-
-    const badgeIdsToDelete = allBadges
-      .filter(b => b.ownerCollectionId === collectionId)
-      .map(b => b.id);
-      
-    badgeIdsToDelete.forEach(badgeId => {
-      batch.delete(doc(firestore, 'badges', badgeId));
-    });
-
-    await batch.commit();
-
-    setAllBadgeCollections(current => current.filter(c => c.id !== collectionId));
-    if (badgeIdsToDelete.length > 0) {
-      setAllBadges(current => current.filter(b => !badgeIdsToDelete.includes(b.id)));
-    }
-  }, [allBadgeCollections, allBadges]);
-
-  const addBadge = useCallback(async (collectionId: string, sourceBadge?: Badge) => {
-    const db = getFirebaseAppForTenant('default');
-    const firestore = getFirestore(db);
-    const collection = allBadgeCollections.find(c => c.id === collectionId);
-    if (!collection || !viewAsUser) return;
-
-    if (collection.owner.id !== viewAsUser.userId) {
-        toast({ variant: 'destructive', title: 'Permission Denied', description: "You can only add badges to collections you own."});
-        return;
-    }
-
-    const batch = writeBatch(firestore);
-    let newBadge: Badge;
-
-    if (sourceBadge) {
-        newBadge = {
-            id: crypto.randomUUID(),
-            owner: { type: 'user', id: viewAsUser.userId },
-            ownerCollectionId: collectionId,
-            name: `${sourceBadge.name} (Copy)`,
-            icon: sourceBadge.icon,
-            color: sourceBadge.color,
-            description: sourceBadge.description,
-        };
-    } else {
-        newBadge = {
-            id: crypto.randomUUID(),
-            owner: collection.owner,
-            ownerCollectionId: collectionId,
-            name: `New Badge`,
-            icon: googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
-            color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)]
-        };
-    }
-    
-    batch.set(doc(firestore, 'badges', newBadge.id), newBadge);
-    const newBadgeIds = [newBadge.id, ...collection.badgeIds];
-    batch.update(doc(firestore, 'badgeCollections', collectionId), { badgeIds: newBadgeIds });
-    
-    await batch.commit();
-
-    setAllBadges(prev => [...prev, newBadge]);
-    setAllBadgeCollections(prevCollections =>
-        prevCollections.map(c =>
-            c.id === collectionId ? { ...c, badgeIds: newBadgeIds } : c
-        )
-    );
-}, [allBadgeCollections, viewAsUser, toast]);
-
-  const updateBadge = useCallback(async (badgeId: string, badgeData: Partial<Badge>) => {
-    const db = getFirebaseAppForTenant('default');
-    const firestore = getFirestore(db);
-    await updateDoc(doc(firestore, 'badges', badgeId), badgeData);
-    setAllBadges(current => current.map(b => b.id === badgeId ? { ...b, ...badgeData } : b));
-  }, []);
-
-  const deleteBadge = useCallback(async (badgeId: string, collectionId: string) => {
-    if (!viewAsUser) return;
-    const db = getFirebaseAppForTenant('default');
-    const firestore = getFirestore(db);
-    const badge = allBadges.find(b => b.id === badgeId);
-    if (!badge) return;
-
-    if (badge.owner.id === viewAsUser.userId) {
-        await deleteDoc(doc(firestore, 'badges', badgeId));
-        const batch = writeBatch(firestore);
-        allBadgeCollections.forEach(c => {
-            if (c.badgeIds.includes(badgeId)) {
-                batch.update(doc(firestore, 'badgeCollections', c.id), {
-                    badgeIds: c.badgeIds.filter(id => id !== badgeId)
-                });
-            }
-        });
-        await batch.commit();
-
-        setAllBadges(current => current.filter(b => b.id !== badgeId));
-        setAllBadgeCollections(current => current.map(c => ({...c, badgeIds: c.badgeIds.filter(id => id !== badgeId)})));
-    } else {
-        const collectionRef = doc(firestore, 'badgeCollections', collectionId);
-        await updateDoc(collectionRef, {
-            badgeIds: allBadgeCollections.find(c => c.id === collectionId)!.badgeIds.filter(id => id !== badgeId)
-        });
-        setAllBadgeCollections(current => current.map(c => c.id === collectionId ? { ...c, badgeIds: c.badgeIds.filter(id => id !== badgeId) } : c));
-    }
-    toast({ title: 'Badge removed' });
-  }, [allBadges, viewAsUser, allBadgeCollections, toast]);
-
-  const reorderBadges = useCallback(async (collectionId: string, badgeIds: string[]) => {
-    const db = getFirebaseAppForTenant('default');
-    const firestore = getFirestore(db);
-    await updateDoc(doc(firestore, 'badgeCollections', collectionId), { badgeIds });
-    setAllBadgeCollections(current => current.map(c => c.id === collectionId ? { ...c, badgeIds } : c));
-  }, []);
-
-  const handleBadgeAssignment = useCallback(async (badge: Badge, memberId: string) => {
-    const member = users.find(u => u.userId === memberId);
-    if (!member) return;
-
-    const currentRoles = new Set(member.roles || []);
-    if (currentRoles.has(badge.id)) return; // Already has it
-
-    const updatedRoles = [...currentRoles, badge.id];
-    await updateUser(memberId, { roles: updatedRoles });
-    toast({ title: "Badge Assigned", description: `"${badge.name}" assigned to ${member.displayName}.` });
-  }, [users, updateUser, toast]);
-
-  const handleBadgeUnassignment = useCallback(async (badge: Badge, memberId: string) => {
-    const member = users.find(u => u.userId === memberId);
-    if (!member) return;
-
-    const updatedRoles = (member.roles || []).filter(roleId => roleId !== badge.id);
-    await updateUser(memberId, { roles: updatedRoles });
-    toast({ title: 'Badge Un-assigned', description: `"${badge.name}" removed from ${member.displayName}.`});
-  }, [users, updateUser, toast]);
-
-  const linkGoogleCalendar = useCallback(async (userId: string) => {
-    await simulateApi(1000);
-    await updateUser(userId, { googleCalendarLinked: true, accountType: 'Full' });
-    toast({ title: "Success!", description: "Your Google Calendar has been successfully connected." });
-  }, [updateUser, toast]);
-
-  const searchSharedTeams = useCallback(async (searchTerm: string): Promise<Team[]> => {
-    await simulateApi();
-    // In a real app, this would query a database. For now, filter local state.
-    return teams.filter(team => team.isShared && team.name.toLowerCase().includes(searchTerm.toLowerCase()));
-  }, [teams]);
-
-  useEffect(() => {
-    if (viewAsUser) {
-      const root = window.document.documentElement;
-      root.classList.remove('light', 'dark');
-      const currentTheme = viewAsUser.theme || 'light';
-      root.classList.add(currentTheme);
-      if (viewAsUser.primaryColor) {
-        const hslColor = hexToHsl(viewAsUser.primaryColor);
-        if (hslColor) {
-          root.style.setProperty('--primary', hslColor);
-          root.style.setProperty('--ring', hslColor);
-        }
+  const contextValue = useMemo(() => {
+    const setViewAsUserWithReset = (userId: string) => {
+      if (userId === realUser?.userId) {
+        setViewAsUserId(null); // Reset to real user
       } else {
-        root.style.removeProperty('--primary');
-        root.style.removeProperty('--ring');
+        setViewAsUserId(userId);
       }
-    }
-  }, [viewAsUser]);
+    };
 
-  const contextValue = useMemo(() => ({
-    realUser, viewAsUser, setViewAsUser: setViewAsUserId, googleLogin, logout, loading,
-    isDragModifierPressed, holidays, users, teams, appSettings, calendars, locations, allBookableLocations, notifications, setNotifications, userStatusAssignments, setUserStatusAssignments, handleApproveAccessRequest,
-    updateUser, addUser, deleteUser, addTeam, updateTeam, deleteTeam, reorderTeams, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, addLocation, deleteLocation,
-    updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors,
-    handleBadgeAssignment, handleBadgeUnassignment, linkGoogleCalendar, getPriorityDisplay, searchSharedTeams,
-  }), [
-    realUser, viewAsUser, googleLogin, logout, loading, isDragModifierPressed, holidays, users, teams, appSettings, calendars, locations, allBookableLocations, notifications, userStatusAssignments, handleApproveAccessRequest,
-    updateUser, addUser, deleteUser, addTeam, updateTeam, deleteTeam, reorderTeams, addCalendar, updateCalendar, deleteCalendar, fetchEvents, addEvent, updateEvent, deleteEvent, fetchTasks, addTask, updateTask, deleteTask, addLocation, deleteLocation,
-    updateAppSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges,
-    handleBadgeAssignment, handleBadgeUnassignment, linkGoogleCalendar, getPriorityDisplay, searchSharedTeams
+    const addTeamWithUser = (teamData: Omit<Team, 'id'>) => dataHook.addTeam(teamData, realUser!);
+    const deleteUserWithUser = (userId: string) => dataHook.deleteUser(userId, realUser!);
+    const addProjectWithUser = (projectData: Partial<Project>) => dataHook.addProject(projectData, realUser!);
+    const deleteTeamWithRouter = (teamId: string, router: AppRouterInstance, pathname: string) => dataHook.deleteTeam(teamId, router, pathname, realUser!);
+    const handleApproveAccessRequestWithUser = (notificationId: string, approved: boolean) => dataHook.handleApproveAccessRequest(notificationId, approved, realUser!);
+    const addBadgeWithUser = (collectionId: string, sourceBadge?: Badge) => dataHook.addBadge(collectionId, sourceBadge, realUser!);
+    const deleteBadgeWithUser = (badgeId: string, collectionId: string) => dataHook.deleteBadge(badgeId, collectionId, realUser!);
+    const addTaskWithUser = (currentTasks: Task[], newTaskData: Omit<Task, 'taskId' | 'createdAt' | 'lastUpdated'>) => dataHook.addTask(currentTasks, newTaskData, realUser!);
+    const addProjectEventWithUser = (projectId: string, currentEvents: Event[], newEventData: Omit<Event, 'eventId'>) => dataHook.addProjectEvent(projectId, currentEvents, newEventData, realUser!);
+
+    return {
+      realUser,
+      viewAsUser,
+      setViewAsUser: setViewAsUserWithReset,
+      googleLogin,
+      logout,
+      loading,
+      isFirebaseReady,
+      ...dataHook,
+      addTeam: addTeamWithUser,
+      deleteUser: deleteUserWithUser,
+      addProject: addProjectWithUser,
+      deleteTeam: deleteTeamWithRouter,
+      handleApproveAccessRequest: handleApproveAccessRequestWithUser,
+      addBadge: addBadgeWithUser,
+      deleteBadge: deleteBadgeWithUser,
+      addTask: addTaskWithUser,
+      addProjectEvent: addProjectEventWithUser,
+    };
+  }, [
+    realUser, viewAsUser, googleLogin, logout, loading, isFirebaseReady, dataHook
   ]);
 
   return (

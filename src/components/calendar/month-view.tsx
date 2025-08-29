@@ -2,27 +2,57 @@
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isToday, isSameMonth, isSaturday, isSunday, isSameDay } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn, getContrastColor } from '@/lib/utils';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { useUser } from '@/context/user-context';
 import { GoogleSymbol } from '../icons/google-symbol';
-import { type Event } from '@/types';
+import { type Event, type Badge as BadgeType } from '@/types';
 
 const isHoliday = (day: Date, holidays: Date[]) => {
-    return holidays.some(holiday => isSameDay(day, holiday));
+    return holidays.some(holiday => {
+        return day.getDate() === holiday.getDate() &&
+               day.getMonth() === holiday.getMonth() &&
+               day.getFullYear() === holiday.getFullYear();
+    });
 }
+
+function isToday(day: Date) {
+    const today = new Date();
+    return day.getDate() === today.getDate() &&
+           day.getMonth() === today.getMonth() &&
+           day.getFullYear() === today.getFullYear();
+}
+
+function getDaysInMonth(year: number, month: number) {
+    const date = new Date(year, month, 1);
+    const days = [];
+    while (date.getMonth() === month) {
+        days.push(new Date(date));
+        date.setDate(date.getDate() + 1);
+    }
+    return days;
+}
+
+function getFirstDayOfMonth(year: number, month: number): number {
+    return new Date(year, month, 1).getDay();
+}
+
 
 export const MonthView = React.memo(({ date, events, containerRef, onEventClick }: { date: Date; events: Event[], containerRef: React.RefObject<HTMLDivElement>; onEventClick: (event: Event) => void; }) => {
     const todayRef = useRef<HTMLDivElement>(null);
-    const { calendars, getPriorityDisplay, holidays } = useUser();
+    const { calendars, holidays, allBadges } = useUser();
 
-    const firstDayOfMonth = startOfMonth(date);
-    const lastDayOfMonth = endOfMonth(date);
-    const daysInMonth = eachDayOfInterval({ start: firstDayOfMonth, end: lastDayOfMonth });
-    
+    const getPriorityDisplay = useCallback((badgeId: string): { label: React.ReactNode, description?: string, color: string, icon?: string } | undefined => {
+      if (!badgeId) return undefined;
+      const badge = allBadges.find(b => b.id === badgeId);
+      if (badge) return { label: badge.name, description: badge.description, color: badge.color, icon: badge.icon };
+      return undefined;
+    }, [allBadges]);
+
+    const daysInMonth = getDaysInMonth(date.getFullYear(), date.getMonth());
+
     const calendarColorMap = useMemo(() => {
         const map: Record<string, { bg: string, text: string }> = {};
         calendars.forEach(cal => {
@@ -32,7 +62,7 @@ export const MonthView = React.memo(({ date, events, containerRef, onEventClick 
     }, [calendars]);
 
     useEffect(() => {
-        if (isSameMonth(date, new Date()) && todayRef.current && containerRef.current) {
+        if (date.getMonth() === new Date().getMonth() && date.getFullYear() === new Date().getFullYear() && todayRef.current && containerRef.current) {
             const container = containerRef.current;
             const todayElement = todayRef.current;
             
@@ -46,11 +76,12 @@ export const MonthView = React.memo(({ date, events, containerRef, onEventClick 
     }, [date, containerRef]);
 
     const getEventsForDay = useCallback((day: Date) => {
-        return events.filter(event => format(event.startTime, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'));
+        return events.filter(event => new Date(event.startTime).toDateString() === day.toDateString());
     }, [events]);
 
     const hasWeekendEvents = useMemo(() => daysInMonth.some(day => {
-        const isWeekend = isSaturday(day) || isSunday(day);
+        const dayOfWeek = day.getDay();
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
         return isWeekend && getEventsForDay(day).length > 0;
     }), [daysInMonth, getEventsForDay]);
 
@@ -64,11 +95,13 @@ export const MonthView = React.memo(({ date, events, containerRef, onEventClick 
     const displayedWeekdays = showWeekends ? weekdays : weekdays.slice(0, 5);
     const gridColsClass = showWeekends ? 'grid-cols-7' : 'grid-cols-5';
     
-    const startingDayIndex = (getDay(firstDayOfMonth) + 6) % 7; 
+    const firstDay = getFirstDayOfMonth(date.getFullYear(), date.getMonth());
+    const startingDayIndex = (firstDay === 0) ? 6 : firstDay - 1;
 
     const renderDayCell = useCallback((day: Date, key: React.Key, dayIndex: number) => {
         const dayEvents = getEventsForDay(day);
-        const isWeekend = isSaturday(day) || isSunday(day);
+        const dayOfWeek = day.getDay();
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
         const isDayHoliday = isHoliday(day, holidays);
         const isDayToday = isToday(day);
         const colIndex = (startingDayIndex + dayIndex) % 7;
@@ -82,15 +115,15 @@ export const MonthView = React.memo(({ date, events, containerRef, onEventClick 
                 "border-r border-b p-2 flex flex-col",
                 { "bg-muted/10": colIndex % 2 !== 0 },
                 { "bg-accent/10": isDayToday },
-                { "bg-muted/50": !isDayToday && (isWeekend || isDayHoliday) && isSameMonth(day, date) }
+                { "bg-muted/50": !isDayToday && (isWeekend || isDayHoliday) && day.getMonth() === date.getMonth() }
             )}>
                 <span className={cn(
-                    "font-light h-6 w-6 flex items-center justify-center rounded-full text-sm text-muted-foreground",
+                    "h-6 w-6 flex items-center justify-center rounded-full text-sm text-muted-foreground",
                     { "bg-primary text-primary-foreground": isDayToday },
-                    { "text-muted-foreground/50": !isSameMonth(day, date) },
+                    { "text-muted-foreground/50": day.getMonth() !== date.getMonth() },
                     { "text-muted-foreground/50": (isWeekend || isDayHoliday) }
                 )}>
-                    {format(day, 'd')}
+                    {day.getDate()}
                 </span>
                 <div className="mt-1 space-y-1 overflow-y-auto flex-1">
                     {dayEvents.map(event => {
@@ -140,7 +173,7 @@ export const MonthView = React.memo(({ date, events, containerRef, onEventClick 
             ...emptyCells,
             ...daysInMonth
                 .map((day, index) => ({ day, index }))
-                .filter(({ day }) => !isSaturday(day) && !isSunday(day))
+                .filter(({ day }) => day.getDay() !== 0 && day.getDay() !== 6)
                 .map(({ day, index }) => renderDayCell(day, `day-${index}`, index))
         ];
     }
@@ -149,7 +182,7 @@ export const MonthView = React.memo(({ date, events, containerRef, onEventClick 
         <Card className="flex flex-col h-full flex-1">
             <div className={cn("grid border-b border-t sticky top-0 bg-muted z-10", gridColsClass)}>
                 {displayedWeekdays.map((day, index) => (
-                    <div key={day} className={cn("text-center font-light p-2 text-sm border-r last:border-r-0 relative text-muted-foreground", 
+                    <div key={day} className={cn("text-center p-2 text-sm border-r last:border-r-0 relative text-muted-foreground", 
                         { "bg-muted": (day === 'Sat' || day === 'Sun') },
                         { "text-muted-foreground": !(day === 'Sat' || day === 'Sun') }
                     )}>

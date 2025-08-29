@@ -1,8 +1,24 @@
 
-import { redirect } from 'next/navigation';
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useUser } from '@/context/user-context';
+import { GoogleSymbol } from '@/components/icons/google-symbol';
 
 export default function DashboardRootPage() {
-  // Redirect to the default page, which is now overview.
-  // In a real app, this could be based on user preferences.
-  redirect('/dashboard/overview');
+  const { loading, realUser } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && realUser) {
+      router.push('/dashboard/overview');
+    }
+  }, [loading, realUser, router]);
+
+  return (
+    <div className="flex h-full w-full items-center justify-center">
+      <GoogleSymbol name="progress_activity" className="animate-spin text-4xl text-primary" />
+    </div>
+  );
 }

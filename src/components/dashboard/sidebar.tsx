@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -9,66 +10,31 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal, DropdownMenuLabel } from '../ui/dropdown-menu';
 import { useUser } from '@/context/user-context';
 import { GoogleSymbol } from '../icons/google-symbol';
-import { Badge } from '../ui/badge';
+import { ScrollArea } from '../ui/scroll-area';
 import { hasAccess } from '@/lib/permissions';
-import { Button } from '../ui/button';
+
 
 export function Sidebar() {
-  const { realUser, viewAsUser, users, loading, notifications, appSettings, linkGoogleCalendar, teams } = useUser();
+  const { realUser, viewAsUser, users, loading, notifications, linkGoogleCalendar, teams, setViewAsUser: setContextViewAsUser, appSettings } = useUser();
   
+  const setViewAsUser = (userId: string) => {
+    setContextViewAsUser(userId);
+  };
+
   const isViewingAsSomeoneElse = realUser?.userId !== viewAsUser?.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const orderedNavItems = useMemo(() => {
-    if (!viewAsUser) return [];
+  const { adminPage, notificationsPage, otherPages } = useMemo(() => {
+    if (!viewAsUser) return { adminPage: null, notificationsPage: null, otherPages: [] };
+    
+    const adminPage = appSettings.pages.find(p => p.id === 'page-admin-management');
+    const notificationsPage = appSettings.pages.find(p => p.id === 'page-notifications');
+    const otherPages = appSettings.pages
+      .filter(page => page.id !== 'page-admin-management' && page.id !== 'page-notifications' && page.id !== 'page-settings')
+      .filter(page => hasAccess(viewAsUser, page));
 
-    const globalPages = ['page-overview', 'page-calendar', 'page-tasks', 'page-notifications'];
-    const visiblePages = appSettings.pages.filter(page => {
-      // 1. Always include global pages for authenticated users
-      if (globalPages.includes(page.id)) {
-        return true;
-      }
-      // 2. Only show admin page if the user is an admin
-      if (page.id === 'page-admin-management') {
-          return viewAsUser.isAdmin;
-      }
-      // 3. For all other pages, use the existing hasAccess check
-      return hasAccess(viewAsUser, page);
-    });
-
-    return visiblePages.flatMap(page => {
-      if (!page.associatedTabs || page.associatedTabs.length === 0) {
-        return null;
-      }
-      
-      if (page.isDynamic) {
-        const relevantTeams = (viewAsUser.memberOfTeamIds || [])
-          .map(teamId => teams.find(t => t.id === teamId))
-          .filter((t): t is NonNullable<typeof t> => !!t)
-          .filter(team => {
-            const pageAccessTeams = page.access?.teams || [];
-            if (pageAccessTeams.length === 0) return true;
-            return pageAccessTeams.includes(team.id);
-        });
-
-        return relevantTeams.map(team => ({
-          id: `${page.id}-${team.id}`,
-          path: `${page.path}/${team.id}`,
-          icon: team.icon,
-          name: team.name,
-          tooltip: `${page.name}: ${team.name}`,
-        }));
-      }
-
-      return {
-        id: page.id,
-        path: page.path,
-        icon: page.icon,
-        name: page.name,
-        tooltip: page.name,
-      };
-    }).filter((item): item is NonNullable<typeof item> => !!item);
-  }, [appSettings.pages, viewAsUser, teams, hasAccess]);
+    return { adminPage, notificationsPage, otherPages };
+  }, [viewAsUser, appSettings.pages]);
   
   if (loading || !viewAsUser || !realUser) {
     return (
@@ -78,48 +44,95 @@ export function Sidebar() {
 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col border-r bg-card sm:flex">
-      <nav className="flex flex-col items-center gap-4 px-2 py-4">
-        <Link href="/dashboard/calendar" className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-thin text-primary-foreground md:h-8 md:w-8 md:text-base">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-accent">
-            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M2 17L12 22L22 17" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M2 12L12 17L22 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          <span className="sr-only">AgileFlow</span>
-        </Link>
-        <TooltipProvider>
-          {orderedNavItems.map((item) => {
-              if (!item) return null;
-              const isNotifications = item.id === 'page-notifications';
-              const pathname = usePathname();
-              const isActive = pathname.startsWith(item.path);
-
-              return (
-                <Tooltip key={item.id}>
-                  <TooltipTrigger asChild>
-                    <Link
-                      href={item.path}
-                      className={cn(
-                        'relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-primary md:h-8 md:w-8',
-                        isActive && 'text-primary'
-                      )}
-                    >
-                      <GoogleSymbol name={item.icon} className="text-4xl" weight={100} />
-                      {isNotifications && unreadCount > 0 && (
-                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary p-0 text-xs text-primary-foreground">
-                          {unreadCount}
-                        </span>
-                      )}
-                      <span className="sr-only">{item.name}</span>
-                    </Link>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">{item.tooltip}</TooltipContent>
+        <nav className="flex flex-col items-center gap-4 px-2 pt-4 pb-2">
+            <Link href="/dashboard/overview" className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg text-primary-foreground md:h-8 md:w-8 md:text-base">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-accent">
+                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span className="sr-only">AgileFlow</span>
+            </Link>
+            {adminPage && hasAccess(viewAsUser, adminPage) && (
+              <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={adminPage.path}
+                        className={cn(
+                          'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-primary md:h-8 md:w-8',
+                          usePathname().startsWith(adminPage.path) && 'text-primary'
+                        )}
+                      >
+                        <GoogleSymbol name={adminPage.icon} className="text-4xl" />
+                        <span className="sr-only">{adminPage.name}</span>
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">{adminPage.name}</TooltipContent>
                 </Tooltip>
-              );
-          })}
-        </TooltipProvider>
-      </nav>
+              </TooltipProvider>
+            )}
+        </nav>
+      <ScrollArea className="flex-1">
+        <nav className="flex flex-col items-center gap-4 px-2 pt-2 pb-4">
+          <TooltipProvider>
+            {otherPages.map((item) => {
+                if (!item) return null;
+                const isNotifications = item.id === 'page-notifications';
+                const pathname = usePathname();
+                const isActive = pathname.startsWith(item.path);
+
+                return (
+                  <Tooltip key={item.id}>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={item.path}
+                        className={cn(
+                          'relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-primary md:h-8 md:w-8',
+                          isActive && 'text-primary'
+                        )}
+                      >
+                        <GoogleSymbol name={item.icon} className="text-4xl" />
+                        {isNotifications && unreadCount > 0 && (
+                          <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary p-0 text-xs text-primary-foreground">
+                            {unreadCount}
+                          </span>
+                        )}
+                        <span className="sr-only">{item.name}</span>
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">{item.name}</TooltipContent>
+                  </Tooltip>
+                );
+            })}
+          </TooltipProvider>
+        </nav>
+      </ScrollArea>
       <nav className="mt-auto flex flex-col items-center gap-4 px-2 py-4">
+        {notificationsPage && hasAccess(viewAsUser, notificationsPage) && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link
+                    href={notificationsPage.path}
+                    className={cn(
+                      'relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-primary md:h-8 md:w-8',
+                      usePathname().startsWith(notificationsPage.path) && 'text-primary'
+                    )}
+                  >
+                    <GoogleSymbol name={notificationsPage.icon} className="text-4xl" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary p-0 text-xs text-primary-foreground">
+                        {unreadCount}
+                      </span>
+                    )}
+                    <span className="sr-only">{notificationsPage.name}</span>
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="right">{notificationsPage.name}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+        )}
          <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <button className="flex h-9 w-9 items-center justify-center rounded-full md:h-8 md:w-8 focus-visible:outline-none">
@@ -147,16 +160,16 @@ export function Sidebar() {
                           </div>
                         </TooltipTrigger>
                         <TooltipContent side="right">
-                          <p>Google Calendar: {viewAsUser.googleCalendarLinked ? 'Connected' : (realUser.userId === viewAsUser.userId ? 'Click to connect' : 'Not Connected')}</p>
+                            <p>Google Calendar: {viewAsUser.googleCalendarLinked ? 'Connected' : realUser.userId === viewAsUser.userId ? 'Click to connect' : 'Not Connected'}</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent side="right" align="end" className="w-64">
-                <DropdownMenuLabel className="font-thin">
+                <DropdownMenuLabel>
                     <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-thin leading-none">{viewAsUser.displayName}</p>
+                        <p className="text-sm leading-none">{viewAsUser.displayName}</p>
                         <p className="text-xs leading-none text-muted-foreground">{viewAsUser.email}</p>
                     </div>
                 </DropdownMenuLabel>
@@ -164,30 +177,30 @@ export function Sidebar() {
                 <DropdownMenuSeparator />
 
                  <DropdownMenuItem asChild>
-                    <Link href="/dashboard/settings" className="font-thin">
-                        <GoogleSymbol name="settings" className="mr-2 text-lg" weight={100} />
+                    <Link href="/dashboard/settings">
+                        <GoogleSymbol name="settings" className="mr-2 text-lg" />
                         <span>Account Settings</span>
                     </Link>
                 </DropdownMenuItem>
 
                 {realUser.isAdmin && (
                   <DropdownMenuSub>
-                    <DropdownMenuSubTrigger className="font-thin">
-                      <GoogleSymbol name="how_to_reg" className="mr-2 text-lg" weight={100} />
+                    <DropdownMenuSubTrigger>
+                      <GoogleSymbol name="how_to_reg" className="mr-2 text-lg" />
                       <span>View as</span>
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
                       <DropdownMenuSubContent>
                         {isViewingAsSomeoneElse && (
                           <>
-                            <DropdownMenuItem onSelect={() => setViewAsUser(realUser.userId)} className="font-thin">
+                            <DropdownMenuItem onSelect={() => setViewAsUser(realUser.userId)}>
                               Return to your view ({realUser.displayName})
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                           </>
                         )}
                         {users.filter(u => u.userId !== realUser.userId).map(user => (
-                          <DropdownMenuItem key={user.userId} onSelect={() => setViewAsUser(user.userId)} className="font-thin">
+                          <DropdownMenuItem key={user.userId} onSelect={() => setViewAsUser(user.userId)}>
                             {user.displayName}
                           </DropdownMenuItem>
                         ))}
@@ -198,8 +211,8 @@ export function Sidebar() {
                 
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                    <Link href="/login" className="font-thin">
-                        <GoogleSymbol name="logout" className="mr-2 text-lg" weight={100} />
+                    <Link href="/login">
+                        <GoogleSymbol name="logout" className="mr-2 text-lg" />
                         <span>Logout</span>
                     </Link>
                 </DropdownMenuItem>

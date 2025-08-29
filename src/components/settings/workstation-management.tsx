@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -11,50 +12,22 @@ import { useToast } from '@/hooks/use-toast';
 import { type Team, type AppTab } from '@/types';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { InlineEditor } from '../common/inline-editor';
 
 export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }) {
   if (!team) {
     return null;
   }
   
-  const { updateTeam, updateAppTab } = useUser();
+  const { updateTeam, updateAppTab, viewAsUser } = useUser();
   const { toast } = useToast();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [workstationToDelete, setWorkstationToDelete] = useState<string | null>(null);
   const [newWorkstationName, setNewWorkstationName] = useState('');
   
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const titleInputRef = useRef<HTMLInputElement>(null);
-  
-  const [editingWorkstation, setEditingWorkstation] = useState<string | null>(null);
-  const workstationInputRef = useRef<HTMLInputElement>(null);
-
+  const canManage = viewAsUser.isAdmin || team.teamAdmins?.includes(viewAsUser.userId);
   const teamWorkstations = team.workstations || [];
-  
-  useEffect(() => {
-    if (isEditingTitle) titleInputRef.current?.focus();
-  }, [isEditingTitle]);
-
-  useEffect(() => {
-    if (editingWorkstation && workstationInputRef.current) {
-        workstationInputRef.current.focus();
-        workstationInputRef.current.select();
-    }
-  }, [editingWorkstation]);
-  
-  const handleSaveTitle = () => {
-    const newName = titleInputRef.current?.value.trim();
-    if (newName && newName !== tab.name) {
-      updateAppTab(tab.id, { name: newName });
-    }
-    setIsEditingTitle(false);
-  };
-  
-  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') handleSaveTitle();
-    else if (e.key === 'Escape') setIsEditingTitle(false);
-  };
 
   const handleUpdateTeamWorkstations = (newWorkstations: string[]) => {
     updateTeam(team.id, { workstations: newWorkstations.sort() });
@@ -78,25 +51,16 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
     setNewWorkstationName('');
   };
 
-  const handleSaveEdit = () => {
-    if (!editingWorkstation || !workstationInputRef.current) return;
-    const newName = workstationInputRef.current.value.trim();
-    if (newName && newName !== editingWorkstation) {
+  const handleSaveEdit = (oldName: string, newName: string) => {
+    if (newName && newName !== oldName) {
       if (teamWorkstations.includes(newName)) {
         toast({ variant: 'destructive', title: 'Error', description: `Workstation "${newName}" already exists.` });
-        setEditingWorkstation(null);
         return;
       }
-      const updatedWorkstations = teamWorkstations.map(ws => ws === editingWorkstation ? newName : ws);
+      const updatedWorkstations = teamWorkstations.map(ws => ws === oldName ? newName : ws);
       handleUpdateTeamWorkstations(updatedWorkstations);
       toast({ title: "Workstation Updated" });
     }
-    setEditingWorkstation(null);
-  };
-
-  const handleEditKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') handleSaveEdit();
-    else if (e.key === 'Escape') setEditingWorkstation(null);
   };
 
   const handleDelete = () => {
@@ -110,26 +74,12 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
   return (
     <>
       <div className="flex items-center gap-2 mb-6">
-        {isEditingTitle ? (
-            <Input
-                ref={titleInputRef}
-                defaultValue={tab.name}
-                onBlur={handleSaveTitle}
-                onKeyDown={handleTitleKeyDown}
-                className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-            />
-        ) : (
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
-                    </TooltipTrigger>
-                    {tab.description && (
-                        <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>
-                    )}
-                </Tooltip>
-            </TooltipProvider>
-        )}
+        <InlineEditor
+            value={tab.name}
+            onSave={(newValue) => updateAppTab(tab.id, { name: newValue })}
+            className="h-auto p-0 font-headline text-2xl font-thin tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+            disabled={!canManage}
+        />
       </div>
       <Card>
         <CardHeader>
@@ -137,8 +87,8 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
             <div>
               <CardTitle className="flex items-center gap-2">
                   Workstation List
-                   <Button variant="ghost" size="icon" className="p-0" onClick={() => setIsAddDialogOpen(true)}>
-                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+                   <Button variant="circle" size="icon" onClick={() => setIsAddDialogOpen(true)} disabled={!canManage}>
+                    <GoogleSymbol name="add_circle" />
                     <span className="sr-only">Add New Workstation</span>
                   </Button>
               </CardTitle>
@@ -152,23 +102,16 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
           <div className="flex flex-wrap gap-2 min-h-[40px] p-2 border rounded-md bg-muted/50">
             {teamWorkstations.length > 0 ? teamWorkstations.map(ws => (
               <div key={ws} className="group relative flex items-center gap-2 rounded-full border-2 p-1 pl-2 bg-muted text-muted-foreground">
-                {editingWorkstation === ws ? (
-                    <Input
-                        ref={workstationInputRef}
-                        defaultValue={ws}
-                        onBlur={handleSaveEdit}
-                        onKeyDown={handleEditKeyDown}
-                        className="h-5 p-0 bg-transparent text-sm font-headline font-thin border-0 shadow-none focus-visible:ring-0"
-                    />
-                ) : (
-                    <span className="font-medium text-sm cursor-text" onClick={() => setEditingWorkstation(ws)}>
-                        {ws}
-                    </span>
-                )}
+                <InlineEditor
+                  value={ws}
+                  onSave={(newValue) => handleSaveEdit(ws, newValue)}
+                  className="font-medium text-sm"
+                  disabled={!canManage}
+                />
                  <button
                     type="button"
                     className="ml-1 h-5 w-5 hover:bg-destructive/20 rounded-full inline-flex items-center justify-center opacity-50 group-hover:opacity-100 transition-opacity"
-                    onClick={() => setWorkstationToDelete(ws)}
+                    onClick={() => canManage && setWorkstationToDelete(ws)}
                   >
                     <GoogleSymbol name="close" className="text-xs" />
                     <span className="sr-only">Delete {ws}</span>
@@ -185,12 +128,12 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
         <DialogContent className="max-w-md">
            <div className="absolute top-4 right-4">
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSaveNew}>
-                <GoogleSymbol name="check" className="text-xl" weight={100} opticalSize={20} />
+                <GoogleSymbol name="check" />
                 <span className="sr-only">Save New Workstation</span>
               </Button>
           </div>
           <DialogHeader>
-            <DialogTitle>Add New Workstation</DialogTitle>
+            <DialogTitle className="text-muted-foreground">Add New Workstation</DialogTitle>
             <DialogDescription>Enter the name for the new workstation or machine.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 pt-4">
@@ -210,12 +153,12 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
         <DialogContent className="max-w-md" onPointerDownCapture={(e) => e.stopPropagation()}>
             <div className="absolute top-4 right-4">
                 <Button variant="ghost" size="icon" className="hover:text-destructive p-0 hover:bg-transparent" onClick={handleDelete}>
-                    <GoogleSymbol name="delete" className="text-4xl" weight={100} />
+                    <GoogleSymbol name="delete" />
                     <span className="sr-only">Delete Workstation</span>
                 </Button>
             </div>
             <DialogHeader>
-                <DialogTitle>Delete Workstation?</DialogTitle>
+                <DialogTitle className="text-muted-foreground">Delete Workstation?</DialogTitle>
                 <DialogDescription>
                     This will permanently delete the workstation "{workstationToDelete}". This action cannot be undone.
                 </DialogDescription>
