@@ -125,15 +125,16 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
   const preApprovedEmails = useMemo(() => appSettings.preApprovedEmails || [], [appSettings]);
 
   const handleAddPreApprovedEmail = () => {
-    if (newUserEmail.trim() && !preApprovedEmails.includes(newUserEmail.trim())) {
-      const updatedEmails = [...preApprovedEmails, newUserEmail.trim()];
+    const trimmedEmail = newUserEmail.trim();
+    if (trimmedEmail && !preApprovedEmails.some(item => item.email === trimmedEmail)) {
+      const updatedEmails = [...preApprovedEmails, { email: trimmedEmail, invitedBy: viewAsUser.userId }];
       updateAppSettings({ preApprovedEmails: updatedEmails });
       setNewUserEmail('');
     }
   };
 
   const handleRemovePreApprovedEmail = (emailToRemove: string) => {
-    const updatedEmails = preApprovedEmails.filter(email => email !== emailToRemove);
+    const updatedEmails = preApprovedEmails.filter(item => item.email !== emailToRemove);
     updateAppSettings({ preApprovedEmails: updatedEmails });
   };
 
@@ -306,10 +307,10 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
                                         {preApprovedEmails.length > 0 && (
                                             <ScrollArea className="max-h-40 mt-2">
                                                 <div className="p-2 space-y-1">
-                                                {preApprovedEmails.map(email => (
-                                                    <div key={email} className="flex items-center justify-between text-sm p-1 rounded-md">
-                                                        <span>{email}</span>
-                                                        <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => handleRemovePreApprovedEmail(email)}>
+                                                {preApprovedEmails.map(item => (
+                                                    <div key={item.email} className="flex items-center justify-between text-sm p-1 rounded-md">
+                                                        <span>{item.email}</span>
+                                                        <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => handleRemovePreApprovedEmail(item.email)}>
                                                             <GoogleSymbol name="close" className="text-xs" />
                                                         </Button>
                                                     </div>
@@ -909,6 +910,7 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
 // #endregion
 
     
+
 
 
 
