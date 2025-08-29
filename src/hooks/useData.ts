@@ -1,11 +1,10 @@
 
-
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, writeBatch, query, where } from 'firebase/firestore';
 import { getDb } from '@/lib/firebase';
-import { useToast } from './use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeOwner, type Task, type Holiday, type Project } from '@/types';
 import { hexToHsl } from '@/lib/utils';
 import { hasAccess, getOwnershipContext } from '@/lib/permissions';
@@ -47,20 +46,21 @@ export function useData(realUser: User | null, authLoading: boolean) {
             return;
         }
 
+        const currentTenantId = realUser.tenantId || 'default'; // Use user's tenantId or fallback
+        
         setLoading(true);
         try {
           const db = getDb();
-          const [teamsSnap, calendarsSnap, locationsSnap, badgesSnap, collectionsSnap, appSettingsSnap, usersSnapshot, projectsSnap] = await Promise.all([
-            getDocs(collection(db, 'teams')),
-            getDocs(collection(db, 'calendars')),
-            getDocs(collection(db, 'locations')),
-            getDocs(collection(db, 'badges')),
-            getDocs(collection(db, 'badgeCollections')),
-            getDoc(doc(db, 'app-settings', 'global')),
-            getDocs(collection(db, 'users')),
-            getDocs(collection(db, 'projects')),
-          ]);
+          const collectionsToFetch = ['teams', 'calendars', 'locations', 'badges', 'badgeCollections', 'projects'];
+          const queries = collectionsToFetch.map(c => query(collection(db, c), where("tenantId", "==", currentTenantId)));
+          
+          const [teamsSnap, calendarsSnap, locationsSnap, badgesSnap, collectionsSnap, projectsSnap] = await Promise.all(queries.map(q => getDocs(q)));
 
+          const [appSettingsSnap, usersSnapshot] = await Promise.all([
+             getDoc(doc(db, 'app-settings', 'global')), // App settings might be global
+             getDocs(query(collection(db, 'users'), where("tenantId", "==", currentTenantId)))
+          ]);
+          
           setUsers(usersSnapshot.docs.map(doc => {
             const data = doc.data();
             return {
@@ -143,9 +143,9 @@ export function useData(realUser: User | null, authLoading: boolean) {
 
   const addUser = useCallback(async (newUser: User) => {
     const db = getDb();
-    await setDoc(doc(db, 'users', newUser.userId), newUser);
+    await setDoc(doc(db, 'users', newUser.userId), { ...newUser, tenantId: realUser?.tenantId || 'default' });
     setUsers(currentUsers => [...currentUsers, newUser]);
-  }, []);
+  }, [realUser]);
 
   const deleteUser = useCallback(async (userId: string, realUser: User) => {
     const db = getDb();
@@ -155,7 +155,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
 
   const addTeam = useCallback(async (teamData: Omit<Team, 'id'>, realUser: User) => {
     const db = getDb();
-    const docRef = await addDoc(collection(db, 'teams'), teamData);
+    const docRef = await addDoc(collection(db, 'teams'), { ...teamData, tenantId: realUser.tenantId || 'default' });
     const newTeam = { ...teamData, id: docRef.id };
     setTeams(current => [...current, newTeam]);
     toast({ title: 'Success', description: `Team "${newTeam.name}" has been created.` });
@@ -208,6 +208,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
         ...projectData,
         owner: { type: 'user', id: realUser.userId },
         isShared: false,
+        tenantId: realUser.tenantId || 'default'
     };
     const docRef = await addDoc(collection(db, 'projects'), newProjectData);
     const newProject = { ...newProjectData, id: docRef.id };
@@ -230,10 +231,10 @@ export function useData(realUser: User | null, authLoading: boolean) {
 
   const addCalendar = useCallback(async (newCalendarData: Omit<SharedCalendar, 'id'>) => {
     const db = getDb();
-    const docRef = await addDoc(collection(db, 'calendars'), newCalendarData);
+    const docRef = await addDoc(collection(db, 'calendars'), { ...newCalendarData, tenantId: realUser?.tenantId || 'default' });
     const newCalendar = { ...newCalendarData, id: docRef.id };
     setCalendars(current => [...current, newCalendar]);
-  }, []);
+  }, [realUser]);
 
   const updateCalendar = useCallback(async (calendarId: string, calendarData: Partial<SharedCalendar>) => {
     const db = getDb();
@@ -386,7 +387,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
             if (!originalBadge) return null;
             const newBadgeId = crypto.randomUUID();
             const newBadge = { ...originalBadge, id: newBadgeId, owner: ownerContext, ownerCollectionId: newCollectionId, name: `${originalBadge.name} (Copy)` };
-            batch.set(doc(db, 'badges', newBadgeId), newBadge);
+            batch.set(doc(db, 'badges', newBadgeId), { ...newBadge, tenantId: realUser?.tenantId || 'default' });
             return newBadge;
         }).filter((b): b is Badge => b !== null);
 
@@ -410,7 +411,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
             color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)]
         };
         newBadges.push(newBadge);
-        batch.set(doc(db, 'badges', newBadgeId), newBadge);
+        batch.set(doc(db, 'badges', newBadgeId), { ...newBadge, tenantId: realUser?.tenantId || 'default' });
         newCollection = {
             id: newCollectionId,
             name: `New Collection`,
@@ -424,7 +425,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
             isShared: false
         };
     }
-    batch.set(doc(db, 'badgeCollections', newCollectionId), newCollection);
+    batch.set(doc(db, 'badgeCollections', newCollectionId), { ...newCollection, tenantId: realUser?.tenantId || 'default' });
     await batch.commit();
 
     setAllBadgeCollections(prev => [...prev, newCollection]);
@@ -432,7 +433,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
         setAllBadges(prev => [...prev, ...newBadges]);
     }
     toast({ title: 'Collection Added', description: `"${newCollection.name}" has been created.` });
-  }, [allBadges, toast]);
+  }, [allBadges, toast, realUser]);
 
   const updateBadgeCollection = useCallback(async (collectionId: string, data: Partial<BadgeCollection>, teamId?: string) => {
     const db = getDb();
@@ -505,7 +506,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
         };
     }
     
-    batch.set(doc(db, 'badges', newBadge.id), newBadge);
+    batch.set(doc(db, 'badges', newBadge.id), { ...newBadge, tenantId: realUser.tenantId || 'default' });
     const newBadgeIds = [newBadge.id, ...collection.badgeIds];
     batch.update(doc(db, 'badgeCollections', collectionId), { badgeIds: newBadgeIds });
     
@@ -517,7 +518,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
             c.id === collectionId ? { ...c, badgeIds: newBadgeIds } : c
         )
     );
-  }, [allBadgeCollections, toast]);
+  }, [allBadgeCollections, toast, realUser]);
 
   const updateBadge = useCallback(async (badgeId: string, badgeData: Partial<Badge>) => {
     const db = getDb();

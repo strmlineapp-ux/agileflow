@@ -22,38 +22,27 @@ AgileFlow employs a highly scalable, on-demand data-fetching strategy that is op
     *   **Performance**: Memory usage is kept to a minimum by only holding the data relevant to the current view.
     *   **NoSQL Optimization**: This model aligns perfectly with NoSQL best practices, which favor fetching specific documents by ID over performing large, complex queries.
 
-## Multi-Tenant Architecture
+## Multi-Tenant Architecture: Shared Database with Tenant ID
 
-AgileFlow is designed as a multi-tenant application, where each company or organization (a "tenant") operates within its own completely isolated Firebase project. This ensures the highest level of data privacy, security, and scalability.
+AgileFlow is designed as a multi-tenant application, where multiple companies or organizations (each a "tenant") can operate within a single, shared Firebase project. Data for each tenant is kept separate and secure using a `tenantId` field on every document.
 
-### Tenant Identification & Configuration
+### Tenant Identification & Data Isolation
 
-1.  **Tenant ID**: Each tenant is identified by a unique ID, which typically corresponds to a subdomain (e.g., `tenant-a.agileflow.app`).
-2.  **Dynamic Configuration**: The application uses a dynamic lookup mechanism (simulated in `/src/lib/firebase.ts`) to fetch the specific Firebase configuration for the tenant making a request.
-3.  **Data Isolation**: Because each tenant has a unique `projectId`, all their data—including Firestore documents, Storage files, and authenticated users—resides in a separate, dedicated Google Cloud project. There is no possibility of data crossover between tenants.
+1.  **Single Firebase Project**: The application uses a single "master" Firebase project to store data for all tenants.
+2.  **`tenantId` Field**: Every document in Firestore (e.g., in the `/users`, `/teams`, `/projects` collections) contains a `tenantId` field. This field acts as a key to partition the data. For example, a user from "Company A" would have `tenantId: 'company-a'`.
+3.  **Filtered Database Queries**: **This is the most critical part of the architecture.** Every database query to read or write data **must** include a `where("tenantId", "==", currentUser.tenantId)` clause. This ensures that a user from one company can only ever see or modify data belonging to their own company. This logic is enforced in the application's data layer (e.g., in the `useData` hook).
+4.  **User-to-Tenant Mapping**: Each `User` document in the `/users` collection must have a `tenantId` field, permanently associating that user with their specific company.
 
-### Tenant Onboarding & Provisioning
+### Benefits of this Model
 
-**Important Security Note:** The process of creating a new tenant and configuring their Firebase project is a privileged, administrative action. **A UI should NOT be created for tenants to enter their own Firebase details**, as this would be a significant security risk.
+*   **Centralized Management**: All tenants can be managed from a single Firebase project, which can simplify administration and maintenance.
+*   **Cost-Effectiveness**: It can be more cost-effective at a small scale than provisioning a separate Firebase project for every new tenant.
+*   **Resource Sharing**: Certain resources or configurations can potentially be shared across tenants if desired.
 
-The correct, secure workflow is as follows:
-1.  **Admin Provisioning**: When a new tenant signs up, a system administrator for AgileFlow uses secure, backend scripts (e.g., Google Cloud SDK) to programmatically create a new, dedicated Firebase project for that tenant.
-2.  **Secure Key Management**: The configuration keys for this new project are then securely added to the application's central tenant configuration store (currently simulated in `firebase.ts`, but would be a secure database in production).
-3.  **Tenant Access**: The tenant is then given their unique subdomain (e.g., `new-company.agileflow.app`) to access their isolated environment. They never handle API keys directly.
+### Security Considerations
 
-### Tenant Parameters & Independence
-
-Each tenant's configuration consists of a standard set of Firebase project keys. It is essential that each tenant has its own unique set of these keys, as they point to their independent cloud resources.
-
-| Parameter | Purpose & Importance for Isolation |
-| :--- | :--- |
-| `apiKey` | **API Key.** Authorizes requests to Firebase services for this specific project. |
-| `authDomain` | **Authentication Domain.** The dedicated domain for Firebase Authentication actions (e.g., `tenant-a.firebaseapp.com`). |
-| `projectId` | **Project ID.** The globally unique identifier for the tenant's Google Cloud project. **This is the most critical key for ensuring database and resource isolation.** |
-| `storageBucket` | **Cloud Storage Bucket.** The unique bucket for storing files like user uploads or images. |
-| `messagingSenderId` | **Sender ID.** Used for Firebase Cloud Messaging (push notifications). |
-| `appId` | **App ID.** A unique identifier for the specific Firebase web app instance within the tenant's project. |
-
+*   **Strict Query Discipline**: It is absolutely essential that every single database query is correctly filtered by `tenantId`. A missing filter on a single query could lead to a data breach, exposing one tenant's data to another.
+*   **Secure Backend Rules**: Firebase Security Rules must be written to enforce this separation at the backend level. This provides a second layer of defense, ensuring that even if a client-side query is compromised, the database itself will reject any unauthorized cross-tenant data access.
 
 **Important Architectural Note:** Application pages are configured within the `AppSettings` object and are not hardcoded entities. Any references to them in documentation are purely as examples of how a dynamic page can be constructed. The codebase should not treat these pages as special or distinct from any other page an administrator might create.
 
@@ -69,6 +58,7 @@ This table details the information stored directly within each `User` object.
 | Data Point | Description & Link to Services |
 | :--- | :--- |
 | `userId: string` | **Internal.** A unique identifier for each user. This is the primary key used to link a user to all other parts of the system. |
+| `tenantId?: string` | **Crucial.** Identifies the tenant (company) the user belongs to. All data access is scoped by this ID. |
 | `displayName: string` | **Google Service.** The user's full name. This is part of the basic profile information obtained during a standard "Sign in with Google" action and **does not require separate permissions**. |
 | `email: string` | **Internal / Google Service.** The user's email address. This is the primary field used for login. The "Sign in with Google" button uses **Firebase Authentication** with the **Google Auth Provider** to verify this email. |
 | `isAdmin: boolean` | **Internal.** A dedicated flag to indicate if a user has administrative privileges, granting them access to all settings and management pages. |
@@ -104,6 +94,7 @@ The `Project` is a top-level container for organizing work. It holds its own sub
 | Data Point | Description |
 | :--- | :--- |
 | `id: string` | A unique identifier for the project. |
+| `tenantId?: string` | The ID of the tenant this project belongs to. |
 | `name: string` | The display name of the project. |
 | `owner: { type: 'user', id: string }` | An object that defines which `User` owns the project. |
 | `isShared: boolean` | A flag to determine if the project is visible to other users. |
@@ -120,6 +111,7 @@ Events are always associated with a parent `Project`.
 | Data Point | Description |
 | :--- | :--- |
 | `eventId: string` | **Internal.** A unique identifier for the event. |
+| `tenantId?: string` | The ID of the tenant this event belongs to. |
 | `title: string` | The name of the event. |
 | `projectId: string` | **Crucial.** The ID of the parent project. |
 | `calendarId: string` | The ID of the calendar used for color-coding and default settings. |
@@ -146,6 +138,7 @@ Tasks are always associated with a parent `Project`.
 | Data Point | Description |
 | :--- | :--- |
 | `taskId: string` | **Internal.** A unique identifier for the task. |
+| `tenantId?: string` | The ID of the tenant this task belongs to. |
 | `title: string` | The name of the task. |
 | `projectId: string` | **Crucial.** The ID of the parent project. |
 | `googleTaskId?: string` | **External (Google Tasks).** The ID for the corresponding task in Google Tasks, used for synchronization. |
@@ -156,7 +149,7 @@ Tasks are always associated with a parent `Project`.
 | `badges?: Record<string, string>` | A map where the key is a `badgeCollectionId` and the value is the `badgeId` of the selected badge from that collection. |
 | `createdBy: string` | The `userId` of the user who created the task. |
 | `createdAt: Date` | The timestamp when the task was created. |
-| `lastUpdated: Date` | The timestamp when the task was last modified. |
+| `lastUpdated: Date` | The timestamp when the event was last modified. |
 
 ---
 ## Shared Calendar Entity
@@ -169,6 +162,7 @@ This entity represents an internal AgileFlow calendar. These are managed on a dy
 | Data Point | Description & Link to Services |
 | :--- | :--- |
 | `id: string` | **Internal.** A unique identifier for the AgileFlow calendar. |
+| `tenantId?: string` | The ID of the tenant this calendar belongs to. |
 | `name: string` | **Internal.** The display name for the calendar within the application. |
 | `icon: string` | **Internal.** The Google Symbol name for the calendar's icon. |
 | `color: string` | **Internal.** The hex color code used for this calendar's events in the UI. |
@@ -190,6 +184,7 @@ The `Team` entity is a functional unit that groups users together for collaborat
 | Data Point | Description |
 | :--- | :--- |
 | `id: string` | A unique identifier for the team. |
+| `tenantId?: string` | The ID of the tenant this team belongs to. |
 | `name: string` | The display name of the team. |
 | `icon: string` | The Google Symbol name for the team's icon. |
 | `color: string` | The hex color for the team's icon. |
@@ -218,6 +213,7 @@ The `Team` entity is a functional unit that groups users together for collaborat
 | Data Point | Description |
 | :--- | :--- |
 | `id: string` | A unique identifier for the collection. |
+| `tenantId?: string` | The ID of the tenant this collection belongs to. |
 | `owner: { type: 'user', id: string }` | **Crucial.** An object that defines which `User` owns the collection. Ownership dictates who can edit the collection's properties. |
 | `isShared?: boolean` | **Internal.** If `true`, this collection and its badges will be visible to all other users in the application for discovery and linking. |
 | `name: string` | The name of the collection (e.g., "Video Production Roles"). |
@@ -237,10 +233,12 @@ This represents a specific, functional role or skill.
 | Data Point | Description |
 | :--- | :--- |
 | `id: string` | A unique identifier for the badge. |
+| `tenantId?: string` | The ID of the tenant this badge belongs to. |
 | `owner: { type: 'user', id: string }` | **Crucial.** An object that defines which `User` owns the badge. Ownership dictates who can edit the badge's properties. |
 | `ownerCollectionId: string` | The `collectionId` of the badge's original, "source-of-truth" collection where it was created. |
 | `name: string` | The display name for the badge (e.g., "Camera", "Audio"). |
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
+
 
