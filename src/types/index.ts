@@ -30,7 +30,7 @@ export interface AppSettings {
   tabs: AppTab[];
   calendarManagementLabel?: string;
   teamManagementLabel?: string;
-  preApprovedEmails?: string[];
+  preApprovedEmails?: Array<{ email: string; invitedBy: string; }>;
 }
 
 export interface Attendee {
@@ -212,7 +212,6 @@ export interface Notification {
   user: Pick<User, 'userId' | 'displayName' | 'avatarUrl'>; // The user who *caused* the notification
   content: string;
   time: Date;
-  read: boolean;
   data?: { // payload for access_requests
     email: string;
     displayName: string;
