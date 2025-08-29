@@ -24,8 +24,8 @@ const tenantConfigs: Record<string, FirebaseConfig> = {
     messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
   },
-  // Example of another tenant's configuration
-  // 'tenant-b': { ... }
+  // Example for a premium tenant with a dedicated project
+  // 'acme-corp': { ... new firebase config ... }
 };
 
 // Store app instances in a map to support multiple tenants
@@ -34,13 +34,26 @@ const authInstances = new Map<string, Auth>();
 const firestoreInstances = new Map<string, Firestore>();
 
 /**
- * Determines the current tenant ID. For this application, we always return 'default'
- * as it operates in a single-tenant mode. In a multi-tenant setup, this function would
- * determine the tenant from the hostname.
- * @returns The tenant ID, which is always 'default'.
+ * Determines the current tenant ID from the hostname.
+ * Falls back to 'default' for localhost or non-subdomain access.
+ * @returns The tenant ID for the current context.
  */
 function getCurrentTenantId(): string {
-  // This application is single-tenant, so we always use the default configuration.
+  if (typeof window === 'undefined') {
+    return 'default'; // Return default for server-side rendering
+  }
+
+  const hostname = window.location.hostname;
+  if (hostname === 'localhost' || !hostname.includes('.')) {
+    return 'default';
+  }
+
+  const parts = hostname.split('.');
+  // Assuming a structure like `tenant-name.agileflow.app`
+  if (parts.length > 2 && parts[1] === 'agileflow') {
+    return parts[0];
+  }
+  
   return 'default';
 }
 
@@ -53,7 +66,9 @@ function getCurrentTenantId(): string {
 export function getFirebaseConfig(tenantId: string): FirebaseConfig {
   const config = tenantConfigs[tenantId];
   if (!config) {
-    throw new Error(`Configuration for tenant "${tenantId}" not found.`);
+    // Fallback to default if a specific tenant config isn't found.
+    // In a production app, you might want to throw an error instead.
+    return tenantConfigs['default'];
   }
   return config;
 }
@@ -70,9 +85,9 @@ export function getFirebaseAppForTenant(tenantId: string): FirebaseApp {
   }
 
   const config = getFirebaseConfig(tenantId);
-  const appName = `tenant-${tenantId}`;
+  // Use projectId for app name to ensure uniqueness for dedicated projects
+  const appName = config.projectId; 
   
-  // Avoid re-initializing an app with the same name
   const existingApp = getApps().find(app => app.name === appName);
   const app = existingApp || initializeApp(config, appName);
 

@@ -2,12 +2,11 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, writeBatch, query, where } from 'firebase/firestore';
 import { getDb } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeOwner, type Task, type Holiday, type Project } from '@/types';
-import { hexToHsl } from '@/lib/utils';
-import { hasAccess, getOwnershipContext } from '@/lib/permissions';
+import { hasAccess } from '@/lib/permissions';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { corePages, coreTabs } from '@/lib/core-data';
 import { mockEvents, mockTasks, mockNotifications as initialMockNotifications } from '@/lib/mock-data';
@@ -49,10 +48,13 @@ export function useData(realUser: User | null, authLoading: boolean) {
         setLoading(true);
         try {
           const db = getDb();
+          const tenantId = realUser.tenantId;
+
           const collectionsToFetch = ['users', 'teams', 'calendars', 'locations', 'badges', 'badgeCollections', 'projects'];
-          const queries = collectionsToFetch.map(c => getDocs(collection(db, c)));
+          const queries = collectionsToFetch.map(c => getDocs(query(collection(db, c), where("tenantId", "==", tenantId))));
           
           const [usersSnapshot, teamsSnap, calendarsSnap, locationsSnap, badgesSnap, collectionsSnap, projectsSnap] = await Promise.all(queries);
+          
           const appSettingsSnap = await getDoc(doc(db, 'app-settings', 'global'));
           
           setUsers(usersSnapshot.docs.map(doc => {
@@ -149,11 +151,12 @@ export function useData(realUser: User | null, authLoading: boolean) {
 
   const addTeam = useCallback(async (teamData: Omit<Team, 'id'>) => {
     const db = getDb();
-    const docRef = await addDoc(collection(db, 'teams'), teamData);
-    const newTeam = { ...teamData, id: docRef.id };
+    const newTeamData = { ...teamData, tenantId: realUser!.tenantId };
+    const docRef = await addDoc(collection(db, 'teams'), newTeamData);
+    const newTeam = { ...newTeamData, id: docRef.id };
     setTeams(current => [...current, newTeam]);
     toast({ title: 'Success', description: `Team "${newTeam.name}" has been created.` });
-  }, [toast]);
+  }, [realUser, toast]);
 
   const updateTeam = useCallback(async (teamId: string, teamData: Partial<Team>) => {
     const db = getDb();
@@ -202,6 +205,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
         ...projectData,
         owner: { type: 'user', id: realUser.userId },
         isShared: false,
+        tenantId: realUser.tenantId,
     };
     const docRef = await addDoc(collection(db, 'projects'), newProjectData);
     const newProject = { ...newProjectData, id: docRef.id };
@@ -224,10 +228,11 @@ export function useData(realUser: User | null, authLoading: boolean) {
 
   const addCalendar = useCallback(async (newCalendarData: Omit<SharedCalendar, 'id'>) => {
     const db = getDb();
-    const docRef = await addDoc(collection(db, 'calendars'), newCalendarData);
-    const newCalendar = { ...newCalendarData, id: docRef.id };
+    const fullCalendarData = { ...newCalendarData, tenantId: realUser!.tenantId };
+    const docRef = await addDoc(collection(db, 'calendars'), fullCalendarData);
+    const newCalendar = { ...fullCalendarData, id: docRef.id };
     setCalendars(current => [...current, newCalendar]);
-  }, []);
+  }, [realUser]);
 
   const updateCalendar = useCallback(async (calendarId: string, calendarData: Partial<SharedCalendar>) => {
     const db = getDb();
@@ -256,14 +261,14 @@ export function useData(realUser: User | null, authLoading: boolean) {
         const eventTime = event.startTime.getTime();
         return eventTime >= start.getTime() && eventTime < end.getTime();
     });
-    return filteredEvents;
+    return filteredEvents as unknown as Event[];
   }, []);
 
   const addEvent = useCallback(async (currentEvents: Event[], newEventData: Omit<Event, 'eventId'>) => {
-    const event: Event = { ...newEventData, eventId: crypto.randomUUID() };
+    const event: Event = { ...newEventData, eventId: crypto.randomUUID(), tenantId: realUser!.tenantId };
     await simulateApi();
     return [...currentEvents, event];
-  }, []);
+  }, [realUser]);
 
   const updateEvent = useCallback(async (currentEvents: Event[], eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => {
       await simulateApi();
@@ -281,7 +286,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
     return mockEvents.filter(event => {
         const eventTime = event.startTime.getTime();
         return event.projectId === projectId && eventTime >= start.getTime() && eventTime < end.getTime();
-    });
+    }) as unknown as Event[];
   }, []);
 
   const addProjectEvent = useCallback(async (projectId: string, currentEvents: Event[], newEventData: Omit<Event, 'eventId'>, realUser: User): Promise<Event[]> => {
@@ -291,6 +296,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
       ...newEventData,
       eventId: crypto.randomUUID(),
       projectId,
+      tenantId: realUser.tenantId
     };
     return [...currentEvents, newEvent];
   }, []);
@@ -310,7 +316,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
 
   const fetchTasks = useCallback(async (): Promise<Task[]> => {
     await simulateApi();
-    return mockTasks;
+    return mockTasks as unknown as Task[];
   }, []);
 
   const addTask = useCallback(async (currentTasks: Task[], newTaskData: Omit<Task, 'taskId' | 'createdAt' | 'lastUpdated'>, realUser: User): Promise<Task[]> => {
@@ -322,6 +328,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
       createdAt: new Date(),
       lastUpdated: new Date(),
       createdBy: realUser.userId,
+      tenantId: realUser.tenantId,
     };
     return [newTask, ...currentTasks];
   }, []);
@@ -339,10 +346,10 @@ export function useData(realUser: User | null, authLoading: boolean) {
   }, []);
 
   const addLocation = useCallback(async (locationName: string) => {
-    const newLocation: BookableLocation = { id: crypto.randomUUID(), name: locationName };
+    const newLocation: BookableLocation = { id: crypto.randomUUID(), name: locationName, tenantId: realUser!.tenantId };
     await simulateApi();
     setLocations(current => [...current, newLocation]);
-  }, []);
+  }, [realUser]);
 
   const deleteLocation = useCallback(async (locationId: string) => {
     await simulateApi();
@@ -368,6 +375,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
   const addBadgeCollection = useCallback(async (owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => {
     const db = getDb();
     const batch = writeBatch(db);
+    const tenantId = owner.tenantId;
 
     const newCollectionId = crypto.randomUUID();
     let newBadges: Badge[] = [];
@@ -379,7 +387,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
             const originalBadge = allBadges.find(b => b.id === bId);
             if (!originalBadge) return null;
             const newBadgeId = crypto.randomUUID();
-            const newBadge = { ...originalBadge, id: newBadgeId, owner: ownerContext, ownerCollectionId: newCollectionId, name: `${originalBadge.name} (Copy)` };
+            const newBadge = { ...originalBadge, id: newBadgeId, owner: ownerContext, ownerCollectionId: newCollectionId, name: `${originalBadge.name} (Copy)`, tenantId };
             batch.set(doc(db, 'badges', newBadgeId), newBadge);
             return newBadge;
         }).filter((b): b is Badge => b !== null);
@@ -391,7 +399,8 @@ export function useData(realUser: User | null, authLoading: boolean) {
             owner: ownerContext,
             isShared: false,
             description: sourceCollection.description || '',
-            badgeIds: newBadges.map(b => b.id)
+            badgeIds: newBadges.map(b => b.id),
+            tenantId,
         };
     } else {
         const newBadgeId = crypto.randomUUID();
@@ -401,7 +410,8 @@ export function useData(realUser: User | null, authLoading: boolean) {
             ownerCollectionId: newCollectionId,
             name: `New Badge`,
             icon: googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
-            color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)]
+            color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
+            tenantId,
         };
         newBadges.push(newBadge);
         batch.set(doc(db, 'badges', newBadgeId), newBadge);
@@ -415,7 +425,8 @@ export function useData(realUser: User | null, authLoading: boolean) {
             badgeIds: [newBadgeId],
             applications: [],
             description: '',
-            isShared: false
+            isShared: false,
+            tenantId,
         };
     }
     batch.set(doc(db, 'badgeCollections', newCollectionId), newCollection);
@@ -476,6 +487,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
 
     const batch = writeBatch(db);
     let newBadge: Badge;
+    const tenantId = realUser!.tenantId;
 
     if (sourceBadge) {
         newBadge = {
@@ -486,6 +498,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
             icon: sourceBadge.icon,
             color: sourceBadge.color,
             description: sourceBadge.description,
+            tenantId,
         };
     } else {
         newBadge = {
@@ -494,7 +507,8 @@ export function useData(realUser: User | null, authLoading: boolean) {
             ownerCollectionId: collectionId,
             name: `New Badge`,
             icon: googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
-            color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)]
+            color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
+            tenantId,
         };
     }
     

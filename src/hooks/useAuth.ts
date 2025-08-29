@@ -52,6 +52,9 @@ export function useAuth() {
                 const accountType = isFirstUser || isPreApproved ? 'Full' : 'Viewer';
                 const approvedBy = isFirstUser ? 'system' : (isPreApproved ? 'pre-approved' : undefined);
 
+                // TODO: Replace with dynamic tenantId from hostname or user selection
+                const tenantId = 'default';
+
                 const newUser: User = {
                     userId: firebaseUser.uid,
                     displayName: firebaseUser.displayName || 'New User',
@@ -65,7 +68,8 @@ export function useAuth() {
                     theme: 'light',
                     dragActivationKey: 'shift',
                     createdAt: new Date(),
-                    approvedBy
+                    approvedBy,
+                    tenantId,
                 };
                 await setDoc(userDocRef, newUser);
                 setRealUser(newUser);
