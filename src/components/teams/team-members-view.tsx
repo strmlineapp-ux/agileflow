@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useUser } from '@/context/user-context';
@@ -17,6 +18,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { useDroppable } from '@dnd-kit/core';
+import { InlineEditor } from '../common/inline-editor';
 
 
 function DroppableUserList({ id, children, className }: { id: string, children: React.ReactNode, className?: string }) {
@@ -28,9 +30,15 @@ function DroppableUserList({ id, children, className }: { id: string, children: 
     )
 }
 
-function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }: { member: User, team: Team, isViewer: boolean, onSetAdmin: () => void, onRemoveUser: () => void }) {
-  const { isDragModifierPressed } = useUser();
-  
+function SortableTeamMember({ member, team, onSetAdmin, onRemoveUser }: { member: User, team: Team, onSetAdmin: () => void, onRemoveUser: () => void }) {
+  const { isDragModifierPressed, viewAsUser } = useUser();
+
+  const isViewer = useMemo(() => {
+    if (viewAsUser.isAdmin) return false;
+    if (!team.teamAdmins?.length) return !team.members.includes(viewAsUser.userId);
+    return !team.teamAdmins.includes(viewAsUser.userId);
+  }, [viewAsUser, team]);
+
   const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
     id: `member:${member.userId}`,
     data: { type: 'member-card', member: member },
@@ -58,7 +66,7 @@ function SortableTeamMember({ member, team, isViewer, onSetAdmin, onRemoveUser }
   return (
     <div ref={combinedRef} style={style} className={cn("relative rounded-md", isDragging && "shadow-xl")}>
       <div {...attributes} {...listeners} className="relative group">
-        <TeamMemberCard member={member} team={team} isViewer={isViewer} onSetAdmin={onSetAdmin} isOver={isOver} />
+        <TeamMemberCard member={member} team={team} onSetAdmin={onSetAdmin} isOver={isOver} />
         {canManage && (
             <TooltipProvider>
                 <Tooltip>
@@ -88,15 +96,7 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
 
     if (!team) return null;
 
-    const [isEditingTitle, setIsEditingTitle] = useState(false);
-    const titleInputRef = useRef<HTMLInputElement>(null);
-
-    const [isEditingAdminsLabel, setIsEditingAdminsLabel] = useState(false);
-    const [isEditingMembersLabel, setIsEditingMembersLabel] = useState(false);
-    const adminsLabelInputRef = useRef<HTMLInputElement>(null);
-    const membersLabelInputRef = useRef<HTMLInputElement>(null);
-
-    const teamAdminsLabel = team.teamAdminsLabel || 'Team Admins';
+    const adminsLabel = team.teamAdminsLabel || 'Team Admins';
     const membersLabel = team.membersLabel || 'Members';
 
     const isViewer = useMemo(() => {
@@ -138,92 +138,6 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
           }
         })
     );
-
-    useEffect(() => {
-        if (isEditingTitle) titleInputRef.current?.focus();
-    }, [isEditingTitle]);
-
-    const handleSaveTitle = useCallback(() => {
-        const newName = titleInputRef.current?.value.trim();
-        if (newName && newName !== tab.name) {
-            updateAppTab(tab.id, { name: newName });
-        }
-        setIsEditingTitle(false);
-    }, [tab.id, tab.name, updateAppTab]);
-
-    useEffect(() => {
-        if (!isEditingTitle) return;
-        const handleOutsideClick = (event: MouseEvent) => {
-            if (titleInputRef.current && !titleInputRef.current.contains(event.target as Node)) {
-                handleSaveTitle();
-            }
-        };
-        document.addEventListener("mousedown", handleOutsideClick);
-        return () => {
-            document.removeEventListener("mousedown", handleOutsideClick);
-        };
-    }, [isEditingTitle, handleSaveTitle]);
-
-    const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter') handleSaveTitle();
-        else if (e.key === 'Escape') setIsEditingTitle(false);
-    };
-
-    const handleSaveAdminsLabel = useCallback(() => {
-        const newLabel = adminsLabelInputRef.current?.value.trim();
-        if (newLabel && newLabel !== teamAdminsLabel) {
-            updateTeam(team.id, { teamAdminsLabel: newLabel });
-        }
-        setIsEditingAdminsLabel(false);
-    }, [team.id, teamAdminsLabel, updateTeam]);
-
-    useEffect(() => {
-        if (!isEditingAdminsLabel) return;
-        const handleOutsideClick = (event: MouseEvent) => {
-            if (adminsLabelInputRef.current && !adminsLabelInputRef.current.contains(event.target as Node)) {
-                handleSaveAdminsLabel();
-            }
-        };
-        adminsLabelInputRef.current?.focus();
-        adminsLabelInputRef.current?.select();
-        document.addEventListener("mousedown", handleOutsideClick);
-        return () => {
-            document.removeEventListener("mousedown", handleOutsideClick);
-        };
-    }, [isEditingAdminsLabel, handleSaveAdminsLabel]);
-
-    const handleAdminsLabelKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter') handleSaveAdminsLabel();
-        else if (e.key === 'Escape') setIsEditingAdminsLabel(false);
-    };
-
-    const handleSaveMembersLabel = useCallback(() => {
-        const newLabel = membersLabelInputRef.current?.value.trim();
-        if (newLabel && newLabel !== membersLabel) {
-            updateTeam(team.id, { membersLabel: newLabel });
-        }
-        setIsEditingMembersLabel(false);
-    }, [team.id, membersLabel, updateTeam]);
-
-    useEffect(() => {
-        if (!isEditingMembersLabel) return;
-        const handleOutsideClick = (event: MouseEvent) => {
-            if (membersLabelInputRef.current && !membersLabelInputRef.current.contains(event.target as Node)) {
-                handleSaveMembersLabel();
-            }
-        };
-        membersLabelInputRef.current?.focus();
-        membersLabelInputRef.current?.select();
-        document.addEventListener("mousedown", handleOutsideClick);
-        return () => {
-            document.removeEventListener("mousedown", handleOutsideClick);
-        };
-    }, [isEditingMembersLabel, handleSaveMembersLabel]);
-
-    const handleMembersLabelKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter') handleSaveMembersLabel();
-        else if (e.key === 'Escape') setIsEditingMembersLabel(false);
-    };
 
     const handleSetAdmin = useCallback((teamId: string, userId: string) => {
         if (isViewer) return;
@@ -322,45 +236,28 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
             <div className="flex-1 flex flex-col overflow-hidden">
                 <div className="flex items-center justify-between mb-6 shrink-0">
                     <div className="flex items-center gap-2">
-                        {isEditingTitle ? (
-                        <Input ref={titleInputRef} defaultValue={tab.name} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
-                        ) : (
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>{tab.name}</h2>
-                                </TooltipTrigger>
-                                {tab.description && (
-                                    <TooltipContent>
-                                        <p className="max-w-xs">{tab.description}</p>
-                                    </TooltipContent>
-                                )}
-                            </Tooltip>
-                        </TooltipProvider>
-                        )}
+                        <InlineEditor
+                            value={tab.name}
+                            onSave={(newValue) => updateAppTab(tab.id, { name: newValue })}
+                            className="h-auto p-0 font-headline text-2xl font-thin tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                            disabled={!canManage}
+                        />
                     </div>
                 </div>
                 <div className="flex-1 overflow-y-auto pr-2 -mr-2">
                     <div className={cn("flex flex-col gap-6", admins.length > 0 && "lg:flex-row")}>
                         {admins.length > 0 && (
                             <div className="lg:w-1/3 lg:max-w-sm space-y-4">
-                                {isEditingAdminsLabel ? (
-                                    <Input
-                                        ref={adminsLabelInputRef}
-                                        defaultValue={teamAdminsLabel}
-                                        onBlur={handleSaveAdminsLabel}
-                                        onKeyDown={handleAdminsLabelKeyDown}
-                                        className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                                    />
-                                ) : (
-                                    <h3 className="font-headline font-thin text-xl cursor-text" onClick={() => canManage && setIsEditingAdminsLabel(true)}>
-                                        {teamAdminsLabel}
-                                    </h3>
-                                )}
+                                <InlineEditor
+                                    value={adminsLabel}
+                                    onSave={(newValue) => updateTeam(team.id, { teamAdminsLabel: newValue })}
+                                    className="font-headline font-thin text-xl"
+                                    disabled={!canManage}
+                                />
                                 <DroppableUserList id="admins" className="space-y-4">
                                     <SortableContext items={adminIds} strategy={verticalListSortingStrategy}>
                                         {admins.map((member) => (
-                                            <SortableTeamMember key={member.userId} member={member} team={team} isViewer={isViewer} onSetAdmin={() => handleSetAdmin(team.id, member.userId)} onRemoveUser={() => handleRemoveUser(member.userId)} />
+                                            <SortableTeamMember key={member.userId} member={member} team={team} onSetAdmin={() => handleSetAdmin(team.id, member.userId)} onRemoveUser={() => handleRemoveUser(member.userId)} />
                                         ))}
                                     </SortableContext>
                                 </DroppableUserList>
@@ -368,26 +265,19 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                         )}
 
                         <div className="flex-1 space-y-4">
-                            {isEditingMembersLabel ? (
-                                <Input
-                                    ref={membersLabelInputRef}
-                                    defaultValue={membersLabel}
-                                    onBlur={handleSaveMembersLabel}
-                                    onKeyDown={handleMembersLabelKeyDown}
-                                    className="h-auto p-0 font-headline text-xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                                />
-                            ) : (
-                                <h3 className="font-headline font-thin text-xl cursor-text" onClick={() => canManage && setIsEditingMembersLabel(true)}>
-                                    {membersLabel}
-                                </h3>
-                            )}
+                             <InlineEditor
+                                value={membersLabel}
+                                onSave={(newValue) => updateTeam(team.id, { membersLabel: newValue })}
+                                className="font-headline font-thin text-xl"
+                                disabled={!canManage}
+                             />
                             {members.length > 0 && (
                                 <DroppableUserList id="members">
                                     <SortableContext items={memberIds} strategy={verticalListSortingStrategy}>
                                         <div className="flex flex-wrap -m-3">
                                         {members.map((member) => (
                                             <div key={member.userId} className="p-3 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0">
-                                                <SortableTeamMember member={member} team={team} isViewer={isViewer} onSetAdmin={() => handleSetAdmin(team.id, member.userId)} onRemoveUser={() => handleRemoveUser(member.userId)} />
+                                                <SortableTeamMember member={member} team={team} onSetAdmin={() => handleSetAdmin(team.id, member.userId)} onRemoveUser={() => handleRemoveUser(member.userId)} />
                                             </div>
                                         ))}
                                         </div>

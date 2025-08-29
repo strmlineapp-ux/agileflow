@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TaskList } from '@/components/tasks/task-list';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
-import { type AppPage, type Task } from '@/types';
+import { type Task } from '@/types';
 import { useUser } from '@/context/user-context';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -16,7 +16,7 @@ const stats = [
   { title: 'Team Members', value: '8', icon: 'group' },
 ];
 
-export function OverviewContent({ tab: pageConfig, isSingleTabPage }: { tab: AppPage, isSingleTabPage?: boolean }) {
+export function OverviewContent() {
   const { fetchTasks } = useUser();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,11 +37,11 @@ export function OverviewContent({ tab: pageConfig, isSingleTabPage }: { tab: App
         {stats.map((stat) => (
           <Card key={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-light text-muted-foreground">{stat.title}</CardTitle>
-              <GoogleSymbol name={stat.icon} className="text-2xl text-muted-foreground" weight={100} />
+              <CardTitle className="text-sm text-muted-foreground">{stat.title}</CardTitle>
+              <GoogleSymbol name={stat.icon} className="text-2xl text-muted-foreground" />
             </CardHeader>
             <CardContent className="p-4 pt-0">
-              <div className="text-2xl font-light text-muted-foreground">{stat.value}</div>
+              <div className="text-2xl">{stat.value}</div>
               <p className="text-xs text-muted-foreground">this month</p>
             </CardContent>
           </Card>

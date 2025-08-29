@@ -15,7 +15,7 @@ The application favors a compact, information-dense layout. Card components are 
 -   **Header Padding**: The `<CardHeader>` for these cards must use a compact `p-2` padding.
 -   **Content Padding**: The `<CardContent>` should use `p-2 pt-0` to keep vertical spacing tight and aligned with the header.
 -   **Card Backgrounds**: Cards use a `bg-transparent` background, relying on their `border` for definition. This creates a lighter, more modern UI.
--   **Text Wrapping**: Card titles should gracefully handle long text by wrapping. The `break-words` utility should be used on titles to prevent layout issues from long, unbroken strings.
+-   **Text Wrapping**: Card titles and descriptions should gracefully handle long text by wrapping. The `break-words` utility should be used on titles to prevent layout issues from long, unbroken strings.
 
 ---
 
@@ -32,7 +32,6 @@ This pattern allows for seamless, direct text editing within the main applicatio
     - Pressing 'Enter' saves the changes and reverts the input back to a standard text element.
     - Pressing 'Escape' cancels the edit without saving.
     - **A `useEffect` hook must be implemented to add a 'mousedown' event listener to the document. This listener should check if the click occurred outside the input field's ref and, if so, trigger the save function. This ensures that clicking anywhere else on the page correctly dismisses and saves the editor.**
-- **Conflict Prevention**: See the "Preventing Interaction Conflicts" section within the **Draggable Card Management blueprint** for the required implementation when using this pattern inside a draggable item.
 - **Application:** Used for editing entity names, labels, and other simple text fields directly in the UI.
 
 ---
@@ -71,8 +70,9 @@ This pattern transforms standard form inputs into minimalist, text-like elements
 ### 5. Integrated Add Button
 This pattern replaces large, card-style "Add New" buttons with a more compact and contextually relevant control.
 
-- **Appearance:** A circular button containing a plus (`+`) or `add_circle` icon. It uses `text-4xl` and `weight={100}` for a large but light appearance.
-- **Placement:** The button's placement is contextual. It can be positioned directly adjacent to a section title (e.g., on the Admin Management pages) or in a dedicated action area, such as below the tab navigation on the Tasks page.
+- **Appearance:** A circular, icon-only button. The `<GoogleSymbol>` inside must use a name like `add_circle`, be `text-4xl`, and have `weight={100}` for a large but light appearance. The icon color **must** be `text-muted-foreground`.
+- **Tooltip**: The button **must** be wrapped in a `<Tooltip>` to describe its action (e.g., "Add New Page").
+- **Placement:** The button's placement is contextual. It can be positioned directly adjacent to a section title (e.g., on the Admin Management pages) or in a dedicated action area.
 - **Behavior:** Clicking the button initiates the process of adding a new item, typically by opening a dialog or form.
 - **Application:** Used for creating new items in a list or grid, such as adding a new page, team, or task.
 
@@ -86,11 +86,11 @@ This is the consistent reference pattern for allowing a user to change both an i
 - **Interaction:**
   - **Icon Picker**: Clicking the main part of the button opens an icon picker popover. This popover uses the **Compact Search Input** pattern for filtering. The icons inside this picker are rendered at `text-4xl` with `weight={100}` inside `h-8 w-8` buttons for clarity and ease of selection.
   - **Color Picker**: Clicking the color swatch badge opens the standard color picker popover.
-- **Color Picker UI**: The popover must contain three elements for a comprehensive user experience:
+- **Color Picker UI**: The popover must contain two elements for a comprehensive user experience:
     1.  A color wheel and saturation box using the `react-colorful` library's `<HexColorPicker />`.
     2.  A text input for the HEX color code using `<HexColorInput />`.
     3.  A grid of predefined color swatches for quick selection.
-    A final "Set Color" button applies the chosen color.
+    All interactions—changing the color via the wheel, hex input, or clicking a swatch—apply the color change instantly. Clicking a predefined swatch also closes the popover.
 - **Application:** This is the required pattern for editing the icon and color of any major entity, such as Pages, Calendars, Teams, and Badge Collections.
 
 ---
@@ -126,13 +126,13 @@ This is the application's perfected, gold-standard pattern for managing a collec
 -   **Critical Stability Properties**:
     -   **`@dnd-kit` is the required library.** The older `react-beautiful-dnd` library was found to be incompatible with this type of responsive layout.
     -   `flex-grow-0` and `flex-shrink-0` **must** be used on draggable items. This prevents the remaining items in a row from expanding or shrinking, which causes the grid to reflow unstably when an item is being dragged.
--   **Initiating a Drag**: The **sole method** for initiating a drag action is by holding down a user-configurable modifier key (`Shift`, `Alt`, `Ctrl`, or `Meta`) while clicking and dragging any non-interactive part of a card. This modifier key is set in the user's Account Settings.
--   **Drag-Ready State**: When the drag modifier key is held down, the application enters a "drag-ready" state to provide clear visual feedback and prevent accidental actions.
-    - **Hide Interactive Elements**: All secondary interactive elements within draggable cards—such as delete buttons, color swatch badges, and expand/collapse icons—**must be hidden**. This is typically achieved by adding a `.hidden` class based on a global `isDragModifierPressed` state from the `UserContext`.
+-   **Initiating a Drag**: The **sole method** for initiating a drag action is by clicking and dragging any non-interactive part of a card.
+-   **Drag-Ready State**: When a drag action is initiated, the application enters a "drag-ready" state to provide clear visual feedback and prevent accidental actions.
+    - **Hide Interactive Elements**: All secondary interactive elements within draggable cards—such as delete buttons, color swatch badges, and expand/collapse icons—**must be hidden**. This is typically achieved by adding a `.hidden` class based on a global state.
     - **Disable Triggers**: The main entity icon's Popover trigger for changing the icon must be **disabled** (but the icon itself remains visible).
     - **Disable Editing**: Inline editing functionality must be disabled to prevent text from being selected or edited during a drag attempt.
 -   **Expand/Collapse**: Cards can be expanded and collapsed to show more detail. This action is triggered by a dedicated `expand_more` icon button, positioned at `absolute -bottom-1 right-0`. This button is hidden when the drag modifier key is pressed. The expanded state of each card is managed independently by its parent component.
--   **Preventing Interaction Conflicts**: The primary mechanism for preventing accidental drags is the **modifier key activation**. However, the `useSortable` hook's listeners can still capture pointer events even when a drag isn't initiated, preventing `onClick` events on the same element. To solve this, the `useSortable` hook **must** be disabled when the modifier key is not pressed (e.g., `disabled: !isDragModifierPressed`). This completely deactivates the drag listeners, ensuring that standard clicks and other interactions function as expected.
+-   **Preventing Interaction Conflicts**: To allow button clicks inside a draggable card without starting a drag, all interactive elements (buttons, inputs, etc.) must have an `onPointerDown={(e) => e.stopPropagation()}` handler. This prevents the pointer event from bubbling up to the drag listener.
 -   **Visual Feedback**: To provide feedback without disrupting layout, visual changes (like a `shadow` or `opacity`) should be applied directly to the inner component based on the `isDragging` prop provided by `dnd-kit`'s `useSortable` hook. The draggable wrapper itself should remain untouched.
 -   **Drag Overlay Visuals & Positioning**: The drag overlay provides a clean, focused representation of the item being dragged.
     -   **Positioning**: To ensure the overlay appears directly under the cursor and tracks it smoothly without an offset, the `<DragOverlay>` component **must** use the `snapCenterToCursor` modifier from the `@dnd-kit/modifiers` library. Example: `modifiers={[snapCenterToCursor]}`.
@@ -157,7 +157,7 @@ This is the application's perfected, gold-standard pattern for managing a collec
     - **Card-level Actions**: To show an action icon (like delete) for the entire card, place the action button (and its `<TooltipProvider>`) **inside the `<CardHeader>`**. Then, apply the `group` class to the `<CardHeader>` itself. This correctly scopes the `group-hover:opacity-100` effect to the header area, preventing it from activating when the user hovers over the card's content. The standard icon for deleting a card is a circular `cancel` icon that appears on hover, absolutely positioned to the corner of the card.
     - **Item-level Actions**: For actions on individual items *within* a card (like Badges in a Collection or Users in a Team), apply the `group` class to the immediate container of **each individual item**. The action button inside that container uses `group-hover:opacity-100`. This ensures that hovering one item only reveals its own actions.
 -   **Drag-to-Duplicate & Create**:
-    -   **Interaction & Implementation**: A designated "Add New" icon (`<Button>`) acts as a drop zone. To ensure this works reliably, the `useDroppable` hook from `@dnd-kit` must be applied to a **permanently rendered wrapper `div`** around the button. The button *inside* this wrapper can be visually hidden (e.g., with the `hidden` class based on the `isDragModifierPressed` state), but the wrapper `div` itself must always be present in the DOM. This ensures `@dnd-kit` can register it as a valid drop zone when the drag operation begins. While a card is being dragged, this zone becomes highlighted with a ring to indicate it can accept a drop.
+    -   **Interaction & Implementation**: A designated "Add New" icon (`<Button>`) acts as a drop zone. To ensure this works reliably, the `useDroppable` hook from `@dnd-kit` must be applied to a **permanently rendered wrapper `div`** around the button. The button *inside* this wrapper can be visually hidden (e.g., with the `hidden` class based on the `isDragging` state), but the wrapper `div` itself must always be present in the DOM. This ensures `@dnd-kit` can register it as a valid drop zone when the drag operation begins. While a card is being dragged, this zone becomes highlighted with a ring to indicate it can accept a drop.
     -   **Behavior (Duplicate)**: Dropping any card (pinned or not, from the main board or the shared panel) creates a deep, independent copy of the original. The new card is given a unique ID, a modified name (e.g., with `(Copy)`), and a unique URL path. It is placed immediately after the original in the list. Its ownership is assigned to the current user's context.
     -   **Behavior (Create)**: Clicking the "Add New" button will create a fresh, default item. The item is intelligently placed *before* any pinned items, preserving the integrity of the core page structure.
     -   **Smart Unlinking**: If the duplicated card was a *linked* item (e.g., a shared calendar from another user), the original linked item is automatically removed from the user's board after the copy is created. This provides a clean "copy and replace" workflow.
@@ -263,7 +263,7 @@ This pattern provides a dense, icon-driven interface for managing a series of us
     - **Tooltip on Hover**: Hovering over any icon button **must** display a `<Tooltip>` that clearly describes the setting and its current value (e.g., "Theme: Dark" or "Easy Booking: On"). This is critical for usability as the icons alone do not convey the current state.
     - **Popover on Click**: Clicking an icon button opens a compact `<Popover>` containing the options for that setting.
     - **Instant Application**: Selecting an option within the popover immediately applies the change and closes the popover. There is no separate "Save" button.
-    - **Custom Color Picker**: The palette icon opens the standard color picker popover, as defined in the **Icon & Color Editing Flow** pattern. Selecting a predefined swatch or clicking "Set Color" with a custom color applies the change and closes the popover.
+    - **Custom Color Picker**: The palette icon opens the standard color picker popover, as defined in the **Icon & Color Editing Flow** pattern. Selecting a predefined swatch instantly applies the color and closes the popover.
 - **Application**: Used on the **Account Settings** page to manage the current user's theme, primary color, default calendar view, time format, and other boolean preferences.
 
 ## Visual & Theming Elements
@@ -308,7 +308,7 @@ This is the single source of truth for indicating user interaction state across 
 -   **Selected/Highlighted State**: To indicate a persistently selected or highlighted state (e.g., the designated "Team Admin" in a list), a clear icon badge (e.g., a "key" icon) is used, typically overlaid on the user's avatar. This avoids visually noisy outlines and provides a clear, universally understood symbol for elevated status.
 
 ### List Item States (Dropdowns & Popovers)
-- **Hover & Focus**: When hovering over or navigating to list items (like in dropdowns or popovers) using the keyboard, the item's text color changes to `text-foreground` and its font weight becomes `font-normal`. **No background highlight is applied**, ensuring a clean and consistent look.
+- **Hover & Focus**: When hovering over or navigating to list items (like in dropdowns or popovers) using the keyboard, the item's text color changes to `text-foreground`. **No background highlight is applied**, ensuring a clean and consistent look.
 - **Selection**: The currently selected item within a list is indicated by a checkmark icon, which also uses the standard foreground color.
 
 ### User Notifications
@@ -330,3 +330,4 @@ This is the single source of truth for indicating user interaction state across 
       - **Ownership Status**: `absolute -top-0 -right-3`.
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Compact View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
+

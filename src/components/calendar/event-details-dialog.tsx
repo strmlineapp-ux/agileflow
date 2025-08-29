@@ -1,9 +1,10 @@
+
+
 'use client';
 
 import * as React from 'react';
 import { type Event } from '@/types';
 import { useUser } from '@/context/user-context';
-import { format } from 'date-fns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle as AlertDialogTitleComponent } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
@@ -46,10 +47,25 @@ const attachmentIcons: Record<AttachmentType, React.ReactNode> = {
   slides: <GoogleSlidesIcon className="h-5 w-5" />,
   forms: <GoogleFormsIcon className="h-5 w-5" />,
   meet: <GoogleMeetIcon className="h-5 w-5" />,
-  local: <GoogleSymbol name="description" className="text-xl" />,
-  link: <GoogleSymbol name="link" className="text-xl" />,
+  local: <GoogleSymbol name="description" />,
+  link: <GoogleSymbol name="link" />,
 };
 
+// Helper to format date
+const formatDate = (date: Date, formatString: string): string => {
+    // Basic implementation, would be replaced by a robust library like date-fns
+    const options: Intl.DateTimeFormatOptions = {};
+    if (formatString.includes('eeee')) options.weekday = 'long';
+    if (formatString.includes('MMM')) options.month = 'short';
+    if (formatString.includes('d')) options.day = 'numeric';
+    if (formatString.includes('yyyy')) options.year = 'numeric';
+    if (formatString.includes('p')) {
+        options.hour = 'numeric';
+        options.minute = 'numeric';
+        options.hour12 = true;
+    }
+    return new Intl.DateTimeFormat('en-US', options).format(date);
+}
 
 // --- DISPLAY VIEW ---
 const EventDisplayView = ({ event }: { event: Event }) => {
@@ -57,7 +73,7 @@ const EventDisplayView = ({ event }: { event: Event }) => {
     const calendar = calendars.find(c => c.id === event.calendarId);
     if (!calendar) return null;
 
-    const timeFormat = format(event.startTime, 'eeee, MMM d, yyyy') + ' ⋅ ' + format(event.startTime, 'p') + ' - ' + format(event.endTime, 'p');
+    const timeFormat = formatDate(event.startTime, 'eeee, MMM d, yyyy') + ' ⋅ ' + formatDate(event.startTime, 'p') + ' - ' + formatDate(event.endTime, 'p');
     const teamForEvent = allBadges.find(t => t.id === event.calendarId);
     const eventTemplate = allBadges.find(t => t.id === event.templateId);
     const roleAssignmentsLabel = calendar?.roleAssignmentsLabel || 'Role Assignments';
@@ -68,7 +84,7 @@ const EventDisplayView = ({ event }: { event: Event }) => {
     return (
         <>
             <DialogHeader>
-              <DialogTitle className="text-2xl">{event.title}</DialogTitle>
+              <DialogTitle className="text-2xl text-muted-foreground">{event.title}</DialogTitle>
               <p className="text-sm text-muted-foreground">{timeFormat}</p>
             </DialogHeader>
             <ScrollArea className="max-h-[60vh]">
@@ -83,14 +99,14 @@ const EventDisplayView = ({ event }: { event: Event }) => {
                     
                     {event.location && (
                         <div className="flex items-start gap-4">
-                            <GoogleSymbol name="location_on" className="text-2xl text-muted-foreground mt-0.5" />
+                            <GoogleSymbol name="location_on" className="text-muted-foreground mt-0.5" />
                             <p className="font-normal">{event.location}</p>
                         </div>
                     )}
                     
                     {event.description && (
                          <div className="flex items-start gap-4">
-                            <GoogleSymbol name="subject" className="text-2xl text-muted-foreground mt-0.5" />
+                            <GoogleSymbol name="subject" className="text-muted-foreground mt-0.5" />
                             <p className="text-sm">{event.description}</p>
                         </div>
                     )}
@@ -99,7 +115,7 @@ const EventDisplayView = ({ event }: { event: Event }) => {
                          <>
                             <Separator />
                             <div className="flex items-start gap-4">
-                                <GoogleSymbol name="badge" className="text-2xl text-muted-foreground mt-0.5" />
+                                <GoogleSymbol name="badge" className="text-muted-foreground mt-0.5" />
                                 <div className="flex-1">
                                     <p className="font-normal mb-2">{roleAssignmentsLabel}</p>
                                     <div className="space-y-2">
@@ -127,7 +143,7 @@ const EventDisplayView = ({ event }: { event: Event }) => {
                         <>
                             <Separator />
                             <div className="flex items-start gap-4">
-                                <GoogleSymbol name="group" className="text-2xl text-muted-foreground mt-0.5" />
+                                <GoogleSymbol name="group" className="text-muted-foreground mt-0.5" />
                                 <div className="flex-1">
                                     <p className="font-normal mb-2">{guestsToDisplay.length} Guests</p>
                                     <div className="space-y-2">
@@ -150,7 +166,7 @@ const EventDisplayView = ({ event }: { event: Event }) => {
                          <>
                             <Separator />
                             <div className="flex items-start gap-4">
-                                 <GoogleSymbol name="attachment" className="text-2xl text-muted-foreground mt-0.5" />
+                                 <GoogleSymbol name="attachment" className="text-muted-foreground mt-0.5" />
                                 <div className="flex-1">
                                     <p className="font-normal mb-2">{event.attachments.length} Attachments</p>
                                     <div className="space-y-2">

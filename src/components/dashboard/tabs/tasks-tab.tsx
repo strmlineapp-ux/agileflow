@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { TaskList } from '@/components/tasks/task-list';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
-import { type AppTab, type AppPage, type Task } from '@/types';
+import { type Task } from '@/types';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useUser } from '@/context/user-context';
@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 // A new form component will be needed for adding/editing tasks. Let's assume its creation.
 // For now, we'll imagine a placeholder. A real implementation would require a TaskForm component.
 
-export function TasksContent({ tab: pageConfig, isSingleTabPage }: { tab: AppPage, isSingleTabPage?: boolean }) {
+export function TasksContent() {
   const [activeTab, setActiveTab] = useState<'my-tasks' | 'all'>('my-tasks');
   const { viewAsUser, fetchTasks, addTask, updateTask, deleteTask } = useUser();
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -82,8 +82,8 @@ export function TasksContent({ tab: pageConfig, isSingleTabPage }: { tab: AppPag
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="rounded-full" onClick={openNewTaskForm}>
-                        <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+                      <Button variant="circle" size="icon" onClick={openNewTaskForm}>
+                        <GoogleSymbol name="add_circle" className="text-4xl" />
                         <span className="sr-only">New Task</span>
                       </Button>
                     </TooltipTrigger>

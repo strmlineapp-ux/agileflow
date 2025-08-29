@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -6,7 +7,6 @@ import { useUser } from '@/context/user-context';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { type Team, type EventTemplate, type AppTab, type Badge } from '@/types';
@@ -16,29 +16,30 @@ import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
 import { ScrollArea } from '../ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { InlineEditor } from '../common/inline-editor';
+import { IconColorPicker } from '../common/icon-color-picker';
+import { getContrastColor } from '@/lib/utils';
 
-function EventTemplateForm({ 
+function EventPresetForm({ 
   team, 
-  template,
+  preset,
   onSave,
   onClose,
 }: {
   team: Team;
-  template: Omit<EventTemplate, 'id'> | EventTemplate | null;
+  preset: Omit<EventTemplate, 'id'> | EventTemplate | null;
   onSave: (templateData: Omit<EventTemplate, 'id'>) => void;
   onClose: () => void;
 }) {
   const { toast } = useToast();
   const { allBadges, allBadgeCollections } = useUser();
-  const [name, setName] = useState(template?.name || '');
-  const [icon, setIcon] = useState(template?.icon || 'label');
-  const [requestedRoles, setRequestedRoles] = useState<string[]>(template?.requestedRoles || []);
+  const [name, setName] = useState(preset?.name || '');
+  const [icon, setIcon] = useState(preset?.icon || 'label');
+  const [color, setColor] = useState(preset?.color || 'hsl(220, 13%, 47%)');
+  const [requestedRoles, setRequestedRoles] = useState<string[]>(preset?.requestedRoles || []);
   
   const [isAddRolePopoverOpen, setIsAddRolePopoverOpen] = useState(false);
   const [roleSearch, setRoleSearch] = useState('');
-  
-  const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
-  const [iconSearch, setIconSearch] = useState('');
   
   const teamBadges = useMemo(() => {
     const activeBadgeIds = new Set(
@@ -52,10 +53,6 @@ function EventTemplateForm({
   
   const availableBadges = teamBadges.filter(badge => !requestedRoles.includes(badge.name) && badge.name.toLowerCase().includes(roleSearch.toLowerCase()));
 
-  const filteredIcons = googleSymbolNames.filter(iconName =>
-    iconName.toLowerCase().includes(iconSearch.toLowerCase())
-  );
-
   const handleAddRole = (roleName: string) => {
     setRequestedRoles(prev => [...prev, roleName]);
     setIsAddRolePopoverOpen(false);
@@ -68,10 +65,10 @@ function EventTemplateForm({
 
   const handleSaveClick = () => {
     if (!name.trim()) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Tag name cannot be empty.' });
+      toast({ variant: 'destructive', title: 'Error', description: 'Preset name cannot be empty.' });
       return;
     }
-    onSave({ name, icon, requestedRoles });
+    onSave({ name, icon, color, requestedRoles });
     onClose();
   };
   
@@ -79,58 +76,30 @@ function EventTemplateForm({
     <>
       <div className="absolute top-4 right-4">
         <Button variant="ghost" size="icon" className="p-0" onClick={handleSaveClick}>
-            <GoogleSymbol name="check" className="text-4xl" weight={100} opticalSize={20} />
-            <span className="sr-only">Save Template</span>
+            <GoogleSymbol name="check" />
+            <span className="sr-only">Save Preset</span>
         </Button>
       </div>
       <DialogHeader>
-        <DialogTitle>{template ? 'Edit Event Template' : 'New Event Template'}</DialogTitle>
+        <DialogTitle className="text-muted-foreground">{preset ? 'Edit Event Preset' : 'New Event Preset'}</DialogTitle>
         <DialogDescription>
-          Create a reusable template of requested roles for common event types.
+          Create a reusable preset of requested roles for common event types.
         </DialogDescription>
       </DialogHeader>
       <div className="grid gap-4 py-4">
         <div className="space-y-2">
             <div className="flex items-center gap-2 border rounded-md px-2 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
-                <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                    <PopoverTrigger asChild>
-                         <Button variant="ghost" className="h-14 w-14 flex items-center justify-center p-0">
-                            <GoogleSymbol name={icon} style={{ fontSize: '48px' }} weight={100} opticalSize={20} />
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-80 p-0">
-                        <div className="p-2 border-b">
-                            <Input
-                                placeholder="Search icons..."
-                                value={iconSearch}
-                                onChange={(e) => setIconSearch(e.target.value)}
-                            />
-                        </div>
-                        <ScrollArea className="h-64">
-                            <div className="grid grid-cols-6 gap-1 p-2">
-                                {filteredIcons.slice(0, 300).map((iconName) => (
-                                    <Button
-                                        key={iconName}
-                                        variant={icon === iconName ? "default" : "ghost"}
-                                        size="icon"
-                                        onClick={() => {
-                                            setIcon(iconName);
-                                            setIsIconPopoverOpen(false);
-                                        }}
-                                        className="h-8 w-8 p-0"
-                                    >
-                                        <GoogleSymbol name={iconName} style={{fontSize: '24px'}} weight={100} opticalSize={20} />
-                                    </Button>
-                                ))}
-                            </div>
-                        </ScrollArea>
-                    </PopoverContent>
-                </Popover>
+                <IconColorPicker 
+                    icon={icon} 
+                    color={color}
+                    onUpdateIcon={setIcon}
+                    onUpdateColor={setColor}
+                />
                 <Input
                     id="template-name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Template Tag Name"
+                    placeholder="Preset Tag Name"
                     className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-9"
                 />
             </div>
@@ -146,7 +115,7 @@ function EventTemplateForm({
                         className="ml-1 h-4 w-4 hover:bg-destructive/20 rounded-full inline-flex items-center justify-center" 
                         onClick={() => handleRemoveRole(role)}
                     >
-                        <GoogleSymbol name="cancel" className="text-sm" weight={100} opticalSize={20} />
+                        <GoogleSymbol name="cancel" className="text-sm" />
                         <span className="sr-only">Remove {role}</span>
                     </button>
                 </UiBadge>
@@ -154,7 +123,7 @@ function EventTemplateForm({
               <Popover open={isAddRolePopoverOpen} onOpenChange={setIsAddRolePopoverOpen}>
                 <PopoverTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
-                        <GoogleSymbol name="add" className="text-lg" weight={100} opticalSize={20} />
+                        <GoogleSymbol name="add" />
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[250px] p-0" align="start">
@@ -193,163 +162,107 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
     return null;
   }
   
-  const { updateTeam, updateAppTab } = useUser();
+  const { updateTeam, updateAppTab, viewAsUser } = useUser();
   const { toast } = useToast();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingTemplate, setEditingTemplate] = useState<EventTemplate | null>(null);
-  const [deletingTemplate, setDeletingTemplate] = useState<EventTemplate | null>(null);
-  const [editingTemplateNameId, setEditingTemplateNameId] = useState<string | null>(null);
-  const nameInputRef = useRef<HTMLInputElement>(null);
-
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const titleInputRef = useRef<HTMLInputElement>(null);
+  const [editingPreset, setEditingPreset] = useState<EventTemplate | null>(null);
+  const [deletingPreset, setDeletingPreset] = useState<EventTemplate | null>(null);
   
-  const templates = team.eventTemplates || [];
-  
-  useEffect(() => {
-    if (isEditingTitle) titleInputRef.current?.focus();
-  }, [isEditingTitle]);
+  const canManage = viewAsUser.isAdmin || team.teamAdmins?.includes(viewAsUser.userId);
+  const presets = team.eventTemplates || [];
 
-  useEffect(() => {
-    if (editingTemplateNameId && nameInputRef.current) {
-        nameInputRef.current.focus();
-        nameInputRef.current.select();
-    }
-  }, [editingTemplateNameId]);
-
-  const handleSaveTitle = () => {
-    const newName = titleInputRef.current?.value.trim();
-    if (newName && newName !== tab.name) {
-      updateAppTab(tab.id, { name: newName });
-    }
-    setIsEditingTitle(false);
-  };
-  
-  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') handleSaveTitle();
-    else if (e.key === 'Escape') setIsEditingTitle(false);
-  };
-  
-  const handleSaveTemplateName = (templateId: string) => {
-    const templateToEdit = templates.find(t => t.id === templateId);
-    if (!templateToEdit || !nameInputRef.current) return;
-
-    const newName = nameInputRef.current.value.trim();
-    if (newName && newName !== templateToEdit.name) {
+  const handleSavePresetName = (presetId: string, newName: string) => {
+    const presetToEdit = presets.find(t => t.id === presetId);
+    if (!presetToEdit) return;
+    
+    if (newName && newName !== presetToEdit.name) {
         updateTeam(team.id, { 
-            eventTemplates: templates.map(t => t.id === templateId ? { ...t, name: newName } : t) 
+            eventTemplates: presets.map(t => t.id === presetId ? { ...t, name: newName } : t) 
         });
-        toast({ title: "Template name updated" });
+        toast({ title: "Preset name updated" });
     }
-    setEditingTemplateNameId(null);
   };
 
   const openAddDialog = () => {
-    setEditingTemplate(null);
+    setEditingPreset(null);
     setIsFormOpen(true);
   };
 
-  const openEditDialog = (template: EventTemplate) => {
-    setEditingTemplate(template);
+  const openEditDialog = (preset: EventTemplate) => {
+    setEditingPreset(preset);
     setIsFormOpen(true);
   };
   
-  const handleSaveTemplate = (templateData: Omit<EventTemplate, 'id'>) => {
-    let updatedTemplates;
-    if (editingTemplate) { // Editing existing
-      updatedTemplates = templates.map(t => 
-        t.id === editingTemplate.id ? { ...t, ...templateData } : t
+  const handleSavePreset = (presetData: Omit<EventTemplate, 'id'>) => {
+    let updatedPresets;
+    if (editingPreset) { // Editing existing
+      updatedPresets = presets.map(t => 
+        t.id === editingPreset.id ? { ...t, ...presetData } : t
       );
-      toast({ title: 'Template Updated', description: `"${templateData.name}" has been saved.` });
+      toast({ title: 'Preset Updated', description: `"${presetData.name}" has been saved.` });
     } else { // Adding new
-      const newTemplate: EventTemplate = {
-        ...templateData,
+      const newPreset: EventTemplate = {
+        ...presetData,
         id: crypto.randomUUID(),
       };
-      updatedTemplates = [...templates, newTemplate];
-      toast({ title: 'Template Created', description: `"${templateData.name}" has been added.` });
+      updatedPresets = [...presets, newPreset];
+      toast({ title: 'Preset Created', description: `"${presetData.name}" has been added.` });
     }
-    updateTeam(team.id, { eventTemplates: updatedTemplates });
+    updateTeam(team.id, { eventTemplates: updatedPresets });
   };
 
-  const handleDeleteTemplate = () => {
-    if (!deletingTemplate) return;
-    const updatedTemplates = templates.filter(t => t.id !== deletingTemplate.id);
-    updateTeam(team.id, { eventTemplates: updatedTemplates });
-    toast({ title: 'Template Deleted', description: `"${deletingTemplate.name}" has been deleted.` });
-    setDeletingTemplate(null);
+  const handleDeletePreset = () => {
+    if (!deletingPreset) return;
+    const updatedPresets = presets.filter(t => t.id !== deletingPreset.id);
+    updateTeam(team.id, { eventTemplates: updatedPresets });
+    toast({ title: 'Preset Deleted', description: `"${deletingPreset.name}" has been deleted.` });
+    setDeletingPreset(null);
   };
 
   return (
     <>
       <div className="flex items-center gap-2 mb-6">
-        {isEditingTitle ? (
-            <Input
-                ref={titleInputRef}
-                defaultValue={tab.name}
-                onBlur={handleSaveTitle}
-                onKeyDown={handleTitleKeyDown}
-                className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-            />
-        ) : (
-             <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <h2 className="font-headline text-2xl font-thin tracking-tight cursor-text" onClick={() => setIsEditingTitle(true)}>
-                            {tab.name}
-                        </h2>
-                    </TooltipTrigger>
-                    {tab.description && (
-                        <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>
-                    )}
-                </Tooltip>
-            </TooltipProvider>
-        )}
+        <InlineEditor
+            value={tab.name}
+            onSave={(newValue) => updateAppTab(tab.id, { name: newValue })}
+            className="h-auto p-0 font-headline text-2xl font-thin tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+            disabled={!canManage}
+        />
       </div>
       <Card>
         <CardHeader>
             <div className="flex items-start justify-between">
                 <div>
                   <CardTitle className="flex items-center gap-2">
-                      Event Templates
-                       <Button variant="ghost" size="icon" className="p-0" onClick={openAddDialog}>
-                        <GoogleSymbol name="add_circle" className="text-4xl" weight={100} opticalSize={20} />
-                        <span className="sr-only">New Template</span>
+                      Event Presets
+                       <Button variant="circle" size="icon" onClick={openAddDialog} disabled={!canManage}>
+                        <GoogleSymbol name="add_circle" />
+                        <span className="sr-only">New Preset</span>
                       </Button>
                   </CardTitle>
                   <CardDescription>
-                    Create reusable templates for common events, pre-filling requested roles to speed up event creation.
+                    Create reusable presets for common events, pre-filling requested roles to speed up event creation.
                   </CardDescription>
                 </div>
             </div>
         </CardHeader>
         <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {templates.length > 0 ? (
-              templates.map(template => (
-                <Card key={template.id} className="flex flex-col bg-transparent">
+            {presets.length > 0 ? (
+              presets.map(preset => (
+                <Card key={preset.id} className="flex flex-col bg-transparent">
                     <CardHeader>
                         <div className="flex items-start justify-between">
                              <CardTitle className="flex-1 min-w-0">
-                                <UiBadge className="text-base py-1 px-3 gap-2">
-                                    <GoogleSymbol name={template.icon} opticalSize={20} />
-                                    {editingTemplateNameId === template.id ? (
-                                        <Input
-                                            ref={nameInputRef}
-                                            defaultValue={template.name}
-                                            onBlur={() => handleSaveTemplateName(template.id)}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter') handleSaveTemplateName(template.id);
-                                                else if (e.key === 'Escape') setEditingTemplateNameId(null);
-                                            }}
-                                            className="h-auto p-0 bg-transparent text-base font-headline font-thin border-0 rounded-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-primary-foreground"
-                                        />
-                                    ) : (
-                                        <span className="cursor-text" onClick={(e) => { e.stopPropagation(); setEditingTemplateNameId(template.id); }}>
-                                            {template.name}
-                                        </span>
-                                    )}
+                                <UiBadge className="text-base py-1 px-3 gap-2" style={{ backgroundColor: preset.color, color: getContrastColor(preset.color || 'hsl(220, 13%, 47%)')}}>
+                                    <GoogleSymbol name={preset.icon} />
+                                    <InlineEditor
+                                        value={preset.name}
+                                        onSave={(newValue) => handleSavePresetName(preset.id, newValue)}
+                                        className="text-primary-foreground"
+                                        disabled={!canManage}
+                                    />
                                 </UiBadge>
                             </CardTitle>
                             <div className="flex items-center -mr-4 -mt-2">
@@ -357,10 +270,11 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
                                   variant="ghost" 
                                   size="icon" 
                                   className="text-muted-foreground p-0"
-                                  onClick={() => openEditDialog(template)}
+                                  onClick={() => openEditDialog(preset)}
+                                  disabled={!canManage}
                                 >
-                                    <GoogleSymbol name="edit" className="text-4xl" weight={100} opticalSize={20} />
-                                    <span className="sr-only">Edit roles for {template.name}</span>
+                                    <GoogleSymbol name="edit" />
+                                    <span className="sr-only">Edit roles for {preset.name}</span>
                                 </Button>
                                 <Button 
                                   variant="ghost" 
@@ -368,11 +282,12 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
                                   className="text-destructive hover:text-destructive p-0"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    setDeletingTemplate(template);
+                                    canManage && setDeletingPreset(preset);
                                   }}
+                                  disabled={!canManage}
                                 >
-                                    <GoogleSymbol name="delete" className="text-4xl" weight={100} opticalSize={20} />
-                                    <span className="sr-only">Delete {template.name}</span>
+                                    <GoogleSymbol name="delete" />
+                                    <span className="sr-only">Delete {preset.name}</span>
                                 </Button>
                             </div>
                         </div>
@@ -380,8 +295,8 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
                     <CardContent className="flex-grow">
                         <p className="text-sm font-medium text-muted-foreground mb-2">Requested Badges</p>
                         <div className="flex flex-wrap gap-1 min-h-[24px]">
-                          {template.requestedRoles.length > 0 ? (
-                            template.requestedRoles.map(role => <UiBadge key={role} variant="outline" className="rounded-full">{role}</UiBadge>)
+                          {preset.requestedRoles.length > 0 ? (
+                            preset.requestedRoles.map(role => <UiBadge key={role} variant="outline" className="rounded-full">{role}</UiBadge>)
                           ) : (
                             <p className="text-xs text-muted-foreground italic">No badges requested.</p>
                           )}
@@ -391,7 +306,7 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
               ))
             ) : (
               <div className="col-span-3 flex items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 text-muted-foreground min-h-[150px]">
-                <p>No templates yet. Click the '+' button to add one.</p>
+                <p>No presets yet. Click the '+' button to add one.</p>
               </div>
             )}
             </div>
@@ -400,27 +315,27 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
       
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent>
-          <EventTemplateForm 
+          <EventPresetForm 
             team={team}
-            template={editingTemplate}
-            onSave={handleSaveTemplate}
+            preset={editingPreset}
+            onSave={handleSavePreset}
             onClose={() => setIsFormOpen(false)}
           />
         </DialogContent>
       </Dialog>
       
-      <Dialog open={!!deletingTemplate} onOpenChange={(isOpen) => !isOpen && setDeletingTemplate(null)}>
+      <Dialog open={!!deletingPreset} onOpenChange={(isOpen) => !isOpen && setDeletingPreset(null)}>
         <DialogContent className="max-w-md">
             <div className="absolute top-4 right-4">
-                <Button variant="ghost" size="icon" className="hover:text-destructive p-0 hover:bg-transparent" onClick={handleDeleteTemplate}>
-                    <GoogleSymbol name="delete" className="text-4xl" weight={100} />
-                    <span className="sr-only">Delete Template</span>
+                <Button variant="ghost" size="icon" className="hover:text-destructive p-0 hover:bg-transparent" onClick={handleDeletePreset}>
+                    <GoogleSymbol name="delete" />
+                    <span className="sr-only">Delete Preset</span>
                 </Button>
             </div>
             <DialogHeader>
-                <DialogTitle>Delete "{deletingTemplate?.name}"?</DialogTitle>
+                <DialogTitle className="text-muted-foreground">Delete "{deletingPreset?.name}"?</DialogTitle>
                 <DialogDescription>
-                    This will permanently delete the template. This action cannot be undone.
+                    This will permanently delete the preset. This action cannot be undone.
                 </DialogDescription>
             </DialogHeader>
         </DialogContent>
@@ -428,3 +343,5 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
     </>
   );
 }
+
+    

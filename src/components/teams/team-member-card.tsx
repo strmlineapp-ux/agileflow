@@ -62,9 +62,14 @@ function AssignedBadge({ badge, canManage, contextId }: { badge: Badge, canManag
     );
 }
 
-export function TeamMemberCard({ member, team, isViewer, onSetAdmin, isOver }: { member: User, team: Team, isViewer: boolean, onSetAdmin: () => void, isOver: boolean }) {
-  const { allBadges } = useUser();
-  const canManage = !isViewer;
+export function TeamMemberCard({ member, team, onSetAdmin, isOver }: { member: User, team: Team, onSetAdmin: () => void, isOver: boolean }) {
+  const { allBadges, viewAsUser } = useUser();
+  
+  const canManage = useMemo(() => {
+    if (viewAsUser.isAdmin) return true;
+    if (!team.teamAdmins?.length) return !team.members.includes(viewAsUser.userId);
+    return team.teamAdmins.includes(viewAsUser.userId);
+  }, [viewAsUser, team]);
 
   const assignedBadges = useMemo(() => {
     return (member.roles || [])
@@ -115,7 +120,7 @@ export function TeamMemberCard({ member, team, isViewer, onSetAdmin, isOver }: {
             </div>
           </div>
         </CardHeader>
-        {!isViewer && (
+        {canManage && (
             <CardContent ref={setNodeRef} className="p-2 pt-0 mt-2">
                 <div className="transition-colors min-h-[48px] rounded-md border p-2 bg-muted/20 flex flex-wrap gap-1.5 items-center">
                     <SortableContext items={assignedBadges.map(b => `badge-assigned:${member.userId}:${b.id}`)} strategy={verticalListSortingStrategy}>

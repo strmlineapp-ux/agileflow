@@ -4,10 +4,25 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { formatDistanceToNow } from 'date-fns';
 import { useUser } from '@/context/user-context';
 import { cn } from '@/lib/utils';
 import { GoogleSymbol } from '../icons/google-symbol';
+
+// Helper function to format distance to now
+const formatDistanceToNow = (date: Date): string => {
+    const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+    let interval = seconds / 31536000;
+    if (interval > 1) return Math.floor(interval) + " years ago";
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + " months ago";
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + " days ago";
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + " hours ago";
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + " minutes ago";
+    return Math.floor(seconds) + " seconds ago";
+}
 
 export function NotificationList() {
   const { realUser, notifications, setNotifications, handleApproveAccessRequest } = useUser();
@@ -43,7 +58,7 @@ export function NotificationList() {
                   {notification.content}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {formatDistanceToNow(notification.time, { addSuffix: true })}
+                  {formatDistanceToNow(notification.time)}
                 </p>
                 {notification.type === 'access_request' && notification.status === 'pending' && isAdmin && (
                   <div className="flex gap-2 mt-2">

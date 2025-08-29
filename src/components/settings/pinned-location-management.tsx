@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -13,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { LocationCheckManagerManagement } from '../teams/location-check-manager-management';
+import { InlineEditor } from '../common/inline-editor';
 
 export function PinnedLocationManagement({ team, tab }: { team: Team, tab: AppTab }) {
   if (!team) {
@@ -24,27 +26,10 @@ export function PinnedLocationManagement({ team, tab }: { team: Team, tab: AppTa
   
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddPopoverOpen, setIsAddPopoverOpen] = useState(false);
-  
-  const [editingAlias, setEditingAlias] = useState<string | null>(null);
-  const aliasInputRef = useRef<HTMLInputElement>(null);
-  
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const titleInputRef = useRef<HTMLInputElement>(null);
 
   const pinnedLocationNames = team.pinnedLocations || [];
   const checkLocationNames = new Set(team.checkLocations || []);
   const canManage = viewAsUser.isAdmin || team.teamAdmins?.includes(viewAsUser.userId);
-
-  useEffect(() => {
-    if (isEditingTitle) titleInputRef.current?.focus();
-  }, [isEditingTitle]);
-
-  useEffect(() => {
-    if (editingAlias && aliasInputRef.current) {
-      aliasInputRef.current.focus();
-      aliasInputRef.current.select();
-    }
-  }, [editingAlias]);
 
   const availableToPin = useMemo(() => {
     return locations
@@ -52,29 +37,19 @@ export function PinnedLocationManagement({ team, tab }: { team: Team, tab: AppTa
       .filter(loc => loc.name.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [locations, pinnedLocationNames, searchTerm]);
   
-  const handleSaveAlias = () => {
-    if (!editingAlias) return;
-
-    const newAlias = aliasInputRef.current?.value || '';
-
+  const handleSaveAlias = (locationName: string, newAlias: string) => {
     const newAliases = { ...(team.locationAliases || {}) };
     if (newAlias.trim()) {
-      newAliases[editingAlias] = newAlias.trim();
+      newAliases[locationName] = newAlias.trim();
     } else {
-      delete newAliases[editingAlias];
+      delete newAliases[locationName];
     }
 
     updateTeam(team.id, { locationAliases: newAliases });
     toast({
       title: 'Alias Updated',
-      description: `Display name for "${editingAlias}" has been updated.`,
+      description: `Display name for "${locationName}" has been updated.`,
     });
-    setEditingAlias(null);
-  };
-
-  const handleAliasKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') handleSaveAlias();
-    else if (e.key === 'Escape') setEditingAlias(null);
   };
   
   const handlePinLocation = (locationName: string) => {
@@ -123,30 +98,23 @@ export function PinnedLocationManagement({ team, tab }: { team: Team, tab: AppTa
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 mb-6">
-          {isEditingTitle ? (
-              <Input
-                  ref={titleInputRef}
-                  defaultValue={tab.name}
-                  onBlur={() => {}}
-                  onKeyDown={() => {}}
-                  className="h-auto p-0 font-headline text-2xl font-thin border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-              />
-          ) : (
-              <h2 className="font-headline text-2xl font-thin tracking-tight text-muted-foreground cursor-text" onClick={() => {}}>
-                  {tab.name}
-              </h2>
-          )}
+          <InlineEditor
+            value={tab.name}
+            onSave={(newName) => updateAppTab(tab.id, {name: newName})}
+            className="h-auto p-0 font-headline text-2xl font-thin tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+            disabled={!canManage}
+          />
       </div>
       <LocationCheckManagerManagement team={team} />
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-muted-foreground">
-              <GoogleSymbol name="push_pin" className="text-muted-foreground" />
+              <GoogleSymbol name="push_pin" />
               Pinned & Check Locations
                <Popover open={isAddPopoverOpen} onOpenChange={setIsAddPopoverOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="ghost" size="icon" className="p-0 text-muted-foreground" disabled={!canManage}>
-                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+                    <GoogleSymbol name="add_circle" className="text-4xl" />
                     <span className="sr-only">Pin a location</span>
                   </Button>
                 </PopoverTrigger>
@@ -191,19 +159,13 @@ export function PinnedLocationManagement({ team, tab }: { team: Team, tab: AppTa
                       checkLocationNames.has(name) ? "border-primary text-primary-foreground bg-primary" : "bg-secondary text-secondary-foreground"
                     )}
                   >
-                    {editingAlias === name ? (
-                      <Input
-                        ref={aliasInputRef}
-                        defaultValue={alias || name}
-                        onBlur={handleSaveAlias}
-                        onKeyDown={handleAliasKeyDown}
-                        className="h-5 p-0 bg-transparent border-0 shadow-none focus-visible:ring-0"
-                      />
-                    ) : (
-                      <span className="cursor-pointer" onClick={() => canManage && setEditingAlias(name)} title={alias ? name : undefined}>
-                        {alias || name}
-                      </span>
-                    )}
+                    <InlineEditor
+                        value={alias || name}
+                        onSave={(newAlias) => handleSaveAlias(name, newAlias)}
+                        placeholder={name}
+                        disabled={!canManage}
+                        className="cursor-text"
+                    />
 
                     <div className='flex items-center gap-0.5'>
                       <Button 

@@ -7,7 +7,7 @@ export interface AppTab {
   icon: string;
   color: string;
   description?: string;
-  componentKey: 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates' | 'admins' | 'pages' | 'tabs' | 'overview' | 'tasks' | 'notifications' | 'settings' | 'calendar' | 'calendars' | 'teams';
+  componentKey: 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates' | 'admins' | 'pages' | 'tabs' | 'overview' | 'tasks' | 'notifications' | 'settings' | 'calendar' | 'calendars' | 'teams' | 'projects' | 'events';
   contextTeamId?: string;
 }
 
@@ -30,6 +30,7 @@ export interface AppSettings {
   tabs: AppTab[];
   calendarManagementLabel?: string;
   teamManagementLabel?: string;
+  preApprovedEmails?: string[];
 }
 
 export interface Attendee {
@@ -54,20 +55,37 @@ export interface User {
   directReports?: string[];
   memberOfTeamIds?: string[];
   theme?: 'light' | 'dark';
-  primaryColor?: string; // HEX value string e.g., "#4A90E2"
+  primaryColor?: string | null;
   defaultCalendarView?: 'month' | 'week' | 'day' | 'production-schedule';
   easyBooking?: boolean;
   timeFormat?: '12h' | '24h';
+  fontWeight?: number;
+  iconGrade?: number;
+  iconOpticalSize?: number;
+  iconFill?: boolean;
   linkedTeamIds?: string[];
-  linkedCollectionIds?: string[];
+  linkedBadgeCollectionIds?: string[];
   linkedCalendarIds?: string[];
   dragActivationKey?: 'alt' | 'ctrl' | 'meta' | 'shift';
+  hideWash?: boolean;
+  createdAt: Date;
+  approvedBy?: string;
+}
+
+export interface Project {
+  id: string;
+  name: string;
+  owner: { type: 'user', id: string };
+  isShared: boolean;
+  icon: string;
+  color: string;
 }
 
 export interface EventTemplate {
   id: string;
   name: string; // This is the "Tag"
   icon: string;
+  color: string;
   requestedRoles: string[]; // array of Badge names
 }
 
@@ -122,10 +140,13 @@ export interface Team {
 export interface Task {
   taskId: string;
   title: string;
+  projectId: string;
+  googleTaskId?: string;
   description?: string;
   assignedTo: User[];
   dueDate: Date;
-  priority: string; // Holds the ID of a badge used for priority
+  priority: string;
+  badges?: Record<string, string>; // { [badgeCollectionId]: badgeId }
   status: 'not_started' | 'in_progress' | 'awaiting_review' | 'completed' | 'blocked';
   createdBy: string; // userId
   createdAt: Date;
@@ -157,7 +178,9 @@ export interface Attachment {
 export interface Event {
   eventId: string;
   title: string;
-  calendarId: CalendarId;
+  projectId: string;
+  calendarId: string; // Still needed for color-coding, can be a project ID or a global calendar ID
+  googleEventId?: string;
   description?: string;
   startTime: Date;
   endTime: Date;

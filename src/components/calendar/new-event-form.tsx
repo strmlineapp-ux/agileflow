@@ -1,11 +1,11 @@
 
+
 'use client';
 
 import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { format, startOfDay } from 'date-fns';
 import { useUser } from '@/context/user-context';
 import { useToast } from '@/hooks/use-toast';
 import { canManageEventOnCalendar } from '@/lib/permissions';
@@ -15,7 +15,6 @@ import { createMeetLink } from '@/ai/flows/create-meet-link-flow';
 import { type User, type SharedCalendar, type Attachment, type AttachmentType, type Attendee, type Event, type Badge } from '@/types';
 
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -61,8 +60,8 @@ const attachmentIcons: Record<AttachmentType, React.ReactNode> = {
   slides: <GoogleSlidesIcon className="h-4 w-4" />,
   forms: <GoogleFormsIcon className="h-4 w-4" />,
   meet: <GoogleMeetIcon className="h-4 w-4" />,
-  local: <GoogleSymbol name="description" className="text-lg" />,
-  link: <GoogleSymbol name="link" className="text-lg" />,
+  local: <GoogleSymbol name="description" />,
+  link: <GoogleSymbol name="link" />,
 };
 
 const AttendeeSchema = z.object({
@@ -77,7 +76,7 @@ const formSchema = z.object({
   calendarId: z.string().nonempty({ message: 'Please select a calendar.' }),
   priority: z.string().nonempty({ message: 'Please select a priority.' }),
   templateId: z.string().optional(),
-  date: z.date({ required_error: 'A date is required.' }),
+  date: z.string().nonempty({ message: 'A date is required.' }),
   startTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, { message: 'Invalid time format (HH:mm).' }),
   endTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, { message: 'Invalid time format (HH:mm).' }),
   location: z.string().optional(),
@@ -106,13 +105,27 @@ type EventFormProps = {
 
 const getDefaultCalendarId = (user: User, availableCalendars: SharedCalendar[]): string | undefined => {
     if (availableCalendars.length === 0) return undefined;
-    const managedCalendar = availableCalendars.find(cal => cal.managers?.includes(user.userId));
-    if (managedCalendar) return managedCalendar.id;
     if (user.isAdmin) {
         return availableCalendars[0].id;
     }
     return undefined;
 };
+
+// Helper function to format a date to 'yyyy-MM-dd'
+function formatDateForInput(date: Date): string {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// Helper function to format a date to 'HH:mm'
+function formatTimeForInput(date: Date): string {
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+}
+
 
 export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onDelete }: EventFormProps) {
   const { realUser, viewAsUser, users, calendars, teams, allBookableLocations, userStatusAssignments, allBadges, allBadgeCollections } = useUser();
@@ -151,9 +164,9 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
         calendarId: event.calendarId,
         priority: event.priority,
         templateId: event.templateId || '',
-        date: event.startTime,
-        startTime: format(event.startTime, 'HH:mm'),
-        endTime: format(event.endTime, 'HH:mm'),
+        date: formatDateForInput(event.startTime),
+        startTime: formatTimeForInput(event.startTime),
+        endTime: formatTimeForInput(event.endTime),
         location: event.location || '',
         description: event.description || '',
         attachments: event.attachments || [],
@@ -163,15 +176,14 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
       title: '',
       calendarId: initialData?.calendarId || defaultCalendarId || '',
       priority: '',
-      date: new Date(),
-      startTime: '09:00',
-      endTime: '10:00',
-      location: '',
+      date: initialData?.date ? formatDateForInput(new Date(initialData.date as any)) : formatDateForInput(new Date()),
+      startTime: initialData?.startTime as string || '09:00',
+      endTime: initialData?.endTime as string || '10:00',
+      location: initialData?.location || '',
       description: '',
       attachments: [],
       attendees: [],
       recurrenceRule: '',
-      ...initialData,
     },
   });
 
@@ -194,7 +206,9 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
   
   const selectedCalendarId = form.watch('calendarId');
   const selectedTemplateId = form.watch('templateId');
-  const eventDate = form.watch('date');
+  const eventDateStr = form.watch('date');
+  
+  const eventDate = eventDateStr ? new Date(eventDateStr) : null;
   const selectedAttendees = form.watch('attendees') || [];
   const attachments = form.watch('attachments') || [];
 
@@ -346,10 +360,12 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
     const [startHour, startMinute] = values.startTime.split(':').map(Number);
     const [endHour, endMinute] = values.endTime.split(':').map(Number);
 
-    const startTime = new Date(values.date);
+    const baseDate = new Date(values.date);
+    baseDate.setMinutes(baseDate.getMinutes() + baseDate.getTimezoneOffset());
+    const startTime = new Date(baseDate);
     startTime.setHours(startHour, startMinute, 0, 0);
 
-    const endTime = new Date(values.date);
+    const endTime = new Date(baseDate);
     endTime.setHours(endHour, endMinute, 0, 0);
 
     const finalRoleAssignments: Record<string, string | null> = {};
@@ -399,7 +415,7 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
     onFinished();
   };
 
-  const dayKey = eventDate ? startOfDay(eventDate).toISOString() : null;
+  const dayKey = eventDate ? new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate()).toISOString() : null;
   const absencesForDay = dayKey && userStatusAssignments[dayKey] ? userStatusAssignments[dayKey] : [];
   
   const teamBadges = teamForSelectedCalendar?.allBadges || [];
@@ -561,7 +577,7 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
                           <Input 
                               placeholder={selectedCalendar?.defaultEventTitle || 'e.g. Team Standup'} 
                               {...field} 
-                              className="text-lg font-normal h-12"
+                              className="text-lg h-12"
                           />
                       </FormControl>
                       <FormMessage />
@@ -575,22 +591,15 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
               name="date"
               render={({ field }) => (
                 <FormItem className="flex-1">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={'outline'}
-                          className={cn('w-full justify-start text-left font-normal', !field.value && 'text-muted-foreground')}
-                        >
-                          <GoogleSymbol name="calendar_month" className="mr-2 text-lg" />
-                          {field.value ? format(field.value, 'MMM d, yyyy') : <span>Pick a date</span>}
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
-                    </PopoverContent>
-                  </Popover>
+                  <FormControl>
+                    <Input
+                      type="date"
+                      {...field}
+                      value={field.value || ''}
+                      onChange={(e) => field.onChange(e.target.value)}
+                      className="w-full justify-start text-left"
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -748,85 +757,83 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
               <FormItem>
                 <div className="flex items-center gap-1">
                   <TooltipProvider>
-                    <DropdownMenu>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-muted-foreground hover:text-primary">
-                              <GoogleSymbol name="attachment" className="text-xl" />
+                              <GoogleSymbol name="attachment" />
                             </Button>
                           </DropdownMenuTrigger>
-                        </TooltipTrigger>
-                        <TooltipContent><p>Attach File</p></TooltipContent>
-                      </Tooltip>
-                      <DropdownMenuContent align="start">
-                        <DropdownMenuItem onSelect={() => handleAddAttachment('drive', 'New Google Drive File')}>
-                            <GoogleDriveIcon className="mr-2 h-4 w-4" />
-                            <span>Attach from Drive</span>
-                        </DropdownMenuItem>
-                         <DropdownMenuItem onSelect={() => handleAddAttachment('sheets', 'New Spreadsheet')}>
-                            <GoogleSheetsIcon className="mr-2 h-4 w-4" />
-                            <span>New Sheet</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => handleAddAttachment('slides', 'New Presentation')}>
-                            <GoogleSlidesIcon className="mr-2 h-4 w-4" />
-                            <span>New Slides</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => handleAddAttachment('forms', 'New Form')}>
-                            <GoogleFormsIcon className="mr-2 h-4 w-4" />
-                            <span>New Form</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => handleAddAttachment('local', 'design_brief.pdf')}>
-                          <GoogleSymbol name="description" className="mr-2 text-lg" />
-                          <span>Attach local file</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => { setIsLinkDialogOpen(true); }}>
-                          <GoogleSymbol name="link" className="mr-2 text-lg" />
-                          <span>Add Link</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          disabled={isCreatingMeetLink || !selectedCalendar?.googleCalendarId}
-                          onSelect={async () => {
-                            if (!selectedCalendar?.googleCalendarId) return;
-                            setIsCreatingMeetLink(true);
-                            try {
-                              const eventTitle = form.getValues('title') || 'New Event';
-                              const result = await createMeetLink({ title: eventTitle });
-                              handleAddAttachment('meet', 'Meet link', result.meetLink);
-                            } catch (error) {
-                              console.error('Failed to create Meet link:', error);
-                              toast({
-                                variant: 'destructive',
-                                title: 'Error',
-                                description: 'Could not generate a Meet link.',
-                              });
-                            } finally {
-                              setIsCreatingMeetLink(false);
-                            }
-                          }}
-                        >
-                          <GoogleMeetIcon className="mr-2 h-4 w-4" />
-                          <span>{isCreatingMeetLink ? 'Generating...' : 'Meet link'}</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                    {teamForSelectedCalendar && (
-                      <Popover open={isAddRolePopoverOpen} onOpenChange={setIsAddRolePopoverOpen}>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <PopoverTrigger asChild>
-                                    <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary"><GoogleSymbol name="badge" className="text-xl" /></Button>
-                                </PopoverTrigger>
-                            </TooltipTrigger>
-                            <TooltipContent><p>Add Badge Request</p></TooltipContent>
-                        </Tooltip>
-                        <PopoverContent className="w-60 p-0">
+                          <DropdownMenuContent align="start">
+                            <DropdownMenuItem onSelect={() => handleAddAttachment('drive', 'New Google Drive File')}>
+                                <GoogleDriveIcon className="mr-2 h-4 w-4" />
+                                <span>Attach from Drive</span>
+                            </DropdownMenuItem>
+                             <DropdownMenuItem onSelect={() => handleAddAttachment('sheets', 'New Spreadsheet')}>
+                                <GoogleSheetsIcon className="mr-2 h-4 w-4" />
+                                <span>New Sheet</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleAddAttachment('slides', 'New Presentation')}>
+                                <GoogleSlidesIcon className="mr-2 h-4 w-4" />
+                                <span>New Slides</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleAddAttachment('forms', 'New Form')}>
+                                <GoogleFormsIcon className="mr-2 h-4 w-4" />
+                                <span>New Form</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleAddAttachment('local', 'design_brief.pdf')}>
+                              <GoogleSymbol name="description" className="mr-2" />
+                              <span>Attach local file</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => { setIsLinkDialogOpen(true); }}>
+                              <GoogleSymbol name="link" className="mr-2" />
+                              <span>Add Link</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              disabled={isCreatingMeetLink || !selectedCalendar?.googleCalendarId}
+                              onSelect={async () => {
+                                if (!selectedCalendar?.googleCalendarId) return;
+                                setIsCreatingMeetLink(true);
+                                try {
+                                  const eventTitle = form.getValues('title') || 'New Event';
+                                  const result = await createMeetLink({ title: eventTitle });
+                                  handleAddAttachment('meet', 'Meet link', result.meetLink);
+                                } catch (error) {
+                                  console.error('Failed to create Meet link:', error);
+                                  toast({
+                                    variant: 'destructive',
+                                    title: 'Error',
+                                    description: 'Could not generate a Meet link.',
+                                  });
+                                } finally {
+                                  setIsCreatingMeetLink(false);
+                                }
+                              }}
+                            >
+                              <GoogleMeetIcon className="mr-2 h-4 w-4" />
+                              <span>{isCreatingMeetLink ? 'Generating...' : 'Meet link'}</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TooltipTrigger>
+                      <TooltipContent><p>Attach File</p></TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Popover open={isAddRolePopoverOpen} onOpenChange={setIsAddRolePopoverOpen}>
+                          <PopoverTrigger asChild>
+                            <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary"><GoogleSymbol name="badge" /></Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-60 p-0">
                             <ScrollArea className="h-48">
                             <div className="p-1">
                                 {availableBadgesToAdd.length > 0 ? availableBadgesToAdd.map(badge => (
                                 <div key={badge.id} onClick={() => handleAddRequestedRole(badge.name)} className="flex items-center gap-2 p-2 rounded-md hover:text-primary cursor-pointer">
-                                    <GoogleSymbol name={badge.icon} className="text-lg" />
+                                    <GoogleSymbol name={badge.icon} />
                                     <span>{badge.name}</span>
                                 </div>
                                 )) : (
@@ -834,21 +841,22 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
                                 )}
                             </div>
                             </ScrollArea>
-                        </PopoverContent>
-                      </Popover>
-                    )}
-                    <Popover open={isGuestPopoverOpen} onOpenChange={setIsGuestPopoverOpen}>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <PopoverTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary">
-                                        <GoogleSymbol name="group_add" className="text-xl" />
-                                    </Button>
-                                </PopoverTrigger>
-                            </TooltipTrigger>
-                            <TooltipContent><p>Add Guests</p></TooltipContent>
-                        </Tooltip>
-                        <PopoverContent className="w-[480px] p-0" align="start">
+                          </PopoverContent>
+                        </Popover>
+                      </TooltipTrigger>
+                      <TooltipContent><p>Add Badge Request</p></TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Popover open={isGuestPopoverOpen} onOpenChange={setIsGuestPopoverOpen}>
+                          <PopoverTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary">
+                                <GoogleSymbol name="group_add" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[480px] p-0" align="start">
                             <Tabs defaultValue="by-name">
                                 <TabsList className="grid w-full grid-cols-2">
                                     <TabsTrigger value="by-name">By Name or Email</TabsTrigger>
@@ -880,8 +888,11 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
                                     </ScrollArea>
                                 </TabsContent>
                             </Tabs>
-                        </PopoverContent>
-                    </Popover>
+                          </PopoverContent>
+                        </Popover>
+                      </TooltipTrigger>
+                      <TooltipContent><p>Add Guests</p></TooltipContent>
+                    </Tooltip>
                   </TooltipProvider>
                 </div>
                 <FormControl><Textarea placeholder="Add more details..." {...field} /></FormControl>
@@ -920,12 +931,12 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
         <DialogContent className="max-w-md">
             <div className="absolute top-4 right-4 flex items-center gap-1">
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleAddLink}>
-                    <GoogleSymbol name="check" className="text-xl" />
+                    <GoogleSymbol name="check" />
                     <span className="sr-only">Add Link</span>
                 </Button>
             </div>
             <DialogHeader>
-                <DialogTitle>Add Link Attachment</DialogTitle>
+                <DialogTitle className="text-muted-foreground">Add Link Attachment</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 pt-4">
                 <Input placeholder="URL (e.g., https://example.com)" value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} />
@@ -938,12 +949,12 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
       <DialogContent className="max-w-md">
         <div className="absolute top-4 right-4">
           <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={handleDelete}>
-              <GoogleSymbol name="delete" className="text-xl" />
+              <GoogleSymbol name="delete" />
               <span className="sr-only">Delete Event</span>
           </Button>
         </div>
         <DialogHeader>
-            <DialogTitle>Delete "{event?.title}"?</DialogTitle>
+            <DialogTitle className="text-muted-foreground">Delete "{event?.title}"?</DialogTitle>
             <DialogDescription>
                 This will permanently delete the event. This action cannot be undone.
             </DialogDescription>
@@ -953,3 +964,5 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
     </>
   );
 }
+
+    

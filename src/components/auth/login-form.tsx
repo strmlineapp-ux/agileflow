@@ -10,23 +10,39 @@ import { useUser } from "@/context/user-context";
 
 export function LoginForm() {
   const router = useRouter();
-  const { googleLogin } = useUser();
-  const [isLoading, setIsLoading] = React.useState(false);
+  const { googleLogin, realUser, loading, isFirebaseReady } = useUser();
+  const [isSigningIn, setIsSigningIn] = React.useState(false);
+
+  React.useEffect(() => {
+    // If loading is finished and we have a user, redirect them.
+    if (!loading && realUser) {
+      if (realUser.accountType === 'Full') {
+        router.push('/dashboard/overview');
+      }
+      // If user is 'Viewer', we let the layout handle the "Awaiting Approval" message,
+      // so no redirect is needed here.
+    }
+  }, [realUser, loading, router]);
+
 
   const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-    const success = await googleLogin();
-    if (success) {
-      router.push('/dashboard/overview');
+    if (!isFirebaseReady) return; 
+    setIsSigningIn(true);
+    try {
+      await googleLogin();
+      // The useEffect will now handle the redirect after state updates.
+    } catch (error) {
+      console.error("Sign-in failed:", error);
+      setIsSigningIn(false);
     }
-    // The context will show a toast on failure.
-    setIsLoading(false);
   };
+  
+  const isButtonDisabled = isSigningIn || loading;
 
   return (
     <div className="space-y-4">
-        <Button variant="outline" type="button" disabled={isLoading} className="w-full justify-center text-muted-foreground hover:text-primary hover:bg-transparent" onClick={handleGoogleSignIn}>
-            {isLoading ? (
+        <Button variant="outline" type="button" disabled={isButtonDisabled} className="w-full justify-center text-muted-foreground hover:text-primary hover:bg-transparent" onClick={handleGoogleSignIn}>
+            {isSigningIn || loading ? (
                 <GoogleSymbol name="progress_activity" className="animate-spin mr-2" />
             ) : (
                 <svg role="img" viewBox="0 0 24 24" className="mr-2 h-4 w-4">

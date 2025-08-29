@@ -1,3 +1,4 @@
+
 # AgileFlow: Backup and Restore Guide
 
 This guide provides the standard developer process for creating a complete backup of your application's codebase using Git and a remote repository service like GitHub. This ensures you always have a safe, restorable version of your project.
@@ -29,7 +30,19 @@ If you don't have Git installed on your local machine, you'll need to download i
 
 GitHub will now show you a page with commands. You will use the URL from the "…or push an existing repository from the command line" section. It will look something like this: `https://github.com/your-username/your-repository-name.git`.
 
-### Step 3: Initialize Git in Your Project
+### Step 3: Create a GitHub Personal Access Token (PAT)
+
+For security, GitHub requires you to use a Personal Access Token (PAT) instead of your password when authenticating from the command line.
+
+1.  Go to your GitHub **Settings** > **Developer settings** > **Personal access tokens** > **Tokens (classic)**.
+2.  Click **"Generate new token"**.
+3.  Give the token a descriptive name (e.g., "AgileFlow Backup").
+4.  Set an expiration date for the token.
+5.  Under **"Select scopes,"** check the `repo` box. This will grant the token permission to access and push to your repositories.
+6.  Click **"Generate token"**.
+7.  **Important**: Copy the generated token immediately. This is the only time you will see it. Treat it like a password.
+
+### Step 4: Initialize Git in Your Project & Push
 
 1.  Open a terminal or command prompt on your computer.
 2.  Navigate to the root directory of your AgileFlow project.
@@ -45,15 +58,18 @@ git add .
 # Create the first "commit" - a snapshot of your project's current state
 git commit -m "Initial project commit"
 
+# Set the default branch name to 'main' (modern standard)
+git branch -M main
+
 # Link your local project to the remote repository you created on GitHub
 # Replace the URL with the one from your GitHub repository page
 git remote add origin https://github.com/your-username/your-repository-name.git
 
 # Push (upload) your committed code to GitHub
-git push -u origin master
+git push -u origin main
 ```
 
-Your entire project is now safely backed up on GitHub.
+**When prompted for a password, paste your Personal Access Token (PAT).** Your operating system's Git credential manager should securely store it for future use.
 
 ## Ongoing Backups: Saving Your Changes
 
@@ -67,12 +83,14 @@ As you make changes to your application, you should periodically save them to yo
 git add .
 
 # Create a new commit with a descriptive message about the changes you made
-git commit -m "feat: Added new calendar view" 
-# Or "fix: Corrected login redirect loop"
+git commit -m "feat: Add user pre-approval feature" 
+# Or "fix: Correct login redirect loop"
 
 # Push your new commit to GitHub
 git push
 ```
+
+**If you encounter an "Authentication failed" error,** it likely means your stored token has expired or is invalid. Use your IDE's Git tools (like the "Git: Push" command in the command palette) to re-trigger the authentication prompt and enter a new PAT.
 
 ## Restoring From a Backup
 

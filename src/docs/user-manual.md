@@ -104,7 +104,7 @@ This page is for managing the specifics of an individual team.
 - **Badge Management Tab**: Create and manage your team's badge collections. To share a collection, simply drag its card to the "Shared Collections" panel. To link a collection from another team, drag it from the shared panel onto your main board. To **activate** a collection for your team, click on its ghosted card; clicking an active card will deactivate it. To **delete** a collection you own, use the dropdown menu on its card.
 - **Pinned Locations Tab**: Pin locations to the team's Production Schedule. You can also designate locations as "check locations."
 - **Workstations Tab**: Manage a list of bookable workstations or machines for the team.
-- **Event Templates Tab**: Create reusable templates for common events. You can edit a template's name by clicking on it directly. Click the edit icon on the template card to manage its requested roles.
+- **Event Presets Tab**: Create reusable Presets for common events. You can edit a Preset's name by clicking on it directly. Click the edit icon on the Preset card to manage its requested roles.
 - **Location Check Managers Tab**: Assign users who are allowed to manage the daily check assignments for this team's locations.
 
 ### 8.3 View As Another User (Admin Only)
@@ -113,4 +113,5 @@ Administrators can view the application from another user's perspective.
 2.  Select "View as" from the dropdown menu.
 3.  Choose a user from the list.
 4.  A banner will appear at the top of the screen indicating whose view you are using. To return to your own view, repeat the process and select "Return to your view".
+
 

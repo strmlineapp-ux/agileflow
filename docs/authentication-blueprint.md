@@ -8,15 +8,33 @@ This document provides a clear, non-technical overview of how user authenticatio
 
 The application uses Google Sign-In as its sole method of authentication. Access is strictly controlled by administrators to ensure workspace security. A user can gain access in one of three ways:
 
-*   **Method A: Administrator Invitation (Recommended)**
-*   **Method B: Administrator Pre-Authorization**
+*   **Method A: First User Auto-Approval (Bootstrap Flow)**
+*   **Method B: Administrator Invitation (Recommended)**
 *   **Method C: User-Initiated Access Request**
 
 ---
 
-### Method A: Administrator Invitation (Recommended Flow)
+### Method A: First User Auto-Approval (Bootstrap Flow)
 
-This is the most secure and user-friendly method for adding new team members.
+This method ensures the very first person to sign into a new, empty AgileFlow instance automatically becomes the system administrator.
+
+**Step 1: New User Signs In to an Empty System**
+A new user navigates to the application URL and is the first person ever to click "Sign in with Google."
+
+**Step 2: System Detects No Existing Users**
+Firebase authenticates the user. The application then checks the `/users` collection in Firestore and finds that it is empty.
+
+**Step 3: Admin Profile Creation & Full Access Granted**
+Because this is the first user, the system creates their profile with two special properties:
+*   `isAdmin` is set to `true`.
+*   `accountType` is set to `'Full'`.
+The user is immediately granted full administrative access to the entire application.
+
+---
+
+### Method B: Administrator Invitation (Recommended Flow)
+
+This is the most secure and user-friendly method for adding new team members once an administrator exists.
 
 **Step 1: Admin Sends an Invitation**
 An existing administrator uses a dedicated "Invite User" form within the application to enter the email address of the new user. This action securely adds the email to an "invited" list in the database.
@@ -32,24 +50,6 @@ Firebase Authentication confirms the user's identity and returns their verified 
 
 **Step 5: Profile Creation & Access Granted**
 Upon finding a match, the system creates a new user profile in the Firestore `/users` collection, populating it with their Google account details (Name, Email, Profile Picture) and granting them full access immediately.
-
----
-
-### Method B: Administrator Pre-Authorization (Manual Flow)
-
-This method allows an administrator to grant access without sending an invitation email, useful for setting up multiple users at once.
-
-**Step 1: Admin Creates a User Profile**
-An administrator manually creates a new document in the `/users` collection in Firestore. They must include the user's `email` and set the `accountType` to `'Full'`.
-
-**Step 2: User Signs In**
-The new user, having been notified by the admin separately, navigates to the login page and signs in with their Google account.
-
-**Step 3: System Finds Pre-Authorized Profile**
-Firebase authenticates the user. The application then searches Firestore for a user document with a matching email address. It finds the pre-created profile.
-
-**Step 4: Access Granted**
-Because the `accountType` is already set to `'Full'`, the user is immediately granted access to the application.
 
 ---
 
@@ -100,6 +100,8 @@ All information related to a user's application experience is stored in a dedica
 | `timeFormat` | A UI preference for displaying time in 12-hour or 24-hour format. |
 | `linked...Ids` | Lists of IDs for shared Teams, Badge Collections, or Calendars that the user has chosen to link to their personal management boards. |
 | `dragActivationKey`| The keyboard key (`Shift`, `Alt`, etc.) the user must hold down to perform drag-and-drop actions. |
+| `createdAt` | The timestamp of when the user's account was first created in the system. |
+| `approvedBy` | The `userId` of the administrator who approved the user's account request, or 'system' for the first user. |
 
 ---
 
@@ -114,8 +116,8 @@ When a new user signs in for the first time, their profile is created from a mix
 | `email` | **Google:** The user's primary email address from their Google profile. |
 | `avatarUrl` | **Google:** The URL of their Google profile picture. |
 | --- | --- |
-| `isAdmin` | **Application:** Defaults to `false` for all new users. |
-| `accountType` | **Application:** Defaults to `Viewer` for user-initiated requests, or `Full` for invited users. |
+| `isAdmin` | **Application:** Defaults to `true` if the user is the first one in the database, otherwise `false`. |
+| `accountType` | **Application:** Defaults to `Viewer` for user-initiated requests, `Full` for invited users, or `Full` for the first user. |
 | `googleCalendarLinked`| **Application:** Defaults to `true` upon first Google Sign-in. |
 | `title` | **Application:** This is empty by default and must be set by an admin or the user. |
 | `roles` | **Application:** This is empty by default. Roles are assigned within the app. |
@@ -127,6 +129,8 @@ When a new user signs in for the first time, their profile is created from a mix
 | `timeFormat` | **Application:** Is not set by default. |
 | `linked...Ids` | **Application:** All are empty by default. |
 | `dragActivationKey`| **Application:** Defaults to `shift`. |
+| `createdAt` | **Application:** Set to the current timestamp on creation. |
+| `approvedBy` | **Application:** Set to 'system' for the first user, or the admin's `userId` upon approval. |
 
 ---
 
