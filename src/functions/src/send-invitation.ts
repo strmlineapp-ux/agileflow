@@ -39,7 +39,7 @@ export const sendInvitation = onDocumentUpdated("app-settings/global", async (ev
     const htmlBody = `
       <p>You have been invited to join your team on AgileFlow.</p>
       <p>Please click the link below to sign up and get started:</p>
-      <p><a href="https://your-agileflow-app.com/login">Sign Up for AgileFlow</a></p>
+      <p><a href="https://agileflow-mlf18.web.app/login">Sign Up for AgileFlow</a></p>
       <p>If you have any questions, please contact your workspace administrator.</p>
     `;
 
