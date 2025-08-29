@@ -2,7 +2,7 @@
 'use client';
 
 import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider, type User as FirebaseUser } from 'firebase/auth';
-import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, limit } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, limit, updateDoc } from 'firebase/firestore';
 import { useState, useEffect, useCallback } from 'react';
 import { type User } from '@/types';
 import { getAuthInstance, getDb } from '@/lib/firebase';
@@ -40,6 +40,14 @@ export function useAuth() {
                     userId: userDoc.id,
                     createdAt: userDoc.data().createdAt?.toDate ? userDoc.data().createdAt.toDate() : new Date(),
                 } as User;
+
+                // Backwards compatibility: Assign a default tenantId if it's missing
+                if (!userData.tenantId) {
+                    userData.tenantId = 'default';
+                    // Update the document in Firestore so this check isn't needed next time
+                    await updateDoc(userDocRef, { tenantId: 'default' });
+                }
+
                 setRealUser(userData);
             } else {
                 // If user doc doesn't exist, check for pre-approval or first user status
