@@ -1,5 +1,4 @@
 
-
 import { type AppPage, type AppTab } from '@/types';
 
 // Core tabs that are fundamental to the application's operation.
@@ -98,7 +97,3 @@ export const corePages: AppPage[] = [
         tenantId: 'default',
     },
 ];
-
-    
-
-    
