@@ -35,7 +35,11 @@ export function useAuth() {
             const userDoc = await getDoc(userDocRef);
 
             if (userDoc.exists()) {
-                const userData = { userId: userDoc.id, ...userDoc.data() } as User;
+                const userData = {
+                    ...userDoc.data(),
+                    userId: userDoc.id,
+                    createdAt: userDoc.data().createdAt?.toDate ? userDoc.data().createdAt.toDate() : new Date(),
+                } as User;
                 setRealUser(userData);
             } else {
                 // If user doc doesn't exist, check for pre-approval or first user status
@@ -104,8 +108,8 @@ export function useAuth() {
 
   const logout = useCallback(async (router: AppRouterInstance) => {
     if (!isFirebaseReady) return;
+    const authInstance = getAuthInstance();
     try {
-      const authInstance = getAuthInstance();
       await signOut(authInstance);
       setRealUser(null);
       router.push('/login');
