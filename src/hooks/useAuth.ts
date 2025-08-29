@@ -105,10 +105,15 @@ export function useAuth() {
 
   const logout = useCallback(async () => {
     if (!isFirebaseReady) return;
-    const authInstance = getAuthInstance();
-    await signOut(authInstance);
-    setRealUser(null);
-  }, [isFirebaseReady]);
+    try {
+      const authInstance = getAuthInstance();
+      await signOut(authInstance);
+      setRealUser(null);
+    } catch (error) {
+      console.error("Logout failed:", error);
+      toast({ variant: 'destructive', title: 'Logout Error', description: 'Could not sign out. Please try again.' });
+    }
+  }, [isFirebaseReady, toast]);
 
   return { realUser, loading, isFirebaseReady, googleLogin, logout, setRealUser };
 }
