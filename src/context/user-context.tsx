@@ -19,7 +19,7 @@ interface UserContextType {
   viewAsUser: User | null;
   setViewAsUser: (userId: string) => void;
   googleLogin: () => Promise<boolean>;
-  logout: () => Promise<void>;
+  logout: (router: AppRouterInstance) => Promise<void>;
   loading: boolean;
   isFirebaseReady: boolean;
 

@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useMemo } from 'react';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
@@ -15,7 +15,8 @@ import { hasAccess } from '@/lib/permissions';
 
 
 export function Sidebar() {
-  const { realUser, viewAsUser, users, loading, notifications, linkGoogleCalendar, teams, setViewAsUser: setContextViewAsUser, appSettings } = useUser();
+  const { realUser, viewAsUser, users, loading, notifications, linkGoogleCalendar, teams, setViewAsUser: setContextViewAsUser, appSettings, logout } = useUser();
+  const router = useRouter();
   
   const setViewAsUser = (userId: string) => {
     setContextViewAsUser(userId);
@@ -210,11 +211,9 @@ export function Sidebar() {
                 )}
                 
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                    <Link href="/login">
-                        <GoogleSymbol name="logout" className="mr-2 text-lg" />
-                        <span>Logout</span>
-                    </Link>
+                <DropdownMenuItem onSelect={() => logout(router)}>
+                    <GoogleSymbol name="logout" className="mr-2 text-lg" />
+                    <span>Logout</span>
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>

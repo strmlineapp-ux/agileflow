@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { type User } from '@/types';
 import { getAuthInstance, getDb } from '@/lib/firebase';
 import { useToast } from './use-toast';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
 export function useAuth() {
   const [realUser, setRealUser] = useState<User | null>(null);
@@ -51,8 +52,7 @@ export function useAuth() {
                 const isAdmin = isFirstUser;
                 const accountType = isFirstUser || isPreApproved ? 'Full' : 'Viewer';
                 const approvedBy = isFirstUser ? 'system' : (isPreApproved ? 'pre-approved' : undefined);
-
-                // TODO: Replace with dynamic tenantId from hostname or user selection
+                
                 const tenantId = 'default';
 
                 const newUser: User = {
@@ -94,7 +94,6 @@ export function useAuth() {
     
     try {
       await signInWithPopup(authInstance, provider);
-      // The onAuthStateChanged listener will handle the user state update.
       return true;
     } catch (error) {
       console.error("Google Sign-In failed:", error);
@@ -103,12 +102,13 @@ export function useAuth() {
     }
   }, [isFirebaseReady, toast]);
 
-  const logout = useCallback(async () => {
+  const logout = useCallback(async (router: AppRouterInstance) => {
     if (!isFirebaseReady) return;
     try {
       const authInstance = getAuthInstance();
       await signOut(authInstance);
       setRealUser(null);
+      router.push('/login');
     } catch (error) {
       console.error("Logout failed:", error);
       toast({ variant: 'destructive', title: 'Logout Error', description: 'Could not sign out. Please try again.' });
