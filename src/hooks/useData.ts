@@ -40,7 +40,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
   
   useEffect(() => {
     const loadData = async () => {
-        if (authLoading || !realUser) {
+        if (authLoading || !realUser || !realUser.tenantId) {
             if (!authLoading) setLoading(false);
             return;
         }
@@ -149,14 +149,14 @@ export function useData(realUser: User | null, authLoading: boolean) {
     setUsers(currentUsers => currentUsers.filter(u => u.userId !== userId));
   }, []);
 
-  const addTeam = useCallback(async (teamData: Omit<Team, 'id'>) => {
+  const addTeam = useCallback(async (teamData: Omit<Team, 'id'>, realUser: User) => {
     const db = getDb();
-    const newTeamData = { ...teamData, tenantId: realUser!.tenantId };
+    const newTeamData = { ...teamData, tenantId: realUser.tenantId };
     const docRef = await addDoc(collection(db, 'teams'), newTeamData);
     const newTeam = { ...newTeamData, id: docRef.id };
     setTeams(current => [...current, newTeam]);
     toast({ title: 'Success', description: `Team "${newTeam.name}" has been created.` });
-  }, [realUser, toast]);
+  }, [toast]);
 
   const updateTeam = useCallback(async (teamId: string, teamData: Partial<Team>) => {
     const db = getDb();
@@ -346,7 +346,8 @@ export function useData(realUser: User | null, authLoading: boolean) {
   }, []);
 
   const addLocation = useCallback(async (locationName: string) => {
-    const newLocation: BookableLocation = { id: crypto.randomUUID(), name: locationName, tenantId: realUser!.tenantId };
+    if(!realUser) return;
+    const newLocation: BookableLocation = { id: crypto.randomUUID(), name: locationName, tenantId: realUser.tenantId };
     await simulateApi();
     setLocations(current => [...current, newLocation]);
   }, [realUser]);
@@ -478,21 +479,21 @@ export function useData(realUser: User | null, authLoading: boolean) {
   const addBadge = useCallback(async (collectionId: string, sourceBadge?: Badge) => {
     const db = getDb();
     const collection = allBadgeCollections.find(c => c.id === collectionId);
-    if (!collection) return;
+    if (!collection || !realUser) return;
 
-    if (collection.owner.id !== realUser?.userId) {
+    if (collection.owner.id !== realUser.userId) {
         toast({ variant: 'destructive', title: 'Permission Denied', description: "You can only add badges to collections you own."});
         return;
     }
 
     const batch = writeBatch(db);
     let newBadge: Badge;
-    const tenantId = realUser!.tenantId;
+    const tenantId = realUser.tenantId;
 
     if (sourceBadge) {
         newBadge = {
             id: crypto.randomUUID(),
-            owner: { type: 'user', id: realUser!.userId },
+            owner: { type: 'user', id: realUser.userId },
             ownerCollectionId: collectionId,
             name: `${sourceBadge.name} (Copy)`,
             icon: sourceBadge.icon,
