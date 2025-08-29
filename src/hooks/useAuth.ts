@@ -72,7 +72,7 @@ export function useAuth() {
                     tenantId,
                 };
                 await setDoc(userDocRef, newUser);
-                setRealUser(newUser);
+                setRealUser(newUser); // Immediately set the new user in state
             }
         } else {
             setRealUser(null);
