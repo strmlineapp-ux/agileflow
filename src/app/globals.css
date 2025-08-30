@@ -7,11 +7,20 @@
     --background: 210 20% 92%;
     --component-bg: 210 20% 96%;
     
+    --foreground: 210 7% 50%;
+
     --primary: 210 70% 50%;
     --primary-foreground: 210 40% 98%;
     
+    --accent: 180 60% 40%;
+    --accent-foreground: 210 40% 98%;
+
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
+
+    --muted: 210 40% 96.1%;
+
+    --popover: 210 40% 100%;
     
     --radius: 0.5rem;
   }
@@ -20,15 +29,24 @@
     --background: 210 40% 9%;
     --component-bg: 210 40% 12%;
     
+    --foreground: 210 7% 40%;
+
     --primary: 25 88% 45%;
     --primary-foreground: 43 55% 95%;
 
+    --accent: 180 60% 40%;
+    --accent-foreground: 210 40% 98%;
+
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
+
+    --muted: 210 40% 15%;
+
+    --popover: 222.2 84% 4.9%;
   }
 
   * {
-    @apply border-foreground;
+    @apply border-border;
   }
 
   body {
