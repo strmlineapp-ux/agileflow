@@ -5,7 +5,8 @@ import * as React from "react"
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
 import { GoogleSymbol } from "../icons/google-symbol"
 
-import { cn } from "@/lib/utils"
+import { cn, getSelectedStyle } from "@/lib/utils"
+import { useUser } from "@/context/user-context"
 
 const DropdownMenu = DropdownMenuPrimitive.Root
 
@@ -96,47 +97,59 @@ DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName
 const DropdownMenuCheckboxItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.CheckboxItem>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.CheckboxItem>
->(({ className, children, checked, ...props }, ref) => (
-  <DropdownMenuPrimitive.CheckboxItem
-    ref={ref}
-    className={cn(
-      "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:text-primary data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-      className
-    )}
-    checked={checked}
-    {...props}
-  >
-    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-      <DropdownMenuPrimitive.ItemIndicator>
-        <GoogleSymbol name="check" className="text-base" />
-      </DropdownMenuPrimitive.ItemIndicator>
-    </span>
-    {children}
-  </DropdownMenuPrimitive.CheckboxItem>
-))
+>(({ className, children, checked, ...props }, ref) => {
+  const { viewAsUser } = useUser();
+  const baseWeight = viewAsUser?.fontWeight || 400;
+  const selectedStyle = getSelectedStyle(baseWeight);
+  
+  return (
+    <DropdownMenuPrimitive.CheckboxItem
+      ref={ref}
+      className={cn(
+        "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:text-primary data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        className
+      )}
+      checked={checked}
+      {...props}
+    >
+      <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+        <DropdownMenuPrimitive.ItemIndicator>
+          <GoogleSymbol name="check" className="text-base" />
+        </DropdownMenuPrimitive.ItemIndicator>
+      </span>
+      <span style={checked ? selectedStyle : {}}>{children}</span>
+    </DropdownMenuPrimitive.CheckboxItem>
+  )
+})
 DropdownMenuCheckboxItem.displayName =
   DropdownMenuPrimitive.CheckboxItem.displayName
 
 const DropdownMenuRadioItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.RadioItem>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.RadioItem>
->(({ className, children, ...props }, ref) => (
-  <DropdownMenuPrimitive.RadioItem
-    ref={ref}
-    className={cn(
-      "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:text-primary data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-      className
-    )}
-    {...props}
-  >
-    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-      <DropdownMenuPrimitive.ItemIndicator>
-        <GoogleSymbol name="circle" className="h-2 w-2 fill-current" />
-      </DropdownMenuPrimitive.ItemIndicator>
-    </span>
-    {children}
-  </DropdownMenuPrimitive.RadioItem>
-))
+>(({ className, children, ...props }, ref) => {
+  const { viewAsUser } = useUser();
+  const baseWeight = viewAsUser?.fontWeight || 400;
+  const selectedStyle = getSelectedStyle(baseWeight);
+
+  return (
+    <DropdownMenuPrimitive.RadioItem
+      ref={ref}
+      className={cn(
+        "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:text-primary data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        className
+      )}
+      {...props}
+    >
+      <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+        <DropdownMenuPrimitive.ItemIndicator>
+          <GoogleSymbol name="circle" className="h-2 w-2 fill-current" />
+        </DropdownMenuPrimitive.ItemIndicator>
+      </span>
+      <span style={props['aria-checked'] ? selectedStyle : {}}>{children}</span>
+    </DropdownMenuPrimitive.RadioItem>
+  )
+})
 DropdownMenuRadioItem.displayName = DropdownMenuPrimitive.RadioItem.displayName
 
 const DropdownMenuLabel = React.forwardRef<
