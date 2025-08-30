@@ -14,7 +14,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "hover:bg-transparent",
-        destructive: "bg-transparent text-foreground hover:text-destructive",
+        destructive: "bg-background text-foreground hover:text-destructive",
         outline: "border border-input bg-transparent",
         ghost: "hover:bg-muted/50",
         link: "hover:underline",
@@ -60,7 +60,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <Comp
         className={cn(
           buttonVariants({ variant, size, className }),
-          "font-emphasis"
+          variant !== 'destructive' && "font-emphasis"
         )}
         ref={ref}
         onClick={handleClick}
