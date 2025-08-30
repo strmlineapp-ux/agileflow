@@ -67,8 +67,11 @@ function AppBody({ children }: { children: React.ReactNode }) {
 
             const iconFill = viewAsUser.iconFill ? 1 : 0;
             root.style.setProperty('--global-icon-fill', iconFill.toString());
+
+            const radius = viewAsUser.radius ?? 0.5;
+            root.style.setProperty('--radius', `${radius}rem`);
         }
-    }, [viewAsUser?.fontWeight, viewAsUser?.iconGrade, viewAsUser?.iconOpticalSize, viewAsUser?.iconFill, viewAsUser]);
+    }, [viewAsUser]);
     
     React.useEffect(() => {
         const root = document.documentElement;
