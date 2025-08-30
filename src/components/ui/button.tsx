@@ -6,7 +6,6 @@ import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
-import { useUser } from "@/context/user-context";
 
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50",
@@ -14,8 +13,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "hover:bg-transparent",
-        outline:
-          "border border-input bg-transparent",
+        outline: "border border-input bg-transparent",
         link: "hover:underline",
         circle: "rounded-full",
       },
@@ -38,36 +36,16 @@ export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
-  enableReset?: boolean;
-  onReset?: () => void;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, enableReset = false, onReset, onClick, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
-    const { viewAsUser } = useUser();
-    const baseWeight = viewAsUser?.fontWeight || 400;
-    const isBoldEmphasis = baseWeight === 700;
-
-    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-      if (enableReset && (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey)) {
-        event.preventDefault();
-        onReset?.();
-      } else {
-        onClick?.(event);
-      }
-    };
-
+    
     return (
       <Comp
-        className={cn(
-            buttonVariants({ variant, size, className }),
-            isBoldEmphasis 
-                ? 'text-foreground hover:text-primary focus:text-primary' 
-                : 'hover:font-emphasis focus:font-emphasis'
-        )}
+        className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
-        onClick={handleClick}
         {...props}
       />
     )

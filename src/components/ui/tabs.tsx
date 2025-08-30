@@ -6,7 +6,6 @@ import * as TabsPrimitive from "@radix-ui/react-tabs"
 
 import { cn } from "@/lib/utils"
 import { Separator } from "./separator"
-import { useUser } from "@/context/user-context"
 
 const Tabs = TabsPrimitive.Root
 
@@ -31,34 +30,26 @@ TabsList.displayName = TabsPrimitive.List.displayName
 const TabsTrigger = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
->(({ className, children, ...props }, ref) => {
-  const { viewAsUser } = useUser();
-  const baseWeight = viewAsUser?.fontWeight || 400;
-  const isBoldEmphasis = baseWeight === 700;
-
-  return (
-    <TabsPrimitive.Trigger
-      ref={ref}
-      className={cn(
-        "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-none data-[state=active]:bg-transparent",
-        isBoldEmphasis
-          ? "text-foreground data-[state=active]:text-primary"
-          : "text-foreground data-[state=active]:font-emphasis",
-        className
-      )}
-      {...props}
-    >
-        {React.Children.map(children, child => {
-          if (React.isValidElement(child) && (child.type as any).displayName === 'GoogleSymbol') {
-            return React.cloneElement(child as React.ReactElement<any>, { 
-              className: cn(child.props.className, 'transition-all'),
-            });
-          }
-          return child;
-        })}
-    </TabsPrimitive.Trigger>
-  )
-})
+>(({ className, children, ...props }, ref) => (
+  <TabsPrimitive.Trigger
+    ref={ref}
+    className={cn(
+      "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-none data-[state=active]:bg-transparent",
+      "data-[state=active]:font-emphasis data-[state=active]:text-primary",
+      className
+    )}
+    {...props}
+  >
+      {React.Children.map(children, child => {
+        if (React.isValidElement(child) && (child.type as any).displayName === 'GoogleSymbol') {
+          return React.cloneElement(child as React.ReactElement<any>, { 
+            className: cn(child.props.className, 'transition-all'),
+          });
+        }
+        return child;
+      })}
+  </TabsPrimitive.Trigger>
+))
 TabsTrigger.displayName = TabsPrimitive.Trigger.displayName
 
 const TabsContent = React.forwardRef<

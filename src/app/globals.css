@@ -22,6 +22,8 @@
     --muted: 210 40% 96.1%;
     --popover: 210 40% 100%;
     --radius: 0.5rem;
+
+    --emphasis-color: hsl(var(--primary));
   }
 
   .dark {
@@ -48,6 +50,13 @@
   h1, h2, h3, h4, h5, h6 {
       font-family: var(--font-roboto), sans-serif;
   }
+}
+
+@layer components {
+    .font-emphasis {
+        font-weight: var(--font-weight-emphasis) !important;
+        color: var(--emphasis-color) !important;
+    }
 }
 
 @layer utilities {

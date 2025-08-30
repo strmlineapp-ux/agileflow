@@ -6,7 +6,6 @@ import * as SelectPrimitive from "@radix-ui/react-select"
 import { GoogleSymbol } from "../icons/google-symbol"
 
 import { cn } from "@/lib/utils"
-import { useUser } from "@/context/user-context"
 
 const Select = SelectPrimitive.Root
 
@@ -116,33 +115,27 @@ SelectLabel.displayName = SelectPrimitive.Label.displayName
 const SelectItem = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
->(({ className, children, ...props }, ref) => {
-  const { viewAsUser } = useUser();
-  const baseWeight = viewAsUser?.fontWeight || 400;
-  const isBoldEmphasis = baseWeight === 700;
+>(({ className, children, ...props }, ref) => (
+  <SelectPrimitive.Item
+    ref={ref}
+    className={cn(
+      "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-transparent data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "focus:font-emphasis focus:text-primary",
+      className
+    )}
+    {...props}
+  >
+    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+      <SelectPrimitive.ItemIndicator>
+        <GoogleSymbol name="check" className="text-base" />
+      </SelectPrimitive.ItemIndicator>
+    </span>
 
-  return (
-    <SelectPrimitive.Item
-      ref={ref}
-      className={cn(
-        "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-transparent data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-        isBoldEmphasis ? "focus:text-primary" : "focus:font-emphasis",
-        className
-      )}
-      {...props}
-    >
-      <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-        <SelectPrimitive.ItemIndicator>
-          <GoogleSymbol name="check" className="text-base" />
-        </SelectPrimitive.ItemIndicator>
-      </span>
-
-      <SelectPrimitive.ItemText>
-        <span>{children}</span>
-      </SelectPrimitive.ItemText>
-    </SelectPrimitive.Item>
-  )
-})
+    <SelectPrimitive.ItemText>
+      <span>{children}</span>
+    </SelectPrimitive.ItemText>
+  </SelectPrimitive.Item>
+))
 SelectItem.displayName = SelectPrimitive.Item.displayName
 
 const SelectSeparator = React.forwardRef<
