@@ -9,6 +9,10 @@ import { getAuthInstance, getDb, getCurrentTenantId } from '@/lib/firebase';
 import { useToast } from './use-toast';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
+const COMMON_EMAIL_DOMAINS = new Set([
+    'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com', 'icloud.com', 'msn.com'
+]);
+
 export function useAuth() {
   const [realUser, setRealUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -83,12 +87,16 @@ export function useAuth() {
                     const tenantDocRef = doc(db, 'tenants', tenantId);
 
                     const emailDomain = firebaseUser.email!.split('@')[1];
-                    const companyName = emailDomain.split('.')[0];
-                    const formattedCompanyName = companyName.charAt(0).toUpperCase() + companyName.slice(1) + " Inc.";
+                    let companyName = "My Workspace"; // Default for common domains
+
+                    if (!COMMON_EMAIL_DOMAINS.has(emailDomain)) {
+                        const domainName = emailDomain.split('.')[0];
+                        companyName = domainName.charAt(0).toUpperCase() + domainName.slice(1);
+                    }
 
                     const newTenant: Tenant = {
                         id: tenantId,
-                        name: formattedCompanyName,
+                        name: companyName,
                         ownerId: firebaseUser.uid,
                         createdAt: new Date(),
                     };
