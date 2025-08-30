@@ -113,7 +113,7 @@ export const getHueFromHsl = (hsl: string | null): number | null => {
     return match ? parseInt(match[1], 10) : null;
 };
 
-export const getSelectedStyle = (baseWeight: number, hasText: boolean): React.CSSProperties => {
+export const getSelectedStyle = (baseWeight: number, hasText?: boolean): React.CSSProperties => {
   const weightMap: Record<number, number> = {
     100: 300, // Thin -> Light
     300: 400, // Light -> Normal
@@ -132,7 +132,6 @@ export const getSelectedStyle = (baseWeight: number, hasText: boolean): React.CS
     }
   }
 
-  // For other weights, just increase font weight. Color remains the default muted-foreground.
+  // For other weights, just increase font weight. Color should remain the default muted-foreground.
   return { fontWeight: newWeight };
 };
-
