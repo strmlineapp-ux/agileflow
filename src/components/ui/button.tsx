@@ -64,7 +64,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const emphasisClass =
-      variant === "ghost"
+      variant === "ghost" || variant === 'outline'
         ? !isBoldEmphasis
           ? "hover:font-emphasis"
           : "hover:text-primary"

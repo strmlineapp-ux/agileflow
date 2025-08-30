@@ -301,12 +301,13 @@ The application supports two distinct color themes, `light` and `dark`, which ca
 - **Button Hover**: See the "Emphasis Logic" section.
 
 ### Emphasis Logic
-The application uses a sophisticated, user-configurable emphasis system for interactive elements.
+The application uses a sophisticated, user-configurable emphasis system for interactive elements. This system creates two distinct interaction styles based on the user's selected global font weight.
 
-- **Mechanism**: The system checks the user's globally selected `fontWeight`.
+- **Mechanism**: The system checks the user's globally selected `fontWeight` (e.g., from `useUser().viewAsUser.fontWeight`).
 - **Logic**:
-    - **If Global Weight is `Thin`, `Light`, `Normal`, or `Medium`**: When a user hovers over or focuses on an interactive element, its font weight increases to the next available level (e.g., `Normal` becomes `Medium`). Color does not change.
-    - **If Global Weight is `Bold`**: When a user hovers over or focuses on an interactive element, its font weight does not change. Instead, its color changes to the theme's primary color (`--primary`).
+    - **If Global Weight is `Thin`, `Light`, `Normal`, or `Medium`**: When a user hovers over or focuses on an interactive element (like a button or menu item), its **font weight increases** to the next available level (e.g., `Normal` becomes `Medium`). Color does not change. This is handled by applying a `font-emphasis` class.
+    - **If Global Weight is `Bold`**: When a user hovers over or focuses on an interactive element, its font weight does not change. Instead, its **color changes** to the theme's primary color (`--primary`).
+- **Implementation**: This is achieved by adding a simple check inside each interactive component. The component reads the user's `fontWeight` and conditionally applies either the `font-emphasis` class or the `text-primary` class to its `focus`, `hover`, or `data-[state=active]` styles.
 
 ### User Notifications
 
