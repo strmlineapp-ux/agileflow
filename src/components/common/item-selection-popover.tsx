@@ -43,19 +43,13 @@ const ItemDisplay = ({ item, isSelected }: { item: Item, isSelected: boolean }) 
     const baseWeight = viewAsUser?.fontWeight || 400;
 
     const itemStyle = getEmphasisStyle({ baseWeight, hasText: true, isSelected: isSelected || isHovered });
-    const iconStyle = getEmphasisStyle({ baseWeight, hasText: false, isSelected: isSelected || isHovered });
-
-    const finalIconStyle = {
-      ...iconStyle,
-      color: (iconStyle.color && !item.color) ? iconStyle.color : item.color,
-    };
     
     return (
         <div
             className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer text-muted-foreground"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            style={{ fontWeight: itemStyle.fontWeight }}
+            style={{ fontWeight: itemStyle.fontWeight, color: itemStyle.color }}
         >
             {item.iconType === 'avatar' ? (
                 <Avatar className="h-7 w-7">
@@ -63,9 +57,9 @@ const ItemDisplay = ({ item, isSelected }: { item: Item, isSelected: boolean }) 
                     <AvatarFallback>{item.name.slice(0, 2)}</AvatarFallback>
                 </Avatar>
             ) : (
-                <GoogleSymbol name={item.icon} style={finalIconStyle} />
+                <GoogleSymbol name={item.icon} style={{ color: item.color, fontWeight: itemStyle.fontWeight }} />
             )}
-            <span style={{ color: itemStyle.color }}>{item.name}</span>
+            <span>{item.name}</span>
         </div>
     );
 }
