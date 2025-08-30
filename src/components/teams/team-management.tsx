@@ -93,9 +93,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     const [searchTerm, setSearchTerm] = useState('');
     const [colorFilter, setColorFilter] = useState<string | null>(null);
     
-    const pageTitle = page.isDynamic && teams.find(t => t.id === page.path.split('/')[2]) ? `${teams.find(t => t.id === page.path.split('/')[2])?.name} ${page.name}` : page.name;
     const tabTitle = appSettings.teamManagementLabel || tab.name;
-    const finalTitle = isSingleTabPage ? pageTitle : tabTitle;
     
     const onToggleExpand = useCallback((teamId: string) => {
         setExpandedTeams(prev => {
@@ -283,7 +281,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                 const isOwner = teamToDrop.owner.id === viewAsUser.userId;
                 if (isOwner) {
                     updateTeam(teamToDrop.id, { isShared: !teamToDrop.isShared });
-                    toast({ title: teamToDrop.isShared ? 'Team Unshared' : 'Team Shared' });
+                    toast({ title: teamToDrop.isShared ? 'Team Unshared' : 'Team Unshared' });
                 } else { 
                     const updatedLinkedTeamIds = (viewAsUser.linkedTeamIds || []).filter(id => id !== teamToDrop.id);
                     updateUser(viewAsUser.userId, { linkedTeamIds: updatedLinkedTeamIds });
@@ -390,12 +388,12 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                 <div className="flex items-center justify-between mb-6 shrink-0">
                     <div className="flex items-center gap-2">
                         {isEditingTitle ? (
-                            <Input ref={titleInputRef} defaultValue={finalTitle} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
+                            <Input ref={titleInputRef} defaultValue={tabTitle} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
                         ) : (
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <h2 className="tracking-tight cursor-pointer" onClick={() => setIsEditingTitle(true)}>{finalTitle}</h2>
+                                        <h2 className="tracking-tight cursor-pointer" onClick={() => setIsEditingTitle(true)}>{tabTitle}</h2>
                                     </TooltipTrigger>
                                     {tab.description && (
                                         <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>
