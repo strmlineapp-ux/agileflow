@@ -2,9 +2,9 @@
 'use client';
 
 import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider, type User as FirebaseUser } from 'firebase/auth';
-import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, limit, updateDoc } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, limit, updateDoc, writeBatch } from 'firebase/firestore';
 import { useState, useEffect, useCallback } from 'react';
-import { type User } from '@/types';
+import { type User, type Tenant } from '@/types';
 import { getAuthInstance, getDb, getCurrentTenantId } from '@/lib/firebase';
 import { useToast } from './use-toast';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
@@ -41,28 +41,24 @@ export function useAuth() {
                     createdAt: userDoc.data().createdAt?.toDate ? userDoc.data().createdAt.toDate() : new Date(),
                 } as User;
 
-                if (!userData.tenantId) {
-                    userData.tenantId = 'default';
-                    await updateDoc(userDocRef, { tenantId: 'default' });
-                }
-
                 setRealUser(userData);
             } else {
                 const tenantId = getCurrentTenantId();
                 const appSettingsRef = doc(db, 'app-settings', 'global');
                 const appSettingsDoc = await getDoc(appSettingsRef);
-                const preApprovedEmails = (appSettingsDoc.data()?.preApprovedEmails || []).map((item: {email: string}) => item.email);
+                const preApprovedEmails = (appSettingsDoc.data()?.preApprovedEmails || []).filter((item: {email: string, tenantId: string}) => item.tenantId === tenantId).map((item: {email: string}) => item.email);
+                
                 const isPreApproved = preApprovedEmails.includes(firebaseUser.email!);
                 
+                // Check if this is the first user for this specific tenant
                 const usersCollectionRef = collection(db, 'users');
-                // Query for users only within the current tenant to check for first user
                 const firstUserQuery = query(usersCollectionRef, where("tenantId", "==", tenantId), limit(1));
                 const firstUserSnapshot = await getDocs(firstUserQuery);
-                const isFirstUser = firstUserSnapshot.empty;
+                const isFirstUserOfTenant = firstUserSnapshot.empty;
                 
-                const isAdmin = isFirstUser;
-                const accountType = isFirstUser || isPreApproved ? 'Full' : 'Viewer';
-                const approvedBy = isFirstUser ? 'system' : (isPreApproved ? 'pre-approved' : undefined);
+                const isAdmin = isFirstUserOfTenant;
+                const accountType = isFirstUserOfTenant || isPreApproved ? 'Full' : 'Viewer';
+                const approvedBy = isFirstUserOfTenant ? 'system' : (isPreApproved ? 'pre-approved' : undefined);
                 
                 const newUser: User = {
                     userId: firebaseUser.uid,
@@ -80,7 +76,22 @@ export function useAuth() {
                     approvedBy,
                     tenantId,
                 };
-                await setDoc(userDocRef, newUser);
+                
+                const batch = writeBatch(db);
+                batch.set(userDocRef, newUser);
+
+                if (isFirstUserOfTenant) {
+                    const tenantDocRef = doc(db, 'tenants', tenantId);
+                    const newTenant: Tenant = {
+                        id: tenantId,
+                        name: `${firebaseUser.displayName?.split(' ')[0] || 'Default'}'s Workspace`,
+                        ownerId: firebaseUser.uid,
+                        createdAt: new Date(),
+                    };
+                    batch.set(tenantDocRef, newTenant);
+                }
+                
+                await batch.commit();
                 setRealUser(newUser); 
             }
         } else {
