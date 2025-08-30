@@ -66,11 +66,11 @@ export function CardTemplate({
     const descriptionContent = (
       <p 
         className={cn(
-            "text-sm", 
-            descriptionAction ? "cursor-pointer hover:text-primary" : "text-muted-foreground"
+            "text-sm text-muted-foreground", 
+            descriptionAction && "cursor-pointer hover:text-primary"
         )}
         onClick={descriptionAction}
-        onPointerDown={(e) => e.stopPropagation()}
+        onPointerDown={(e) => { if (descriptionAction) e.stopPropagation(); }}
       >
         {entity.description}
       </p>

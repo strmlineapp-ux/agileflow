@@ -37,6 +37,7 @@ export const systemPages: Omit<AppPage, 'workspaceId'>[] = [
         icon: 'shield',
         color: 'hsl(220, 13%, 47%)',
         path: '/dashboard/admin',
+        description: 'Global application configuration and user management.',
         isDynamic: false,
         associatedTabs: ['tab-admins', 'tab-admin-pages', 'tab-admin-tabs'],
         access: { users: [], teams: [] }, // Special-cased in hasAccess to only allow isAdmin
@@ -48,6 +49,7 @@ export const systemPages: Omit<AppPage, 'workspaceId'>[] = [
         icon: 'dashboard',
         color: 'hsl(25, 95%, 53%)',
         path: '/dashboard/overview',
+        description: 'A high-level summary of all team activity.',
         isDynamic: false,
         associatedTabs: ['tab-overview'],
         access: { users: [], teams: [] }, // Public
@@ -59,6 +61,7 @@ export const systemPages: Omit<AppPage, 'workspaceId'>[] = [
         icon: 'calendar_month',
         color: 'hsl(207, 90%, 54%)',
         path: '/dashboard/calendar',
+        description: 'Shared team calendar for all events.',
         isDynamic: false,
         associatedTabs: ['tab-calendar'],
         access: { users: [], teams: [] }, // Public
@@ -70,6 +73,7 @@ export const systemPages: Omit<AppPage, 'workspaceId'>[] = [
         icon: 'checklist',
         color: 'hsl(160, 100%, 37%)',
         path: '/dashboard/tasks',
+        description: 'All tasks, with views for personal and team assignments.',
         isDynamic: false,
         associatedTabs: ['tab-tasks'],
         access: { users: [], teams: [] },
@@ -81,6 +85,7 @@ export const systemPages: Omit<AppPage, 'workspaceId'>[] = [
         icon: 'notifications',
         color: 'hsl(221, 83%, 61%)',
         path: '/dashboard/notifications',
+        description: 'Recent system notifications and user access requests.',
         isDynamic: false,
         associatedTabs: ['tab-notifications'],
         access: { users: [], teams: [] }, // Public
@@ -92,6 +97,7 @@ export const systemPages: Omit<AppPage, 'workspaceId'>[] = [
         icon: 'settings',
         color: 'hsl(220, 13%, 47%)',
         path: '/dashboard/settings',
+        description: 'Manage your personal user preferences.',
         isDynamic: false,
         associatedTabs: ['tab-settings'],
         access: { users: [], teams: [] }, // Public

@@ -423,7 +423,8 @@ export function useData(realUser: User | null, authLoading: boolean) {
     const newPageData = { 
         ...pageData, 
         workspaceId: realUser.workspaceId,
-        owner: { type: 'user', id: realUser.userId }
+        owner: { type: 'user', id: realUser.userId },
+        description: '',
     };
     const docRef = await addDoc(collection(db, 'pages'), newPageData);
     const newPage = { ...newPageData, id: docRef.id };
