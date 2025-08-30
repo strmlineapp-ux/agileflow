@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
@@ -62,7 +61,7 @@ export function CardTemplate({
     
     return (
         <>
-            <Card className="group relative bg-transparent flex flex-col h-full" {...dragHandleProps}>
+            <Card className="group relative bg-card flex flex-col h-full" {...dragHandleProps}>
                 {!isPinned && canManage && !isSharedPreview && (
                 <TooltipProvider>
                     <Tooltip>
