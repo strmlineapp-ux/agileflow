@@ -23,7 +23,7 @@ export default {
       colors: {
         border: "hsl(var(--foreground) / <alpha-value>)",
         input: "hsl(var(--foreground) / <alpha-value>)",
-        ring: "hsl(var(--ring) / <alpha-value>)",
+        ring: "hsl(var(--primary) / <alpha-value>)",
         background: "hsl(var(--background) / <alpha-value>)",
         foreground: "hsl(var(--foreground) / <alpha-value>)",
         primary: {
@@ -66,3 +66,4 @@ export default {
   },
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;
+
