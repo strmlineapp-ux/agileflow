@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -592,8 +591,8 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
               <TooltipContent><p>Manage Associated Tabs</p></TooltipContent>
           </Tooltip>
       </TooltipProvider>
-      <PopoverContent className="w-80 p-0" onPointerDownCapture={(e) => { e.stopPropagation(); }}>
-        <div className="p-2 border-b">
+      <PopoverContent className="w-80 p-0 flex flex-col" onPointerDownCapture={(e) => { e.stopPropagation(); }}>
+        <div className="p-2 border-b shrink-0">
           <CompactSearchInput
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
@@ -604,7 +603,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
             activeColorFilter={colorFilter}
           />
         </div>
-        <ScrollArea className="max-h-64 h-auto">
+        <ScrollArea className="max-h-64">
           {filteredTabs.length > 0 ? (
             <div className="p-1 space-y-1">
                 {filteredTabs.map(tab => {
@@ -644,36 +643,8 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
     const isPinned = page.isSystemPage;
 
     const displayPath = page.isDynamic ? `${page.path}/[...]` : page.path;
-    const { name, description, ...entityRest } = page;
-
-    const descriptionContent = (
-      <div onPointerDown={(e) => e.stopPropagation()}>
-          <InlineEditor
-              value={page.description || ''}
-              onSave={(newDesc) => onUpdate(page.id, { description: newDesc })}
-              disabled={!canManage}
-              placeholder="Click to add a description..."
-              className="text-sm text-muted-foreground"
-          />
-      </div>
-    );
+    const { name, ...entityRest } = page;
     
-    const bodyContent = (
-        <>
-            {descriptionContent}
-            <p 
-              className={cn(
-                  "text-sm text-muted-foreground", 
-                  !isPinned && "cursor-pointer hover:text-primary"
-              )}
-              onClick={!isPinned ? () => onUpdate(page.id, { isDynamic: !page.isDynamic }) : undefined}
-              onPointerDown={(e) => { if (!isPinned) e.stopPropagation(); }}
-            >
-              {displayPath}
-            </p>
-        </>
-    );
-
     return (
         <CardTemplate
             entity={{...entityRest, name}}
@@ -683,7 +654,21 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
             isPinned={isPinned}
             isExpanded={isExpanded}
             onToggleExpand={onToggleExpand}
-            body={bodyContent}
+            body={
+              <>
+                <div onPointerDown={(e) => e.stopPropagation()}>
+                    <InlineEditor
+                        value={page.description || ''}
+                        onSave={(newDesc) => onUpdate(page.id, { description: newDesc })}
+                        disabled={!canManage}
+                        placeholder="Click to add a description..."
+                        className="text-sm text-muted-foreground"
+                    />
+                </div>
+              </>
+            }
+            description={displayPath}
+            descriptionAction={!isPinned ? () => onUpdate(page.id, { isDynamic: !page.isDynamic }) : undefined}
             headerControls={
                 <div className="flex items-center">
                     {!isPinned && <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />}
@@ -720,35 +705,12 @@ export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
     }, [updatePage]);
     
     const handleDuplicatePage = useCallback((sourcePage: AppPage) => {
-        const newName = `${sourcePage.name} (Copy)`;
-        const newPath = `/dashboard/${newName.toLowerCase().replace(/\s+/g, '-').replace(/[()]/g, '')}-${crypto.randomUUID().slice(0, 4)}`;
-        
-        const newPage: Omit<AppPage, 'id'> = {
-            ...JSON.parse(JSON.stringify(sourcePage)),
-            name: newName,
-            path: newPath,
-            isDynamic: sourcePage.isDynamic,
-            isSystemPage: false, // Duplicated pages are never system pages
-            workspaceId: sourcePage.workspaceId,
-        };
-        addPage(newPage);
+        addPage(sourcePage);
         toast({ title: "Page Duplicated", description: `A copy of "${sourcePage.name}" was created.`});
     }, [addPage, toast]);
 
     const handleAddPage = () => {
-        const pageCount = appSettings.pages.length;
-        const newName = `New Page ${pageCount + 1}`;
-        const newPage: Omit<AppPage, 'id' | 'workspaceId'> = {
-            name: newName,
-            icon: 'web',
-            color: 'hsl(220, 13%, 47%)',
-            path: `/dashboard/${newName.toLowerCase().replace(/\s/g, '-')}-${crypto.randomUUID().slice(0,4)}`,
-            isDynamic: false,
-            associatedTabs: [],
-            access: { users: [], teams: [] }
-        };
-        
-        addPage(newPage as Omit<AppPage, 'id'>);
+        addPage();
     };
 
     const handleDeletePage = (pageId: string) => {
@@ -967,5 +929,7 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
 
 
 
+
+    
 
     
