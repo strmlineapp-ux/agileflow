@@ -59,8 +59,8 @@ const MenubarTrigger = React.forwardRef<
   <MenubarPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex cursor-default select-none items-center rounded-sm px-3 py-1.5 text-sm font-normal outline-none focus-visible:ring-1 focus-visible:ring-ring/50 data-[state=open]:bg-muted/50",
-      "data-[state=open]:font-emphasis data-[state=open]:text-primary",
+      "flex cursor-default select-none items-center rounded-sm px-3 py-1.5 text-sm outline-none focus-visible:ring-1 focus-visible:ring-ring/50 data-[state=open]:bg-muted/50",
+      "font-emphasis",
       className
     )}
     {...props}
@@ -78,7 +78,7 @@ const MenubarSubTrigger = React.forwardRef<
     ref={ref}
     className={cn(
       "flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-muted/50 data-[state=open]:bg-muted/50",
-      "focus:font-emphasis data-[state=open]:font-emphasis focus:text-primary data-[state=open]:text-primary",
+      "font-emphasis",
       inset && "pl-8",
       className
     )}
@@ -140,7 +140,7 @@ const MenubarItem = React.forwardRef<
     ref={ref}
     className={cn(
       "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-muted/50 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-      "focus:font-emphasis focus:text-primary",
+      "font-emphasis",
       inset && "pl-8",
       className
     )}
@@ -157,7 +157,7 @@ const MenubarCheckboxItem = React.forwardRef<
     ref={ref}
     className={cn(
       "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:bg-muted/50 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-      "focus:font-emphasis focus:text-primary",
+      "font-emphasis",
       className
     )}
     checked={checked}
@@ -181,7 +181,7 @@ const MenubarRadioItem = React.forwardRef<
     ref={ref}
     className={cn(
       "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:bg-muted/50 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-      "focus:font-emphasis focus:text-primary",
+      "font-emphasis",
       className
     )}
     {...props}

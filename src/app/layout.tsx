@@ -70,8 +70,11 @@ function AppBody({ children }: { children: React.ReactNode }) {
             }
 
             if (viewAsUser.primaryColor) {
+                // If a custom primary color is set, use it.
+                // You might need a function to convert hex to HSL string if user can provide hex.
                 root.style.setProperty('--primary', viewAsUser.primaryColor);
             } else {
+                // Otherwise, fall back to the theme default by removing the property
                 root.style.removeProperty('--primary');
             }
 

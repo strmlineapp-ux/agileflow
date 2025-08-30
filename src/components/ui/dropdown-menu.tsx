@@ -28,8 +28,8 @@ const DropdownMenuSubTrigger = React.forwardRef<
   <DropdownMenuPrimitive.SubTrigger
     ref={ref}
     className={cn(
-      "flex cursor-default gap-2 select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-transparent data-[state=open]:bg-transparent [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
-      "focus:font-emphasis data-[state=open]:font-emphasis focus:text-primary data-[state=open]:text-primary",
+      "flex cursor-default gap-2 select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[state=open]:bg-transparent [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+      "font-emphasis",
       inset && "pl-8",
       className
     )}
@@ -86,7 +86,7 @@ const DropdownMenuItem = React.forwardRef<
     ref={ref}
     className={cn(
       "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 focus:bg-transparent",
-      "focus:font-emphasis focus:text-primary",
+      "font-emphasis",
       inset && "pl-8",
       className
     )}
@@ -103,7 +103,7 @@ const DropdownMenuCheckboxItem = React.forwardRef<
     ref={ref}
     className={cn(
       "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50 focus:bg-transparent",
-      "focus:font-emphasis focus:text-primary",
+      "font-emphasis",
       className
     )}
     checked={checked}
@@ -128,7 +128,7 @@ const DropdownMenuRadioItem = React.forwardRef<
     ref={ref}
     className={cn(
       "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50 focus:bg-transparent",
-      "focus:font-emphasis focus:text-primary",
+      "font-emphasis",
       className
     )}
     {...props}

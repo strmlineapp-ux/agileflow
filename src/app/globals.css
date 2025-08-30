@@ -23,7 +23,7 @@
     --popover: 210 40% 100%;
     --radius: 0.5rem;
 
-    --emphasis-color: hsl(var(--primary));
+    --emphasis-color: hsl(var(--foreground)); /* Default emphasis to foreground */
   }
 
   .dark {
@@ -54,6 +54,11 @@
 
 @layer components {
     .font-emphasis {
+        @apply transition-colors;
+    }
+    .font-emphasis:hover,
+    .font-emphasis:focus,
+    .font-emphasis[data-state=open] {
         font-weight: var(--font-weight-emphasis) !important;
         color: var(--emphasis-color) !important;
     }
