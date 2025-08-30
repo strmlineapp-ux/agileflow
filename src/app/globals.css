@@ -67,6 +67,7 @@
     .font-emphasis:focus .material-symbols-outlined,
     .font-emphasis[data-state=open] .material-symbols-outlined {
         color: var(--emphasis-color) !important;
+        font-variation-settings: 'FILL' var(--global-icon-fill, 0), 'wght' var(--font-weight-emphasis, 500), 'GRAD' var(--global-icon-grade, 0), 'opsz' var(--global-icon-optical-size, 24) !important;
     }
 }
 
