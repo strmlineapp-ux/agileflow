@@ -119,12 +119,13 @@ export function ItemSelectionPopover({
                   filteredItems.map(item => {
                     const isSelected = tabs.find(t => t.value === activeTab)?.selectedIds.includes(item.id) || false;
                     const itemStyle = isSelected ? getSelectedStyle(baseWeight, true) : {};
-                    const iconStyle = isSelected ? getSelectedStyle(baseWeight, false) : { color: item.color };
+                    
                     return (
                       <div
                         key={item.id}
-                        className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer text-muted-foreground"
+                        className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer text-muted-foreground hover:bg-muted/50"
                         onClick={() => onSelectionChange(activeTab, item.id)}
+                        style={itemStyle}
                       >
                         {item.iconType === 'avatar' ? (
                           <Avatar className="h-7 w-7">
@@ -132,9 +133,9 @@ export function ItemSelectionPopover({
                             <AvatarFallback>{item.name.slice(0, 2)}</AvatarFallback>
                           </Avatar>
                         ) : (
-                          <GoogleSymbol name={item.icon} style={iconStyle} />
+                          <GoogleSymbol name={item.icon} style={{color: item.color}} />
                         )}
-                        <span style={itemStyle}>{item.name}</span>
+                        <span>{item.name}</span>
                       </div>
                     );
                   })
@@ -149,4 +150,3 @@ export function ItemSelectionPopover({
     </Popover>
   );
 }
-
