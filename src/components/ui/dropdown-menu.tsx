@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -100,7 +101,7 @@ const DropdownMenuCheckboxItem = React.forwardRef<
 >(({ className, children, checked, ...props }, ref) => {
   const { viewAsUser } = useUser();
   const baseWeight = viewAsUser?.fontWeight || 400;
-  const selectedStyle = getSelectedStyle(baseWeight);
+  const selectedStyle = getSelectedStyle(baseWeight, true);
   
   return (
     <DropdownMenuPrimitive.CheckboxItem
@@ -130,7 +131,7 @@ const DropdownMenuRadioItem = React.forwardRef<
 >(({ className, children, ...props }, ref) => {
   const { viewAsUser } = useUser();
   const baseWeight = viewAsUser?.fontWeight || 400;
-  const selectedStyle = getSelectedStyle(baseWeight);
+  const selectedStyle = getSelectedStyle(baseWeight, true);
 
   return (
     <DropdownMenuPrimitive.RadioItem

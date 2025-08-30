@@ -32,10 +32,11 @@ TabsList.displayName = TabsPrimitive.List.displayName
 const TabsTrigger = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
->(({ className, ...props }, ref) => {
+>(({ className, children, ...props }, ref) => {
   const { viewAsUser } = useUser();
   const baseWeight = viewAsUser?.fontWeight || 400;
-
+  const isSelected = props['data-state'] === 'active';
+  
   return (
     <TabsPrimitive.Trigger
       ref={ref}
@@ -43,9 +44,11 @@ const TabsTrigger = React.forwardRef<
         "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-none",
         className
       )}
-      style={props['data-state'] === 'active' ? getSelectedStyle(baseWeight, true) : {}}
+      style={isSelected ? getSelectedStyle(baseWeight, true) : {}}
       {...props}
-    />
+    >
+        {children}
+    </TabsPrimitive.Trigger>
   )
 })
 TabsTrigger.displayName = TabsPrimitive.Trigger.displayName

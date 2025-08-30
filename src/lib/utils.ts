@@ -121,8 +121,9 @@ export const getSelectedStyle = (baseWeight: number, hasText: boolean): React.CS
     500: 700, // Medium -> Bold
   };
 
-  if (baseWeight >= 700) {
-    // If base weight is Bold or higher, use primary color.
+  const newWeight = weightMap[baseWeight];
+
+  if (baseWeight >= 700) { // This is the "Bold" case
     if (hasText) {
       return { color: 'hsl(var(--primary))' };
     } else {
@@ -131,10 +132,7 @@ export const getSelectedStyle = (baseWeight: number, hasText: boolean): React.CS
     }
   }
 
-  // For other weights, increase font weight and use standard foreground color for text.
-  return { 
-    fontWeight: weightMap[baseWeight] || baseWeight,
-    color: 'hsl(var(--foreground))'
-  };
+  // For other weights, just increase font weight. Color remains the same.
+  return { fontWeight: newWeight || baseWeight };
 };
 
