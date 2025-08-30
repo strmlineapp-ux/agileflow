@@ -463,7 +463,6 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                 searchTerm={userSearchTerm}
                 setSearchTerm={setUserSearchTerm}
                 placeholder="Search users..."
-                isActive={true}
                 autoFocus={true}
               />
         </div>
@@ -475,7 +474,6 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                 searchTerm={teamSearchTerm}
                 setSearchTerm={setTeamSearchTerm}
                 placeholder="Search teams..."
-                isActive={true}
                 autoFocus={true}
                 showColorFilter={true}
                 onColorSelect={setColorFilter}
@@ -502,52 +500,50 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                         <TabsTrigger value="users">Users</TabsTrigger>
                         <TabsTrigger value="teams">Teams</TabsTrigger>
                     </TabsList>
-                    <div className="flex-1 overflow-hidden">
-                        <TabsContent value="users" className="m-0 h-full flex flex-col">
-                            {renderUserSearch()}
-                            <div className="flex-1 overflow-y-auto">
-                                <ScrollArea className="h-full">
-                                    {filteredUsers.length > 0 ? (
-                                    <div className="p-1 space-y-1">
-                                        {filteredUsers.map(user => {
-                                        const isSelected = access.users.includes(user.userId);
-                                        return (
-                                            <div key={user.userId} className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer", !isSelected && "text-muted-foreground", isSelected && "text-primary")} onClick={() => handleToggle('users', user.userId)}>
-                                            <Avatar className="h-7 w-7"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
-                                            <span>{user.displayName}</span>
-                                            </div>
-                                        )
-                                        })}
-                                    </div>
-                                    ) : (
-                                    <p className="text-center text-sm text-muted-foreground p-4">No users found.</p>
-                                    )}
-                                </ScrollArea>
-                            </div>
-                        </TabsContent>
-                        <TabsContent value="teams" className="m-0 h-full flex flex-col">
-                             {renderTeamSearch()}
-                            <div className="flex-1 overflow-y-auto">
-                                <ScrollArea className="h-full">
-                                    {filteredTeams.length > 0 ? (
-                                    <div className="p-1 space-y-1">
-                                        {filteredTeams.map(team => {
-                                        const isSelected = access.teams.includes(team.id);
-                                        return (
-                                            <div key={team.id} className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer", !isSelected && "text-muted-foreground", isSelected && "text-primary")} onClick={() => handleToggle('teams', team.id)}>
-                                            <GoogleSymbol name={team.icon} style={{color: isSelected ? 'hsl(var(--primary))' : team.color}} />
-                                            <span>{team.name}</span>
-                                            </div>
-                                        )
-                                        })}
-                                    </div>
-                                    ) : (
-                                    <p className="text-center text-sm text-muted-foreground p-4">No teams found.</p>
-                                    )}
-                                </ScrollArea>
-                            </div>
-                        </TabsContent>
-                    </div>
+                     <TabsContent value="users" className="m-0 flex flex-col flex-1 min-h-0">
+                        {renderUserSearch()}
+                        <div className="flex-1 overflow-hidden">
+                            <ScrollArea className="h-full">
+                                {filteredUsers.length > 0 ? (
+                                <div className="p-1 space-y-1">
+                                    {filteredUsers.map(user => {
+                                    const isSelected = access.users.includes(user.userId);
+                                    return (
+                                        <div key={user.userId} className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer", !isSelected && "text-muted-foreground", isSelected && "text-primary")} onClick={() => handleToggle('users', user.userId)}>
+                                        <Avatar className="h-7 w-7"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
+                                        <span>{user.displayName}</span>
+                                        </div>
+                                    )
+                                    })}
+                                </div>
+                                ) : (
+                                <p className="text-center text-sm text-muted-foreground p-4">No users found.</p>
+                                )}
+                            </ScrollArea>
+                        </div>
+                    </TabsContent>
+                    <TabsContent value="teams" className="m-0 flex flex-col flex-1 min-h-0">
+                            {renderTeamSearch()}
+                        <div className="flex-1 overflow-hidden">
+                            <ScrollArea className="h-full">
+                                {filteredTeams.length > 0 ? (
+                                <div className="p-1 space-y-1">
+                                    {filteredTeams.map(team => {
+                                    const isSelected = access.teams.includes(team.id);
+                                    return (
+                                        <div key={team.id} className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer", !isSelected && "text-muted-foreground", isSelected && "text-primary")} onClick={() => handleToggle('teams', team.id)}>
+                                        <GoogleSymbol name={team.icon} style={{color: isSelected ? 'hsl(var(--primary))' : team.color}} />
+                                        <span>{team.name}</span>
+                                        </div>
+                                    )
+                                    })}
+                                </div>
+                                ) : (
+                                <p className="text-center text-sm text-muted-foreground p-4">No teams found.</p>
+                                )}
+                            </ScrollArea>
+                        </div>
+                    </TabsContent>
                 </Tabs>
             </PopoverContent>
         </Popover>
@@ -613,7 +609,6 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
             showColorFilter={true}
             onColorSelect={setColorFilter}
             activeColorFilter={colorFilter}
-            isActive={true}
           />
         </div>
         <div className="flex-1 overflow-hidden">
@@ -936,3 +931,4 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
     );
 };
 // #endregion
+
