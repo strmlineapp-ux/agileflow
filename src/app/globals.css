@@ -5,8 +5,9 @@
 
 @layer base {
   :root {
-    --background: 210 20% 96%;
+    --background: 210 20% 92%;
     --foreground: 210 7% 12%;
+    --component-bg: 210 20% 96%;
 
     --primary: 210 70% 50%;
     --primary-foreground: 210 40% 98%;
@@ -20,6 +21,7 @@
   .dark {
     --background: 210 40% 9%;
     --foreground: 210 7% 92%;
+    --component-bg: 210 40% 12%;
     
     --primary: 25 88% 45%;
     --primary-foreground: 43 55% 95%;
@@ -62,4 +64,3 @@
     scrollbar-width: none;  /* Firefox */
   }
 }
-
