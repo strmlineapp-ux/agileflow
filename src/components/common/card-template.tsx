@@ -69,8 +69,8 @@ export function CardTemplate({
                         <TooltipTrigger asChild>
                             <Button
                                 variant="destructive"
-                                size="icon"
-                                className="absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                size="sm"
+                                className="absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity z-10 p-0"
                                 onPointerDown={(e) => {
                                     e.stopPropagation();
                                     setIsDeleteDialogOpen(true);
