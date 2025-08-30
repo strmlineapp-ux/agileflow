@@ -16,8 +16,8 @@ export default {
       },
     },
     extend: {
-      fontFamily: {
-        body: ['"Roboto"', "sans-serif"],
+      fontWeight: {
+        emphasis: "var(--font-weight-emphasis, 500)",
       },
       colors: {
         border: "hsl(var(--foreground) / <alpha-value>)",
@@ -38,9 +38,6 @@ export default {
         },
         muted: {
           DEFAULT: "hsl(var(--muted) / <alpha-value>)",
-        },
-        accent: {
-          DEFAULT: "hsl(var(--accent) / <alpha-value>)",
         },
         popover: {
           DEFAULT: "hsl(var(--popover) / <alpha-value>)",
