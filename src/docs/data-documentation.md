@@ -22,36 +22,36 @@ AgileFlow employs a highly scalable, on-demand data-fetching strategy that is op
     *   **Performance**: Memory usage is kept to a minimum by only holding the data relevant to the current view.
     *   **NoSQL Optimization**: This model aligns perfectly with NoSQL best practices, which favor fetching specific documents by ID over performing large, complex queries.
 
-## Multi-Tenant Architecture: A Flexible Hybrid Model
+## Multi-Workspace Architecture: A Flexible Hybrid Model
 
-AgileFlow is designed with a flexible, hybrid multi-tenant architecture. This approach allows the application to scale efficiently by supporting two distinct models for tenant data isolation, which can be chosen based on a customer's needs or tier.
+AgileFlow is designed with a flexible, hybrid multi-workspace architecture. This approach allows the application to scale efficiently by supporting two distinct models for workspace data isolation, which can be chosen based on a customer's needs or tier.
 
 ### Model 1: Shared Database with Logical Isolation (Default)
 
-This is the standard model for most tenants, balancing cost-effectiveness and ease of management.
+This is the standard model for most workspaces, balancing cost-effectiveness and ease of management.
 
-1.  **Shared Firebase Project**: Multiple tenants coexist within a single, primary Firebase project.
-2.  **`tenantId` Field**: Every document in Firestore (e.g., users, projects, tasks) includes a `tenantId` field. This field is the key to ensuring data privacy.
-3.  **Mandatory Query Filtering**: **Every single database query must be filtered by the current user's `tenantId`**. This is a strict development discipline that prevents one tenant's data from ever being visible to another. For example, fetching a list of teams would require a `where("tenantId", "==", currentUser.tenantId)` clause.
-4.  **Benefits**: Lower operational overhead, easier to manage migrations, and more cost-effective for smaller tenants.
+1.  **Shared Firebase Project**: Multiple workspaces coexist within a single, primary Firebase project.
+2.  **`workspaceId` Field**: Every document in Firestore (e.g., users, projects, tasks) includes a `workspaceId` field. This field is the key to ensuring data privacy.
+3.  **Mandatory Query Filtering**: **Every single database query must be filtered by the current user's `workspaceId`**. This is a strict development discipline that prevents one workspace's data from ever being visible to another. For example, fetching a list of teams would require a `where("workspaceId", "==", currentUser.workspaceId)` clause.
+4.  **Benefits**: Lower operational overhead, easier to manage migrations, and more cost-effective for smaller workspaces.
 
 ### Model 2: Dedicated Database with Physical Isolation (Premium)
 
 This model is ideal for enterprise clients or those with stringent data residency or security requirements.
 
-1.  **Separate Firebase Project**: Each tenant is provisioned with their own completely independent Firebase project. This provides the highest possible level of data isolation.
-2.  **No `tenantId` Field Needed**: Because the data is physically isolated at the project level, there is no need for a `tenantId` field within the documents or for special query filtering. The connection itself is already scoped to that tenant.
-3.  **Benefits**: Maximum security and performance, as the database resources are not shared. This also allows for tenant-specific customizations to security rules and cloud infrastructure.
+1.  **Separate Firebase Project**: Each workspace is provisioned with their own completely independent Firebase project. This provides the highest possible level of data isolation.
+2.  **No `workspaceId` Field Needed**: Because the data is physically isolated at the project level, there is no need for a `workspaceId` field within the documents or for special query filtering. The connection itself is already scoped to that workspace.
+3.  **Benefits**: Maximum security and performance, as the database resources are not shared. This also allows for workspace-specific customizations to security rules and cloud infrastructure.
 
 ### How the Hybrid Model Works in Practice
 
 The application uses a dynamic lookup mechanism to seamlessly support both models.
 
-1.  **Tenant Identification**: The application identifies the current tenant based on the hostname (e.g., `tenant-a.agileflow.app`).
-2.  **Dynamic Configuration**: The system looks up the tenant's configuration from a secure, central store.
-    *   A standard tenant might resolve to the configuration for the **shared** Firebase project.
-    *   An enterprise tenant (`megacorp.agileflow.app`) would resolve to the unique configuration for **their own dedicated** Firebase project.
-3.  **Data Access**: The application's data hooks and services use the retrieved configuration to connect to the correct database and apply the appropriate querying strategy (with or without `tenantId` filtering).
+1.  **Workspace Identification**: The application identifies the current workspace based on the hostname (e.g., `workspace-a.agileflow.app`).
+2.  **Dynamic Configuration**: The system looks up the workspace's configuration from a secure, central store.
+    *   A standard workspace might resolve to the configuration for the **shared** Firebase project.
+    *   An enterprise workspace (`megacorp.agileflow.app`) would resolve to the unique configuration for **their own dedicated** Firebase project.
+3.  **Data Access**: The application's data hooks and services use the retrieved configuration to connect to the correct database and apply the appropriate querying strategy (with or without `workspaceId` filtering).
 
 This hybrid approach provides the flexibility to offer different service tiers without being locked into a single architectural pattern, ensuring the application can adapt to a wide range of customer needs.
 
@@ -247,7 +247,3 @@ This represents a specific, functional role or skill.
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
-
-
-
-

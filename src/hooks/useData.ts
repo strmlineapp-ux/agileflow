@@ -39,7 +39,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
   
   useEffect(() => {
     const loadData = async () => {
-        if (authLoading || !realUser || !realUser.tenantId) {
+        if (authLoading || !realUser || !realUser.workspaceId) {
             if (!authLoading) setLoading(false);
             return;
         }
@@ -47,10 +47,10 @@ export function useData(realUser: User | null, authLoading: boolean) {
         setLoading(true);
         try {
           const db = getDb();
-          const tenantId = realUser.tenantId;
+          const workspaceId = realUser.workspaceId;
 
           const collectionsToFetch = ['users', 'teams', 'calendars', 'locations', 'badges', 'badgeCollections', 'projects'];
-          const queries = collectionsToFetch.map(c => getDocs(query(collection(db, c), where("tenantId", "==", tenantId))));
+          const queries = collectionsToFetch.map(c => getDocs(query(collection(db, c), where("workspaceId", "==", workspaceId))));
           
           const [usersSnapshot, teamsSnap, calendarsSnap, locationsSnap, badgesSnap, collectionsSnap, projectsSnap] = await Promise.all(queries);
           
@@ -151,7 +151,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
 
   const addTeam = useCallback(async (teamData: Omit<Team, 'id'>, realUser: User) => {
     const db = getDb();
-    const newTeamData = { ...teamData, tenantId: realUser.tenantId };
+    const newTeamData = { ...teamData, workspaceId: realUser.workspaceId };
     const docRef = await addDoc(collection(db, 'teams'), newTeamData);
     const newTeam = { ...newTeamData, id: docRef.id };
     setTeams(current => [...current, newTeam]);
@@ -206,7 +206,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
         ...projectData,
         owner: { type: 'user', id: realUser.userId },
         isShared: false,
-        tenantId: realUser.tenantId,
+        workspaceId: realUser.workspaceId,
     };
     const docRef = await addDoc(collection(db, 'projects'), newProjectData);
     const newProject = { ...newProjectData, id: docRef.id };
@@ -229,7 +229,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
 
   const addCalendar = useCallback(async (newCalendarData: Omit<SharedCalendar, 'id'>) => {
     const db = getDb();
-    const fullCalendarData = { ...newCalendarData, tenantId: realUser!.tenantId };
+    const fullCalendarData = { ...newCalendarData, workspaceId: realUser!.workspaceId };
     const docRef = await addDoc(collection(db, 'calendars'), fullCalendarData);
     const newCalendar = { ...fullCalendarData, id: docRef.id };
     setCalendars(current => [...current, newCalendar]);
@@ -260,7 +260,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
   const fetchEvents = useCallback(async (start: Date, end: Date): Promise<Event[]> => {
     const db = getDb();
     const eventsQuery = query(collection(db, "events"), 
-      where("tenantId", "==", realUser!.tenantId),
+      where("workspaceId", "==", realUser!.workspaceId),
       where("startTime", ">=", start),
       where("startTime", "<", end)
     );
@@ -275,9 +275,9 @@ export function useData(realUser: User | null, authLoading: boolean) {
 
   const addEvent = useCallback(async (currentEvents: Event[], newEventData: Omit<Event, 'eventId'>) => {
     const db = getDb();
-    const eventWithTenant = { ...newEventData, tenantId: realUser!.tenantId };
-    const docRef = await addDoc(collection(db, "events"), eventWithTenant);
-    const newEvent = { ...eventWithTenant, eventId: docRef.id };
+    const eventWithWorkspace = { ...newEventData, workspaceId: realUser!.workspaceId };
+    const docRef = await addDoc(collection(db, "events"), eventWithWorkspace);
+    const newEvent = { ...eventWithWorkspace, eventId: docRef.id };
     return [...currentEvents, newEvent];
   }, [realUser]);
 
@@ -312,10 +312,10 @@ export function useData(realUser: User | null, authLoading: boolean) {
   const addProjectEvent = useCallback(async (projectId: string, currentEvents: Event[], newEventData: Omit<Event, 'eventId'>, realUser: User): Promise<Event[]> => {
     if (!realUser) throw new Error("User not found");
     const db = getDb();
-    const eventWithTenant = { ...newEventData, tenantId: realUser!.tenantId };
-    const docRef = await addDoc(collection(db, `projects/${projectId}/events`), eventWithTenant);
+    const eventWithWorkspace = { ...newEventData, workspaceId: realUser!.workspaceId };
+    const docRef = await addDoc(collection(db, `projects/${projectId}/events`), eventWithWorkspace);
     const newEvent: Event = {
-      ...eventWithTenant,
+      ...eventWithWorkspace,
       eventId: docRef.id,
     };
     return [...currentEvents, newEvent];
@@ -338,7 +338,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
 
   const fetchTasks = useCallback(async (): Promise<Task[]> => {
     const db = getDb();
-    const tasksQuery = query(collection(db, 'tasks'), where("tenantId", "==", realUser!.tenantId));
+    const tasksQuery = query(collection(db, 'tasks'), where("workspaceId", "==", realUser!.workspaceId));
     const snapshot = await getDocs(tasksQuery);
     return snapshot.docs.map(doc => ({
         ...doc.data(),
@@ -355,7 +355,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
       createdAt: new Date(),
       lastUpdated: new Date(),
       createdBy: realUser.userId,
-      tenantId: realUser.tenantId,
+      workspaceId: realUser.workspaceId,
     };
     const docRef = await addDoc(collection(db, 'tasks'), newTaskWithMeta);
     const newTask: Task = { ...newTaskWithMeta, taskId: docRef.id };
@@ -379,7 +379,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
   const addLocation = useCallback(async (locationName: string) => {
     if(!realUser) return;
     const db = getDb();
-    const newLocationData = { name: locationName, tenantId: realUser.tenantId };
+    const newLocationData = { name: locationName, workspaceId: realUser.workspaceId };
     const docRef = await addDoc(collection(db, 'locations'), newLocationData);
     const newLocation: BookableLocation = { ...newLocationData, id: docRef.id };
     setLocations(current => [...current, newLocation]);
@@ -410,7 +410,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
   const addBadgeCollection = useCallback(async (owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => {
     const db = getDb();
     const batch = writeBatch(db);
-    const tenantId = owner.tenantId;
+    const workspaceId = owner.workspaceId;
 
     const newCollectionId = crypto.randomUUID();
     let newBadges: Badge[] = [];
@@ -422,7 +422,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
             const originalBadge = allBadges.find(b => b.id === bId);
             if (!originalBadge) return null;
             const newBadgeId = crypto.randomUUID();
-            const newBadge = { ...originalBadge, id: newBadgeId, owner: ownerContext, ownerCollectionId: newCollectionId, name: `${originalBadge.name} (Copy)`, tenantId };
+            const newBadge = { ...originalBadge, id: newBadgeId, owner: ownerContext, ownerCollectionId: newCollectionId, name: `${originalBadge.name} (Copy)`, workspaceId };
             batch.set(doc(db, 'badges', newBadgeId), newBadge);
             return newBadge;
         }).filter((b): b is Badge => b !== null);
@@ -435,7 +435,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
             isShared: false,
             description: sourceCollection.description || '',
             badgeIds: newBadges.map(b => b.id),
-            tenantId,
+            workspaceId,
         };
     } else {
         const newBadgeId = crypto.randomUUID();
@@ -446,7 +446,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
             name: `New Badge`,
             icon: googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
             color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
-            tenantId,
+            workspaceId,
         };
         newBadges.push(newBadge);
         batch.set(doc(db, 'badges', newBadgeId), newBadge);
@@ -461,7 +461,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
             applications: [],
             description: '',
             isShared: false,
-            tenantId,
+            workspaceId,
         };
     }
     batch.set(doc(db, 'badgeCollections', newCollectionId), newCollection);
@@ -522,7 +522,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
 
     const batch = writeBatch(db);
     let newBadge: Badge;
-    const tenantId = realUser.tenantId;
+    const workspaceId = realUser.workspaceId;
 
     if (sourceBadge) {
         newBadge = {
@@ -533,7 +533,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
             icon: sourceBadge.icon,
             color: sourceBadge.color,
             description: sourceBadge.description,
-            tenantId,
+            workspaceId,
         };
     } else {
         newBadge = {
@@ -543,7 +543,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
             name: `New Badge`,
             icon: googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
             color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
-            tenantId,
+            workspaceId,
         };
     }
     

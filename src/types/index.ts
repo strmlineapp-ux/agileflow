@@ -1,7 +1,7 @@
 
 import type React from 'react';
 
-export interface Tenant {
+export interface Workspace {
   id: string;
   name: string;
   ownerId: string;
@@ -16,7 +16,7 @@ export interface AppTab {
   description?: string;
   componentKey: 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates' | 'admins' | 'pages' | 'tabs' | 'overview' | 'tasks' | 'notifications' | 'settings' | 'calendar' | 'calendars' | 'teams' | 'projects' | 'events';
   contextTeamId?: string;
-  tenantId?: string;
+  workspaceId?: string;
 }
 
 export interface AppPage {
@@ -31,7 +31,7 @@ export interface AppPage {
     users: string[]; // User IDs
     teams: string[]; // Team IDs
   };
-  tenantId?: string;
+  workspaceId?: string;
 }
 
 export interface AppSettings {
@@ -39,8 +39,8 @@ export interface AppSettings {
   tabs: AppTab[];
   calendarManagementLabel?: string;
   teamManagementLabel?: string;
-  preApprovedEmails?: Array<{ email: string; invitedBy: string; tenantId: string; }>;
-  tenantId?: string;
+  preApprovedEmails?: Array<{ email: string; invitedBy: string; workspaceId: string; }>;
+  workspaceId?: string;
 }
 
 export interface Attendee {
@@ -80,7 +80,7 @@ export interface User {
   hideWash?: boolean;
   createdAt: Date;
   approvedBy?: string;
-  tenantId: string;
+  workspaceId: string;
 }
 
 export interface Project {
@@ -90,7 +90,7 @@ export interface Project {
   isShared: boolean;
   icon: string;
   color: string;
-  tenantId: string;
+  workspaceId: string;
 }
 
 export interface EventTemplate {
@@ -111,7 +111,7 @@ export interface Badge {
   description?: string;
   owner: BadgeOwner;
   ownerCollectionId: string;
-  tenantId: string;
+  workspaceId: string;
 }
 
 export type BadgeApplication = 'team members' | 'events' | 'tasks' | 'badges';
@@ -127,7 +127,7 @@ export interface BadgeCollection {
   description?: string;
   applications?: BadgeApplication[];
   isShared?: boolean;
-  tenantId: string;
+  workspaceId: string;
 }
 
 export interface Team {
@@ -149,7 +149,7 @@ export interface Team {
   locationAliases?: { [key:string]: string };
   workstations?: string[];
   eventTemplates?: EventTemplate[];
-  tenantId: string;
+  workspaceId: string;
 }
 
 export interface Task {
@@ -166,7 +166,7 @@ export interface Task {
   createdBy: string; // userId
   createdAt: Date;
   lastUpdated: Date;
-  tenantId: string;
+  workspaceId: string;
 }
 
 export type CalendarId = string;
@@ -181,7 +181,7 @@ export interface SharedCalendar {
   isShared?: boolean;
   defaultEventTitle?: string;
   roleAssignmentsLabel?: string;
-  tenantId: string;
+  workspaceId: string;
 }
 
 export type AttachmentType = 'drive' | 'docs' | 'sheets' | 'slides' | 'forms' | 'meet' | 'local' | 'link';
@@ -213,7 +213,7 @@ export interface Event {
   lastUpdated: Date;
   syncToGoogleCalendar?: boolean;
   recurrenceRule?: string; // iCal RRULE string for recurring events
-  tenantId: string;
+  workspaceId: string;
 }
 
 export type UserStatus = 'PTO' | 'PTO (AM)' | 'PTO (PM)' | 'TOIL' | 'TOIL (AM)' | 'TOIL (PM)' | 'Sick' | 'Offsite' | 'Training';
@@ -240,7 +240,7 @@ export interface Notification {
 export interface BookableLocation {
   id: string;
   name: string;
-  tenantId: string;
+  workspaceId: string;
 }
 
 export type Holiday = Date;

@@ -12,7 +12,7 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
-async function addTenantIdToCollection(collectionName) {
+async function addWorkspaceIdToCollection(collectionName) {
     const collectionRef = db.collection(collectionName);
     const snapshot = await collectionRef.get();
 
@@ -25,22 +25,22 @@ async function addTenantIdToCollection(collectionName) {
     let updatedCount = 0;
     snapshot.forEach(doc => {
         const data = doc.data();
-        if (!data.tenantId) {
-            batch.update(doc.ref, { tenantId: 'default' });
+        if (!data.workspaceId) {
+            batch.update(doc.ref, { workspaceId: 'default' });
             updatedCount++;
         }
     });
 
     if (updatedCount > 0) {
         await batch.commit();
-        console.log(`Successfully added tenantId to ${updatedCount} documents in ${collectionName}.`);
+        console.log(`Successfully added workspaceId to ${updatedCount} documents in ${collectionName}.`);
     } else {
-        console.log(`All documents in ${collectionName} already have a tenantId.`);
+        console.log(`All documents in ${collectionName} already have a workspaceId.`);
     }
 }
 
 async function migrate() {
-    console.log('Starting data migration to add tenant IDs...');
+    console.log('Starting data migration to add workspace IDs...');
     const collectionsToUpdate = [
         'users',
         'teams',
@@ -54,9 +54,9 @@ async function migrate() {
 
     try {
         for (const collectionName of collectionsToUpdate) {
-            await addTenantIdToCollection(collectionName);
+            await addWorkspaceIdToCollection(collectionName);
         }
-        console.log('Data migration complete! All documents should now have a tenantId.');
+        console.log('Data migration complete! All documents should now have a workspaceId.');
     } catch (error) {
         console.error("Error during data migration:", error);
         process.exit(1);
