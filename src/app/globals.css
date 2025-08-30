@@ -62,6 +62,12 @@
         font-weight: var(--font-weight-emphasis) !important;
         color: var(--emphasis-color) !important;
     }
+    
+    .font-emphasis:hover .material-symbols-outlined,
+    .font-emphasis:focus .material-symbols-outlined,
+    .font-emphasis[data-state=open] .material-symbols-outlined {
+        color: var(--emphasis-color) !important;
+    }
 }
 
 @layer utilities {
