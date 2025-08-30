@@ -6,7 +6,7 @@
 @layer base {
   :root {
     --background: 210 20% 92%;
-    --foreground: 210 7% 60%;
+    --foreground: 210 7% 67%;
     --component-bg: 210 20% 96%;
 
     --primary: 210 70% 50%;
@@ -20,7 +20,7 @@
 
   .dark {
     --background: 210 40% 9%;
-    --foreground: 210 7% 86%;
+    --foreground: 210 7% 76%;
     --component-bg: 210 40% 12%;
     
     --primary: 25 88% 45%;
