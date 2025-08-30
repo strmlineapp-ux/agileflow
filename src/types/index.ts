@@ -31,6 +31,7 @@ export interface AppPage {
     users: string[]; // User IDs
     teams: string[]; // Team IDs
   };
+  isSystemPage?: boolean; // Indicates if the page is a core, non-deletable page
   workspaceId: string;
 }
 
@@ -244,3 +245,10 @@ export interface BookableLocation {
 }
 
 export type Holiday = Date;
+
+export interface Tenant {
+    id: string;
+    name: string;
+    ownerId: string;
+    createdAt: Date;
+}

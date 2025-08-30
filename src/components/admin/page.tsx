@@ -14,7 +14,7 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
-import { corePages, coreTabs } from '@/lib/core-data';
+import { systemPages, coreTabs } from '@/lib/core-data';
 import { cn, getContrastColor, isHueInRange, getHueFromHsl } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -604,7 +604,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
 }) {
     const { viewAsUser } = useUser();
     const canManage = viewAsUser.isAdmin;
-    const isPinned = corePages.some(p => p.id === page.id);
+    const isPinned = page.isSystemPage;
 
     const displayPath = page.isDynamic ? `${page.path}/[...]` : page.path;
 
@@ -629,7 +629,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
         <CardTemplate
             entity={entityWithDescription}
             onUpdate={onUpdate}
-            onDelete={onDelete}
+            onDelete={() => onDelete(page.id)}
             canManage={canManage}
             isPinned={isPinned}
             isExpanded={isExpanded}
@@ -645,7 +645,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
 }
 
 export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
-    const { appSettings, updateAppSettings } = useUser();
+    const { appSettings, addPage, updatePage, deletePage, reorderPages } = useUser();
     const { toast } = useToast();
     const [searchTerm, setSearchTerm] = useState('');
     const [colorFilter, setColorFilter] = useState<string | null>(null);
@@ -663,36 +663,32 @@ export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
         });
     }, []);
     
-    const pinnedIds = useMemo(() => new Set(corePages.map(p => p.id)), []);
+    const pinnedIds = useMemo(() => new Set(systemPages.map(p => p.id)), []);
     
     const handleUpdatePage = useCallback((pageId: string, data: Partial<AppPage>) => {
-        const newPages = appSettings.pages.map(p => p.id === pageId ? { ...p, ...data } : p);
-        updateAppSettings({ pages: newPages });
-    }, [appSettings.pages, updateAppSettings]);
+        updatePage(pageId, data);
+    }, [updatePage]);
     
     const handleDuplicatePage = useCallback((sourcePage: AppPage) => {
         const newName = `${sourcePage.name} (Copy)`;
         const newPath = `/dashboard/${newName.toLowerCase().replace(/\s+/g, '-').replace(/[()]/g, '')}-${crypto.randomUUID().slice(0, 4)}`;
         
-        const newPage: AppPage = {
+        const newPage: Omit<AppPage, 'id'> = {
             ...JSON.parse(JSON.stringify(sourcePage)),
-            id: crypto.randomUUID(),
             name: newName,
             path: newPath,
             isDynamic: sourcePage.isDynamic,
+            isSystemPage: false, // Duplicated pages are never system pages
+            workspaceId: sourcePage.workspaceId,
         };
-        const sourceIndex = appSettings.pages.findIndex(p => p.id === sourcePage.id);
-        const newPages = [...appSettings.pages];
-        newPages.splice(sourceIndex + 1, 0, newPage);
-        updateAppSettings({ pages: newPages });
+        addPage(newPage);
         toast({ title: "Page Duplicated", description: `A copy of "${sourcePage.name}" was created.`});
-    }, [appSettings.pages, updateAppSettings, toast]);
+    }, [addPage, toast]);
 
     const handleAddPage = () => {
         const pageCount = appSettings.pages.length;
         const newName = `New Page ${pageCount + 1}`;
-        const newPage: AppPage = {
-            id: crypto.randomUUID(),
+        const newPage: Omit<AppPage, 'id' | 'workspaceId'> = {
             name: newName,
             icon: 'web',
             color: 'hsl(220, 13%, 47%)',
@@ -702,20 +698,11 @@ export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
             access: { users: [], teams: [] }
         };
         
-        const insertIndex = appSettings.pages.findIndex(p => p.id === 'page-notifications');
-        const newPages = [...appSettings.pages];
-        if (insertIndex !== -1) {
-            newPages.splice(insertIndex, 0, newPage);
-        } else {
-            // Fallback: place before the last element if notifications page not found
-            newPages.splice(newPages.length -1, 0, newPage);
-        }
-        
-        updateAppSettings({ pages: newPages });
+        addPage(newPage as Omit<AppPage, 'id'>);
     };
 
     const handleDeletePage = (pageId: string) => {
-        updateAppSettings({ pages: appSettings.pages.filter(p => p.id !== pageId) });
+        deletePage(pageId);
         toast({ title: 'Page Deleted' });
     };
 
@@ -750,7 +737,7 @@ export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
     return (
         <DraggableGrid
             items={filteredPages}
-            setItems={(newPages) => updateAppSettings({ pages: newPages })}
+            setItems={reorderPages}
             onDragEnd={(event) => {
                 const { active, over } = event;
                 if (over?.id === 'duplicate-page-zone') {
@@ -770,8 +757,7 @@ export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
                     
                     if (activeIsPinned !== overIsPinned) return;
                     
-                    const reorderedPages = arrayMove(appSettings.pages, oldIndex, newIndex);
-                    updateAppSettings({ pages: reorderedPages });
+                    reorderPages(arrayMove(appSettings.pages, oldIndex, newIndex));
                 }
             }}
             renderItem={(item, isDragging) => renderPageCard(item as AppPage)}
@@ -828,7 +814,7 @@ function SortableTabCard({ tab, onUpdate, isExpanded, onToggleExpand }: {
 }
 
 export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
-    const { appSettings, updateAppSettings, reorderTabs } = useUser();
+    const { appSettings, updateAppTab, reorderTabs } = useUser();
     const [searchTerm, setSearchTerm] = useState('');
     const [colorFilter, setColorFilter] = useState<string | null>(null);
     const [expandedTabs, setExpandedTabs] = useState<Set<string>>(new Set());
@@ -846,9 +832,8 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
     }, []);
 
     const handleUpdateTab = useCallback((tabId: string, data: Partial<AppTab>) => {
-        const newTabs = appSettings.tabs.map(t => t.id === tabId ? { ...t, ...data } : t);
-        updateAppSettings({ tabs: newTabs });
-    }, [appSettings.tabs, updateAppSettings]);
+        updateAppTab(tabId, data);
+    }, [updateAppTab]);
     
     const filteredTabs = useMemo(() => {
         let results = appSettings.tabs;
@@ -910,6 +895,7 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
 // #endregion
 
     
+
 
 
 

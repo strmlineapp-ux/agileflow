@@ -5,10 +5,10 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, writeBatch, query, where } from 'firebase/firestore';
 import { getDb } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
-import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeOwner, type Task, type Holiday, type Project } from '@/types';
+import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeOwner, type Task, type Holiday, type Project, type AppPage } from '@/types';
 import { hasAccess } from '@/lib/permissions';
 import { googleSymbolNames } from '@/lib/google-symbols';
-import { corePages, coreTabs } from '@/lib/core-data';
+import { systemPages, coreTabs } from '@/lib/core-data';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
 // Helper to simulate async operations
@@ -34,6 +34,8 @@ export function useData(realUser: User | null, authLoading: boolean) {
   const [appSettings, setAppSettings] = useState<AppSettings>({ pages: [], tabs: [], preApprovedEmails: [], workspaceId: 'default' });
   const [allBadges, setAllBadges] = useState<Badge[]>([]);
   const [allBadgeCollections, setAllBadgeCollections] = useState<BadgeCollection[]>([]);
+  const [allPages, setAllPages] = useState<AppPage[]>([]);
+
 
   const { toast } = useToast();
   
@@ -49,10 +51,10 @@ export function useData(realUser: User | null, authLoading: boolean) {
           const db = getDb();
           const workspaceId = realUser.workspaceId;
 
-          const collectionsToFetch = ['users', 'teams', 'calendars', 'locations', 'badges', 'badgeCollections', 'projects'];
+          const collectionsToFetch = ['users', 'teams', 'calendars', 'locations', 'badges', 'badgeCollections', 'projects', 'pages'];
           const queries = collectionsToFetch.map(c => getDocs(query(collection(db, c), where("workspaceId", "==", workspaceId))));
           
-          const [usersSnapshot, teamsSnap, calendarsSnap, locationsSnap, badgesSnap, collectionsSnap, projectsSnap] = await Promise.all(queries);
+          const [usersSnapshot, teamsSnap, calendarsSnap, locationsSnap, badgesSnap, collectionsSnap, projectsSnap, pagesSnap] = await Promise.all(queries);
           
           const appSettingsSnap = await getDoc(doc(db, 'app-settings', workspaceId));
           
@@ -71,16 +73,21 @@ export function useData(realUser: User | null, authLoading: boolean) {
           setAllBadges(badgesSnap.docs.map(d => ({ id: d.id, ...d.data() } as Badge)));
           setAllBadgeCollections(collectionsSnap.docs.map(d => ({ id: d.id, ...d.data() } as BadgeCollection)));
           
+          const userCreatedPages = pagesSnap.docs.map(d => ({ id: d.id, ...d.data() } as AppPage));
+          setAllPages([...systemPages, ...userCreatedPages]);
+
           if (appSettingsSnap.exists()) {
             const settingsData = appSettingsSnap.data() as AppSettings;
-              setAppSettings(settingsData);
+              setAppSettings({
+                ...settingsData,
+                pages: [...systemPages, ...userCreatedPages]
+              });
           } else {
-            // If for some reason settings don't exist for this workspace, create them.
              const newAppSettings = {
-                pages: corePages.map(p => ({...p, workspaceId})),
                 tabs: coreTabs.map(t => ({...t, workspaceId})),
                 preApprovedEmails: [],
                 workspaceId,
+                pages: []
             };
             await setDoc(doc(db, 'app-settings', workspaceId), newAppSettings);
             setAppSettings(newAppSettings);
@@ -401,13 +408,50 @@ export function useData(realUser: User | null, authLoading: boolean) {
     setLocations(current => current.filter(loc => loc.id !== locationId));
   }, []);
 
-  const updateAppSettings = useCallback(async (settings: Partial<AppSettings>) => {
+  const updateAppSettings = useCallback(async (settings: Partial<Omit<AppSettings, 'pages'>>) => {
     if(!realUser) return;
     const db = getDb();
     const settingsRef = doc(db, 'app-settings', realUser.workspaceId);
     await updateDoc(settingsRef, settings);
     setAppSettings(current => ({ ...current, ...settings }));
   }, [realUser]);
+  
+  const addPage = useCallback(async (pageData: Omit<AppPage, 'id'>) => {
+    if (!realUser) return;
+    const db = getDb();
+    const newPageData = { ...pageData, workspaceId: realUser.workspaceId };
+    const docRef = await addDoc(collection(db, 'pages'), newPageData);
+    const newPage = { ...newPageData, id: docRef.id };
+    setAllPages(current => [...current, newPage]);
+    setAppSettings(current => ({ ...current, pages: [...current.pages, newPage] }));
+  }, [realUser]);
+
+  const updatePage = useCallback(async (pageId: string, pageData: Partial<AppPage>) => {
+    const db = getDb();
+    await updateDoc(doc(db, 'pages', pageId), pageData);
+    const updatedPages = allPages.map(p => p.id === pageId ? { ...p, ...pageData } : p);
+    setAllPages(updatedPages);
+    setAppSettings(current => ({ ...current, pages: updatedPages }));
+  }, [allPages]);
+
+  const deletePage = useCallback(async (pageId: string) => {
+    const db = getDb();
+    await deleteDoc(doc(db, 'pages', pageId));
+    const updatedPages = allPages.filter(p => p.id !== pageId);
+    setAllPages(updatedPages);
+    setAppSettings(current => ({ ...current, pages: updatedPages }));
+  }, [allPages]);
+  
+  const reorderPages = useCallback(async (reorderedPages: AppPage[]) => {
+    // In a real app, this might update a 'sortOrder' field in Firestore
+    // For now, we only update the local state.
+    await simulateApi();
+    const systemPageIds = new Set(systemPages.map(p => p.id));
+    const userPages = reorderedPages.filter(p => !systemPageIds.has(p.id));
+    const newPageOrder = [...systemPages, ...userPages];
+    setAllPages(newPageOrder);
+    setAppSettings(current => ({ ...current, pages: newPageOrder }));
+  }, []);
 
   const updateAppTab = useCallback(async (tabId: string, tabData: Partial<AppTab>) => {
     const newTabs = appSettings.tabs.map(t => t.id === tabId ? { ...t, ...tabData } : t);
@@ -654,14 +698,17 @@ export function useData(realUser: User | null, authLoading: boolean) {
   }, []);
   
   return {
-    loading, users, teams, projects, appSettings, calendars, locations, notifications, userStatusAssignments, allBadges, allBadgeCollections, holidays, allBookableLocations,
+    loading, users, teams, projects, appSettings: {...appSettings, pages: allPages}, calendars, locations, notifications, userStatusAssignments, allBadges, allBadgeCollections, holidays, allBookableLocations,
     setUsers, setTeams, setAllBadgeCollections, setAppSettings, setCalendars, setLocations, setNotifications, setUserStatusAssignments, setAllBadges,
     handleApproveAccessRequest, updateUser, addUser, deleteUser, reorderUsers, addTeam, updateTeam, deleteTeam, reorderTeams,
     addProject, updateProject, deleteProject,
     addCalendar, updateCalendar, deleteCalendar, reorderCalendars, fetchEvents, addEvent, updateEvent, deleteEvent, 
     fetchProjectEvents, addProjectEvent, updateProjectEvent, deleteProjectEvent,
     fetchTasks,
-    addTask, updateTask, deleteTask, addLocation, deleteLocation, updateAppSettings, updateAppTab, reorderTabs,
+    addTask, updateTask, deleteTask, addLocation, deleteLocation,
+    addPage, updatePage, deletePage, reorderPages,
+    updateAppSettings: (settings: Partial<Omit<AppSettings, 'pages'>>) => updateAppSettings(settings),
+    updateAppTab, reorderTabs,
     addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, reorderBadgeCollections, addBadge, updateBadge, deleteBadge,
     reorderBadges, handleBadgeAssignment, handleBadgeUnassignment,
     searchSharedTeams,
