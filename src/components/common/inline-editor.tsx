@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
@@ -92,7 +93,7 @@ export function InlineEditor({
   return (
     <span
       onClick={handleDisplayClick}
-      className={cn(className, !disabled && "cursor-text", !value && "italic")}
+      className={cn(className, !disabled && "cursor-text", !value && "italic text-foreground/70")}
     >
       {value || placeholder || "Click to edit"}
     </span>

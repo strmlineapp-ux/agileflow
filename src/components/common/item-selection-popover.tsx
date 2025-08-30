@@ -46,7 +46,7 @@ const ItemDisplay = ({ item, isSelected }: { item: Item, isSelected: boolean }) 
     
     return (
         <div
-            className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer text-muted-foreground"
+            className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer text-foreground"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             style={{ fontWeight: itemStyle.fontWeight, color: itemStyle.color }}
@@ -154,7 +154,7 @@ export function ItemSelectionPopover({
                     );
                   })
                 ) : (
-                  <p className="text-center text-sm text-muted-foreground p-4">No {activeTab} found.</p>
+                  <p className="text-center text-sm text-foreground p-4">No {activeTab} found.</p>
                 )}
               </div>
             </ScrollArea>
