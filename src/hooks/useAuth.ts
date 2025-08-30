@@ -5,7 +5,7 @@ import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvid
 import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, limit, updateDoc } from 'firebase/firestore';
 import { useState, useEffect, useCallback } from 'react';
 import { type User } from '@/types';
-import { getAuthInstance, getDb } from '@/lib/firebase';
+import { getAuthInstance, getDb, getCurrentTenantId } from '@/lib/firebase';
 import { useToast } from './use-toast';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
@@ -41,16 +41,13 @@ export function useAuth() {
                     createdAt: userDoc.data().createdAt?.toDate ? userDoc.data().createdAt.toDate() : new Date(),
                 } as User;
 
-                // Backwards compatibility: Assign a default tenantId if it's missing
                 if (!userData.tenantId) {
                     userData.tenantId = 'default';
-                    // Update the document in Firestore so this check isn't needed next time
                     await updateDoc(userDocRef, { tenantId: 'default' });
                 }
 
                 setRealUser(userData);
             } else {
-                // If user doc doesn't exist, check for pre-approval or first user status
                 const appSettingsRef = doc(db, 'app-settings', 'global');
                 const appSettingsDoc = await getDoc(appSettingsRef);
                 const preApprovedEmails = (appSettingsDoc.data()?.preApprovedEmails || []).map((item: {email: string}) => item.email);
@@ -65,7 +62,7 @@ export function useAuth() {
                 const accountType = isFirstUser || isPreApproved ? 'Full' : 'Viewer';
                 const approvedBy = isFirstUser ? 'system' : (isPreApproved ? 'pre-approved' : undefined);
                 
-                const tenantId = 'default';
+                const tenantId = getCurrentTenantId();
 
                 const newUser: User = {
                     userId: firebaseUser.uid,
@@ -84,7 +81,7 @@ export function useAuth() {
                     tenantId,
                 };
                 await setDoc(userDocRef, newUser);
-                setRealUser(newUser); // Immediately set the new user in state
+                setRealUser(newUser); 
             }
         } else {
             setRealUser(null);
