@@ -42,6 +42,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { HslStringColorPicker } from 'react-colorful';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { DraggableGrid } from '../common/draggable-grid';
+import { InlineEditor } from '../common/inline-editor';
 
 function SortableCalendarCard({
     calendar,
@@ -318,7 +319,7 @@ function CalendarDropZone({ id, type, children, className }: { id: string; type:
 
 
 export function CalendarManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
-  const { viewAsUser, calendars, addCalendar, updateCalendar, deleteCalendar, updateAppTab, appSettings, updateUser, reorderCalendars } = useUser();
+  const { viewAsUser, calendars, addCalendar, updateCalendar, deleteCalendar, updatePage, appSettings, updateUser, reorderCalendars } = useUser();
   const { toast } = useToast();
   
   const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
@@ -340,8 +341,20 @@ export function CalendarManagement({ tab, page }: { tab: AppTab; page: AppPage }
       });
   }, []);
 
-  const title = appSettings.calendarManagementLabel || tab.name;
+  const title = page.displayTitle ?? tab.name;
   
+  const handleTitleSave = (newTitle: string) => {
+    updatePage(page.id, { displayTitle: newTitle });
+  };
+
+  const handleTitleReset = (e: React.MouseEvent<HTMLHeadingElement>) => {
+    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
+        e.preventDefault();
+        updatePage(page.id, { displayTitle: null });
+        toast({title: "Title Reset", description: "The page title has been reset to its default."});
+    }
+  };
+
   const handleAddCalendar = (sourceCalendar?: SharedCalendar) => {
     const calendarCount = calendars.length;
     let newCalendarData: Omit<SharedCalendar, 'id'>;
@@ -427,9 +440,8 @@ export function CalendarManagement({ tab, page }: { tab: AppTab; page: AppPage }
       if (over.id === 'shared-calendars-panel') {
         const isOwner = activeCalendar.owner.id === viewAsUser.userId;
         if (isOwner) { // Owned calendar dragged to share/unshare
-            const newSharedState = !activeCalendar.isShared;
-            updateCalendar(activeCalendar.id, { isShared: newSharedState });
-            toast({ title: newSharedState ? 'Calendar Shared' : 'Calendar Unshared' });
+            updateCalendar(activeCalendar.id, { isShared: !activeCalendar.isShared });
+            toast({ title: activeCalendar.isShared ? 'Calendar Unshared' : 'Calendar Shared' });
         } else { // Linked calendar dragged back to unlink
             const updatedLinkedIds = (viewAsUser.linkedCalendarIds || []).filter(id => id !== activeCalendar.id);
             updateUser(viewAsUser.userId, { linkedCalendarIds: updatedLinkedIds });
@@ -483,7 +495,12 @@ export function CalendarManagement({ tab, page }: { tab: AppTab; page: AppPage }
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex items-center justify-between mb-6 shrink-0">
           <div className="flex items-center gap-2">
-            <h2 className="font-headline text-2xl font-thin tracking-tight">{title}</h2>
+            <InlineEditor 
+                value={title}
+                onSave={handleTitleSave}
+                className="h-auto p-0 font-headline text-2xl font-thin tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                onClick={handleTitleReset}
+            />
             <DuplicateZone id="duplicate-calendar-zone" onAdd={() => handleAddCalendar()} />
           </div>
           <div className="flex items-center gap-2">

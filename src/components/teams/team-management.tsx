@@ -37,6 +37,7 @@ import { DraggableGrid } from '../common/draggable-grid';
 import { CompactSearchInput } from '@/components/common/compact-search-input';
 import { TeamCard } from './team-card';
 import { SortableItem } from '../common/sortable-item';
+import { InlineEditor } from '../common/inline-editor';
 
 
 function TeamManagementDropZone({id, type, children, className}: {id: string, type: string, children: React.ReactNode, className?: string}) {
@@ -78,14 +79,12 @@ function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
 }
 
 export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: AppTab; page: AppPage; isSingleTabPage?: boolean }) {
-    const { viewAsUser, users, teams, appSettings, addTeam, updateTeam, deleteTeam, reorderTeams, updateAppTab, updateUser } = useUser();
+    const { viewAsUser, users, teams, appSettings, addTeam, updateTeam, deleteTeam, reorderTeams, updatePage, updateUser } = useUser();
     const router = useRouter();
     const pathname = usePathname();
     const { toast } = useToast();
 
     const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
-    const [isEditingTitle, setIsEditingTitle] = useState(false);
-    const titleInputRef = useRef<HTMLInputElement>(null);
     const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
     const [sharedSearchTerm, setSharedSearchTerm] = useState('');
     const [expandedTeams, setExpandedTeams] = useState<Set<string>>(new Set());
@@ -93,7 +92,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     const [searchTerm, setSearchTerm] = useState('');
     const [colorFilter, setColorFilter] = useState<string | null>(null);
     
-    const tabTitle = appSettings.teamManagementLabel || tab.name;
+    const title = page.displayTitle ?? tab.name;
     
     const onToggleExpand = useCallback((teamId: string) => {
         setExpandedTeams(prev => {
@@ -112,23 +111,18 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
         return team.owner.id === viewAsUser.userId || (team.teamAdmins || []).includes(viewAsUser.userId);
     }, [viewAsUser]);
 
-    useEffect(() => {
-        if (isEditingTitle) titleInputRef.current?.focus();
-    }, [isEditingTitle]);
+    const handleTitleSave = (newTitle: string) => {
+        updatePage(page.id, { displayTitle: newTitle });
+    };
 
-    const handleSaveTitle = () => {
-        const newName = titleInputRef.current?.value.trim();
-        if (newName && newName !== tab.name) {
-            updateAppTab(tab.id, { name: newName });
+    const handleTitleReset = (e: React.MouseEvent<HTMLHeadingElement>) => {
+        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
+            e.preventDefault();
+            updatePage(page.id, { displayTitle: null });
+            toast({title: "Title Reset", description: "The page title has been reset to its default."});
         }
-        setIsEditingTitle(false);
     };
-
-    const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter') handleSaveTitle();
-        else if (e.key === 'Escape') setIsEditingTitle(false);
-    };
-
+    
     const handleAddTeam = (sourceTeam?: Team) => {
         const owner: BadgeCollectionOwner = { type: 'user', id: viewAsUser!.userId };
         let newTeamData: Omit<Team, 'id'>;
@@ -281,7 +275,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                 const isOwner = teamToDrop.owner.id === viewAsUser.userId;
                 if (isOwner) {
                     updateTeam(teamToDrop.id, { isShared: !teamToDrop.isShared });
-                    toast({ title: teamToDrop.isShared ? 'Team Unshared' : 'Team Unshared' });
+                    toast({ title: teamToDrop.isShared ? 'Team Unshared' : 'Team Shared' });
                 } else { 
                     const updatedLinkedTeamIds = (viewAsUser.linkedTeamIds || []).filter(id => id !== teamToDrop.id);
                     updateUser(viewAsUser.userId, { linkedTeamIds: updatedLinkedTeamIds });
@@ -387,20 +381,13 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
             >
                 <div className="flex items-center justify-between mb-6 shrink-0">
                     <div className="flex items-center gap-2">
-                        {isEditingTitle ? (
-                            <Input ref={titleInputRef} defaultValue={tabTitle} onBlur={handleSaveTitle} onKeyDown={handleTitleKeyDown} className="h-auto p-0 border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0" />
-                        ) : (
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <h2 className="tracking-tight cursor-pointer" onClick={() => setIsEditingTitle(true)}>{tabTitle}</h2>
-                                    </TooltipTrigger>
-                                    {tab.description && (
-                                        <TooltipContent><p className="max-w-xs">{tab.description}</p></TooltipContent>
-                                    )}
-                                </Tooltip>
-                            </TooltipProvider>
-                        )}
+                        <InlineEditor 
+                            value={title}
+                            onSave={handleTitleSave}
+                            onClick={handleTitleReset}
+                            className="h-auto p-0 font-headline text-2xl font-thin tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                            disabled={!viewAsUser.isAdmin}
+                        />
                         <DuplicateZone id="duplicate-team-zone" onAdd={() => handleAddTeam()} />
                     </div>
                     <div className="flex items-center gap-1">
