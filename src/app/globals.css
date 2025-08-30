@@ -12,8 +12,7 @@
     --primary: 210 70% 50%;
     --primary-foreground: 210 40% 98%;
     
-    --accent: 180 60% 40%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 210 40% 96%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
@@ -34,8 +33,7 @@
     --primary: 25 88% 45%;
     --primary-foreground: 43 55% 95%;
 
-    --accent: 180 60% 40%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 43 55% 71%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
