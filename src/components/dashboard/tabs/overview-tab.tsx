@@ -17,11 +17,12 @@ const stats = [
 ];
 
 export function OverviewContent() {
-  const { fetchTasks } = useUser();
+  const { fetchTasks, loading: userLoading } = useUser();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (userLoading) return;
     const loadTasks = async () => {
       setLoading(true);
       const fetchedTasks = await fetchTasks();
@@ -29,7 +30,7 @@ export function OverviewContent() {
       setLoading(false);
     };
     loadTasks();
-  }, [fetchTasks]);
+  }, [fetchTasks, userLoading]);
 
   return (
     <div className="flex flex-col gap-6">

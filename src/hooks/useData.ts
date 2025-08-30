@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -10,7 +9,6 @@ import { type User, type Notification, type UserStatusAssignment, type SharedCal
 import { hasAccess } from '@/lib/permissions';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { corePages, coreTabs } from '@/lib/core-data';
-import { mockEvents, mockTasks, mockNotifications as initialMockNotifications } from '@/lib/mock-data';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
 // Helper to simulate async operations
@@ -116,6 +114,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
   }, []);
   
   const reorderUsers = useCallback(async (reorderedUsers: User[]) => {
+      // In a real app, this might update a 'sortOrder' field in Firestore
       await simulateApi();
       setUsers([...reorderedUsers]);
   }, []);
@@ -192,6 +191,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
   }, [appSettings, toast, teams]);
 
   const reorderTeams = useCallback(async (reorderedTeams: Team[]) => {
+      // In a real app, this might update a 'sortOrder' field in Firestore
       await simulateApi();
       setTeams([...reorderedTeams]);
   }, []);
@@ -252,58 +252,78 @@ export function useData(realUser: User | null, authLoading: boolean) {
   }, [calendars.length, toast]);
   
   const reorderCalendars = useCallback(async (reorderedCalendars: SharedCalendar[]) => {
+      // In a real app, this might update a 'sortOrder' field in Firestore
       await simulateApi();
       setCalendars([...reorderedCalendars]);
   }, []);
 
   const fetchEvents = useCallback(async (start: Date, end: Date): Promise<Event[]> => {
-    await simulateApi();
-    const filteredEvents = mockEvents.filter(event => {
-        const eventTime = event.startTime.getTime();
-        return eventTime >= start.getTime() && eventTime < end.getTime();
-    });
-    return filteredEvents as unknown as Event[];
-  }, []);
+    const db = getDb();
+    const eventsQuery = query(collection(db, "events"), 
+      where("tenantId", "==", realUser!.tenantId),
+      where("startTime", ">=", start),
+      where("startTime", "<", end)
+    );
+    const snapshot = await getDocs(eventsQuery);
+    return snapshot.docs.map(doc => ({
+        ...doc.data(),
+        eventId: doc.id,
+        startTime: doc.data().startTime.toDate(),
+        endTime: doc.data().endTime.toDate(),
+    } as Event));
+  }, [realUser]);
 
   const addEvent = useCallback(async (currentEvents: Event[], newEventData: Omit<Event, 'eventId'>) => {
-    const event: Event = { ...newEventData, eventId: crypto.randomUUID(), tenantId: realUser!.tenantId };
-    await simulateApi();
-    return [...currentEvents, event];
+    const db = getDb();
+    const eventWithTenant = { ...newEventData, tenantId: realUser!.tenantId };
+    const docRef = await addDoc(collection(db, "events"), eventWithTenant);
+    const newEvent = { ...eventWithTenant, eventId: docRef.id };
+    return [...currentEvents, newEvent];
   }, [realUser]);
 
   const updateEvent = useCallback(async (currentEvents: Event[], eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => {
-      await simulateApi();
+      const db = getDb();
+      await updateDoc(doc(db, 'events', eventId), { ...eventData, lastUpdated: new Date() });
       const updatedEvent = { ...currentEvents.find(e => e.eventId === eventId)!, ...eventData, lastUpdated: new Date() } as Event;
       return currentEvents.map(e => e.eventId === eventId ? updatedEvent : e);
   }, []);
 
   const deleteEvent = useCallback(async (currentEvents: Event[], eventId: string) => {
-    await simulateApi();
+    const db = getDb();
+    await deleteDoc(doc(db, 'events', eventId));
     return currentEvents.filter(e => e.eventId !== eventId);
   }, []);
 
   const fetchProjectEvents = useCallback(async (projectId: string, start: Date, end: Date): Promise<Event[]> => {
-    await simulateApi();
-    return mockEvents.filter(event => {
-        const eventTime = event.startTime.getTime();
-        return event.projectId === projectId && eventTime >= start.getTime() && eventTime < end.getTime();
-    }) as unknown as Event[];
+    const db = getDb();
+    const eventsQuery = query(collection(db, `projects/${projectId}/events`), 
+      where("startTime", ">=", start),
+      where("startTime", "<", end)
+    );
+    const snapshot = await getDocs(eventsQuery);
+    return snapshot.docs.map(doc => ({
+        ...doc.data(),
+        eventId: doc.id,
+        startTime: doc.data().startTime.toDate(),
+        endTime: doc.data().endTime.toDate(),
+    } as Event));
   }, []);
 
   const addProjectEvent = useCallback(async (projectId: string, currentEvents: Event[], newEventData: Omit<Event, 'eventId'>, realUser: User): Promise<Event[]> => {
     if (!realUser) throw new Error("User not found");
-    await simulateApi();
+    const db = getDb();
+    const eventWithTenant = { ...newEventData, tenantId: realUser!.tenantId };
+    const docRef = await addDoc(collection(db, `projects/${projectId}/events`), eventWithTenant);
     const newEvent: Event = {
-      ...newEventData,
-      eventId: crypto.randomUUID(),
-      projectId,
-      tenantId: realUser.tenantId
+      ...eventWithTenant,
+      eventId: docRef.id,
     };
     return [...currentEvents, newEvent];
   }, []);
 
   const updateProjectEvent = useCallback(async (projectId: string, currentEvents: Event[], eventId: string, eventData: Partial<Event>): Promise<Event[]> => {
-    await simulateApi();
+    const db = getDb();
+    await updateDoc(doc(db, `projects/${projectId}/events`, eventId), { ...eventData, lastUpdated: new Date() });
     const eventToUpdate = currentEvents.find(e => e.eventId === eventId);
     if (!eventToUpdate) return currentEvents;
     const updatedEvent = { ...eventToUpdate, ...eventData, lastUpdated: new Date() };
@@ -311,50 +331,63 @@ export function useData(realUser: User | null, authLoading: boolean) {
   }, []);
 
   const deleteProjectEvent = useCallback(async (projectId: string, currentEvents: Event[], eventId: string): Promise<Event[]> => {
-    await simulateApi();
+    const db = getDb();
+    await deleteDoc(doc(db, `projects/${projectId}/events`, eventId));
     return currentEvents.filter(e => e.eventId !== eventId);
   }, []);
 
   const fetchTasks = useCallback(async (): Promise<Task[]> => {
-    await simulateApi();
-    return mockTasks as unknown as Task[];
-  }, []);
+    const db = getDb();
+    const tasksQuery = query(collection(db, 'tasks'), where("tenantId", "==", realUser!.tenantId));
+    const snapshot = await getDocs(tasksQuery);
+    return snapshot.docs.map(doc => ({
+        ...doc.data(),
+        taskId: doc.id,
+        dueDate: doc.data().dueDate.toDate(),
+    } as Task));
+  }, [realUser]);
 
   const addTask = useCallback(async (currentTasks: Task[], newTaskData: Omit<Task, 'taskId' | 'createdAt' | 'lastUpdated'>, realUser: User): Promise<Task[]> => {
     if (!realUser) throw new Error("User not found or Firebase not ready");
-    await simulateApi();
-    const newTask: Task = {
+    const db = getDb();
+    const newTaskWithMeta = {
       ...newTaskData,
-      taskId: crypto.randomUUID(),
       createdAt: new Date(),
       lastUpdated: new Date(),
       createdBy: realUser.userId,
       tenantId: realUser.tenantId,
     };
+    const docRef = await addDoc(collection(db, 'tasks'), newTaskWithMeta);
+    const newTask: Task = { ...newTaskWithMeta, taskId: docRef.id };
     return [newTask, ...currentTasks];
   }, []);
 
   const updateTask = useCallback(async (currentTasks: Task[], taskId: string, taskData: Partial<Task>): Promise<Task[]> => {
-    await simulateApi();
+    const db = getDb();
+    await updateDoc(doc(db, 'tasks', taskId), { ...taskData, lastUpdated: new Date() });
     return currentTasks.map(task =>
       task.taskId === taskId ? { ...task, ...taskData, lastUpdated: new Date() } : task
     );
   }, []);
 
   const deleteTask = useCallback(async (currentTasks: Task[], taskId: string): Promise<Task[]> => {
-    await simulateApi();
+    const db = getDb();
+    await deleteDoc(doc(db, 'tasks', taskId));
     return currentTasks.filter(task => task.taskId !== taskId);
   }, []);
 
   const addLocation = useCallback(async (locationName: string) => {
     if(!realUser) return;
-    const newLocation: BookableLocation = { id: crypto.randomUUID(), name: locationName, tenantId: realUser.tenantId };
-    await simulateApi();
+    const db = getDb();
+    const newLocationData = { name: locationName, tenantId: realUser.tenantId };
+    const docRef = await addDoc(collection(db, 'locations'), newLocationData);
+    const newLocation: BookableLocation = { ...newLocationData, id: docRef.id };
     setLocations(current => [...current, newLocation]);
   }, [realUser]);
 
   const deleteLocation = useCallback(async (locationId: string) => {
-    await simulateApi();
+    const db = getDb();
+    await deleteDoc(doc(db, 'locations', locationId));
     setLocations(current => current.filter(loc => loc.id !== locationId));
   }, []);
 
@@ -592,15 +625,22 @@ export function useData(realUser: User | null, authLoading: boolean) {
   }, [users, updateUser, toast]);
 
   const linkGoogleCalendar = useCallback(async (userId: string) => {
+    // In a real app, this would trigger the Google OAuth flow.
     await simulateApi(1000);
     await updateUser(userId, { googleCalendarLinked: true, accountType: 'Full' });
     toast({ title: "Success!", description: "Your Google Calendar has been successfully connected." });
   }, [updateUser, toast]);
 
   const searchSharedTeams = useCallback(async (searchTerm: string): Promise<Team[]> => {
+    // In a real app, this might query a specific 'sharedTeams' collection or use a different logic
     await simulateApi();
     return teams.filter(team => team.isShared && team.name.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [teams]);
+  
+  // A placeholder for seeding the database if it's empty
+  const seedDatabase = useCallback(async () => {
+    console.log("Seeding is not implemented for live Firestore connection.");
+  }, []);
   
   return {
     loading, users, teams, projects, appSettings, calendars, locations, notifications, userStatusAssignments, allBadges, allBadgeCollections, holidays, allBookableLocations,
@@ -614,6 +654,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
     addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, reorderBadgeCollections, addBadge, updateBadge, deleteBadge,
     reorderBadges, handleBadgeAssignment, handleBadgeUnassignment,
     searchSharedTeams,
-    linkGoogleCalendar, predefinedColors
+    linkGoogleCalendar, predefinedColors,
+    seedDatabase, // Expose seed function
   };
 }
