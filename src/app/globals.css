@@ -22,6 +22,7 @@
     --muted: 210 40% 96.1%;
     --popover: 210 40% 100%;
     --radius: 0.5rem;
+    --border: 210 7% 40% / 0.2; /* NEW: Border is foreground with 20% opacity */
 
     --emphasis-color: hsl(var(--foreground)); /* Default emphasis to foreground */
   }
@@ -36,10 +37,7 @@
     --destructive-foreground: 210 40% 98%;
     --muted: 210 40% 15%;
     --popover: 222.2 84% 4.9%;
-  }
-
-  * {
-    @apply border-border;
+    --border: 210 7% 50% / 0.2; /* NEW: Border is foreground with 20% opacity */
   }
 
   body {
