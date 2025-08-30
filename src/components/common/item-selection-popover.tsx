@@ -7,7 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn, getHueFromHsl, isHueInRange, getSelectedStyle } from '@/lib/utils';
+import { cn, getHueFromHsl, isHueInRange, getEmphasisStyle } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CompactSearchInput } from './compact-search-input';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -104,7 +104,7 @@ export function ItemSelectionPopover({
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
               placeholder={`Search ${activeTab}...`}
-              isActive={true}
+              isActive={isOpen}
               autoFocus={true}
               showColorFilter={showColorFilter}
               onColorSelect={setColorFilter}
@@ -118,7 +118,8 @@ export function ItemSelectionPopover({
                 {filteredItems.length > 0 ? (
                   filteredItems.map(item => {
                     const isSelected = tabs.find(t => t.value === activeTab)?.selectedIds.includes(item.id) || false;
-                    const itemStyle = isSelected ? getSelectedStyle(baseWeight, true) : {};
+                    const itemStyle = getEmphasisStyle(baseWeight, true, isSelected);
+                    const iconStyle = getEmphasisStyle(baseWeight, false, isSelected);
                     
                     return (
                       <div
@@ -133,9 +134,9 @@ export function ItemSelectionPopover({
                             <AvatarFallback>{item.name.slice(0, 2)}</AvatarFallback>
                           </Avatar>
                         ) : (
-                          <GoogleSymbol name={item.icon} style={{ color: itemStyle.color || item.color }} />
+                          <GoogleSymbol name={item.icon} style={{ ...iconStyle, color: iconStyle.color || item.color }} />
                         )}
-                        <span>{item.name}</span>
+                        <span style={itemStyle}>{item.name}</span>
                       </div>
                     );
                   })

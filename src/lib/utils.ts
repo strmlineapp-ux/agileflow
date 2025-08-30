@@ -113,25 +113,26 @@ export const getHueFromHsl = (hsl: string | null): number | null => {
     return match ? parseInt(match[1], 10) : null;
 };
 
-export const getSelectedStyle = (baseWeight: number, hasText?: boolean): React.CSSProperties => {
+export const getEmphasisStyle = (baseWeight: number, hasText?: boolean, isSelected?: boolean): React.CSSProperties => {
   const weightMap: Record<number, number> = {
     100: 300, // Thin -> Light
     300: 400, // Light -> Normal
     400: 500, // Normal -> Medium
     500: 700, // Medium -> Bold
   };
-
   const newWeight = weightMap[baseWeight] || baseWeight;
+  
+  if (!isSelected) {
+    return { fontWeight: baseWeight };
+  }
 
   if (baseWeight >= 700) { // This is the "Bold" case
     if (hasText) {
       return { color: 'hsl(var(--primary))' };
-    } else {
-      // Icon-only element
-      return { color: 'hsl(var(--primary))' };
     }
+    // Icon-only element
+    return { color: 'hsl(var(--primary))' };
   }
 
-  // For other weights, just increase font weight. Color should remain the default muted-foreground.
-  return { fontWeight: newWeight };
+  return { fontWeight: newWeight, color: 'hsl(var(--muted-foreground))' };
 };

@@ -5,7 +5,7 @@
 import * as React from "react"
 import * as TabsPrimitive from "@radix-ui/react-tabs"
 
-import { cn, getSelectedStyle } from "@/lib/utils"
+import { cn, getEmphasisStyle } from "@/lib/utils"
 import { Separator } from "./separator"
 import { useUser } from "@/context/user-context"
 
@@ -44,7 +44,7 @@ const TabsTrigger = React.forwardRef<
         "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-none",
         className
       )}
-      style={isSelected ? getSelectedStyle(baseWeight, true) : {}}
+      style={isSelected ? getEmphasisStyle(baseWeight, true, isSelected) : {}}
       {...props}
     >
         {children}
