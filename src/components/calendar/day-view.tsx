@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef, useCallback, useLayoutEffect } from 'react';
@@ -68,8 +69,8 @@ const DayViewLocationRow = React.memo(({
                 className="w-[160px] shrink-0 p-2 border-r flex items-start justify-start bg-muted sticky left-0 z-30 gap-1 cursor-pointer"
                 onClick={() => toggleLocationCollapse(location)}
             >
-                <GoogleSymbol name={isCollapsed ? "chevron_right" : "expand_more"} className="text-lg mt-1 text-muted-foreground" weight={100} />
-                <p className="font-light text-sm text-muted-foreground">{location}</p>
+                <GoogleSymbol name={isCollapsed ? "chevron_right" : "expand_more"} className="text-lg mt-1 text-foreground" weight={100} />
+                <p className="font-light text-sm text-foreground">{location}</p>
             </div>
             <div className={cn("relative flex-1", isCollapsed ? "h-10" : "min-h-[5rem] py-1")} onClick={(e) => handleEasyBookingClick(e, 'standard', day, location)}>
                 {Array.from({ length: 23 }).map((_, hour) => (
@@ -330,15 +331,15 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
             <div className="overflow-y-hidden" ref={timelineScrollerRef}>
                 <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}} className="flex flex-col flex-1 h-full">
                     <CardHeader className="p-0 border-b sticky top-0 bg-muted z-20 flex flex-row">
-                        <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-normal text-sm sticky left-0 bg-muted z-30 text-muted-foreground">Location</div>
+                        <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-normal text-sm sticky left-0 bg-muted z-30 text-foreground">Location</div>
                         {hours.map(hour => (
                             <div key={hour} className="shrink-0 text-left p-2 border-r" style={{ width: `${hourWidth}px` }}>
-                                <span className="text-xs text-muted-foreground">{format(addHours(startOfDay(date), hour), timeFormatTimeline)}</span>
+                                <span className="text-xs text-foreground">{format(addHours(startOfDay(date), hour), timeFormatTimeline)}</span>
                             </div>
                         ))}
                     </CardHeader>
                     {allLocations.length === 0 && dayEvents.length === 0 ? (
-                         <div className="flex items-center justify-center h-40 text-muted-foreground flex-1">
+                         <div className="flex items-center justify-center h-40 text-foreground flex-1">
                             No events scheduled for this day.
                         </div>
                     ) : (
@@ -396,7 +397,7 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
                         <div className="w-20 border-r bg-muted">
                             {hours.map(hour => (
                                 <div key={hour} className="relative text-right pr-2 border-b" style={{ height: `${hourHeight}px` }}>
-                                    <span className="text-xs text-muted-foreground relative -top-2">{format(addHours(startOfDay(date), hour), viewAsUser.timeFormat === '24h' ? 'HH:00' : 'h a')}</span>
+                                    <span className="text-xs text-foreground relative -top-2">{format(addHours(startOfDay(date), hour), viewAsUser.timeFormat === '24h' ? 'HH:00' : 'h a')}</span>
                                 </div>
                             ))}
                         </div>
@@ -415,7 +416,7 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
                             ))}
 
                             {dayEvents.length === 0 ? (
-                                 <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                                 <div className="absolute inset-0 flex items-center justify-center text-foreground">
                                     No events scheduled for this day.
                                 </div>
                             ) : (

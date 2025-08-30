@@ -255,7 +255,7 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
                 <Card className="flex flex-col h-full bg-transparent border-0 shadow-none">
                     <CardHeader>
                         <div className="flex items-center justify-between gap-4">
-                            <CardTitle className="text-muted-foreground">Admins ({filteredAdminUsers.length})</CardTitle>
+                            <CardTitle className="text-foreground">Admins ({filteredAdminUsers.length})</CardTitle>
                              <div className="flex items-center gap-1">
                                 <CompactSearchInput
                                   searchTerm={adminSearch}
@@ -274,13 +274,13 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
                     <CardHeader>
                         <div className="flex items-center justify-between gap-4">
                              <div className="flex items-center gap-2">
-                                <CardTitle className="text-muted-foreground">Users ({filteredNonAdminUsers.length})</CardTitle>
+                                <CardTitle className="text-foreground">Users ({filteredNonAdminUsers.length})</CardTitle>
                                 <Popover open={isAddUserPopoverOpen} onOpenChange={setIsAddUserPopoverOpen}>
                                     <TooltipProvider>
                                       <Tooltip>
                                         <TooltipTrigger asChild>
                                           <PopoverTrigger asChild>
-                                              <Button variant="ghost" size="icon" className="p-0 text-muted-foreground">
+                                              <Button variant="ghost" size="icon" className="p-0 text-foreground">
                                                   <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                                               </Button>
                                           </PopoverTrigger>
@@ -358,11 +358,11 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
                     </TooltipProvider>
                 </div>
                 <DialogHeader>
-                    <UIDialogTitle className="font-headline font-thin text-muted-foreground">Two-Factor Authentication</UIDialogTitle>
+                    <UIDialogTitle className="font-headline font-thin text-foreground">Two-Factor Authentication</UIDialogTitle>
                     <DialogDescription>Enter the 6-digit code from your authenticator app to proceed.</DialogDescription>
                 </DialogHeader>
                 <div
-                    className={cn("flex items-center gap-2 w-full text-left text-muted-foreground transition-colors p-2 h-10",
+                    className={cn("flex items-center gap-2 w-full text-left text-foreground transition-colors p-2 h-10",
                         !isEditing2fa && "cursor-text hover:text-primary/80"
                     )}
                     onClick={() => {if (!isEditing2fa) setIsEditing2fa(true)}}
@@ -410,7 +410,7 @@ function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
           <Tooltip>
               <TooltipTrigger asChild>
                   <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={onAdd} onPointerDown={(e) => e.stopPropagation()}>
-                    <GoogleSymbol name="add_circle" className="text-4xl text-muted-foreground" weight={100} />
+                    <GoogleSymbol name="add_circle" className="text-4xl text-foreground" weight={100} />
                     <span className="sr-only">New Page or Drop to Duplicate</span>
                   </Button>
               </TooltipTrigger>
@@ -472,7 +472,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
         <ItemSelectionPopover
             tabs={tabs}
             onSelectionChange={(type, id) => handleToggle(type as 'users' | 'teams', id)}
-            trigger={<Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground"><GoogleSymbol name="group_add" /></Button>}
+            trigger={<Button variant="ghost" size="icon" className="h-8 w-8 text-foreground"><GoogleSymbol name="group_add" /></Button>}
             tooltip="Manage Page Access"
             showColorFilter={true}
         />
@@ -518,7 +518,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
     <ItemSelectionPopover
       tabs={tabs}
       onSelectionChange={(_, id) => handleToggle(id)}
-      trigger={<Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground"><GoogleSymbol name="layers" /></Button>}
+      trigger={<Button variant="ghost" size="icon" className="h-8 w-8 text-foreground"><GoogleSymbol name="layers" /></Button>}
       tooltip="Manage Associated Tabs"
       showColorFilter={true}
     />
@@ -546,11 +546,11 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
             onSave={(newDesc) => onUpdate(page.id, { description: newDesc })}
             disabled={!canManage}
             placeholder="Click to add a description..."
-            className="text-sm text-muted-foreground"
+            className="text-sm text-foreground"
           />
         </div>
         <p
-          className={cn("text-xs text-muted-foreground/60", !isPinned && canManage && "cursor-pointer hover:text-primary")}
+          className={cn("text-xs text-foreground/60", !isPinned && canManage && "cursor-pointer hover:text-primary")}
           onPointerDown={(e) => {
               if(!isPinned && canManage) {
                   e.stopPropagation();
@@ -717,7 +717,7 @@ function SortableTabCard({ tab, onUpdate, isExpanded, onToggleExpand }: {
             onSave={(newDesc) => onUpdate(tab.id, { description: newDesc })}
             disabled={!canManage}
             placeholder="Click to add description"
-            className="text-sm text-muted-foreground min-h-[20px]"
+            className="text-sm text-foreground min-h-[20px]"
         />
       </div>
     );
@@ -816,4 +816,3 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
     );
 };
 // #endregion
-
