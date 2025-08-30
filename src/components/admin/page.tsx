@@ -535,7 +535,9 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
     const canManage = viewAsUser.isAdmin || page.owner?.id === viewAsUser.userId;
     const isPinned = page.isSystemPage;
 
-    const displayPath = page.isDynamic ? `${page.path}/[...]` : page.path;
+    const displayPath = page.isDynamic 
+        ? `${page.path.replace('/dashboard/', '')}/[...]` 
+        : page.path.replace('/dashboard/', '');
     
     const bodyContent = (
       <>
