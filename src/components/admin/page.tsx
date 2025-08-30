@@ -494,11 +494,10 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                         <TabsTrigger value="users">Users</TabsTrigger>
                         <TabsTrigger value="teams">Teams</TabsTrigger>
                     </TabsList>
-                    
-                    <TabsContent value="users" className="m-0 flex flex-col min-h-0">
+                    <TabsContent value="users" className="m-0 flex flex-col flex-1 min-h-0">
                         {renderSearchControl()}
                         <div className="flex-1 overflow-hidden">
-                          <ScrollArea className="h-full max-h-64">
+                          <ScrollArea className="h-64">
                             {filteredUsers.length > 0 ? (
                               <div className="p-1 space-y-1">
                                   {filteredUsers.map(user => {
@@ -506,7 +505,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                                   return (
                                       <div key={user.userId} className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer", !isSelected && "text-muted-foreground")} style={{ color: isSelected ? 'hsl(var(--primary))' : undefined }} onClick={() => handleToggle('users', user.userId)}>
                                       <Avatar className="h-7 w-7"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
-                                      <span>{user.displayName}</span>
+                                      <span className={cn(!isSelected && 'text-muted-foreground')}>{user.displayName}</span>
                                       </div>
                                   )
                                   })}
@@ -517,10 +516,10 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                           </ScrollArea>
                         </div>
                     </TabsContent>
-                    <TabsContent value="teams" className="m-0 flex flex-col min-h-0">
+                    <TabsContent value="teams" className="m-0 flex flex-col flex-1 min-h-0">
                         {renderSearchControl()}
                          <div className="flex-1 overflow-hidden">
-                          <ScrollArea className="h-full max-h-64">
+                          <ScrollArea className="h-64">
                             {filteredTeams.length > 0 ? (
                               <div className="p-1 space-y-1">
                                   {filteredTeams.map(team => {
@@ -528,7 +527,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                                   return (
                                       <div key={team.id} className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer", !isSelected && "text-muted-foreground")} style={{ color: isSelected ? team.color : undefined }} onClick={() => handleToggle('teams', team.id)}>
                                       <GoogleSymbol name={team.icon} />
-                                      <span>{team.name}</span>
+                                      <span className={cn(!isSelected && 'text-muted-foreground')}>{team.name}</span>
                                       </div>
                                   )
                                   })}
@@ -607,7 +606,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
           />
         </div>
         <div className="flex-1 overflow-hidden">
-          <ScrollArea className="h-full max-h-64">
+          <ScrollArea className="h-64">
             {filteredTabs.length > 0 ? (
               <div className="p-1 space-y-1">
                   {filteredTabs.map(tab => {
@@ -621,7 +620,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
                           onClick={() => handleToggle(tab.id)}
                       >
                           <GoogleSymbol name={tab.icon} />
-                          <span>{tab.name}</span>
+                          <span className={cn(!isAssociated && 'text-muted-foreground')}>{tab.name}</span>
                       </div>
                   );
                   })}
@@ -649,26 +648,28 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
 
     const displayPath = page.isDynamic ? `${page.path}/[...]` : page.path;
     
-    const descriptionContent = (
+    const bodyContent = (
       <div className="space-y-1">
-          <div onPointerDown={(e) => e.stopPropagation()}>
-            <InlineEditor
-                value={page.description || ''}
-                onSave={(newDesc) => onUpdate(page.id, { description: newDesc })}
-                disabled={!canManage}
-                placeholder="Click to add a description..."
-                className="text-sm text-muted-foreground"
-            />
-          </div>
-          <p 
-              className={cn("text-xs text-muted-foreground/60", !isPinned && "cursor-pointer hover:text-primary")}
-              onPointerDown={(e) => {
+        <div onPointerDown={(e) => e.stopPropagation()}>
+          <InlineEditor
+            value={page.description || ''}
+            onSave={(newDesc) => onUpdate(page.id, { description: newDesc })}
+            disabled={!canManage}
+            placeholder="Click to add a description..."
+            className="text-sm text-muted-foreground"
+          />
+        </div>
+        <p
+          className={cn("text-xs text-muted-foreground/60", !isPinned && canManage && "cursor-pointer hover:text-primary")}
+          onPointerDown={(e) => {
+              if(!isPinned && canManage) {
                   e.stopPropagation();
-                  if (!isPinned) onUpdate(page.id, { isDynamic: !page.isDynamic });
-              }}
-          >
-              {displayPath}
-          </p>
+                  onUpdate(page.id, { isDynamic: !page.isDynamic });
+              }
+          }}
+        >
+          {displayPath}
+        </p>
       </div>
     );
     
@@ -681,7 +682,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
             isPinned={isPinned}
             isExpanded={isExpanded}
             onToggleExpand={onToggleExpand}
-            body={descriptionContent}
+            body={bodyContent}
             headerControls={
                 <div className="flex items-center">
                     {!isPinned && <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />}
@@ -946,4 +947,5 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
     
 
     
+
 
