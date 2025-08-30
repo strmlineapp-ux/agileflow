@@ -53,6 +53,7 @@ import { DraggableGrid } from '../common/draggable-grid';
 import { SortableItem } from '../common/sortable-item';
 import { IconColorPicker } from '../common/icon-color-picker';
 import { InlineEditor } from '../common/inline-editor';
+import { ItemSelectionPopover, type ItemSelectionTab } from '../common/item-selection-popover';
 
 // #region Admin Groups Management Tab
 
@@ -425,14 +426,9 @@ function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
 function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: Partial<AppPage>) => void }) {
     const { users, teams } = useUser();
     const [isOpen, setIsOpen] = useState(false);
-    const [userSearchTerm, setUserSearchTerm] = useState("");
-    const [teamSearchTerm, setTeamSearchTerm] = useState("");
-    const [colorFilter, setColorFilter] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState('users');
-
-    const access = page.access;
-
+    
     const handleToggle = (type: 'users' | 'teams', id: string) => {
+        const access = page.access || { users: [], teams: [] };
         const currentIds = new Set(access[type] || []);
         if (currentIds.has(id)) {
             currentIds.delete(id);
@@ -442,140 +438,50 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
         onUpdate({ access: { ...access, [type]: Array.from(currentIds) } });
     };
 
-    const filteredUsers = useMemo(() => users.filter(u => u.displayName.toLowerCase().includes(userSearchTerm.toLowerCase())), [users, userSearchTerm]);
-    const filteredTeams = useMemo(() => {
-        let results = teams.filter(t => t.name.toLowerCase().includes(teamSearchTerm.toLowerCase()));
-        if (colorFilter) {
-            const targetHue = getHueFromHsl(colorFilter);
-            if(targetHue !== null) {
-                results = results.filter(t => {
-                    const itemHue = getHueFromHsl(t.color);
-                    return itemHue !== null && isHueInRange(targetHue, itemHue);
-                });
-            }
-        }
-        return results;
-    }, [teams, teamSearchTerm, colorFilter]);
-
-    const renderUserSearch = () => (
-         <div className="p-2 border-b">
-            <CompactSearchInput
-                searchTerm={userSearchTerm}
-                setSearchTerm={setUserSearchTerm}
-                placeholder="Search users..."
-                autoFocus={true}
-              />
-        </div>
-    );
+    const userItemData = useMemo(() => users.map(user => ({
+        id: user.userId,
+        name: user.displayName,
+        icon: user.avatarUrl || '',
+        iconType: 'avatar' as const,
+    })), [users]);
     
-    const renderTeamSearch = () => (
-         <div className="p-2 border-b">
-            <CompactSearchInput
-                searchTerm={teamSearchTerm}
-                setSearchTerm={setTeamSearchTerm}
-                placeholder="Search teams..."
-                autoFocus={true}
-                showColorFilter={true}
-                onColorSelect={setColorFilter}
-                activeColorFilter={colorFilter}
-              />
-        </div>
-    );
+    const teamItemData = useMemo(() => teams.map(team => ({
+        id: team.id,
+        name: team.name,
+        icon: team.icon,
+        iconType: 'symbol' as const,
+        color: team.color,
+    })), [teams]);
+
+    const tabs: ItemSelectionTab[] = [
+        {
+            value: 'users',
+            label: 'Users',
+            items: userItemData,
+            selectedIds: page.access?.users || [],
+        },
+        {
+            value: 'teams',
+            label: 'Teams',
+            items: teamItemData,
+            selectedIds: page.access?.teams || [],
+        }
+    ];
 
     return (
-        <Popover open={isOpen} onOpenChange={setIsOpen}>
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <PopoverTrigger asChild>
-                            <Button variant="ghost" size="icon" onPointerDown={(e) => e.stopPropagation()} className="h-8 w-8 text-muted-foreground"><GoogleSymbol name="group_add" /></Button>
-                        </PopoverTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent><p>Manage Page Access</p></TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-            <PopoverContent className="w-80 p-0 flex flex-col max-h-96" onPointerDown={(e) => e.stopPropagation()}>
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-1 min-h-0">
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="users">Users</TabsTrigger>
-                        <TabsTrigger value="teams">Teams</TabsTrigger>
-                    </TabsList>
-                     <TabsContent value="users" className="m-0 flex flex-col flex-1 min-h-0">
-                        {renderUserSearch()}
-                        <div className="flex-1 overflow-hidden">
-                            <ScrollArea className="h-full">
-                                {filteredUsers.length > 0 ? (
-                                <div className="p-1 space-y-1">
-                                    {filteredUsers.map(user => {
-                                    const isSelected = access.users.includes(user.userId);
-                                    return (
-                                        <div key={user.userId} className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer", !isSelected && "text-muted-foreground", isSelected && "text-primary")} onClick={() => handleToggle('users', user.userId)}>
-                                        <Avatar className="h-7 w-7"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
-                                        <span>{user.displayName}</span>
-                                        </div>
-                                    )
-                                    })}
-                                </div>
-                                ) : (
-                                <p className="text-center text-sm text-muted-foreground p-4">No users found.</p>
-                                )}
-                            </ScrollArea>
-                        </div>
-                    </TabsContent>
-                    <TabsContent value="teams" className="m-0 flex flex-col flex-1 min-h-0">
-                            {renderTeamSearch()}
-                        <div className="flex-1 overflow-hidden">
-                            <ScrollArea className="h-full">
-                                {filteredTeams.length > 0 ? (
-                                <div className="p-1 space-y-1">
-                                    {filteredTeams.map(team => {
-                                    const isSelected = access.teams.includes(team.id);
-                                    return (
-                                        <div key={team.id} className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer", !isSelected && "text-muted-foreground", isSelected && "text-primary")} onClick={() => handleToggle('teams', team.id)}>
-                                        <GoogleSymbol name={team.icon} style={{color: isSelected ? 'hsl(var(--primary))' : team.color}} />
-                                        <span>{team.name}</span>
-                                        </div>
-                                    )
-                                    })}
-                                </div>
-                                ) : (
-                                <p className="text-center text-sm text-muted-foreground p-4">No teams found.</p>
-                                )}
-                            </ScrollArea>
-                        </div>
-                    </TabsContent>
-                </Tabs>
-            </PopoverContent>
-        </Popover>
+        <ItemSelectionPopover
+            tabs={tabs}
+            onSelectionChange={(type, id) => handleToggle(type as 'users' | 'teams', id)}
+            trigger={<Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground"><GoogleSymbol name="group_add" /></Button>}
+            tooltip="Manage Page Access"
+            showColorFilter={true}
+        />
     );
 }
 
 function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: Partial<AppPage>) => void }) {
   const { appSettings } = useUser();
-  const [isOpen, setIsOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [colorFilter, setColorFilter] = useState<string | null>(null);
-  
   const systemTabIds = ['tab-admins', 'tab-settings'];
-
-  const filteredTabs = useMemo(() => {
-    let allTabs = appSettings.tabs.filter(tab => !systemTabIds.includes(tab.id));
-    if (searchTerm) {
-      allTabs = allTabs.filter(tab =>
-        tab.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    if (colorFilter) {
-      const targetHue = getHueFromHsl(colorFilter);
-      if (targetHue !== null) {
-        allTabs = allTabs.filter(t => {
-          const itemHue = getHueFromHsl(t.color);
-          return itemHue !== null && isHueInRange(targetHue, itemHue);
-        });
-      }
-    }
-    return allTabs;
-  }, [appSettings.tabs, searchTerm, colorFilter]);
 
   const handleToggle = (tabId: string) => {
     const currentIds = new Set(page.associatedTabs || []);
@@ -587,56 +493,35 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
     onUpdate({ associatedTabs: Array.from(currentIds) });
   };
   
+  const tabItemData = useMemo(() => {
+    return appSettings.tabs
+      .filter(tab => !systemTabIds.includes(tab.id))
+      .map(tab => ({
+        id: tab.id,
+        name: tab.name,
+        icon: tab.icon,
+        iconType: 'symbol' as const,
+        color: tab.color,
+      }));
+  }, [appSettings.tabs]);
+  
+  const tabs: ItemSelectionTab[] = [
+    {
+      value: 'tabs',
+      label: 'Tabs',
+      items: tabItemData,
+      selectedIds: page.associatedTabs || [],
+    }
+  ];
+
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <TooltipProvider>
-          <Tooltip>
-              <TooltipTrigger asChild>
-                  <PopoverTrigger asChild>
-                      <Button variant="ghost" size="icon" onPointerDown={(e) => e.stopPropagation()} className="h-8 w-8 text-muted-foreground"><GoogleSymbol name="layers" /></Button>
-                  </PopoverTrigger>
-              </TooltipTrigger>
-              <TooltipContent><p>Manage Associated Tabs</p></TooltipContent>
-          </Tooltip>
-      </TooltipProvider>
-      <PopoverContent className="w-80 p-0 flex flex-col max-h-96" onPointerDownCapture={(e) => { e.stopPropagation(); }}>
-        <div className="p-2 border-b shrink-0">
-          <CompactSearchInput
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            placeholder="Search tabs..."
-            autoFocus={isOpen}
-            showColorFilter={true}
-            onColorSelect={setColorFilter}
-            activeColorFilter={colorFilter}
-          />
-        </div>
-        <div className="flex-1 overflow-hidden">
-          <ScrollArea className="h-full">
-              {filteredTabs.length > 0 ? (
-              <div className="p-1 space-y-1">
-                  {filteredTabs.map(tab => {
-                  const isAssociated = (page.associatedTabs || []).includes(tab.id);
-                  
-                  return (
-                      <div 
-                          key={tab.id} 
-                          className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer", !isAssociated && "text-muted-foreground", isAssociated && "text-primary")}
-                          onClick={() => handleToggle(tab.id)}
-                      >
-                          <GoogleSymbol name={tab.icon} style={{ color: isAssociated ? 'hsl(var(--primary))' : tab.color }} />
-                          <span>{tab.name}</span>
-                      </div>
-                  );
-                  })}
-              </div>
-              ) : (
-              <p className="text-center text-sm text-muted-foreground p-4">No tabs found.</p>
-              )}
-          </ScrollArea>
-        </div>
-      </PopoverContent>
-    </Popover>
+    <ItemSelectionPopover
+      tabs={tabs}
+      onSelectionChange={(_, id) => handleToggle(id)}
+      trigger={<Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground"><GoogleSymbol name="layers" /></Button>}
+      tooltip="Manage Associated Tabs"
+      showColorFilter={true}
+    />
   );
 }
 
