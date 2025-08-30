@@ -499,7 +499,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                     
                     <TabsContent value="users" className="m-0">
                         {renderSearchControl()}
-                        <ScrollArea className="h-64"><div className="p-1 space-y-1">{filteredUsers.map(user => {
+                        <ScrollArea className="max-h-64"><div className="p-1 space-y-1">{filteredUsers.map(user => {
                           const isSelected = access.users.includes(user.userId);
                           return (
                             <div key={user.userId} className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer" style={{ color: isSelected ? 'hsl(var(--primary))' : undefined }} onClick={() => handleToggle('users', user.userId)}>
@@ -511,7 +511,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                     </TabsContent>
                     <TabsContent value="teams" className="m-0">
                         {renderSearchControl()}
-                        <ScrollArea className="h-64"><div className="p-1 space-y-1">{filteredTeams.map(team => {
+                        <ScrollArea className="max-h-64"><div className="p-1 space-y-1">{filteredTeams.map(team => {
                           const isSelected = access.teams.includes(team.id);
                           return (
                             <div key={team.id} className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer" style={{ color: isSelected ? team.color : undefined }} onClick={() => handleToggle('teams', team.id)}>
@@ -573,7 +573,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
             autoFocus={isOpen}
           />
         </div>
-        <ScrollArea className="h-64">
+        <ScrollArea className="max-h-64">
           <div className="p-1 space-y-1">
             {filteredTabs.map(tab => {
               const isAssociated = (page.associatedTabs || []).includes(tab.id);
@@ -609,10 +609,11 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
     const isPinned = page.isSystemPage;
 
     const displayPath = page.isDynamic ? `${page.path}/[...]` : page.path;
+    const { name, description, ...entityRest } = page;
 
     return (
         <CardTemplate
-            entity={{...page, url: displayPath}}
+            entity={{...entityRest, name, url: displayPath}}
             onUpdate={onUpdate}
             onDelete={() => onDelete(page.id)}
             canManage={canManage}
@@ -623,7 +624,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
             body={
                 <div onPointerDown={(e) => e.stopPropagation()}>
                     <InlineEditor
-                        value={page.description || ''}
+                        value={description || ''}
                         onSave={(newDesc) => onUpdate(page.id, { description: newDesc })}
                         disabled={!canManage}
                         placeholder="Click to add a description..."
@@ -903,5 +904,6 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
 
 
     
+
 
 
