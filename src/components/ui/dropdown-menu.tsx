@@ -6,7 +6,6 @@ import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
 import { GoogleSymbol } from "../icons/google-symbol"
 
 import { cn } from "@/lib/utils"
-import { useUser } from "@/context/user-context"
 
 const DropdownMenu = DropdownMenuPrimitive.Root
 
@@ -25,31 +24,21 @@ const DropdownMenuSubTrigger = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubTrigger> & {
     inset?: boolean
   }
->(({ className, inset, children, ...props }, ref) => {
-  const { viewAsUser } = useUser();
-  const baseWeight = viewAsUser?.fontWeight || 400;
-  const isBoldEmphasis = baseWeight === 700;
-
-  const emphasisClass = isBoldEmphasis
-    ? "focus:text-primary data-[state=open]:text-primary"
-    : "focus:font-emphasis data-[state=open]:font-emphasis";
-
-  return (
-    <DropdownMenuPrimitive.SubTrigger
-      ref={ref}
-      className={cn(
-        "flex cursor-default gap-2 select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-transparent data-[state=open]:bg-transparent [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
-        emphasisClass,
-        inset && "pl-8",
-        className
-      )}
-      {...props}
-    >
-      {children}
-      <GoogleSymbol name="chevron_right" className="ml-auto" weight={100} opticalSize={20} />
-    </DropdownMenuPrimitive.SubTrigger>
-  );
-});
+>(({ className, inset, children, ...props }, ref) => (
+  <DropdownMenuPrimitive.SubTrigger
+    ref={ref}
+    className={cn(
+      "flex cursor-default gap-2 select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-transparent data-[state=open]:bg-transparent [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+      "focus:font-emphasis data-[state=open]:font-emphasis focus:text-primary data-[state=open]:text-primary",
+      inset && "pl-8",
+      className
+    )}
+    {...props}
+  >
+    {children}
+    <GoogleSymbol name="chevron_right" className="ml-auto" weight={100} opticalSize={20} />
+  </DropdownMenuPrimitive.SubTrigger>
+))
 DropdownMenuSubTrigger.displayName =
   DropdownMenuPrimitive.SubTrigger.displayName
 
@@ -92,84 +81,66 @@ const DropdownMenuItem = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> & {
     inset?: boolean
   }
->(({ className, inset, ...props }, ref) => {
-  const { viewAsUser } = useUser();
-  const baseWeight = viewAsUser?.fontWeight || 400;
-  const isBoldEmphasis = baseWeight === 700;
-
-  return (
-    <DropdownMenuPrimitive.Item
-      ref={ref}
-      className={cn(
-        "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 focus:bg-transparent",
-        isBoldEmphasis ? "focus:text-primary" : "focus:font-emphasis",
-        inset && "pl-8",
-        className
-      )}
-      {...props}
-    />
-  )
-})
+>(({ className, inset, ...props }, ref) => (
+  <DropdownMenuPrimitive.Item
+    ref={ref}
+    className={cn(
+      "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 focus:bg-transparent",
+      "focus:font-emphasis focus:text-primary",
+      inset && "pl-8",
+      className
+    )}
+    {...props}
+  />
+))
 DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName
 
 const DropdownMenuCheckboxItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.CheckboxItem>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.CheckboxItem>
->(({ className, children, checked, ...props }, ref) => {
-  const { viewAsUser } = useUser();
-  const baseWeight = viewAsUser?.fontWeight || 400;
-  const isBoldEmphasis = baseWeight === 700;
-  
-  return (
-    <DropdownMenuPrimitive.CheckboxItem
-      ref={ref}
-      className={cn(
-        "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50 focus:bg-transparent",
-        isBoldEmphasis ? "focus:text-primary" : "focus:font-emphasis",
-        className
-      )}
-      checked={checked}
-      {...props}
-    >
-      <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-        <DropdownMenuPrimitive.ItemIndicator>
-          <GoogleSymbol name="check" className="text-base" />
-        </DropdownMenuPrimitive.ItemIndicator>
-      </span>
-      <span>{children}</span>
-    </DropdownMenuPrimitive.CheckboxItem>
-  )
-})
+>(({ className, children, checked, ...props }, ref) => (
+  <DropdownMenuPrimitive.CheckboxItem
+    ref={ref}
+    className={cn(
+      "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50 focus:bg-transparent",
+      "focus:font-emphasis focus:text-primary",
+      className
+    )}
+    checked={checked}
+    {...props}
+  >
+    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+      <DropdownMenuPrimitive.ItemIndicator>
+        <GoogleSymbol name="check" className="text-base" />
+      </DropdownMenuPrimitive.ItemIndicator>
+    </span>
+    {children}
+  </DropdownMenuPrimitive.CheckboxItem>
+))
 DropdownMenuCheckboxItem.displayName =
   DropdownMenuPrimitive.CheckboxItem.displayName
 
 const DropdownMenuRadioItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.RadioItem>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.RadioItem>
->(({ className, children, ...props }, ref) => {
-  const { viewAsUser } = useUser();
-  const baseWeight = viewAsUser?.fontWeight || 400;
-  const isBoldEmphasis = baseWeight === 700;
-
-  return (
-    <DropdownMenuPrimitive.RadioItem
-      ref={ref}
-      className={cn(
-        "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50 focus:bg-transparent",
-        isBoldEmphasis ? "focus:text-primary" : "focus:font-emphasis",
-        className
-      )}
-      {...props}
-    >
-      <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-        <DropdownMenuPrimitive.ItemIndicator>
-          <GoogleSymbol name="circle" className="h-2 w-2 fill-current" />
-        </DropdownMenuPrimitive.ItemIndicator>
-      </span>
-      <span>{children}</span>
-    </DropdownMenuPrimitive.RadioItem>
-  )
-})
+>(({ className, children, ...props }, ref) => (
+  <DropdownMenuPrimitive.RadioItem
+    ref={ref}
+    className={cn(
+      "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50 focus:bg-transparent",
+      "focus:font-emphasis focus:text-primary",
+      className
+    )}
+    {...props}
+  >
+    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+      <DropdownMenuPrimitive.ItemIndicator>
+        <GoogleSymbol name="circle" className="h-2 w-2 fill-current" />
+      </DropdownMenuPrimitive.ItemIndicator>
+    </span>
+    {children}
+  </DropdownMenuPrimitive.RadioItem>
+))
 DropdownMenuRadioItem.displayName = DropdownMenuPrimitive.RadioItem.displayName
 
 const DropdownMenuLabel = React.forwardRef<

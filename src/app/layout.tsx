@@ -16,31 +16,6 @@ const roboto = Roboto({
   variable: '--font-roboto',
 });
 
-const DynamicStyles = () => {
-  const { viewAsUser, loading } = useUser();
-
-  const primaryColor = viewAsUser?.primaryColor;
-
-  React.useEffect(() => {
-    const root = document.documentElement;
-    if (primaryColor) {
-        const hslValues = primaryColor.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
-        if(hslValues) {
-            const primaryHsl = `${hslValues[1]} ${hslValues[2]}% ${hslValues[3]}%`;
-            root.style.setProperty('--primary', primaryHsl);
-        }
-    } else {
-        root.style.removeProperty('--primary');
-    }
-    
-  }, [primaryColor]);
-
-
-  if (loading) return null;
-
-  return null;
-}
-
 function AppBody({ children }: { children: React.ReactNode }) {
     const { viewAsUser } = useUser();
     const { setTheme, theme } = useTheme();
@@ -56,14 +31,16 @@ function AppBody({ children }: { children: React.ReactNode }) {
             const root = document.documentElement;
             
             const fontWeight = viewAsUser.fontWeight || 400;
+            const isBoldEmphasis = fontWeight === 700;
+
             document.body.style.fontWeight = fontWeight.toString();
 
             const emphasisWeightMap: { [key: number]: number } = {
-                100: 300, // Thin -> Light
-                300: 400, // Light -> Normal
-                400: 500, // Normal -> Medium
-                500: 700, // Medium -> Bold
-                700: 700  // Bold -> Bold (no change)
+                100: 300,
+                300: 400,
+                400: 500,
+                500: 700,
+                700: 700
             };
             const emphasisWeight = emphasisWeightMap[fontWeight] || 500;
             root.style.setProperty('--font-weight-emphasis', emphasisWeight.toString());
@@ -81,37 +58,28 @@ function AppBody({ children }: { children: React.ReactNode }) {
 
             const radius = viewAsUser.radius ?? 0.5;
             root.style.setProperty('--radius', `${radius}rem`);
-        }
-    }, [viewAsUser]);
-    
-    React.useEffect(() => {
-        const root = document.documentElement;
-        if (viewAsUser?.primaryColor) {
-            const hslValues = viewAsUser.primaryColor.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
-            if (hslValues) {
-                const primaryHsl = `${hslValues[1]} ${hslValues[2]}% ${hslValues[3]}%`;
-                root.style.setProperty('--primary', primaryHsl);
+
+             // Set emphasis color based on logic
+            const primaryColor = viewAsUser.primaryColor || (theme === 'dark' ? 'hsl(25 88% 45%)' : 'hsl(210 70% 50%)');
+            const foregroundColor = `hsl(${theme === 'dark' ? '210 7% 50%' : '210 7% 40%'})`;
+            
+            if (isBoldEmphasis) {
+                root.style.setProperty('--emphasis-color', primaryColor);
+            } else {
+                root.style.setProperty('--emphasis-color', foregroundColor);
             }
-        } else {
-            root.style.removeProperty('--primary');
-        }
-        
-        const isDarkMode = theme === 'dark';
-        const isHighContrast = viewAsUser?.highContrast;
 
-        let luma;
-        if (isHighContrast) {
-            luma = isDarkMode ? '100%' : '0%';
-        } else {
-            luma = isDarkMode ? '67%' : '40%';
-        }
-        root.style.setProperty('--foreground', `210 7% ${luma}`);
+            if (viewAsUser.primaryColor) {
+                root.style.setProperty('--primary', viewAsUser.primaryColor);
+            } else {
+                root.style.removeProperty('--primary');
+            }
 
-    }, [viewAsUser?.primaryColor, viewAsUser?.theme, viewAsUser?.highContrast, theme]);
+        }
+    }, [viewAsUser, theme]);
     
     return (
         <>
-            <DynamicStyles />
             {children}
             <Toaster />
         </>
