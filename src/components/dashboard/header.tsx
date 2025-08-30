@@ -14,21 +14,21 @@ import { useUser } from '@/context/user-context';
 import { Badge } from '@/components/ui/badge';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { corePages } from '@/lib/core-data';
 
 export function Header() {
-  const { realUser, viewAsUser, notifications, teams } = useUser();
+  const { realUser, viewAsUser, notifications, appSettings } = useUser();
   const isViewingAsSomeoneElse = realUser?.userId !== viewAsUser?.userId;
   const unreadCount = notifications.filter((n) => !n.read && n.type === 'standard').length;
   
   const orderedNavItems = useMemo(() => {
-    if (!viewAsUser) return [];
+    if (!viewAsUser || !appSettings.pages) return [];
 
-    return corePages.filter(page => {
-      if (page.id === 'page-admin-management') return viewAsUser.isAdmin;
-      return true; // All other core pages are public
+    return appSettings.pages.filter(page => {
+        if (!page.isSystemPage) return false;
+        if (page.id === 'page-admin-management') return viewAsUser.isAdmin;
+        return true; 
     });
-  }, [viewAsUser]);
+  }, [viewAsUser, appSettings.pages]);
 
 
   return (
