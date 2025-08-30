@@ -307,7 +307,7 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
                                             <Button variant="ghost" size="icon" onClick={handleAddPreApprovedEmail} className="h-8 w-8"><GoogleSymbol name="add" /></Button>
                                         </div>
                                         {preApprovedEmails.length > 0 && (
-                                            <ScrollArea className="max-h-40 mt-2">
+                                            <ScrollArea className="max-h-40">
                                                 <div className="p-2 space-y-1">
                                                 {preApprovedEmails.map(item => (
                                                     <div key={item.email} className="flex items-center justify-between text-sm p-1 rounded-md">
@@ -547,16 +547,28 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
   const { appSettings } = useUser();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [colorFilter, setColorFilter] = useState<string | null>(null);
   
   const systemTabIds = ['tab-admins', 'tab-settings'];
 
   const filteredTabs = useMemo(() => {
-    const allTabs = appSettings.tabs.filter(tab => !systemTabIds.includes(tab.id));
-    if (!searchTerm) return allTabs;
-    return allTabs.filter(tab =>
-      tab.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [appSettings.tabs, searchTerm]);
+    let allTabs = appSettings.tabs.filter(tab => !systemTabIds.includes(tab.id));
+    if (searchTerm) {
+      allTabs = allTabs.filter(tab =>
+        tab.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    if (colorFilter) {
+      const targetHue = getHueFromHsl(colorFilter);
+      if (targetHue !== null) {
+        allTabs = allTabs.filter(t => {
+          const itemHue = getHueFromHsl(t.color);
+          return itemHue !== null && isHueInRange(targetHue, itemHue);
+        });
+      }
+    }
+    return allTabs;
+  }, [appSettings.tabs, searchTerm, colorFilter]);
 
   const handleToggle = (tabId: string) => {
     const currentIds = new Set(page.associatedTabs || []);
@@ -587,9 +599,12 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
             setSearchTerm={setSearchTerm}
             placeholder="Search tabs..."
             autoFocus={isOpen}
+            showColorFilter={true}
+            onColorSelect={setColorFilter}
+            activeColorFilter={colorFilter}
           />
         </div>
-        <ScrollArea className="max-h-64">
+        <ScrollArea className="max-h-64 h-auto">
           {filteredTabs.length > 0 ? (
             <div className="p-1 space-y-1">
                 {filteredTabs.map(tab => {
@@ -629,7 +644,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
     const isPinned = page.isSystemPage;
 
     const displayPath = page.isDynamic ? `${page.path}/[...]` : page.path;
-    const { name, ...entityRest } = page;
+    const { name, description, ...entityRest } = page;
 
     const descriptionContent = (
       <div onPointerDown={(e) => e.stopPropagation()}>
@@ -642,18 +657,33 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
           />
       </div>
     );
+    
+    const bodyContent = (
+        <>
+            {descriptionContent}
+            <p 
+              className={cn(
+                  "text-sm text-muted-foreground", 
+                  !isPinned && "cursor-pointer hover:text-primary"
+              )}
+              onClick={!isPinned ? () => onUpdate(page.id, { isDynamic: !page.isDynamic }) : undefined}
+              onPointerDown={(e) => { if (!isPinned) e.stopPropagation(); }}
+            >
+              {displayPath}
+            </p>
+        </>
+    );
 
     return (
         <CardTemplate
-            entity={{...entityRest, name, url: displayPath}}
+            entity={{...entityRest, name}}
             onUpdate={onUpdate}
             onDelete={() => onDelete(page.id)}
             canManage={canManage}
             isPinned={isPinned}
             isExpanded={isExpanded}
             onToggleExpand={onToggleExpand}
-            descriptionAction={isPinned ? undefined : () => onUpdate(page.id, { isDynamic: !page.isDynamic })}
-            body={descriptionContent}
+            body={bodyContent}
             headerControls={
                 <div className="flex items-center">
                     {!isPinned && <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />}
@@ -936,3 +966,6 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
 
 
 
+
+
+    

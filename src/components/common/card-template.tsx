@@ -20,8 +20,6 @@ interface CardTemplateProps {
     name: string;
     icon: string;
     color: string;
-    description?: React.ReactNode;
-    url?: string;
     isShared?: boolean;
     owner?: { type: string, id: string };
   };
@@ -39,7 +37,6 @@ interface CardTemplateProps {
   footer?: React.ReactNode;
   headerControls?: React.ReactNode;
   dragHandleProps?: any;
-  descriptionAction?: () => void;
 }
 
 export function CardTemplate({
@@ -58,25 +55,11 @@ export function CardTemplate({
   footer,
   headerControls,
   dragHandleProps,
-  descriptionAction,
 }: CardTemplateProps) {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const { theme } = useTheme();
     const readableColor = getReadableColor(entity.color, theme);
     
-    const urlContent = (
-      <p 
-        className={cn(
-            "text-sm text-muted-foreground", 
-            descriptionAction && "cursor-pointer hover:text-primary"
-        )}
-        onClick={descriptionAction}
-        onPointerDown={(e) => { if (descriptionAction) e.stopPropagation(); }}
-      >
-        {entity.url}
-      </p>
-    );
-
     return (
         <>
             <Card className="group relative bg-transparent flex flex-col h-full" {...dragHandleProps}>
@@ -139,11 +122,10 @@ export function CardTemplate({
                 {isExpanded && (
                     <CardContent className="p-2 pt-0 flex-grow flex flex-col gap-2">
                         {body}
-                        {entity.url && urlContent}
                     </CardContent>
                 )}
                 {footer && <CardFooter className="p-2 pt-0">{footer}</CardFooter>}
-                {(body || entity.description || entity.url) && (
+                {(body) && (
                     <div className="absolute -bottom-1 right-0">
                         <Button variant="ghost" size="icon" onClick={onToggleExpand} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
                             <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
@@ -177,5 +159,7 @@ export function CardTemplate({
         </>
     );
 }
+
+    
 
     
