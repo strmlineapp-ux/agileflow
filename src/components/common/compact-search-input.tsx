@@ -118,7 +118,7 @@ export function CompactSearchInput({
         {showColorFilter && onColorSelect && (
             <Popover open={isColorPopoverOpen} onOpenChange={handleColorPopoverChange}>
                 <PopoverTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
+                    <Button variant="default" size="icon" className="h-6 w-6 rounded-full">
                         <GoogleSymbol name={activeColorFilter ? "radio_button_checked" : "radio_button_unchecked"} style={{ color: activeColorFilter || 'hsl(var(--foreground))' }} />
                     </Button>
                 </PopoverTrigger>
@@ -136,7 +136,7 @@ export function CompactSearchInput({
                             }}
                         />
                         <Button
-                          variant="ghost" 
+                          variant="default" 
                           size="icon" 
                           className="w-auto h-auto text-foreground"
                           onClick={handleClearColorFilter}
@@ -153,7 +153,7 @@ export function CompactSearchInput({
   }
 
   const searchButton = (
-    <Button variant="ghost" size="icon" onClick={handleToggle} className="text-foreground">
+    <Button variant="default" size="icon" onClick={handleToggle} className="text-foreground">
       <GoogleSymbol name="search" />
     </Button>
   );

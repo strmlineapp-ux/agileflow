@@ -192,7 +192,7 @@ function CalendarCard({
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsLinkDialogOpen(true)}>
+                            <Button variant="default" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsLinkDialogOpen(true)}>
                                 <GoogleSymbol name="add_link" />
                             </Button>
                         </TooltipTrigger>
@@ -206,7 +206,7 @@ function CalendarCard({
                        <TooltipTrigger asChild>
                            <span tabIndex={0} onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') { handleSync(e as any); }}}>
                                <Button
-                                   variant="ghost"
+                                   variant="default"
                                    size="icon"
                                    className="h-8 w-8 text-muted-foreground"
                                    onClick={handleSync}
@@ -251,7 +251,7 @@ function CalendarCard({
       <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
         <DialogContent className="max-w-md">
             <div className="absolute top-4 right-4">
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSaveGoogleCalendarId}>
+              <Button variant="default" size="icon" className="h-8 w-8" onClick={handleSaveGoogleCalendarId}>
                   <GoogleSymbol name="check" className="text-xl" />
                   <span className="sr-only">Link Calendar</span>
               </Button>
@@ -293,7 +293,7 @@ function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
       <TooltipProvider>
           <Tooltip>
               <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={onAdd} onPointerDown={(e) => e.stopPropagation()}>
+                  <Button variant="default" size="icon" className="rounded-full p-0" onClick={onAdd} onPointerDown={(e) => e.stopPropagation()}>
                     <GoogleSymbol name="add_circle" className="text-4xl" />
                     <span className="sr-only">New Calendar or Drop to Duplicate</span>
                   </Button>
@@ -516,7 +516,7 @@ export function CalendarManagement({ tab, page }: { tab: AppTab; page: AppPage }
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
+                  <Button variant="default" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
                     <GoogleSymbol name="dynamic_feed" />
                   </Button>
                 </TooltipTrigger>

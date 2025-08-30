@@ -195,7 +195,7 @@ export function EventsContent({ project }: { project: Project }) {
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                        <Button variant="default" size="icon" className="h-8 w-8 rounded-full">
                           <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                           <span className="sr-only">New Event</span>
                         </Button>
@@ -214,9 +214,9 @@ export function EventsContent({ project }: { project: Project }) {
               </Dialog>
             )}
              <div className="flex items-center gap-1 border-r pr-2">
-                <Button variant="ghost" size="icon" onClick={handlePrev}><GoogleSymbol name="chevron_left" weight={100} /></Button>
-                <Button variant="ghost" size="sm" onClick={goToToday}>Today</Button>
-                <Button variant="ghost" size="icon" onClick={handleNext}><GoogleSymbol name="chevron_right" weight={100} /></Button>
+                <Button variant="default" size="icon" onClick={handlePrev}><GoogleSymbol name="chevron_left" weight={100} /></Button>
+                <Button variant="default" size="sm" onClick={goToToday}>Today</Button>
+                <Button variant="default" size="icon" onClick={handleNext}><GoogleSymbol name="chevron_right" weight={100} /></Button>
             </div>
             <p className="text-muted-foreground text-sm font-normal">{dateRange}</p>
           </div>
@@ -225,7 +225,7 @@ export function EventsContent({ project }: { project: Project }) {
                 {(view === 'production-schedule' || view === 'day' || view === 'week') && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" onClick={() => setZoomLevel(zoomLevel === 'normal' ? 'fit' : 'normal')}>
+                      <Button variant="default" size="icon" onClick={() => setZoomLevel(zoomLevel === 'normal' ? 'fit' : 'normal')}>
                           {zoomLevel === 'normal' ? <GoogleSymbol name="close_fullscreen" weight={100} /> : <GoogleSymbol name="open_in_full" weight={100} />}
                           <span className="sr-only">{zoomLevel === 'normal' ? 'Fit to view' : 'Reset view'}</span>
                       </Button>
@@ -236,7 +236,7 @@ export function EventsContent({ project }: { project: Project }) {
                 {view === 'day' && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" onClick={() => setDayViewAxis(dayViewAxis === 'standard' ? 'reversed' : 'standard')}>
+                        <Button variant="default" size="icon" onClick={() => setDayViewAxis(dayViewAxis === 'standard' ? 'reversed' : 'standard')}>
                             <GoogleSymbol name="swap_horiz" weight={100} />
                             <span className="sr-only">{dayViewAxis === 'standard' ? 'Switch to reversed axis view' : 'Switch to standard view'}</span>
                         </Button>
