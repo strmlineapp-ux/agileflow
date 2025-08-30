@@ -19,7 +19,7 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground",
         ghost: "text-muted-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        circle: "rounded-full hover:bg-muted/50 hover:text-primary",
+        circle: "rounded-full hover:bg-muted/50",
       },
       size: {
         default: "h-10 px-4 py-2",

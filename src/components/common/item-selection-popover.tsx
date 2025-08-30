@@ -43,18 +43,19 @@ const ItemDisplay = ({ item, isSelected }: { item: Item, isSelected: boolean }) 
     const baseWeight = viewAsUser?.fontWeight || 400;
 
     const itemStyle = getEmphasisStyle({ baseWeight, hasText: true, isSelected: isSelected || isHovered });
-    const iconStyle = getEmphasisStyle({ baseWeight, hasText: true, isSelected: isSelected || isHovered });
+    const iconStyle = getEmphasisStyle({ baseWeight, hasText: false, isSelected: isSelected || isHovered });
+
+    const finalIconStyle = {
+      ...iconStyle,
+      color: (iconStyle.color && !item.color) ? iconStyle.color : item.color,
+    };
     
-    // The icon's color should only change to primary in the 'bold' state
-    // Otherwise, it uses its own color or inherits the parent's color for muted states.
-    const finalIconColor = iconStyle.color === 'hsl(var(--primary))' ? item.color : (isSelected || isHovered ? itemStyle.color : item.color);
-
-
     return (
         <div
             className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer text-muted-foreground"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
+            style={{ fontWeight: itemStyle.fontWeight }}
         >
             {item.iconType === 'avatar' ? (
                 <Avatar className="h-7 w-7">
@@ -62,9 +63,9 @@ const ItemDisplay = ({ item, isSelected }: { item: Item, isSelected: boolean }) 
                     <AvatarFallback>{item.name.slice(0, 2)}</AvatarFallback>
                 </Avatar>
             ) : (
-                <GoogleSymbol name={item.icon} style={{ ...iconStyle, color: item.color }} />
+                <GoogleSymbol name={item.icon} style={finalIconStyle} />
             )}
-            <span style={itemStyle}>{item.name}</span>
+            <span style={{ color: itemStyle.color }}>{item.name}</span>
         </div>
     );
 }
