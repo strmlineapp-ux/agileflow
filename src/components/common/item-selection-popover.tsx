@@ -133,7 +133,7 @@ export function ItemSelectionPopover({
                             <AvatarFallback>{item.name.slice(0, 2)}</AvatarFallback>
                           </Avatar>
                         ) : (
-                          <GoogleSymbol name={item.icon} style={{color: item.color}} />
+                          <GoogleSymbol name={item.icon} style={{ color: itemStyle.color || item.color }} />
                         )}
                         <span>{item.name}</span>
                       </div>
