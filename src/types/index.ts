@@ -1,6 +1,13 @@
 
 import type React from 'react';
 
+export interface Tenant {
+  id: string;
+  name: string;
+  ownerId: string;
+  createdAt: Date;
+}
+
 export interface AppTab {
   id: string;
   name: string;
@@ -32,7 +39,7 @@ export interface AppSettings {
   tabs: AppTab[];
   calendarManagementLabel?: string;
   teamManagementLabel?: string;
-  preApprovedEmails?: Array<{ email: string; invitedBy: string; }>;
+  preApprovedEmails?: Array<{ email: string; invitedBy: string; tenantId: string; }>;
   tenantId?: string;
 }
 
