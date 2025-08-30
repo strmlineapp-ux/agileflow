@@ -25,20 +25,29 @@ const DropdownMenuSubTrigger = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubTrigger> & {
     inset?: boolean
   }
->(({ className, inset, children, ...props }, ref) => (
-  <DropdownMenuPrimitive.SubTrigger
-    ref={ref}
-    className={cn(
-      "flex cursor-default gap-2 select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[state=open]:text-primary [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
-      inset && "pl-8",
-      className
-    )}
-    {...props}
-  >
-    {children}
-    <GoogleSymbol name="chevron_right" className="ml-auto" />
-  </DropdownMenuPrimitive.SubTrigger>
-))
+>(({ className, inset, children, ...props }, ref) => {
+  const [isHovered, setIsHovered] = React.useState(false);
+  const { viewAsUser } = useUser();
+  const baseWeight = viewAsUser?.fontWeight || 400;
+
+  return (
+    <DropdownMenuPrimitive.SubTrigger
+      ref={ref}
+      className={cn(
+        "flex cursor-default gap-2 select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+        inset && "pl-8",
+        className
+      )}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={getEmphasisStyle({ baseWeight, hasText: true, isSelected: isHovered })}
+      {...props}
+    >
+      {children}
+      <GoogleSymbol name="chevron_right" className="ml-auto" />
+    </DropdownMenuPrimitive.SubTrigger>
+  );
+});
 DropdownMenuSubTrigger.displayName =
   DropdownMenuPrimitive.SubTrigger.displayName
 
@@ -81,17 +90,26 @@ const DropdownMenuItem = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> & {
     inset?: boolean
   }
->(({ className, inset, ...props }, ref) => (
-  <DropdownMenuPrimitive.Item
-    ref={ref}
-    className={cn(
-      "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
-      inset && "pl-8",
-      className
-    )}
-    {...props}
-  />
-))
+>(({ className, inset, ...props }, ref) => {
+  const [isHovered, setIsHovered] = React.useState(false);
+  const { viewAsUser } = useUser();
+  const baseWeight = viewAsUser?.fontWeight || 400;
+
+  return (
+    <DropdownMenuPrimitive.Item
+      ref={ref}
+      className={cn(
+        "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+        inset && "pl-8",
+        className
+      )}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={getEmphasisStyle({ baseWeight, hasText: true, isSelected: isHovered })}
+      {...props}
+    />
+  )
+})
 DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName
 
 const DropdownMenuCheckboxItem = React.forwardRef<
@@ -100,7 +118,8 @@ const DropdownMenuCheckboxItem = React.forwardRef<
 >(({ className, children, checked, ...props }, ref) => {
   const { viewAsUser } = useUser();
   const baseWeight = viewAsUser?.fontWeight || 400;
-  const selectedStyle = getEmphasisStyle(baseWeight, true, checked);
+  const selectedStyle = getEmphasisStyle({baseWeight, hasText: true, isSelected: checked});
+  const [isHovered, setIsHovered] = React.useState(false);
   
   return (
     <DropdownMenuPrimitive.CheckboxItem
@@ -110,6 +129,8 @@ const DropdownMenuCheckboxItem = React.forwardRef<
         className
       )}
       checked={checked}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       {...props}
     >
       <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
@@ -117,7 +138,7 @@ const DropdownMenuCheckboxItem = React.forwardRef<
           <GoogleSymbol name="check" className="text-base" />
         </DropdownMenuPrimitive.ItemIndicator>
       </span>
-      <span style={selectedStyle}>{children}</span>
+      <span style={checked ? selectedStyle : (isHovered ? getEmphasisStyle({baseWeight, hasText: true, isSelected: true}) : {})}>{children}</span>
     </DropdownMenuPrimitive.CheckboxItem>
   )
 })
@@ -131,7 +152,8 @@ const DropdownMenuRadioItem = React.forwardRef<
   const { viewAsUser } = useUser();
   const baseWeight = viewAsUser?.fontWeight || 400;
   const isSelected = props['aria-checked'];
-  const selectedStyle = getEmphasisStyle(baseWeight, true, isSelected);
+  const selectedStyle = getEmphasisStyle({baseWeight, hasText: true, isSelected});
+  const [isHovered, setIsHovered] = React.useState(false);
 
   return (
     <DropdownMenuPrimitive.RadioItem
@@ -140,6 +162,8 @@ const DropdownMenuRadioItem = React.forwardRef<
         "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         className
       )}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       {...props}
     >
       <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
@@ -147,7 +171,7 @@ const DropdownMenuRadioItem = React.forwardRef<
           <GoogleSymbol name="circle" className="h-2 w-2 fill-current" />
         </DropdownMenuPrimitive.ItemIndicator>
       </span>
-      <span style={selectedStyle}>{children}</span>
+      <span style={isSelected ? selectedStyle : (isHovered ? getEmphasisStyle({baseWeight, hasText: true, isSelected: true}) : {})}>{children}</span>
     </DropdownMenuPrimitive.RadioItem>
   )
 })
