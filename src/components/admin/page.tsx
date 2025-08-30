@@ -649,7 +649,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
     const displayPath = page.isDynamic ? `${page.path}/[...]` : page.path;
     
     const bodyContent = (
-      <div className="space-y-1">
+      <>
         <div onPointerDown={(e) => e.stopPropagation()}>
           <InlineEditor
             value={page.description || ''}
@@ -670,7 +670,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
         >
           {displayPath}
         </p>
-      </div>
+      </>
     );
     
     return (
@@ -949,6 +949,7 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
     
 
     
+
 
 
 
