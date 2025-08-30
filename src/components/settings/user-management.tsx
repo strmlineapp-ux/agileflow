@@ -143,8 +143,8 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
         }
     }
     
-    const currentWeight = user.fontWeight || 100;
-    const currentFontWeightLabel = fontWeightOptions.find(opt => opt.value === currentWeight)?.label || 'Thin';
+    const currentWeight = user.fontWeight || 400;
+    const currentFontWeightLabel = fontWeightOptions.find(opt => opt.value === currentWeight)?.label || 'Normal';
     const currentWeightIndex = fontWeightOptions.findIndex(opt => opt.value === currentWeight);
 
     const currentIconGrade = user.iconGrade ?? 0;
@@ -204,8 +204,8 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                         </TooltipProvider>
                         <div>
                             <p className="text-lg text-foreground">{user.displayName}</p>
-                            <p className="text-sm text-muted-foreground">{user.title || <span className="italic">Not provided</span>}</p>
-                            <p className="text-sm text-muted-foreground">{user.email}</p>
+                            <p className="text-sm text-foreground">{user.title || <span className="italic">Not provided</span>}</p>
+                            <p className="text-sm text-foreground">{user.email}</p>
                         </div>
                     </div>
                     {canEditPreferences && (
@@ -237,7 +237,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="h-9 w-9 text-muted-foreground hover:bg-transparent hover:text-foreground"
+                                            className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground"
                                             onClick={handleThemeChange}
                                         >
                                             <GoogleSymbol
@@ -259,7 +259,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                     <Button variant="ghost" size="icon" onClick={(e) => {
                                         if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { e.preventDefault(); updateUser(user.userId, { iconFill: false }); }
                                         else { updateUser(user.userId, { iconFill: !user.iconFill }); }
-                                     }} className="h-9 w-9 text-muted-foreground hover:bg-transparent hover:text-foreground">
+                                     }} className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground">
                                         <GoogleSymbol name="opacity" />
                                     </Button>
                                 </TooltipTrigger>
@@ -274,7 +274,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <PopoverTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:bg-transparent hover:text-foreground" onClick={(e) => { if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { e.preventDefault(); updateUser(user.userId, { fontWeight: 400 }); } }}>
+                                      <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onClick={(e) => { if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { e.preventDefault(); updateUser(user.userId, { fontWeight: 400 }); } }}>
                                         <GoogleSymbol name="fitness_center" />
                                       </Button>
                                     </PopoverTrigger>
@@ -300,7 +300,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:bg-transparent hover:text-foreground" onClick={(e) => { if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { e.preventDefault(); updateUser(user.userId, { iconGrade: -25 }); } }}>
+                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onClick={(e) => { if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { e.preventDefault(); updateUser(user.userId, { iconGrade: -25 }); } }}>
                                                     <GoogleSymbol name="tonality" />
                                                 </Button>
                                             </PopoverTrigger>
@@ -320,7 +320,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:bg-transparent hover:text-foreground" onClick={(e) => { if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { e.preventDefault(); updateUser(user.userId, { iconOpticalSize: 20 }); } }}>
+                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onClick={(e) => { if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { e.preventDefault(); updateUser(user.userId, { iconOpticalSize: 20 }); } }}>
                                                     <GoogleSymbol name="visibility" />
                                                 </Button>
                                             </PopoverTrigger>
@@ -340,7 +340,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:bg-transparent hover:text-foreground" onClick={(e) => { if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { e.preventDefault(); updateUser(user.userId, { defaultCalendarView: 'production-schedule' }); } }}>
+                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onClick={(e) => { if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { e.preventDefault(); updateUser(user.userId, { defaultCalendarView: 'production-schedule' }); } }}>
                                                     <GoogleSymbol name="edit_calendar" />
                                                 </Button>
                                             </PopoverTrigger>
@@ -369,7 +369,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:bg-transparent hover:text-foreground" onClick={(e) => { if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { e.preventDefault(); updateUser(user.userId, { timeFormat: '12h' }); } }}>
+                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onClick={(e) => { if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { e.preventDefault(); updateUser(user.userId, { timeFormat: '12h' }); } }}>
                                                     <GoogleSymbol name="schedule" />
                                                 </Button>
                                             </PopoverTrigger>
@@ -399,7 +399,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                     <Button variant="ghost" size="icon" onClick={(e) => {
                                         if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { e.preventDefault(); updateUser(user.userId, { easyBooking: false }); }
                                         else { updateUser(user.userId, { easyBooking: !user.easyBooking }); }
-                                    }} className="h-9 w-9 text-muted-foreground hover:bg-transparent hover:text-foreground">
+                                    }} className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground">
                                         <GoogleSymbol name={user.easyBooking ? 'toggle_on' : 'toggle_off'} />
                                     </Button>
                                 </TooltipTrigger>

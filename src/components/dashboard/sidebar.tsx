@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
-import { cn, getEmphasisStyle } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import { useUser } from '@/context/user-context';
@@ -44,8 +44,6 @@ export function Sidebar() {
         <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col border-r bg-card sm:flex" />
     );
   }
-  
-  const baseWeight = viewAsUser.fontWeight || 400;
 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col border-r bg-card sm:flex">
@@ -64,9 +62,11 @@ export function Sidebar() {
                     <TooltipTrigger asChild>
                       <Link
                         href={adminPage.path}
-                        className='flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors md:h-8 md:w-8'
+                        className={cn('flex h-9 w-9 items-center justify-center rounded-lg text-foreground transition-colors hover:text-foreground md:h-8 md:w-8', {
+                            'bg-accent text-accent-foreground': pathname.startsWith(adminPage.path),
+                        })}
                       >
-                        <GoogleSymbol name={adminPage.icon} className="text-4xl" style={getEmphasisStyle({ baseWeight, hasText: false, isSelected: pathname.startsWith(adminPage.path)})} />
+                        <GoogleSymbol name={adminPage.icon} className="text-4xl" />
                         <span className="sr-only">{adminPage.name}</span>
                       </Link>
                     </TooltipTrigger>
@@ -88,9 +88,11 @@ export function Sidebar() {
                     <TooltipTrigger asChild>
                       <Link
                         href={item.path}
-                        className='relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors md:h-8 md:w-8'
+                        className={cn('relative flex h-9 w-9 items-center justify-center rounded-lg text-foreground transition-colors hover:text-foreground md:h-8 md:w-8', {
+                          'bg-accent text-accent-foreground': isActive,
+                        })}
                       >
-                        <GoogleSymbol name={item.icon} className="text-4xl" style={getEmphasisStyle({ baseWeight, hasText: false, isSelected: isActive })} />
+                        <GoogleSymbol name={item.icon} className="text-4xl" />
                         {isNotifications && unreadCount > 0 && (
                           <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary p-0 text-xs text-primary-foreground">
                             {unreadCount}
@@ -113,9 +115,11 @@ export function Sidebar() {
                 <TooltipTrigger asChild>
                   <Link
                     href={notificationsPage.path}
-                    className='relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors md:h-8 md:w-8'
+                    className={cn('relative flex h-9 w-9 items-center justify-center rounded-lg text-foreground transition-colors hover:text-foreground md:h-8 md:w-8', {
+                      'bg-accent text-accent-foreground': pathname.startsWith(notificationsPage.path),
+                    })}
                   >
-                    <GoogleSymbol name={notificationsPage.icon} className="text-4xl" style={getEmphasisStyle({ baseWeight, hasText: false, isSelected: pathname.startsWith(notificationsPage.path)})} />
+                    <GoogleSymbol name={notificationsPage.icon} className="text-4xl" />
                     {unreadCount > 0 && (
                       <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary p-0 text-xs text-primary-foreground">
                         {unreadCount}
@@ -165,7 +169,7 @@ export function Sidebar() {
                 <DropdownMenuLabel>
                     <div className="flex flex-col space-y-1">
                         <p className="text-sm leading-none">{viewAsUser.displayName}</p>
-                        <p className="text-xs leading-none text-muted-foreground">{viewAsUser.email}</p>
+                        <p className="text-xs leading-none text-foreground">{viewAsUser.email}</p>
                     </div>
                 </DropdownMenuLabel>
                 

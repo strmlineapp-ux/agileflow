@@ -153,11 +153,11 @@ export const WeekView = React.memo(({ date, events, containerRef, zoomLevel, onE
                         const isDayHoliday = isHoliday(day, holidays);
                         return (
                             <div key={day.toString()} className={cn("text-center p-2 border-l relative", { "bg-muted/50": isWeekend || isDayHoliday })}>
-                                <p className={cn("text-sm text-muted-foreground", { "text-muted-foreground": isWeekend || isDayHoliday })}>{format(day, 'EEE')}</p>
+                                <p className={cn("text-sm text-foreground", { "text-foreground": isWeekend || isDayHoliday })}>{format(day, 'EEE')}</p>
                                 <p className={cn(
-                                    "text-2xl text-muted-foreground",
+                                    "text-2xl text-foreground",
                                     isToday(day) && 'text-primary bg-primary/10 rounded-full',
-                                     { "text-muted-foreground": isWeekend || isDayHoliday }
+                                     { "text-foreground": isWeekend || isDayHoliday }
                                 )}>
                                     {format(day, 'd')}
                                 </p>
@@ -183,7 +183,7 @@ export const WeekView = React.memo(({ date, events, containerRef, zoomLevel, onE
                         <div className="w-20 border-r bg-muted">
                             {hours.map((hour, index) => (
                                 <div key={hour} className={cn("relative text-right pr-2 border-b bg-muted", {"bg-muted/10": index % 2 !== 0})} style={{ height: `${hourHeight}px` }}>
-                                    <span className="text-xs text-muted-foreground relative -top-2">{format(addHours(startOfDay(date), hour), timeFormatTimeline)}</span>
+                                    <span className="text-xs text-foreground relative -top-2">{format(addHours(startOfDay(date), hour), timeFormatTimeline)}</span>
                                 </div>
                             ))}
                         </div>
