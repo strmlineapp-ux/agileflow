@@ -2,7 +2,7 @@
 'use client';
 
 import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider, type User as FirebaseUser } from 'firebase/auth';
-import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, limit, updateDoc, writeBatch } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where, limit, updateDoc, writeBatch } from 'firebase/firestore';
 import { useState, useEffect, useCallback } from 'react';
 import { type User, type Tenant } from '@/types';
 import { getAuthInstance, getDb, getCurrentTenantId } from '@/lib/firebase';
@@ -50,7 +50,6 @@ export function useAuth() {
                 
                 const isPreApproved = preApprovedEmails.includes(firebaseUser.email!);
                 
-                // Check if this is the first user for this specific tenant
                 const usersCollectionRef = collection(db, 'users');
                 const firstUserQuery = query(usersCollectionRef, where("tenantId", "==", tenantId), limit(1));
                 const firstUserSnapshot = await getDocs(firstUserQuery);
@@ -82,9 +81,14 @@ export function useAuth() {
 
                 if (isFirstUserOfTenant) {
                     const tenantDocRef = doc(db, 'tenants', tenantId);
+
+                    const emailDomain = firebaseUser.email!.split('@')[1];
+                    const companyName = emailDomain.split('.')[0];
+                    const formattedCompanyName = companyName.charAt(0).toUpperCase() + companyName.slice(1) + " Inc.";
+
                     const newTenant: Tenant = {
                         id: tenantId,
-                        name: `${firebaseUser.displayName?.split(' ')[0] || 'Default'}'s Workspace`,
+                        name: formattedCompanyName,
                         ownerId: firebaseUser.uid,
                         createdAt: new Date(),
                     };
