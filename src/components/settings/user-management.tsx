@@ -96,26 +96,6 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
     const [isCalendarViewPopoverOpen, setIsCalendarViewPopoverOpen] = useState(false);
     const [isTimeFormatPopoverOpen, setIsTimeFormatPopoverOpen] = useState(false);
     
-    const handleSettingChange = (
-      e: React.MouseEvent,
-      field: keyof User,
-      // The value to use for a normal click (e.g., toggling a boolean)
-      // Can be a direct value or a function that receives the current value.
-      clickValue: any | ((currentValue: any) => any),
-      // The value to use for a modifier+click (resetting to default)
-      resetValue: any,
-    ) => {
-        const isModifierClick = e.altKey || e.ctrlKey || e.metaKey || e.shiftKey;
-        
-        if (isModifierClick) {
-            e.preventDefault();
-            updateUser(user.userId, { [field]: resetValue });
-        } else {
-            const newValue = typeof clickValue === 'function' ? clickValue(user[field]) : clickValue;
-            updateUser(user.userId, { [field]: newValue });
-        }
-    };
-    
     const handleThemeChange = () => {
         const newTheme = user.theme === 'dark' ? 'light' : 'dark';
         updateUser(user.userId, { theme: newTheme });
@@ -228,7 +208,8 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                                     size="icon" 
                                                     className="h-9 w-9 shrink-0" 
                                                     style={{ color: 'hsl(var(--primary))' }}
-                                                    onClick={(e) => handleSettingChange(e, 'primaryColor', null, null)}
+                                                    enableReset={true}
+                                                    onReset={() => updateUser(user.userId, { primaryColor: null })}
                                                 >
                                                     <GoogleSymbol name="radio_button_checked" />
                                                 </Button>
@@ -274,7 +255,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="icon" onClick={(e) => handleSettingChange(e, 'highContrast', !user.highContrast, false)} className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground">
+                                        <Button variant="ghost" size="icon" onClick={() => updateUser(user.userId, { highContrast: !user.highContrast })} onReset={() => updateUser(user.userId, { highContrast: false })} enableReset className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground">
                                             <GoogleSymbol name="contrast" />
                                         </Button>
                                     </TooltipTrigger>
@@ -287,7 +268,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                             <TooltipProvider>
                                 <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" onClick={(e) => handleSettingChange(e, 'iconFill', !user.iconFill, false)} className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground">
+                                    <Button variant="ghost" size="icon" onClick={() => updateUser(user.userId, { iconFill: !user.iconFill })} onReset={() => updateUser(user.userId, { iconFill: false})} enableReset className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground">
                                         <GoogleSymbol name="opacity" />
                                     </Button>
                                 </TooltipTrigger>
@@ -302,7 +283,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <PopoverTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onClick={(e) => handleSettingChange(e, 'fontWeight', user.fontWeight, 400)}>
+                                      <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onReset={() => updateUser(user.userId, { fontWeight: 400 })} enableReset>
                                         <GoogleSymbol name="fitness_center" />
                                       </Button>
                                     </PopoverTrigger>
@@ -328,7 +309,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onClick={(e) => handleSettingChange(e, 'iconGrade', user.iconGrade, -25)}>
+                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onReset={() => updateUser(user.userId, { iconGrade: -25 })} enableReset>
                                                     <GoogleSymbol name="tonality" />
                                                 </Button>
                                             </PopoverTrigger>
@@ -348,7 +329,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onClick={(e) => handleSettingChange(e, 'iconOpticalSize', user.iconOpticalSize, 20)}>
+                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onReset={() => updateUser(user.userId, { iconOpticalSize: 20 })} enableReset>
                                                     <GoogleSymbol name="visibility" />
                                                 </Button>
                                             </PopoverTrigger>
@@ -368,7 +349,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onClick={(e) => handleSettingChange(e, 'radius', user.radius, 0.5)}>
+                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onClick={() => {}} onReset={() => updateUser(user.userId, { radius: 0.5 })} enableReset>
                                                     <GoogleSymbol name="rounded_corner" />
                                                 </Button>
                                             </PopoverTrigger>
@@ -388,7 +369,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onClick={(e) => handleSettingChange(e, 'defaultCalendarView', user.defaultCalendarView, 'production-schedule')}>
+                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onReset={() => updateUser(user.userId, { defaultCalendarView: 'production-schedule' })} enableReset>
                                                     <GoogleSymbol name="edit_calendar" />
                                                 </Button>
                                             </PopoverTrigger>
@@ -417,7 +398,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onClick={(e) => handleSettingChange(e, 'timeFormat', user.timeFormat, '12h')}>
+                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onReset={() => updateUser(user.userId, { timeFormat: '12h' })} enableReset>
                                                     <GoogleSymbol name="schedule" />
                                                 </Button>
                                             </PopoverTrigger>
@@ -444,7 +425,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                             <TooltipProvider>
                                 <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" onClick={(e) => handleSettingChange(e, 'easyBooking', !user.easyBooking, false)} className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground">
+                                    <Button variant="ghost" size="icon" onClick={() => updateUser(user.userId, { easyBooking: !user.easyBooking })} onReset={() => updateUser(user.userId, { easyBooking: false })} enableReset className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground">
                                         <GoogleSymbol name={user.easyBooking ? 'toggle_on' : 'toggle_off'} />
                                     </Button>
                                 </TooltipTrigger>
@@ -503,5 +484,3 @@ export function UserManagement({ showSearch = false, isActive = false }: { showS
         </div>
     )
 }
-
-    
