@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, writeBatch, query, where } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, writeBatch, query, where, limit } from 'firebase/firestore';
 import { getDb } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeOwner, type Task, type Holiday, type Project, type AppPage, type PreApprovedEmail } from '@/types';
@@ -18,6 +18,15 @@ const predefinedColors = [
     'hsl(0, 84%, 60%)', 'hsl(25, 95%, 53%)', 'hsl(45, 93%, 47%)', 'hsl(88, 62%, 53%)', 'hsl(142, 71%, 45%)', 'hsl(160, 100%, 37%)',
     'hsl(174, 100%, 34%)', 'hsl(188, 95%, 43%)', 'hsl(207, 90%, 54%)', 'hsl(221, 83%, 61%)', 'hsl(244, 100%, 72%)', 'hsl(262, 88%, 66%)',
     'hsl(271, 91%, 65%)', 'hsl(328, 84%, 60%)', 'hsl(347, 89%, 61%)', 'hsl(358, 86%, 56%)'
+];
+
+const randomDescriptions = [
+    "Manage project assets and timelines.",
+    "Track team progress and upcoming deadlines.",
+    "A space for creative collaboration.",
+    "The central hub for all client-related information.",
+    "Planning and execution of marketing campaigns.",
+    "Development and testing for the new feature.",
 ];
 
 export function useData(realUser: User | null, authLoading: boolean) {
@@ -449,13 +458,19 @@ export function useData(realUser: User | null, authLoading: boolean) {
   const addPage = useCallback(async (pageData: Partial<AppPage>) => {
     if (!realUser) return;
     const db = getDb();
-    const tempId = crypto.randomUUID();
-    const newPageData: Omit<AppPage, 'id'> = {
-      name: 'New Page',
-      icon: 'article',
-      color: 'hsl(220, 13%, 47%)',
-      path: `/dashboard/page/${tempId}`,
-      description: '',
+    
+    const randomIcon = googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)];
+    const randomDesc = randomDescriptions[Math.floor(Math.random() * randomDescriptions.length)];
+    const pageName = pageData.name || "New Page";
+
+    // Create a slug from the name
+    const slug = pageName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
+    const newPageData: Omit<AppPage, 'id' | 'path'> = {
+      name: pageName,
+      icon: randomIcon,
+      color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
+      description: randomDesc,
       isDynamic: false,
       associatedTabs: [],
       access: { users: [], teams: [] },
@@ -467,10 +482,10 @@ export function useData(realUser: User | null, authLoading: boolean) {
     const docRef = await addDoc(collection(db, 'pages'), newPageData);
     
     // Now update path with real ID
-    const finalPageData: Partial<AppPage> = { path: `/dashboard/page/${docRef.id}` };
+    const finalPageData: Partial<AppPage> = { path: `/dashboard/${slug}-${docRef.id}` };
     await updateDoc(docRef, finalPageData);
 
-    const newPage: AppPage = { ...newPageData, ...finalPageData, id: docRef.id };
+    const newPage: AppPage = { ...newPageData, ...finalPageData, id: docRef.id, path: finalPageData.path! };
 
     setAllPages(current => [...current, newPage]);
     setAppSettings(current => ({ ...current, pages: [...current.pages, newPage] }));
