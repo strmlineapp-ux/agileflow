@@ -8,7 +8,7 @@ import { useMemo, useState } from 'react';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { cn, getEmphasisStyle } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal, DropdownMenuLabel } from '../ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import { useUser } from '@/context/user-context';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { ScrollArea } from '../ui/scroll-area';
@@ -230,3 +230,4 @@ export function Sidebar() {
     </aside>
   );
 }
+
