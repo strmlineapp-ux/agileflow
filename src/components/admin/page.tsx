@@ -814,21 +814,26 @@ function SortableTabCard({ tab, onUpdate, isExpanded, onToggleExpand }: {
     const { viewAsUser } = useUser();
     const canManage = viewAsUser.isAdmin;
     
-    const entityWithDescription = {
-        ...tab,
-        description: tab.description || 'No description provided.'
-    };
+    const descriptionContent = (
+      <InlineEditor
+          value={tab.description || ''}
+          onSave={(newDesc) => onUpdate(tab.id, { description: newDesc })}
+          disabled={!canManage}
+          placeholder="Click to add description"
+          className="text-sm text-muted-foreground min-h-[20px]"
+      />
+    );
 
     return (
         <CardTemplate
-            entity={entityWithDescription}
+            entity={tab}
             onUpdate={onUpdate}
             onDelete={() => {}} // Tabs cannot be deleted
             canManage={canManage}
             isPinned={false}
             isExpanded={isExpanded}
             onToggleExpand={onToggleExpand}
-            body={<Badge variant="outline">{tab.componentKey}</Badge>}
+            body={descriptionContent}
         />
     );
 }
@@ -926,6 +931,7 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
 
 
     
+
 
 
 

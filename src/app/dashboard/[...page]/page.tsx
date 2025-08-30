@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useMemo } from 'react';
@@ -132,7 +133,7 @@ export default function DynamicPage() {
   return (
     <div className="flex flex-col h-full gap-6">
        {!seamlessPageIds.includes(page.id) && (
-            <h1 className="font-headline text-2xl font-thin text-muted-foreground flex items-center gap-2">
+            <h1 className="font-headline text-2xl text-muted-foreground flex items-center gap-2">
                 <GoogleSymbol name={page.icon} style={{color: page.color}} />
                 {teamContext ? `${teamContext.name}: ${page.name}` : page.name}
             </h1>
