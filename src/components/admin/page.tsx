@@ -280,7 +280,7 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
                                       <Tooltip>
                                         <TooltipTrigger asChild>
                                           <PopoverTrigger asChild>
-                                              <Button variant="ghost" size="icon" className="p-0 text-foreground">
+                                              <Button variant="default" size="icon" className="p-0 text-foreground">
                                                   <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                                               </Button>
                                           </PopoverTrigger>
@@ -297,7 +297,7 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
                                                 onKeyDown={(e) => e.key === 'Enter' && handleAddPreApprovedEmail()}
                                                 className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 h-9 p-0 flex-1"
                                             />
-                                            <Button variant="ghost" size="icon" onClick={handleAddPreApprovedEmail} className="h-8 w-8"><GoogleSymbol name="add" /></Button>
+                                            <Button variant="default" size="icon" onClick={handleAddPreApprovedEmail} className="h-8 w-8"><GoogleSymbol name="add" /></Button>
                                         </div>
                                         {preApprovedEmails.length > 0 && (
                                             <ScrollArea className="max-h-40">
@@ -305,7 +305,7 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
                                                 {preApprovedEmails.map(item => (
                                                     <div key={item.email} className="flex items-center justify-between text-sm p-1 rounded-md">
                                                         <span>{item.email}</span>
-                                                        <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => removePreApprovedEmail(item.email)}>
+                                                        <Button variant="default" size="icon" className="h-5 w-5" onClick={() => removePreApprovedEmail(item.email)}>
                                                             <GoogleSymbol name="close" className="text-xs" />
                                                         </Button>
                                                     </div>
@@ -348,7 +348,7 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" onClick={handleVerify2fa}>
+                                <Button variant="default" size="icon" onClick={handleVerify2fa}>
                                     <GoogleSymbol name="check" />
                                     <span className="sr-only">Verify Code</span>
                                 </Button>
@@ -409,7 +409,7 @@ function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
       <TooltipProvider>
           <Tooltip>
               <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={onAdd} onPointerDown={(e) => e.stopPropagation()}>
+                  <Button variant="default" size="icon" className="rounded-full p-0" onClick={onAdd} onPointerDown={(e) => e.stopPropagation()}>
                     <GoogleSymbol name="add_circle" className="text-4xl text-foreground" weight={100} />
                     <span className="sr-only">New Page or Drop to Duplicate</span>
                   </Button>
@@ -472,7 +472,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
         <ItemSelectionPopover
             tabs={tabs}
             onSelectionChange={(type, id) => handleToggle(type as 'users' | 'teams', id)}
-            trigger={<Button variant="ghost" size="icon" className="h-8 w-8 text-foreground"><GoogleSymbol name="group_add" /></Button>}
+            trigger={<Button variant="default" size="icon" className="h-8 w-8 text-foreground"><GoogleSymbol name="group_add" /></Button>}
             tooltip="Manage Page Access"
             showColorFilter={true}
         />
@@ -518,7 +518,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
     <ItemSelectionPopover
       tabs={tabs}
       onSelectionChange={(_, id) => handleToggle(id)}
-      trigger={<Button variant="ghost" size="icon" className="h-8 w-8 text-foreground"><GoogleSymbol name="layers" /></Button>}
+      trigger={<Button variant="default" size="icon" className="h-8 w-8 text-foreground"><GoogleSymbol name="layers" /></Button>}
       tooltip="Manage Associated Tabs"
       showColorFilter={true}
     />

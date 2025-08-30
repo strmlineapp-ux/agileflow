@@ -53,7 +53,7 @@ export function CompactSearchIconPicker({
         <Tooltip>
           <TooltipTrigger asChild>
             <PopoverTrigger asChild disabled={disabled} onPointerDown={(e) => e.stopPropagation()}>
-              <Button variant="ghost" className={buttonClassName} {...props}>
+              <Button variant="default" className={buttonClassName} {...props}>
                 <GoogleSymbol name={icon} className={iconClassName} weight={weight} grade={grade} />
               </Button>
             </PopoverTrigger>
@@ -78,7 +78,7 @@ export function CompactSearchIconPicker({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
-                      variant={icon === iconName ? "default" : "ghost"}
+                      variant={icon === iconName ? "default" : "default"}
                       size="icon"
                       onClick={() => {
                         onUpdateIcon(iconName);

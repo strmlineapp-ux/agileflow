@@ -436,7 +436,7 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
                     <FormItem>
                         <Popover open={isCalendarPopoverOpen} onOpenChange={setIsCalendarPopoverOpen}>
                         <PopoverTrigger asChild>
-                            <Button variant="ghost" className="h-auto p-0.5 rounded-full" aria-label="Select calendar">
+                            <Button variant="default" className="h-auto p-0.5 rounded-full" aria-label="Select calendar">
                             <div className="h-4 w-4 rounded-full shrink-0 border" style={{ backgroundColor: selectedCalendar?.color }} />
                             </Button>
                         </PopoverTrigger>
@@ -470,7 +470,7 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
                       <FormItem>
                         <Popover open={isPriorityPopoverOpen} onOpenChange={setIsPriorityPopoverOpen}>
                           <PopoverTrigger asChild>
-                            <Button variant="ghost" className="h-auto p-0">
+                            <Button variant="default" className="h-auto p-0">
                               {field.value ? <PriorityBadge priorityId={field.value} /> : <UiBadge variant="outline">Priority</UiBadge>}
                             </Button>
                           </PopoverTrigger>
@@ -500,7 +500,7 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
                             <FormItem>
                                 <Popover open={isTemplatePopoverOpen} onOpenChange={setIsTemplatePopoverOpen}>
                                     <PopoverTrigger asChild>
-                                        <Button variant="ghost" className="h-auto p-0">
+                                        <Button variant="default" className="h-auto p-0">
                                             <UiBadge variant={selectedTemplate ? 'default' : 'outline'} className="gap-2">
                                                 {selectedTemplate && <GoogleSymbol name={selectedTemplate.icon} />}
                                                 {selectedTemplate?.name || 'Tag'}
@@ -536,7 +536,7 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setIsDeleteDialogOpen(true)} disabled={isLoading}>
+                          <Button type="button" variant="default" size="icon" className="h-8 w-8 text-destructive" onClick={() => setIsDeleteDialogOpen(true)} disabled={isLoading}>
                             <GoogleSymbol name="delete"/>
                           </Button>
                         </TooltipTrigger>
@@ -547,7 +547,7 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button type="button" variant="ghost" size="icon" onClick={() => onFinished()} disabled={isLoading} aria-label="Discard changes">
+                      <Button type="button" variant="default" size="icon" onClick={() => onFinished()} disabled={isLoading} aria-label="Discard changes">
                         <GoogleSymbol name="close" />
                       </Button>
                     </TooltipTrigger>
@@ -557,7 +557,7 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
                  <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button type="submit" variant="ghost" size="icon" disabled={isLoading} aria-label="Save changes">
+                      <Button type="submit" variant="default" size="icon" disabled={isLoading} aria-label="Save changes">
                         <GoogleSymbol name="check" />
                       </Button>
                     </TooltipTrigger>
@@ -761,7 +761,7 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
                       <TooltipTrigger asChild>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-muted-foreground hover:text-primary">
+                            <Button variant="default" size="icon" className="h-6 w-6 shrink-0 text-muted-foreground hover:text-primary">
                               <GoogleSymbol name="attachment" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -826,7 +826,7 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
                       <TooltipTrigger asChild>
                         <Popover open={isAddRolePopoverOpen} onOpenChange={setIsAddRolePopoverOpen}>
                           <PopoverTrigger asChild>
-                            <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary"><GoogleSymbol name="badge" /></Button>
+                            <Button type="button" variant="default" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary"><GoogleSymbol name="badge" /></Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-60 p-0">
                             <ScrollArea className="h-48">
@@ -852,7 +852,7 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
                       <TooltipTrigger asChild>
                         <Popover open={isGuestPopoverOpen} onOpenChange={setIsGuestPopoverOpen}>
                           <PopoverTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary">
+                            <Button variant="default" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary">
                                 <GoogleSymbol name="group_add" />
                             </Button>
                           </PopoverTrigger>
@@ -911,7 +911,7 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
                   </div>
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="default"
                     size="icon"
                     className="h-4 w-4 shrink-0"
                     onClick={() => handleRemoveAttachment(index)}
@@ -930,7 +930,7 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
     <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
         <DialogContent className="max-w-md">
             <div className="absolute top-4 right-4 flex items-center gap-1">
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleAddLink}>
+                <Button variant="default" size="icon" className="h-8 w-8" onClick={handleAddLink}>
                     <GoogleSymbol name="check" />
                     <span className="sr-only">Add Link</span>
                 </Button>
@@ -948,7 +948,7 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
     <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
       <DialogContent className="max-w-md">
         <div className="absolute top-4 right-4">
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={handleDelete}>
+          <Button variant="default" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={handleDelete}>
               <GoogleSymbol name="delete" />
               <span className="sr-only">Delete Event</span>
           </Button>

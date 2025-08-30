@@ -69,7 +69,7 @@ export function TaskList({ tasks, limit, onEdit, onDelete }: { tasks: Task[], li
           <TableHeader>
             <TableRow>
               <TableHead>
-                <Button variant="ghost" className="-ml-4 text-foreground">
+                <Button variant="default" className="-ml-4 text-foreground">
                   Task
                   <GoogleSymbol name="swap_vert" className="ml-2" />
                 </Button>
@@ -106,7 +106,7 @@ export function TaskList({ tasks, limit, onEdit, onDelete }: { tasks: Task[], li
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button aria-haspopup="true" size="icon" variant="ghost">
+                      <Button aria-haspopup="true" size="icon" variant="default">
                         <GoogleSymbol name="more_horiz" />
                         <span className="sr-only">Toggle menu</span>
                       </Button>
