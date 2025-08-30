@@ -38,18 +38,18 @@ export function OverviewContent() {
         {stats.map((stat) => (
           <Card key={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm text-muted-foreground">{stat.title}</CardTitle>
-              <GoogleSymbol name={stat.icon} className="text-2xl text-muted-foreground" />
+              <CardTitle className="text-sm text-foreground">{stat.title}</CardTitle>
+              <GoogleSymbol name={stat.icon} className="text-2xl text-foreground" />
             </CardHeader>
             <CardContent className="p-4 pt-0">
               <div className="text-2xl">{stat.value}</div>
-              <p className="text-xs text-muted-foreground">this month</p>
+              <p className="text-xs text-foreground">this month</p>
             </CardContent>
           </Card>
         ))}
       </div>
       <div>
-        <h2 className="font-headline text-2xl font-thin mb-4 text-muted-foreground">Recent Tasks</h2>
+        <h2 className="font-headline text-2xl font-thin mb-4 text-foreground">Recent Tasks</h2>
         {loading ? (
             <Card><CardHeader className="h-64"><Skeleton className="h-full w-full" /></CardHeader></Card>
         ) : (

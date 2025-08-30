@@ -107,19 +107,19 @@ export function CompactSearchInput({
         ref={containerRef}
         className={cn("flex items-center gap-1 w-full rounded-full h-8 px-2 text-sm bg-muted/50", className)}
       >
-        <GoogleSymbol name="search" className="text-muted-foreground" />
+        <GoogleSymbol name="search" className="text-foreground" />
         <input
           ref={inputRef}
           placeholder={placeholder}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1 w-full h-full p-0 bg-transparent border-0 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+          className="flex-1 w-full h-full p-0 bg-transparent border-0 placeholder:text-foreground focus-visible:outline-none focus-visible:ring-0"
         />
         {showColorFilter && onColorSelect && (
             <Popover open={isColorPopoverOpen} onOpenChange={handleColorPopoverChange}>
                 <PopoverTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
-                        <GoogleSymbol name={activeColorFilter ? "radio_button_checked" : "radio_button_unchecked"} style={{ color: activeColorFilter || 'hsl(var(--muted-foreground))' }} />
+                        <GoogleSymbol name={activeColorFilter ? "radio_button_checked" : "radio_button_unchecked"} style={{ color: activeColorFilter || 'hsl(var(--foreground))' }} />
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-56 p-2" onPointerDownCapture={(e) => e.stopPropagation()}>
@@ -138,7 +138,7 @@ export function CompactSearchInput({
                         <Button
                           variant="ghost" 
                           size="icon" 
-                          className="w-auto h-auto text-muted-foreground"
+                          className="w-auto h-auto text-foreground"
                           onClick={handleClearColorFilter}
                         >
                             <GoogleSymbol name="cancel" />
@@ -153,7 +153,7 @@ export function CompactSearchInput({
   }
 
   const searchButton = (
-    <Button variant="ghost" size="icon" onClick={handleToggle} className="text-muted-foreground">
+    <Button variant="ghost" size="icon" onClick={handleToggle} className="text-foreground">
       <GoogleSymbol name="search" />
     </Button>
   );

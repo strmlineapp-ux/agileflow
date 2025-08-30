@@ -80,12 +80,14 @@ This pattern replaces large, card-style "Add New" buttons with a more compact an
 ### 6. Icon & Color Editing Flow
 This is the consistent, hardcoded blueprint for allowing a user to change both an icon and its associated color for an entity.
 
+- **Component**: `<IconColorPicker />` from `src/components/common/icon-color-picker.tsx`.
 - **Trigger:** A single, interactive icon button located on the main entity card.
 - **Icon Sizing**: The trigger button itself must be sized `h-10 w-12`. The `<GoogleSymbol>` inside must have `style={{fontSize: '36px'}}`, `weight={100}`, and `grade={-25}` to create the "large but thin" aesthetic.
 - **Main Popover (Icon Picker)**:
     - **Trigger**: Clicking the main icon button.
     - **Layout**: The `<PopoverContent>` must be a flex container with a fixed width (`w-80`) to ensure stability.
-    - **Header**: Contains a `CompactSearchInput` (with `isActive` and `autoFocus` enabled) on the left and the color picker trigger badge on the right. The header element must have minimal vertical padding (`p-1`) for a compact feel.
+    - **Header**: Contains a `CompactSearchInput` (with `isActive` and `autoFocus` enabled) on the left and the color picker trigger on the right. The header element must have minimal vertical padding (`p-1`) for a compact feel.
+    - **Color Picker Trigger**: A `Button` component containing a filled `circle` icon, dynamically colored to match the entity's current color.
     - **Icon Grid**:
         - A scrollable area (`<ScrollArea>`) with a fixed height (`h-52`) to display approximately six rows of icons.
         - The grid must use six columns (`grid-cols-6`) with a `gap-4` for adequate spacing.
@@ -95,7 +97,7 @@ This is the consistent, hardcoded blueprint for allowing a user to change both a
         - Clicking an icon instantly updates the entity's icon and closes the popover.
         - The currently selected icon is highlighted with a button whose background is the entity's dynamic color (`entity.color`). The icon symbol inside this button must be colored with the theme's muted background color (`bg-muted`) to create a high-contrast, "punched out" look.
 - **Side Panel (Color Picker)**:
-    - **Trigger**: A colored, circular badge (`h-8 w-8`) in the main popover's header. Clicking this badge toggles the visibility of the color picker panel.
+    - **Trigger**: The color picker trigger button in the main popover's header. Clicking this badge toggles the visibility of the color picker panel.
     - **Layout**: The color picker panel is a conditionally rendered flex item inside the main popover. When it appears, the total width of the popover expands to accommodate it without compressing the icon grid.
     - **UI**: The panel contains:
         1.  The `react-colorful` `<HslStringColorPicker />` component. This component must have no extra header or title above it.
@@ -281,7 +283,7 @@ This pattern provides a dense, icon-driven interface for managing a series of us
 ### Typography
 - **Font**: The application exclusively uses the **Roboto** font family for a clean and consistent look for both headlines and body text.
 - **Headline Font**: All major titles (pages, tabs, prominent cards) use the `font-headline` utility class, which is configured to use a `font-thin` weight (`font-weight: 100`) from the Roboto family.
-- **Body Font**: All standard body text, labels, and buttons now use a `font-thin` weight.
+- **Body Font**: All standard body text and labels use a standard `font-normal` weight.
 
 ### Icons & Hover Effects
 - **Icon Set**: We exclusively use **Google Material Symbols** via the `<GoogleSymbol />` component. This ensures a consistent visual language. The font library is a variable font, which means we can adjust its properties.
@@ -291,7 +293,7 @@ This pattern provides a dense, icon-driven interface for managing a series of us
   - Large, circular 'Add New' buttons use `text-4xl` for prominence.
 - **Filled Icons**: To use the filled style of an icon, pass the `filled` prop to the component: `<GoogleSymbol name="star" filled />`. This works with any of the three main styles.
 - **Hover Behavior**: The color of icons on hover is typically determined by their parent element. For example, an icon inside a `<Button variant="ghost">` will change to the primary theme color on hover because the button's text color changes, and the icon inherits that color. This creates a clean and predictable interaction.
-- **Destructive Actions**: Delete or other destructive action icons (like `delete`, `close`, `cancel`) are `text-muted-foreground` by default and become `text-destructive` on hover to provide a clear but not overwhelming visual warning.
+- **Destructive Actions**: Delete or other destructive action icons (like `delete`, `close`, `cancel`) are `text-foreground` by default and become `text-destructive` on hover to provide a clear but not overwhelming visual warning.
 - **Tooltips for Clarity**: Icon-only buttons (those without visible text) and icons within pickers (like the **Icon Picker**) must always be wrapped in a `<Tooltip>` to provide context on their function. This is crucial for accessibility and user experience.
 
 ### Color Themes & Button Styles
@@ -318,7 +320,7 @@ This is the single source of truth for indicating user interaction state across 
 -   **Selected/Highlighted State**: To indicate a persistently selected or highlighted state (e.g., the designated "Team Admin" in a list), a clear icon badge (e.g., a "key" icon) is used, typically overlaid on the user's avatar. This avoids visually noisy outlines and provides a clear, universally understood symbol for elevated status.
 
 ### List Item States (Dropdowns & Popovers)
-- **Hover & Focus**: When hovering over or navigating to list items (like in dropdowns or popovers) using the keyboard, the item's text color changes to `text-foreground`. **No background highlight is applied**, ensuring a clean and consistent look.
+- **Hover & Focus**: When hovering over or navigating to list items (like in dropdowns or popovers) using the keyboard, the item's background color changes to the theme's accent color.
 - **Selection**: The currently selected item within a list is indicated by a checkmark icon, which also uses the standard foreground color.
 
 ### User Notifications

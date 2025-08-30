@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useCallback } from 'react';
@@ -119,7 +120,7 @@ export function ProjectsContent() {
                 </div>
               </div>
             ))}
-             {ownedProjects.length === 0 && <p className="text-sm text-muted-foreground text-center p-4">No projects yet.</p>}
+             {ownedProjects.length === 0 && <p className="text-sm text-foreground text-center p-4">No projects yet.</p>}
           </div>
         </CardContent>
       </Card>

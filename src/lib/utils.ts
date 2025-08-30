@@ -41,7 +41,7 @@ function getLuminance(colorString: string): number | null {
  * @returns The original color or a muted fallback color.
  */
 export function getReadableColor(colorString: string, theme?: string): string {
-    const fallbackColor = "hsl(var(--muted-foreground))";
+    const fallbackColor = "hsl(var(--foreground))";
     if (!colorString) return fallbackColor;
 
     const luma = getLuminance(colorString);
@@ -59,11 +59,11 @@ export function getReadableColor(colorString: string, theme?: string): string {
 
 
 export function getContrastColor(colorString: string): string {
-    if (!colorString) return "hsl(var(--muted-foreground))";
+    if (!colorString) return "hsl(var(--foreground))";
 
     if (colorString.startsWith('hsl')) {
         const matches = colorString.match(/hsl\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*\)/);
-        if (!matches) return "hsl(var(--muted-foreground))";
+        if (!matches) return "hsl(var(--foreground))";
         const l = parseInt(matches[3]);
         return (l > 50) ? '#000000' : '#FFFFFF';
     } else {
@@ -111,29 +111,4 @@ export const getHueFromHsl = (hsl: string | null): number | null => {
     if (!hsl || !hsl.startsWith('hsl')) return null;
     const match = hsl.match(/hsl\((\d+)/);
     return match ? parseInt(match[1], 10) : null;
-};
-
-export const getEmphasisStyle = ({ baseWeight, hasText, isSelected }: { baseWeight: number, hasText?: boolean, isSelected?: boolean }): React.CSSProperties => {
-  const weightMap: Record<number, number> = {
-    100: 300, // Thin -> Light
-    300: 400, // Light -> Normal
-    400: 500, // Normal -> Medium
-    500: 700, // Medium -> Bold
-  };
-
-  if (!isSelected) {
-    return { fontWeight: baseWeight };
-  }
-
-  const newWeight = weightMap[baseWeight] || baseWeight;
-
-  if (baseWeight >= 700) { // This is the "Bold" state
-    if (!hasText) { // Icon-only
-      return { color: 'hsl(var(--primary))', fontWeight: newWeight };
-    }
-    return { color: 'hsl(var(--primary))', fontWeight: newWeight }; // Text with icon
-  }
-  
-  // For all other states, just increase weight
-  return { fontWeight: newWeight };
 };

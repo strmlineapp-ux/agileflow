@@ -57,7 +57,7 @@ export function Header() {
           <nav className="grid gap-6 text-lg font-normal">
             <Link
               href="/dashboard/overview"
-              className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-normal text-primary-foreground md:text-base"
+              className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg text-primary-foreground md:text-base"
             >
               <svg
                 width="24"
@@ -75,7 +75,7 @@ export function Header() {
             </Link>
 
             {orderedNavItems.map(item => (
-                <Link key={item.id} href={item.path} className="flex items-center justify-between gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+                <Link key={item.id} href={item.path} className="flex items-center justify-between gap-4 px-2.5 text-foreground hover:text-foreground">
                   <div className="flex items-center gap-4">
                     <GoogleSymbol name={item.icon} className="text-2xl" />
                     {item.name}

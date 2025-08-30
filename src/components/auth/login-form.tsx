@@ -41,7 +41,7 @@ export function LoginForm() {
 
   return (
     <div className="space-y-4">
-        <Button variant="outline" type="button" disabled={isButtonDisabled} className="w-full justify-center text-muted-foreground hover:text-primary hover:bg-transparent" onClick={handleGoogleSignIn}>
+        <Button variant="outline" type="button" disabled={isButtonDisabled} className="w-full justify-center text-foreground hover:text-primary hover:bg-transparent" onClick={handleGoogleSignIn}>
             {isSigningIn || loading ? (
                 <GoogleSymbol name="progress_activity" className="animate-spin mr-2" />
             ) : (

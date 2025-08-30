@@ -1,11 +1,10 @@
 
-
 "use client"
 
 import * as React from "react"
 import * as TabsPrimitive from "@radix-ui/react-tabs"
 
-import { cn, getEmphasisStyle } from "@/lib/utils"
+import { cn } from "@/lib/utils"
 import { Separator } from "./separator"
 import { useUser } from "@/context/user-context"
 
@@ -19,7 +18,7 @@ const TabsList = React.forwardRef<
     <TabsPrimitive.List
       ref={ref}
       className={cn(
-        "flex h-auto items-center justify-around bg-transparent p-0 text-muted-foreground",
+        "flex h-auto items-center justify-around bg-transparent p-0 text-foreground",
         className
       )}
       {...props}
@@ -33,8 +32,6 @@ const TabsTrigger = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
 >(({ className, children, ...props }, ref) => {
-  const { viewAsUser } = useUser();
-  const baseWeight = viewAsUser?.fontWeight || 400;
   const isSelected = props['data-state'] === 'active';
   
   return (
@@ -42,12 +39,19 @@ const TabsTrigger = React.forwardRef<
       ref={ref}
       className={cn(
         "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-none",
-        className
+        className,
+        isSelected ? 'font-normal text-foreground' : ''
       )}
-      style={isSelected ? getEmphasisStyle({ baseWeight, hasText: true, isSelected: true }) : {}}
       {...props}
     >
-        {children}
+        {React.Children.map(children, child => {
+          if (React.isValidElement(child) && (child.type as any).displayName === 'GoogleSymbol') {
+            return React.cloneElement(child as React.ReactElement<any>, { 
+              className: cn(child.props.className, 'transition-all'),
+            });
+          }
+          return child;
+        })}
     </TabsPrimitive.Trigger>
   )
 })

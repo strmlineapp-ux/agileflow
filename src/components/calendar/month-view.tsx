@@ -118,10 +118,10 @@ export const MonthView = React.memo(({ date, events, containerRef, onEventClick 
                 { "bg-muted/50": !isDayToday && (isWeekend || isDayHoliday) && day.getMonth() === date.getMonth() }
             )}>
                 <span className={cn(
-                    "h-6 w-6 flex items-center justify-center rounded-full text-sm text-muted-foreground",
+                    "h-6 w-6 flex items-center justify-center rounded-full text-sm text-foreground",
                     { "bg-primary text-primary-foreground": isDayToday },
-                    { "text-muted-foreground/50": day.getMonth() !== date.getMonth() },
-                    { "text-muted-foreground/50": (isWeekend || isDayHoliday) }
+                    { "text-foreground/50": day.getMonth() !== date.getMonth() },
+                    { "text-foreground/50": (isWeekend || isDayHoliday) }
                 )}>
                     {day.getDate()}
                 </span>
@@ -182,9 +182,9 @@ export const MonthView = React.memo(({ date, events, containerRef, onEventClick 
         <Card className="flex flex-col h-full flex-1">
             <div className={cn("grid border-b border-t sticky top-0 bg-muted z-10", gridColsClass)}>
                 {displayedWeekdays.map((day, index) => (
-                    <div key={day} className={cn("text-center p-2 text-sm border-r last:border-r-0 relative text-muted-foreground", 
+                    <div key={day} className={cn("text-center p-2 text-sm border-r last:border-r-0 relative text-foreground", 
                         { "bg-muted": (day === 'Sat' || day === 'Sun') },
-                        { "text-muted-foreground": !(day === 'Sat' || day === 'Sun') }
+                        { "text-foreground": !(day === 'Sat' || day === 'Sun') }
                     )}>
                         {day}
                          {!showWeekends && day === 'Fri' && (

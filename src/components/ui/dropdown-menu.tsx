@@ -6,7 +6,7 @@ import * as React from "react"
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
 import { GoogleSymbol } from "../icons/google-symbol"
 
-import { cn, getEmphasisStyle } from "@/lib/utils"
+import { cn } from "@/lib/utils"
 import { useUser } from "@/context/user-context"
 
 const DropdownMenu = DropdownMenuPrimitive.Root
@@ -27,25 +27,18 @@ const DropdownMenuSubTrigger = React.forwardRef<
     inset?: boolean
   }
 >(({ className, inset, children, ...props }, ref) => {
-  const [isHovered, setIsHovered] = React.useState(false);
-  const { viewAsUser } = useUser();
-  const baseWeight = viewAsUser?.fontWeight || 400;
-
   return (
     <DropdownMenuPrimitive.SubTrigger
       ref={ref}
       className={cn(
-        "flex cursor-default gap-2 select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[state=open]:text-foreground [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+        "flex cursor-default gap-2 select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent data-[state=open]:bg-accent [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
         inset && "pl-8",
         className
       )}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      style={getEmphasisStyle({ baseWeight, hasText: true, isSelected: isHovered })}
       {...props}
     >
       {children}
-      <GoogleSymbol name="chevron_right" className="ml-auto" />
+      <GoogleSymbol name="chevron_right" className="ml-auto" weight={100} opticalSize={20} />
     </DropdownMenuPrimitive.SubTrigger>
   );
 });
@@ -92,21 +85,14 @@ const DropdownMenuItem = React.forwardRef<
     inset?: boolean
   }
 >(({ className, inset, ...props }, ref) => {
-  const [isHovered, setIsHovered] = React.useState(false);
-  const { viewAsUser } = useUser();
-  const baseWeight = viewAsUser?.fontWeight || 400;
-
   return (
     <DropdownMenuPrimitive.Item
       ref={ref}
       className={cn(
-        "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+        "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
         inset && "pl-8",
         className
       )}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      style={getEmphasisStyle({ baseWeight, hasText: true, isSelected: isHovered })}
       {...props}
     />
   )
@@ -117,20 +103,15 @@ const DropdownMenuCheckboxItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.CheckboxItem>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.CheckboxItem>
 >(({ className, children, checked, ...props }, ref) => {
-  const { viewAsUser } = useUser();
-  const baseWeight = viewAsUser?.fontWeight || 400;
-  const [isHovered, setIsHovered] = React.useState(false);
   
   return (
     <DropdownMenuPrimitive.CheckboxItem
       ref={ref}
       className={cn(
-        "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         className
       )}
       checked={checked}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       {...props}
     >
       <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
@@ -138,7 +119,7 @@ const DropdownMenuCheckboxItem = React.forwardRef<
           <GoogleSymbol name="check" className="text-base" />
         </DropdownMenuPrimitive.ItemIndicator>
       </span>
-      <span style={getEmphasisStyle({baseWeight, hasText: true, isSelected: checked || isHovered})}>{children}</span>
+      <span>{children}</span>
     </DropdownMenuPrimitive.CheckboxItem>
   )
 })
@@ -149,20 +130,13 @@ const DropdownMenuRadioItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.RadioItem>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.RadioItem>
 >(({ className, children, ...props }, ref) => {
-  const { viewAsUser } = useUser();
-  const baseWeight = viewAsUser?.fontWeight || 400;
-  const isSelected = props['aria-checked'];
-  const [isHovered, setIsHovered] = React.useState(false);
-
   return (
     <DropdownMenuPrimitive.RadioItem
       ref={ref}
       className={cn(
-        "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         className
       )}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       {...props}
     >
       <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
@@ -170,7 +144,7 @@ const DropdownMenuRadioItem = React.forwardRef<
           <GoogleSymbol name="circle" className="h-2 w-2 fill-current" />
         </DropdownMenuPrimitive.ItemIndicator>
       </span>
-      <span style={getEmphasisStyle({baseWeight, hasText: true, isSelected: isSelected || isHovered})}>{children}</span>
+      <span>{children}</span>
     </DropdownMenuPrimitive.RadioItem>
   )
 })
@@ -185,7 +159,7 @@ const DropdownMenuLabel = React.forwardRef<
   <DropdownMenuPrimitive.Label
     ref={ref}
     className={cn(
-      "px-2 py-1.5 text-sm",
+      "px-2 py-1.5 text-sm font-normal",
       inset && "pl-8",
       className
     )}
