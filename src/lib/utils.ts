@@ -128,14 +128,8 @@ export const getEmphasisStyle = ({ baseWeight, hasText, isSelected }: { baseWeig
   const newWeight = weightMap[baseWeight] || baseWeight;
 
   if (baseWeight >= 700) { // This is the "Bold" case
-    if (hasText) {
-      // For items with text, only change the text color to primary.
-      return { color: 'hsl(var(--primary))' };
-    }
-    // For icon-only items, change the icon color.
-    return { color: 'hsl(var(--primary))' };
+    return { color: 'hsl(var(--primary))', fontWeight: newWeight };
   }
 
-  // For all other weights, only change the font weight.
   return { fontWeight: newWeight };
 };

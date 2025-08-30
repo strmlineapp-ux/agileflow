@@ -18,6 +18,7 @@ import { hasAccess } from '@/lib/permissions';
 export function Sidebar() {
   const { realUser, viewAsUser, users, loading, notifications, linkGoogleCalendar, teams, setViewAsUser: setContextViewAsUser, appSettings, logout } = useUser();
   const router = useRouter();
+  const pathname = usePathname();
   
   const setViewAsUser = (userId: string) => {
     setContextViewAsUser(userId);
@@ -64,13 +65,8 @@ export function Sidebar() {
                       <Link
                         href={adminPage.path}
                         className='flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors md:h-8 md:w-8'
-                        style={getEmphasisStyle({
-                            baseWeight, 
-                            hasText: false, 
-                            isSelected: usePathname().startsWith(adminPage.path)
-                        })}
                       >
-                        <GoogleSymbol name={adminPage.icon} className="text-4xl" />
+                        <GoogleSymbol name={adminPage.icon} className="text-4xl" style={getEmphasisStyle({ baseWeight, hasText: false, isSelected: pathname.startsWith(adminPage.path)})} />
                         <span className="sr-only">{adminPage.name}</span>
                       </Link>
                     </TooltipTrigger>
@@ -85,7 +81,6 @@ export function Sidebar() {
             {otherPages.map((item) => {
                 if (!item) return null;
                 const isNotifications = item.id === 'page-notifications';
-                const pathname = usePathname();
                 const isActive = pathname.startsWith(item.path);
 
                 return (
@@ -94,13 +89,8 @@ export function Sidebar() {
                       <Link
                         href={item.path}
                         className='relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors md:h-8 md:w-8'
-                        style={getEmphasisStyle({
-                            baseWeight, 
-                            hasText: false, 
-                            isSelected: isActive
-                        })}
                       >
-                        <GoogleSymbol name={item.icon} className="text-4xl" />
+                        <GoogleSymbol name={item.icon} className="text-4xl" style={getEmphasisStyle({ baseWeight, hasText: false, isSelected: isActive })} />
                         {isNotifications && unreadCount > 0 && (
                           <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary p-0 text-xs text-primary-foreground">
                             {unreadCount}
@@ -124,13 +114,8 @@ export function Sidebar() {
                   <Link
                     href={notificationsPage.path}
                     className='relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors md:h-8 md:w-8'
-                     style={getEmphasisStyle({
-                        baseWeight, 
-                        hasText: false, 
-                        isSelected: usePathname().startsWith(notificationsPage.path)
-                    })}
                   >
-                    <GoogleSymbol name={notificationsPage.icon} className="text-4xl" />
+                    <GoogleSymbol name={notificationsPage.icon} className="text-4xl" style={getEmphasisStyle({ baseWeight, hasText: false, isSelected: pathname.startsWith(notificationsPage.path)})} />
                     {unreadCount > 0 && (
                       <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary p-0 text-xs text-primary-foreground">
                         {unreadCount}
