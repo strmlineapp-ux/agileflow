@@ -497,7 +497,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                     <TabsContent value="users" className="m-0 flex flex-col flex-1 min-h-0">
                         {renderSearchControl()}
                         <div className="flex-1 overflow-hidden">
-                          <ScrollArea className="h-full">
+                            <div className="h-full overflow-y-auto">
                             {filteredUsers.length > 0 ? (
                               <div className="p-1 space-y-1">
                                   {filteredUsers.map(user => {
@@ -513,13 +513,13 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                             ) : (
                               <p className="text-center text-sm text-muted-foreground p-4">No users found.</p>
                             )}
-                          </ScrollArea>
+                          </div>
                         </div>
                     </TabsContent>
                     <TabsContent value="teams" className="m-0 flex flex-col flex-1 min-h-0">
                         {renderSearchControl()}
                          <div className="flex-1 overflow-hidden">
-                          <ScrollArea className="h-full">
+                          <div className="h-full overflow-y-auto">
                             {filteredTeams.length > 0 ? (
                               <div className="p-1 space-y-1">
                                   {filteredTeams.map(team => {
@@ -535,7 +535,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                             ) : (
                               <p className="text-center text-sm text-muted-foreground p-4">No teams found.</p>
                             )}
-                          </ScrollArea>
+                          </div>
                         </div>
                     </TabsContent>
                 </Tabs>
@@ -606,7 +606,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
           />
         </div>
         <div className="flex-1 overflow-hidden">
-          <ScrollArea className="h-full">
+          <div className="h-full overflow-y-auto">
             {filteredTabs.length > 0 ? (
               <div className="p-1 space-y-1">
                   {filteredTabs.map(tab => {
@@ -628,7 +628,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
             ) : (
               <p className="text-center text-sm text-muted-foreground p-4">No tabs found.</p>
             )}
-          </ScrollArea>
+          </div>
         </div>
       </PopoverContent>
     </Popover>
@@ -926,32 +926,3 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
     );
 };
 // #endregion
-
-    
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
-
-
-    
-
-    
-
-
-
-
-
-
