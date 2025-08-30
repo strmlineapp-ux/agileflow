@@ -38,6 +38,7 @@ interface CardTemplateProps {
   footer?: React.ReactNode;
   headerControls?: React.ReactNode;
   dragHandleProps?: any;
+  descriptionAction?: () => void;
 }
 
 export function CardTemplate({
@@ -56,11 +57,24 @@ export function CardTemplate({
   footer,
   headerControls,
   dragHandleProps,
+  descriptionAction,
 }: CardTemplateProps) {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const { theme } = useTheme();
-    const readableColor = getReadableColor(entity.color, theme);
+    readableColor = getReadableColor(entity.color, theme);
     
+    const descriptionContent = (
+      <p 
+        className={cn(
+            "text-sm", 
+            descriptionAction ? "cursor-pointer hover:text-primary" : "text-muted-foreground"
+        )}
+        onClick={descriptionAction}
+      >
+        {entity.description}
+      </p>
+    );
+
     return (
         <>
             <Card className="group relative bg-transparent flex flex-col h-full" {...dragHandleProps}>
@@ -122,9 +136,7 @@ export function CardTemplate({
                 </CardHeader>
                 {isExpanded && (entity.description || body) && (
                     <CardContent className="p-2 pt-0 flex-grow flex flex-col gap-2">
-                        {entity.description && (
-                            <p className="text-sm text-muted-foreground">{entity.description}</p>
-                        )}
+                        {entity.description && descriptionContent}
                         {body}
                     </CardContent>
                 )}
@@ -163,3 +175,5 @@ export function CardTemplate({
         </>
     );
 }
+
+    

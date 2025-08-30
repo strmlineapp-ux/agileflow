@@ -610,19 +610,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
 
     const entityWithDescription = {
         ...page,
-        description: (
-             <button
-                disabled={isPinned}
-                onClick={() => !isPinned && onUpdate(page.id, { isDynamic: !page.isDynamic })}
-                className={cn(
-                    "text-sm text-left",
-                    !isPinned && "cursor-pointer hover:text-primary",
-                    isPinned ? "text-muted-foreground/50" : "text-muted-foreground"
-                )}
-            >
-                {displayPath}
-            </button>
-        )
+        description: displayPath
     };
     
     return (
@@ -634,6 +622,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
             isPinned={isPinned}
             isExpanded={isExpanded}
             onToggleExpand={onToggleExpand}
+            descriptionAction={isPinned ? undefined : () => onUpdate(page.id, { isDynamic: !page.isDynamic })}
             headerControls={
                 <div className="flex items-center">
                     {!isPinned && <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />}
@@ -903,3 +892,6 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
 
 
 
+
+
+    
