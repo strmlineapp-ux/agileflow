@@ -38,7 +38,7 @@ const firestoreInstances = new Map<string, Firestore>();
  * Falls back to 'default' for localhost or non-subdomain access.
  * @returns The tenant ID for the current context.
  */
-function getCurrentTenantId(): string {
+export function getCurrentTenantId(): string {
   if (typeof window === 'undefined') {
     return 'default'; // Return default for server-side rendering
   }
@@ -49,9 +49,11 @@ function getCurrentTenantId(): string {
   }
 
   const parts = hostname.split('.');
-  // Assuming a structure like `tenant-name.agileflow.app`
-  if (parts.length > 2 && parts[1] === 'agileflow') {
-    return parts[0];
+  const tenantId = parts[0];
+
+  // If the derived tenantId doesn't have a specific config, fall back to default
+  if (tenantConfigs[tenantId]) {
+    return tenantId;
   }
   
   return 'default';
