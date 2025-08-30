@@ -1,4 +1,5 @@
 
+
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -112,16 +113,27 @@ export const getHueFromHsl = (hsl: string | null): number | null => {
     return match ? parseInt(match[1], 10) : null;
 };
 
-export const getSelectedStyle = (baseWeight: number): React.CSSProperties => {
+export const getSelectedStyle = (baseWeight: number, hasText: boolean): React.CSSProperties => {
   const weightMap: Record<number, number> = {
-    100: 300,
-    300: 400,
-    400: 500,
-    500: 700,
+    100: 300, // Thin -> Light
+    300: 400, // Light -> Normal
+    400: 500, // Normal -> Medium
+    500: 700, // Medium -> Bold
   };
 
   if (baseWeight >= 700) {
-    return { color: 'hsl(var(--primary))' };
+    // If base weight is Bold or higher, use primary color.
+    // Conditionally apply color only to text or icon.
+    if (hasText) {
+      return { color: 'hsl(var(--primary))' };
+    } else {
+      return { color: 'hsl(var(--primary))' };
+    }
   }
-  return { fontWeight: weightMap[baseWeight] || baseWeight };
+
+  // For other weights, increase font weight and use standard foreground color for text.
+  return { 
+    fontWeight: weightMap[baseWeight] || baseWeight,
+    color: 'hsl(var(--foreground))'
+  };
 };

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -50,7 +51,6 @@ export function ItemSelectionPopover({
   const [colorFilter, setColorFilter] = useState<string | null>(null);
 
   const baseWeight = viewAsUser?.fontWeight || 400;
-  const selectedStyle = getSelectedStyle(baseWeight);
 
   const filteredItems = useMemo(() => {
     const currentTab = tabs.find(t => t.value === activeTab);
@@ -117,7 +117,8 @@ export function ItemSelectionPopover({
                 {filteredItems.length > 0 ? (
                   filteredItems.map(item => {
                     const isSelected = tabs.find(t => t.value === activeTab)?.selectedIds.includes(item.id) || false;
-                    const itemStyle = isSelected ? selectedStyle : {};
+                    const itemStyle = isSelected ? getSelectedStyle(baseWeight, true) : {};
+                    const iconStyle = isSelected ? getSelectedStyle(baseWeight, false) : { color: item.color };
                     return (
                       <div
                         key={item.id}
@@ -134,7 +135,7 @@ export function ItemSelectionPopover({
                             <AvatarFallback>{item.name.slice(0, 2)}</AvatarFallback>
                           </Avatar>
                         ) : (
-                          <GoogleSymbol name={item.icon} style={{ color: isSelected ? 'hsl(var(--primary))' : item.color }} />
+                          <GoogleSymbol name={item.icon} style={iconStyle} />
                         )}
                         <span>{item.name}</span>
                       </div>

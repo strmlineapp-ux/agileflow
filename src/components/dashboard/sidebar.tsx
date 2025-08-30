@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Link from 'next/link';
@@ -44,7 +45,6 @@ export function Sidebar() {
   }
   
   const baseWeight = viewAsUser.fontWeight || 400;
-  const selectedStyle = getSelectedStyle(baseWeight);
 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col border-r bg-card sm:flex">
@@ -64,7 +64,7 @@ export function Sidebar() {
                       <Link
                         href={adminPage.path}
                         className='flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-primary md:h-8 md:w-8'
-                        style={usePathname().startsWith(adminPage.path) ? selectedStyle : {}}
+                        style={usePathname().startsWith(adminPage.path) ? getSelectedStyle(baseWeight, false) : {}}
                       >
                         <GoogleSymbol name={adminPage.icon} className="text-4xl" />
                         <span className="sr-only">{adminPage.name}</span>
@@ -90,7 +90,7 @@ export function Sidebar() {
                       <Link
                         href={item.path}
                         className='relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-primary md:h-8 md:w-8'
-                        style={isActive ? selectedStyle : {}}
+                        style={isActive ? getSelectedStyle(baseWeight, false) : {}}
                       >
                         <GoogleSymbol name={item.icon} className="text-4xl" />
                         {isNotifications && unreadCount > 0 && (
@@ -116,7 +116,7 @@ export function Sidebar() {
                   <Link
                     href={notificationsPage.path}
                     className='relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-primary md:h-8 md:w-8'
-                    style={usePathname().startsWith(notificationsPage.path) ? selectedStyle : {}}
+                    style={usePathname().startsWith(notificationsPage.path) ? getSelectedStyle(baseWeight, false) : {}}
                   >
                     <GoogleSymbol name={notificationsPage.icon} className="text-4xl" />
                     {unreadCount > 0 && (
