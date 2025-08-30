@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -34,7 +35,7 @@ const DropdownMenuSubTrigger = React.forwardRef<
     <DropdownMenuPrimitive.SubTrigger
       ref={ref}
       className={cn(
-        "flex cursor-default gap-2 select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+        "flex cursor-default gap-2 select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[state=open]:text-foreground [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
         inset && "pl-8",
         className
       )}
@@ -118,7 +119,6 @@ const DropdownMenuCheckboxItem = React.forwardRef<
 >(({ className, children, checked, ...props }, ref) => {
   const { viewAsUser } = useUser();
   const baseWeight = viewAsUser?.fontWeight || 400;
-  const selectedStyle = getEmphasisStyle({baseWeight, hasText: true, isSelected: checked});
   const [isHovered, setIsHovered] = React.useState(false);
   
   return (
@@ -138,7 +138,7 @@ const DropdownMenuCheckboxItem = React.forwardRef<
           <GoogleSymbol name="check" className="text-base" />
         </DropdownMenuPrimitive.ItemIndicator>
       </span>
-      <span style={checked ? selectedStyle : (isHovered ? getEmphasisStyle({baseWeight, hasText: true, isSelected: true}) : {})}>{children}</span>
+      <span style={getEmphasisStyle({baseWeight, hasText: true, isSelected: checked || isHovered})}>{children}</span>
     </DropdownMenuPrimitive.CheckboxItem>
   )
 })
@@ -152,7 +152,6 @@ const DropdownMenuRadioItem = React.forwardRef<
   const { viewAsUser } = useUser();
   const baseWeight = viewAsUser?.fontWeight || 400;
   const isSelected = props['aria-checked'];
-  const selectedStyle = getEmphasisStyle({baseWeight, hasText: true, isSelected});
   const [isHovered, setIsHovered] = React.useState(false);
 
   return (
@@ -171,7 +170,7 @@ const DropdownMenuRadioItem = React.forwardRef<
           <GoogleSymbol name="circle" className="h-2 w-2 fill-current" />
         </DropdownMenuPrimitive.ItemIndicator>
       </span>
-      <span style={isSelected ? selectedStyle : (isHovered ? getEmphasisStyle({baseWeight, hasText: true, isSelected: true}) : {})}>{children}</span>
+      <span style={getEmphasisStyle({baseWeight, hasText: true, isSelected: isSelected || isHovered})}>{children}</span>
     </DropdownMenuPrimitive.RadioItem>
   )
 })

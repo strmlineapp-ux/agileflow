@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -120,7 +121,6 @@ const SelectItem = React.forwardRef<
   const { viewAsUser } = useUser();
   const baseWeight = viewAsUser?.fontWeight || 400;
   const isSelected = props['aria-selected'];
-  const selectedStyle = getEmphasisStyle({baseWeight, hasText: true, isSelected});
   const [isHovered, setIsHovered] = React.useState(false);
 
   return (
@@ -141,7 +141,7 @@ const SelectItem = React.forwardRef<
       </span>
 
       <SelectPrimitive.ItemText>
-        <span style={isSelected ? selectedStyle : (isHovered ? getEmphasisStyle({baseWeight, hasText: true, isSelected: true}) : {})}>{children}</span>
+        <span style={getEmphasisStyle({baseWeight, hasText: true, isSelected: isSelected || isHovered})}>{children}</span>
       </SelectPrimitive.ItemText>
     </SelectPrimitive.Item>
   )
