@@ -34,14 +34,6 @@ export default {
           DEFAULT: "hsl(var(--destructive) / <alpha-value>)",
           foreground: "hsl(var(--destructive-foreground) / <alpha-value>)",
         },
-        popover: {
-          DEFAULT: "hsl(var(--background) / <alpha-value>)",
-          foreground: "hsl(var(--foreground) / <alpha-value>)",
-        },
-        card: {
-          DEFAULT: "hsl(var(--background) / <alpha-value>)",
-          foreground: "hsl(var(--foreground) / <alpha-value>)",
-        },
       },
       borderRadius: {
         lg: "var(--radius)",
