@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useMemo } from 'react';
@@ -105,7 +106,7 @@ export default function ProjectDetailsPage() {
   
   return (
     <div className="flex flex-col h-full gap-6">
-        <h1 className="font-headline text-2xl font-thin text-muted-foreground flex items-center gap-2">
+        <h1 className="font-headline text-2xl text-muted-foreground flex items-center gap-2">
             <GoogleSymbol name={page.icon} style={{color: page.color}} />
             {projectContext.name}
         </h1>
