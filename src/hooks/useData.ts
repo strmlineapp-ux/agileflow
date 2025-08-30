@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -419,7 +420,11 @@ export function useData(realUser: User | null, authLoading: boolean) {
   const addPage = useCallback(async (pageData: Omit<AppPage, 'id'>) => {
     if (!realUser) return;
     const db = getDb();
-    const newPageData = { ...pageData, workspaceId: realUser.workspaceId };
+    const newPageData = { 
+        ...pageData, 
+        workspaceId: realUser.workspaceId,
+        owner: { type: 'user', id: realUser.userId }
+    };
     const docRef = await addDoc(collection(db, 'pages'), newPageData);
     const newPage = { ...newPageData, id: docRef.id };
     setAllPages(current => [...current, newPage]);

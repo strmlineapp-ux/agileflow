@@ -1,4 +1,5 @@
 
+
 import type React from 'react';
 
 export interface Workspace {
@@ -31,6 +32,7 @@ export interface AppPage {
     users: string[]; // User IDs
     teams: string[]; // Team IDs
   };
+  owner?: { type: 'user', id: string };
   isSystemPage?: boolean; // Indicates if the page is a core, non-deletable page
   workspaceId: string;
 }

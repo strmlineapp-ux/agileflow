@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -603,7 +604,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
     onToggleExpand: () => void;
 }) {
     const { viewAsUser } = useUser();
-    const canManage = viewAsUser.isAdmin;
+    const canManage = viewAsUser.isAdmin || (page.owner?.id === viewAsUser.userId);
     const isPinned = page.isSystemPage;
 
     const displayPath = page.isDynamic ? `${page.path}/[...]` : page.path;
