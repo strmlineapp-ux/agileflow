@@ -136,9 +136,8 @@ export function CardTemplate({
                         </div>
                     </div>
                 </CardHeader>
-                {isExpanded && (entity.description || body) && (
+                {isExpanded && (
                     <CardContent className="p-2 pt-0 flex-grow flex flex-col gap-2">
-                        {entity.description && <p className="text-sm text-muted-foreground">{entity.description}</p>}
                         {body}
                         {entity.url && urlContent}
                     </CardContent>
