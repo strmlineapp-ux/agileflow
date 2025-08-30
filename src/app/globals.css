@@ -9,6 +9,7 @@
     --font-weight-normal: 400;
     --font-weight-medium: 500;
     --font-weight-bold: 700;
+    --font-weight-emphasis: 500; /* Default emphasis */
 
     /* Base theme colors */
     --background: 210 20% 92%;
@@ -46,13 +47,6 @@
   
   h1, h2, h3, h4, h5, h6 {
       font-family: var(--font-roboto), sans-serif;
-  }
-}
-
-@layer components {
-  /* Dynamic font-weight emphasis */
-  .font-emphasis {
-    font-weight: var(--font-weight-emphasis, 500); /* Default to medium */
   }
 }
 
