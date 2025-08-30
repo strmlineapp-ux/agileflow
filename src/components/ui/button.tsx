@@ -60,7 +60,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <Comp
         className={cn(
           buttonVariants({ variant, size, className }),
-          variant !== 'destructive' && "font-emphasis"
+          "font-emphasis"
         )}
         ref={ref}
         onClick={handleClick}
