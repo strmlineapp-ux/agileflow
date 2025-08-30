@@ -425,18 +425,10 @@ function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
 function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: Partial<AppPage>) => void }) {
     const { users, teams } = useUser();
     const [isOpen, setIsOpen] = useState(false);
-    const [searchTerm, setSearchTerm] = useState("");
-    const searchInputRef = useRef<HTMLInputElement>(null);
+    const [userSearchTerm, setUserSearchTerm] = useState("");
+    const [teamSearchTerm, setTeamSearchTerm] = useState("");
+    const [colorFilter, setColorFilter] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState('users');
-
-    useEffect(() => {
-        if (isOpen) {
-            const timer = setTimeout(() => {
-                searchInputRef.current?.focus();
-            }, 100);
-            return () => clearTimeout(timer);
-        }
-    }, [isOpen, activeTab]);
 
     const access = page.access;
 
@@ -450,21 +442,45 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
         onUpdate({ access: { ...access, [type]: Array.from(currentIds) } });
     };
 
-    const filteredUsers = useMemo(() => users.filter(u => u.displayName.toLowerCase().includes(searchTerm.toLowerCase())), [users, searchTerm]);
-    const filteredTeams = useMemo(() => teams.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase())), [teams, searchTerm]);
+    const filteredUsers = useMemo(() => users.filter(u => u.displayName.toLowerCase().includes(userSearchTerm.toLowerCase())), [users, userSearchTerm]);
+    const filteredTeams = useMemo(() => {
+        let results = teams.filter(t => t.name.toLowerCase().includes(teamSearchTerm.toLowerCase()));
+        if (colorFilter) {
+            const targetHue = getHueFromHsl(colorFilter);
+            if(targetHue !== null) {
+                results = results.filter(t => {
+                    const itemHue = getHueFromHsl(t.color);
+                    return itemHue !== null && isHueInRange(targetHue, itemHue);
+                });
+            }
+        }
+        return results;
+    }, [teams, teamSearchTerm, colorFilter]);
 
-    const renderSearchControl = () => (
+    const renderUserSearch = () => (
          <div className="p-2 border-b">
-            <div className="flex items-center gap-1 w-full">
-              <GoogleSymbol name="search" className="text-muted-foreground" />
-              <input
-                  ref={searchInputRef}
-                  placeholder="Search..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full h-8 p-0 bg-transparent border-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+            <CompactSearchInput
+                searchTerm={userSearchTerm}
+                setSearchTerm={setUserSearchTerm}
+                placeholder="Search users..."
+                isActive={true}
+                autoFocus={true}
               />
-          </div>
+        </div>
+    );
+    
+    const renderTeamSearch = () => (
+         <div className="p-2 border-b">
+            <CompactSearchInput
+                searchTerm={teamSearchTerm}
+                setSearchTerm={setTeamSearchTerm}
+                placeholder="Search teams..."
+                isActive={true}
+                autoFocus={true}
+                showColorFilter={true}
+                onColorSelect={setColorFilter}
+                activeColorFilter={colorFilter}
+              />
         </div>
     );
 
@@ -488,15 +504,15 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                     </TabsList>
                     <div className="flex-1 overflow-hidden">
                         <TabsContent value="users" className="m-0 h-full flex flex-col">
-                            {renderSearchControl()}
-                            <div className="flex-1 overflow-hidden">
+                            {renderUserSearch()}
+                            <div className="flex-1 overflow-y-auto">
                                 <ScrollArea className="h-full">
                                     {filteredUsers.length > 0 ? (
                                     <div className="p-1 space-y-1">
                                         {filteredUsers.map(user => {
                                         const isSelected = access.users.includes(user.userId);
                                         return (
-                                            <div key={user.userId} className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer", !isSelected && "text-muted-foreground")} style={{ color: isSelected ? 'hsl(var(--primary))' : undefined }} onClick={() => handleToggle('users', user.userId)}>
+                                            <div key={user.userId} className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer", !isSelected && "text-muted-foreground", isSelected && "text-primary")} onClick={() => handleToggle('users', user.userId)}>
                                             <Avatar className="h-7 w-7"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
                                             <span>{user.displayName}</span>
                                             </div>
@@ -510,16 +526,16 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                             </div>
                         </TabsContent>
                         <TabsContent value="teams" className="m-0 h-full flex flex-col">
-                             {renderSearchControl()}
-                            <div className="flex-1 overflow-hidden">
+                             {renderTeamSearch()}
+                            <div className="flex-1 overflow-y-auto">
                                 <ScrollArea className="h-full">
                                     {filteredTeams.length > 0 ? (
                                     <div className="p-1 space-y-1">
                                         {filteredTeams.map(team => {
                                         const isSelected = access.teams.includes(team.id);
                                         return (
-                                            <div key={team.id} className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer", !isSelected && "text-muted-foreground")} style={{ color: isSelected ? team.color : undefined }} onClick={() => handleToggle('teams', team.id)}>
-                                            <GoogleSymbol name={team.icon} />
+                                            <div key={team.id} className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer", !isSelected && "text-muted-foreground", isSelected && "text-primary")} onClick={() => handleToggle('teams', team.id)}>
+                                            <GoogleSymbol name={team.icon} style={{color: isSelected ? 'hsl(var(--primary))' : team.color}} />
                                             <span>{team.name}</span>
                                             </div>
                                         )
@@ -597,6 +613,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
             showColorFilter={true}
             onColorSelect={setColorFilter}
             activeColorFilter={colorFilter}
+            isActive={true}
           />
         </div>
         <div className="flex-1 overflow-hidden">
@@ -609,12 +626,11 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
                   return (
                       <div 
                           key={tab.id} 
-                          className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer", !isAssociated && "text-muted-foreground")}
-                          style={{ color: isAssociated ? tab.color : undefined }}
+                          className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer", !isAssociated && "text-muted-foreground", isAssociated && "text-primary")}
                           onClick={() => handleToggle(tab.id)}
                       >
-                          <GoogleSymbol name={tab.icon} />
-                          <span className={cn(!isAssociated && 'text-muted-foreground')}>{tab.name}</span>
+                          <GoogleSymbol name={tab.icon} style={{ color: isAssociated ? 'hsl(var(--primary))' : tab.color }} />
+                          <span>{tab.name}</span>
                       </div>
                   );
                   })}
