@@ -87,7 +87,7 @@ export function useAuth() {
                     const tenantDocRef = doc(db, 'tenants', tenantId);
 
                     const emailDomain = firebaseUser.email!.split('@')[1];
-                    let companyName = "My Workspace"; // Default for common domains
+                    let companyName = "Workspace"; // Default for common domains
 
                     if (!COMMON_EMAIL_DOMAINS.has(emailDomain)) {
                         const domainName = emailDomain.split('.')[0];
