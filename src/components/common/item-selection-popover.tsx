@@ -37,6 +37,44 @@ interface ItemSelectionPopoverProps {
   showColorFilter?: boolean;
 }
 
+const ItemDisplay = ({ item, isSelected }: { item: Item, isSelected: boolean }) => {
+    const { viewAsUser } = useUser();
+    const [isHovered, setIsHovered] = useState(false);
+    const baseWeight = viewAsUser?.fontWeight || 400;
+
+    const emphasisStyle = getEmphasisStyle({ baseWeight, hasText: true, isSelected: isSelected || isHovered });
+
+    const iconStyle = getEmphasisStyle({
+      baseWeight,
+      hasText: false, // This is an icon, but it has text next to it
+      isSelected: isSelected || isHovered,
+    });
+    
+    // The icon's color should only change to primary in the 'bold' state
+    // Otherwise, it uses its own color or inherits the parent's color for muted states.
+    const finalIconColor = iconStyle.color === 'hsl(var(--primary))' ? iconStyle.color : item.color;
+
+
+    return (
+        <div
+            className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer text-muted-foreground"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            {item.iconType === 'avatar' ? (
+                <Avatar className="h-7 w-7">
+                    <AvatarImage src={item.icon} alt={item.name} data-ai-hint="user avatar" />
+                    <AvatarFallback>{item.name.slice(0, 2)}</AvatarFallback>
+                </Avatar>
+            ) : (
+                <GoogleSymbol name={item.icon} style={{ ...iconStyle, color: finalIconColor }} />
+            )}
+            <span style={emphasisStyle}>{item.name}</span>
+        </div>
+    );
+}
+
+
 export function ItemSelectionPopover({
   tabs,
   onSelectionChange,
@@ -118,25 +156,10 @@ export function ItemSelectionPopover({
                 {filteredItems.length > 0 ? (
                   filteredItems.map(item => {
                     const isSelected = tabs.find(t => t.value === activeTab)?.selectedIds.includes(item.id) || false;
-                    const itemStyle = getEmphasisStyle(baseWeight, true, isSelected);
-                    const iconStyle = getEmphasisStyle(baseWeight, false, isSelected);
                     
                     return (
-                      <div
-                        key={item.id}
-                        className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer text-muted-foreground hover:bg-muted/50"
-                        onClick={() => onSelectionChange(activeTab, item.id)}
-                        style={itemStyle}
-                      >
-                        {item.iconType === 'avatar' ? (
-                          <Avatar className="h-7 w-7">
-                            <AvatarImage src={item.icon} alt={item.name} data-ai-hint="user avatar" />
-                            <AvatarFallback>{item.name.slice(0, 2)}</AvatarFallback>
-                          </Avatar>
-                        ) : (
-                          <GoogleSymbol name={item.icon} style={{ ...iconStyle, color: iconStyle.color || item.color }} />
-                        )}
-                        <span style={itemStyle}>{item.name}</span>
+                      <div key={item.id} onClick={() => onSelectionChange(activeTab, item.id)}>
+                          <ItemDisplay item={item} isSelected={isSelected} />
                       </div>
                     );
                   })
