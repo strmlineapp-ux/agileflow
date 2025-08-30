@@ -45,7 +45,7 @@ export default {
           foreground: "hsl(var(--accent-foreground) / <alpha-value>)",
         },
         popover: {
-          DEFAULT: "hsl(var(--popover) / <alpha-value>)",
+          DEFAULT: "hsl(var(--background) / <alpha-value>)",
         },
         card: {
           DEFAULT: "hsl(var(--background) / <alpha-value>)",
