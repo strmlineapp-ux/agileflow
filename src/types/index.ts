@@ -88,7 +88,6 @@ export interface User {
   linkedBadgeCollectionIds?: string[];
   linkedCalendarIds?: string[];
   dragActivationKey?: 'alt' | 'ctrl' | 'meta' | 'shift';
-  hideWash?: boolean;
   createdAt: Date;
   approvedBy?: string;
   workspaceId: string;
