@@ -283,7 +283,7 @@ This pattern provides a dense, icon-driven interface for managing a series of us
 ### Typography
 - **Font**: The application exclusively uses the **Roboto** font family for a clean and consistent look for both headlines and body text.
 - **Headline Font**: All major titles (pages, tabs, prominent cards) use the `font-headline` utility class, which is configured to use a `font-thin` weight (`font-weight: 100`) from the Roboto family.
-- **Body Font**: All standard body text and labels use a standard `font-normal` weight.
+- **Body Font**: All standard body text, labels, and buttons now use a `font-thin` weight.
 
 ### Icons & Hover Effects
 - **Icon Set**: We exclusively use **Google Material Symbols** via the `<GoogleSymbol />` component. This ensures a consistent visual language. The font library is a variable font, which means we can adjust its properties.
@@ -293,7 +293,7 @@ This pattern provides a dense, icon-driven interface for managing a series of us
   - Large, circular 'Add New' buttons use `text-4xl` for prominence.
 - **Filled Icons**: To use the filled style of an icon, pass the `filled` prop to the component: `<GoogleSymbol name="star" filled />`. This works with any of the three main styles.
 - **Hover Behavior**: The color of icons on hover is typically determined by their parent element. For example, an icon inside a `<Button variant="ghost">` will change to the primary theme color on hover because the button's text color changes, and the icon inherits that color. This creates a clean and predictable interaction.
-- **Destructive Actions**: Delete or other destructive action icons (like `delete`, `close`, `cancel`) are `text-foreground` by default and become `text-destructive` on hover to provide a clear but not overwhelming visual warning.
+- **Destructive Actions**: Delete or other destructive action icons (like `delete`, `close`, `cancel`) are `text-muted-foreground` by default and become `text-destructive` on hover to provide a clear but not overwhelming visual warning.
 - **Tooltips for Clarity**: Icon-only buttons (those without visible text) and icons within pickers (like the **Icon Picker**) must always be wrapped in a `<Tooltip>` to provide context on their function. This is crucial for accessibility and user experience.
 
 ### Color Themes & Button Styles
@@ -306,7 +306,7 @@ The application supports two distinct color themes, `light` and `dark`, which ca
 
 -   **Dark Theme**:
     -   **Aesthetic**: Modern and focused, using a dark charcoal background (`--background: 0 0% 8%`) and light grey text (`--foreground: 0 0% 67%`).
-    -   **Primary Color**: A vibrant, energetic orange (`#D8620E` or `hsl(25 88% 45%)`) used for key actions.
+    -   **Primary Color**: This is the main accent color for the most important interactive elements. It's used for selected/hovered text in bold state, selected/hovered icon-only buttons when in bold state, and also used for the focus-visible ring to ensure accessibility.
     -   **Accent Color**: A warm, golden yellow (`hsl(43 55% 71%)`) used in button hover gradients.
 
 - **Custom Primary Color**: Users can select a custom primary color using a color picker popover, as defined in the **Icon & Color Editing Flow** pattern. This custom color overrides the theme's default primary color.
@@ -320,7 +320,7 @@ This is the single source of truth for indicating user interaction state across 
 -   **Selected/Highlighted State**: To indicate a persistently selected or highlighted state (e.g., the designated "Team Admin" in a list), a clear icon badge (e.g., a "key" icon) is used, typically overlaid on the user's avatar. This avoids visually noisy outlines and provides a clear, universally understood symbol for elevated status.
 
 ### List Item States (Dropdowns & Popovers)
-- **Hover & Focus**: When hovering over or navigating to list items (like in dropdowns or popovers) using the keyboard, the item's background color changes to the theme's accent color.
+- **Hover & Focus**: When hovering over or navigating to list items (like in dropdowns or popovers) using the keyboard, the item's text color changes to `text-foreground`. **No background highlight is applied**, ensuring a clean and consistent look.
 - **Selection**: The currently selected item within a list is indicated by a checkmark icon, which also uses the standard foreground color.
 
 ### User Notifications
