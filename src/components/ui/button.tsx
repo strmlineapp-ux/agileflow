@@ -16,7 +16,7 @@ const buttonVariants = cva(
         default: "hover:bg-transparent",
         outline:
           "border border-input bg-transparent",
-        link: "text-primary underline-offset-4",
+        link: "text-primary underline-offset-4 hover:underline",
         circle: "rounded-full",
       },
       size: {
