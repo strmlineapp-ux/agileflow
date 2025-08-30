@@ -6,6 +6,7 @@ import * as MenubarPrimitive from "@radix-ui/react-menubar"
 import { GoogleSymbol } from "../icons/google-symbol"
 
 import { cn } from "@/lib/utils"
+import { useUser } from "@/context/user-context"
 
 function MenubarMenu({
   ...props
@@ -55,16 +56,23 @@ Menubar.displayName = MenubarPrimitive.Root.displayName
 const MenubarTrigger = React.forwardRef<
   React.ElementRef<typeof MenubarPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Trigger>
->(({ className, ...props }, ref) => (
-  <MenubarPrimitive.Trigger
-    ref={ref}
-    className={cn(
-      "flex cursor-default select-none items-center rounded-sm px-3 py-1.5 text-sm font-normal outline-none focus-visible:ring-1 focus-visible:ring-ring/50 data-[state=open]:bg-primary/10 data-[state=open]:text-primary",
-      className
-    )}
-    {...props}
-  />
-))
+>(({ className, ...props }, ref) => {
+  const { viewAsUser } = useUser();
+  const baseWeight = viewAsUser?.fontWeight || 400;
+  const isBoldEmphasis = baseWeight === 700;
+
+  return (
+    <MenubarPrimitive.Trigger
+      ref={ref}
+      className={cn(
+        "flex cursor-default select-none items-center rounded-sm px-3 py-1.5 text-sm font-normal outline-none focus-visible:ring-1 focus-visible:ring-ring/50",
+        !isBoldEmphasis ? "data-[state=open]:font-emphasis" : "data-[state=open]:text-primary",
+        className
+      )}
+      {...props}
+    />
+  )
+})
 MenubarTrigger.displayName = MenubarPrimitive.Trigger.displayName
 
 const MenubarSubTrigger = React.forwardRef<
@@ -72,20 +80,27 @@ const MenubarSubTrigger = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof MenubarPrimitive.SubTrigger> & {
     inset?: boolean
   }
->(({ className, inset, children, ...props }, ref) => (
-  <MenubarPrimitive.SubTrigger
-    ref={ref}
-    className={cn(
-      "flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-primary/10 data-[state=open]:bg-primary/10",
-      inset && "pl-8",
-      className
-    )}
-    {...props}
-  >
-    {children}
-    <GoogleSymbol name="chevron_right" className="ml-auto h-4 w-4" />
-  </MenubarPrimitive.SubTrigger>
-))
+>(({ className, inset, children, ...props }, ref) => {
+  const { viewAsUser } = useUser();
+  const baseWeight = viewAsUser?.fontWeight || 400;
+  const isBoldEmphasis = baseWeight === 700;
+  
+  return (
+    <MenubarPrimitive.SubTrigger
+      ref={ref}
+      className={cn(
+        "flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none",
+        !isBoldEmphasis ? "focus:font-emphasis data-[state=open]:font-emphasis" : "focus:text-primary data-[state=open]:text-primary",
+        inset && "pl-8",
+        className
+      )}
+      {...props}
+    >
+      {children}
+      <GoogleSymbol name="chevron_right" className="ml-auto h-4 w-4" />
+    </MenubarPrimitive.SubTrigger>
+  )
+})
 MenubarSubTrigger.displayName = MenubarPrimitive.SubTrigger.displayName
 
 const MenubarSubContent = React.forwardRef<
@@ -133,50 +148,70 @@ const MenubarItem = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Item> & {
     inset?: boolean
   }
->(({ className, inset, ...props }, ref) => (
+>(({ className, inset, ...props }, ref) => {
+  const { viewAsUser } = useUser();
+  const baseWeight = viewAsUser?.fontWeight || 400;
+  const isBoldEmphasis = baseWeight === 700;
+
+  return (
   <MenubarPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-primary/10 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      !isBoldEmphasis ? "focus:font-emphasis" : "focus:text-primary",
       inset && "pl-8",
       className
     )}
     {...props}
   />
-))
+  )
+})
 MenubarItem.displayName = MenubarPrimitive.Item.displayName
 
 const MenubarCheckboxItem = React.forwardRef<
   React.ElementRef<typeof MenubarPrimitive.CheckboxItem>,
   React.ComponentPropsWithoutRef<typeof MenubarPrimitive.CheckboxItem>
->(({ className, children, checked, ...props }, ref) => (
-  <MenubarPrimitive.CheckboxItem
-    ref={ref}
-    className={cn(
-      "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:bg-primary/10 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-      className
-    )}
-    checked={checked}
-    {...props}
-  >
-    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-      <MenubarPrimitive.ItemIndicator>
-        <GoogleSymbol name="check" className="h-4 w-4" />
-      </MenubarPrimitive.ItemIndicator>
-    </span>
-    {children}
-  </MenubarPrimitive.CheckboxItem>
-))
+>(({ className, children, checked, ...props }, ref) => {
+  const { viewAsUser } = useUser();
+  const baseWeight = viewAsUser?.fontWeight || 400;
+  const isBoldEmphasis = baseWeight === 700;
+
+  return (
+    <MenubarPrimitive.CheckboxItem
+      ref={ref}
+      className={cn(
+        "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        !isBoldEmphasis ? "focus:font-emphasis" : "focus:text-primary",
+        className
+      )}
+      checked={checked}
+      {...props}
+    >
+      <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+        <MenubarPrimitive.ItemIndicator>
+          <GoogleSymbol name="check" className="h-4 w-4" />
+        </MenubarPrimitive.ItemIndicator>
+      </span>
+      {children}
+    </MenubarPrimitive.CheckboxItem>
+  )
+})
 MenubarCheckboxItem.displayName = MenubarPrimitive.CheckboxItem.displayName
 
 const MenubarRadioItem = React.forwardRef<
   React.ElementRef<typeof MenubarPrimitive.RadioItem>,
   React.ComponentPropsWithoutRef<typeof MenubarPrimitive.RadioItem>
->(({ className, children, ...props }, ref) => (
+>(({ className, children, ...props }, ref) => {
+  const { viewAsUser } = useUser();
+  const baseWeight = viewAsUser?.fontWeight || 400;
+  const isBoldEmphasis = baseWeight === 700;
+
+  return (
   <MenubarPrimitive.RadioItem
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:bg-primary/10 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      !isBoldEmphasis ? "focus:font-emphasis" : "focus:text-primary",
       className
     )}
     {...props}
@@ -188,7 +223,8 @@ const MenubarRadioItem = React.forwardRef<
     </span>
     {children}
   </MenubarPrimitive.RadioItem>
-))
+  )
+})
 MenubarRadioItem.displayName = MenubarPrimitive.RadioItem.displayName
 
 const MenubarLabel = React.forwardRef<
