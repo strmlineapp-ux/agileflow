@@ -120,16 +120,20 @@ export const getEmphasisStyle = ({ baseWeight, hasText, isSelected }: { baseWeig
     400: 500, // Normal -> Medium
     500: 700, // Medium -> Bold
   };
-  
+
   if (!isSelected) {
-    return { };
+    return { fontWeight: baseWeight };
   }
 
   const newWeight = weightMap[baseWeight] || baseWeight;
 
-  if (baseWeight >= 700) { // This is the "Bold" case
-    return { color: 'hsl(var(--primary))', fontWeight: newWeight };
+  if (baseWeight >= 700) { // This is the "Bold" state
+    if (!hasText) { // Icon-only
+      return { color: 'hsl(var(--primary))', fontWeight: newWeight };
+    }
+    return { color: 'hsl(var(--primary))', fontWeight: newWeight }; // Text with icon
   }
-
+  
+  // For all other states, just increase weight
   return { fontWeight: newWeight };
 };
