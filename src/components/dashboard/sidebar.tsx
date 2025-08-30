@@ -34,7 +34,8 @@ export function Sidebar() {
     const notificationsPage = appSettings.pages.find(p => p.id === 'page-notifications');
     const otherPages = appSettings.pages
       .filter(page => page.id !== 'page-admin-management' && page.id !== 'page-notifications' && page.id !== 'page-settings')
-      .filter(page => hasAccess(viewAsUser, page));
+      .filter(page => hasAccess(viewAsUser, page))
+      .filter(page => !!page.path); // Ensure page has a path
 
     return { adminPage, notificationsPage, otherPages };
   }, [viewAsUser, appSettings.pages]);
@@ -56,7 +57,7 @@ export function Sidebar() {
                 </svg>
                 <span className="sr-only">AgileFlow</span>
             </Link>
-            {adminPage && hasAccess(viewAsUser, adminPage) && (
+            {adminPage && hasAccess(viewAsUser, adminPage) && adminPage.path && (
               <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
@@ -109,7 +110,7 @@ export function Sidebar() {
         </nav>
       </ScrollArea>
       <nav className="mt-auto flex flex-col items-center gap-4 px-2 py-4">
-        {notificationsPage && hasAccess(viewAsUser, notificationsPage) && (
+        {notificationsPage && hasAccess(viewAsUser, notificationsPage) && notificationsPage.path && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
