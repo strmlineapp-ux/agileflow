@@ -61,7 +61,7 @@ export function CardTemplate({
 }: CardTemplateProps) {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const { theme } = useTheme();
-    readableColor = getReadableColor(entity.color, theme);
+    const readableColor = getReadableColor(entity.color, theme);
     
     const descriptionContent = (
       <p 
