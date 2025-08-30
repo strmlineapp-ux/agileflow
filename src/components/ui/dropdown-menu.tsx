@@ -1,12 +1,11 @@
 
-
 "use client"
 
 import * as React from "react"
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
 import { GoogleSymbol } from "../icons/google-symbol"
 
-import { cn, getSelectedStyle } from "@/lib/utils"
+import { cn, getEmphasisStyle } from "@/lib/utils"
 import { useUser } from "@/context/user-context"
 
 const DropdownMenu = DropdownMenuPrimitive.Root
@@ -30,7 +29,7 @@ const DropdownMenuSubTrigger = React.forwardRef<
   <DropdownMenuPrimitive.SubTrigger
     ref={ref}
     className={cn(
-      "flex cursor-default gap-2 select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:text-primary data-[state=open]:text-primary [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+      "flex cursor-default gap-2 select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[state=open]:text-primary [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
       inset && "pl-8",
       className
     )}
@@ -86,7 +85,7 @@ const DropdownMenuItem = React.forwardRef<
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:text-primary data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+      "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
       inset && "pl-8",
       className
     )}
@@ -101,13 +100,13 @@ const DropdownMenuCheckboxItem = React.forwardRef<
 >(({ className, children, checked, ...props }, ref) => {
   const { viewAsUser } = useUser();
   const baseWeight = viewAsUser?.fontWeight || 400;
-  const selectedStyle = getSelectedStyle(baseWeight, true);
+  const selectedStyle = getEmphasisStyle(baseWeight, true, checked);
   
   return (
     <DropdownMenuPrimitive.CheckboxItem
       ref={ref}
       className={cn(
-        "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:text-primary data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         className
       )}
       checked={checked}
@@ -118,7 +117,7 @@ const DropdownMenuCheckboxItem = React.forwardRef<
           <GoogleSymbol name="check" className="text-base" />
         </DropdownMenuPrimitive.ItemIndicator>
       </span>
-      <span style={checked ? selectedStyle : {}}>{children}</span>
+      <span style={selectedStyle}>{children}</span>
     </DropdownMenuPrimitive.CheckboxItem>
   )
 })
@@ -131,13 +130,14 @@ const DropdownMenuRadioItem = React.forwardRef<
 >(({ className, children, ...props }, ref) => {
   const { viewAsUser } = useUser();
   const baseWeight = viewAsUser?.fontWeight || 400;
-  const selectedStyle = getSelectedStyle(baseWeight, true);
+  const isSelected = props['aria-checked'];
+  const selectedStyle = getEmphasisStyle(baseWeight, true, isSelected);
 
   return (
     <DropdownMenuPrimitive.RadioItem
       ref={ref}
       className={cn(
-        "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:text-primary data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         className
       )}
       {...props}
@@ -147,7 +147,7 @@ const DropdownMenuRadioItem = React.forwardRef<
           <GoogleSymbol name="circle" className="h-2 w-2 fill-current" />
         </DropdownMenuPrimitive.ItemIndicator>
       </span>
-      <span style={props['aria-checked'] ? selectedStyle : {}}>{children}</span>
+      <span style={selectedStyle}>{children}</span>
     </DropdownMenuPrimitive.RadioItem>
   )
 })

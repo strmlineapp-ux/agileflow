@@ -5,7 +5,7 @@ import * as React from "react"
 import * as SelectPrimitive from "@radix-ui/react-select"
 import { GoogleSymbol } from "../icons/google-symbol"
 
-import { cn, getSelectedStyle } from "@/lib/utils"
+import { cn, getEmphasisStyle } from "@/lib/utils"
 import { useUser } from "@/context/user-context"
 
 const Select = SelectPrimitive.Root
@@ -119,14 +119,14 @@ const SelectItem = React.forwardRef<
 >(({ className, children, ...props }, ref) => {
   const { viewAsUser } = useUser();
   const baseWeight = viewAsUser?.fontWeight || 400;
-  const selectedStyle = getSelectedStyle(baseWeight);
   const isSelected = props['aria-selected'];
+  const selectedStyle = getEmphasisStyle(baseWeight, true, isSelected);
 
   return (
     <SelectPrimitive.Item
       ref={ref}
       className={cn(
-        "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         className
       )}
       {...props}
@@ -138,7 +138,7 @@ const SelectItem = React.forwardRef<
       </span>
 
       <SelectPrimitive.ItemText>
-        <span style={isSelected ? selectedStyle : {}}>{children}</span>
+        <span style={selectedStyle}>{children}</span>
       </SelectPrimitive.ItemText>
     </SelectPrimitive.Item>
   )
