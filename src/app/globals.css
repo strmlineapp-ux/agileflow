@@ -6,7 +6,7 @@
 @layer base {
   :root {
     --background: 0 0% 98%;
-    --foreground: 222.2 47.4% 11.2%;
+    --foreground: 214.3 31.8% 91.4%;
 
     --primary: 210 70% 50%;
     --primary-foreground: 210 40% 98%;
@@ -14,7 +14,6 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     
-    --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 210 70% 50%;
 
@@ -23,7 +22,7 @@
 
   .dark {
     --background: 0 0% 3%;
-    --foreground: 210 40% 98%;
+    --foreground: 217.2 32.6% 17.5%;
     
     --primary: 25 88% 45%;
     --primary-foreground: 43 55% 95%;
@@ -31,7 +30,6 @@
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 25 88% 45%;
   }
@@ -56,8 +54,8 @@
       -45deg,
       transparent,
       transparent 5px,
-      hsl(var(--border) / var(--lunch-break-opacity, 0.06)) 5px,
-      hsl(var(--border) / var(--lunch-break-opacity, 0.06)) 10px
+      hsl(var(--foreground) / var(--lunch-break-opacity, 0.06)) 5px,
+      hsl(var(--foreground) / var(--lunch-break-opacity, 0.06)) 10px
     );
   }
 
