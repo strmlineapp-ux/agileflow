@@ -42,17 +42,12 @@ const ItemDisplay = ({ item, isSelected }: { item: Item, isSelected: boolean }) 
     const [isHovered, setIsHovered] = useState(false);
     const baseWeight = viewAsUser?.fontWeight || 400;
 
-    const emphasisStyle = getEmphasisStyle({ baseWeight, hasText: true, isSelected: isSelected || isHovered });
-
-    const iconStyle = getEmphasisStyle({
-      baseWeight,
-      hasText: false, // This is an icon, but it has text next to it
-      isSelected: isSelected || isHovered,
-    });
+    const itemStyle = getEmphasisStyle({ baseWeight, hasText: true, isSelected: isSelected || isHovered });
+    const iconStyle = getEmphasisStyle({ baseWeight, hasText: true, isSelected: isSelected || isHovered });
     
     // The icon's color should only change to primary in the 'bold' state
     // Otherwise, it uses its own color or inherits the parent's color for muted states.
-    const finalIconColor = iconStyle.color === 'hsl(var(--primary))' ? iconStyle.color : item.color;
+    const finalIconColor = iconStyle.color === 'hsl(var(--primary))' ? item.color : (isSelected || isHovered ? itemStyle.color : item.color);
 
 
     return (
@@ -60,6 +55,7 @@ const ItemDisplay = ({ item, isSelected }: { item: Item, isSelected: boolean }) 
             className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer text-muted-foreground"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
+            style={itemStyle}
         >
             {item.iconType === 'avatar' ? (
                 <Avatar className="h-7 w-7">
@@ -69,7 +65,7 @@ const ItemDisplay = ({ item, isSelected }: { item: Item, isSelected: boolean }) 
             ) : (
                 <GoogleSymbol name={item.icon} style={{ ...iconStyle, color: finalIconColor }} />
             )}
-            <span style={emphasisStyle}>{item.name}</span>
+            <span style={itemStyle}>{item.name}</span>
         </div>
     );
 }
@@ -174,3 +170,4 @@ export function ItemSelectionPopover({
     </Popover>
   );
 }
+
