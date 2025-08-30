@@ -64,10 +64,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const emphasisClass =
-      variant === "ghost" || variant === 'outline'
-        ? !isBoldEmphasis
-          ? "hover:font-emphasis"
-          : "hover:text-primary"
+      variant === "ghost" || variant === 'outline' || variant === 'secondary'
+        ? isBoldEmphasis
+          ? "hover:text-primary focus:text-primary"
+          : "hover:font-emphasis focus:font-emphasis"
         : "";
     
     return (
