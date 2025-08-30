@@ -62,7 +62,7 @@ export function Sidebar() {
                     <TooltipTrigger asChild>
                       <Link
                         href={adminPage.path}
-                        className={cn('flex h-9 w-9 items-center justify-center rounded-lg text-foreground transition-colors hover:text-foreground md:h-8 md:w-8', {
+                        className={cn('font-emphasis flex h-9 w-9 items-center justify-center rounded-lg text-foreground transition-colors md:h-8 md:w-8', {
                             'bg-accent text-accent-foreground': pathname.startsWith(adminPage.path),
                         })}
                       >
@@ -88,7 +88,7 @@ export function Sidebar() {
                     <TooltipTrigger asChild>
                       <Link
                         href={item.path}
-                        className={cn('relative flex h-9 w-9 items-center justify-center rounded-lg text-foreground transition-colors hover:text-foreground md:h-8 md:w-8', {
+                        className={cn('font-emphasis relative flex h-9 w-9 items-center justify-center rounded-lg text-foreground transition-colors md:h-8 md:w-8', {
                           'bg-accent text-accent-foreground': isActive,
                         })}
                       >
@@ -115,7 +115,7 @@ export function Sidebar() {
                 <TooltipTrigger asChild>
                   <Link
                     href={notificationsPage.path}
-                    className={cn('relative flex h-9 w-9 items-center justify-center rounded-lg text-foreground transition-colors hover:text-foreground md:h-8 md:w-8', {
+                    className={cn('font-emphasis relative flex h-9 w-9 items-center justify-center rounded-lg text-foreground transition-colors md:h-8 md:w-8', {
                       'bg-accent text-accent-foreground': pathname.startsWith(notificationsPage.path),
                     })}
                   >
@@ -134,7 +134,7 @@ export function Sidebar() {
         )}
          <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <button className="flex h-9 w-9 items-center justify-center rounded-full md:h-8 md:w-8 focus-visible:outline-none">
+                <button className="font-emphasis flex h-9 w-9 items-center justify-center rounded-full md:h-8 md:w-8 focus-visible:outline-none">
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
