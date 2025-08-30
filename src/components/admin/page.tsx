@@ -488,8 +488,8 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                     <TooltipContent><p>Manage Page Access</p></TooltipContent>
                 </Tooltip>
             </TooltipProvider>
-            <PopoverContent className="w-80 p-0 flex flex-col" onPointerDown={(e) => e.stopPropagation()}>
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col">
+            <PopoverContent className="w-80 p-0 flex flex-col max-h-96" onPointerDown={(e) => e.stopPropagation()}>
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-1 min-h-0">
                     <TabsList className="grid w-full grid-cols-2">
                         <TabsTrigger value="users">Users</TabsTrigger>
                         <TabsTrigger value="teams">Teams</TabsTrigger>
@@ -497,7 +497,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                     <TabsContent value="users" className="m-0 flex flex-col flex-1 min-h-0">
                         {renderSearchControl()}
                         <div className="flex-1 overflow-hidden">
-                          <ScrollArea className="h-full max-h-64">
+                          <ScrollArea className="h-full">
                             {filteredUsers.length > 0 ? (
                               <div className="p-1 space-y-1">
                                   {filteredUsers.map(user => {
@@ -505,7 +505,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                                   return (
                                       <div key={user.userId} className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer", !isSelected && "text-muted-foreground")} style={{ color: isSelected ? 'hsl(var(--primary))' : undefined }} onClick={() => handleToggle('users', user.userId)}>
                                       <Avatar className="h-7 w-7"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
-                                      <span className={cn(!isSelected && 'text-muted-foreground')}>{user.displayName}</span>
+                                      <span>{user.displayName}</span>
                                       </div>
                                   )
                                   })}
@@ -519,7 +519,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                     <TabsContent value="teams" className="m-0 flex flex-col flex-1 min-h-0">
                         {renderSearchControl()}
                          <div className="flex-1 overflow-hidden">
-                          <ScrollArea className="h-full max-h-64">
+                          <ScrollArea className="h-full">
                             {filteredTeams.length > 0 ? (
                               <div className="p-1 space-y-1">
                                   {filteredTeams.map(team => {
@@ -527,7 +527,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                                   return (
                                       <div key={team.id} className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer", !isSelected && "text-muted-foreground")} style={{ color: isSelected ? team.color : undefined }} onClick={() => handleToggle('teams', team.id)}>
                                       <GoogleSymbol name={team.icon} />
-                                      <span className={cn(!isSelected && 'text-muted-foreground')}>{team.name}</span>
+                                      <span>{team.name}</span>
                                       </div>
                                   )
                                   })}
@@ -593,7 +593,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
               <TooltipContent><p>Manage Associated Tabs</p></TooltipContent>
           </Tooltip>
       </TooltipProvider>
-      <PopoverContent className="w-80 p-0 flex flex-col" onPointerDownCapture={(e) => { e.stopPropagation(); }}>
+      <PopoverContent className="w-80 p-0 flex flex-col max-h-96" onPointerDownCapture={(e) => { e.stopPropagation(); }}>
         <div className="p-2 border-b shrink-0">
           <CompactSearchInput
             searchTerm={searchTerm}
@@ -606,7 +606,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
           />
         </div>
         <div className="flex-1 overflow-hidden">
-          <ScrollArea className="h-full max-h-64">
+          <ScrollArea className="h-full">
             {filteredTabs.length > 0 ? (
               <div className="p-1 space-y-1">
                   {filteredTabs.map(tab => {
@@ -821,13 +821,15 @@ function SortableTabCard({ tab, onUpdate, isExpanded, onToggleExpand }: {
     const canManage = viewAsUser.isAdmin;
     
     const descriptionContent = (
-      <InlineEditor
-          value={tab.description || ''}
-          onSave={(newDesc) => onUpdate(tab.id, { description: newDesc })}
-          disabled={!canManage}
-          placeholder="Click to add description"
-          className="text-sm text-muted-foreground min-h-[20px]"
-      />
+      <div onPointerDown={(e) => e.stopPropagation()}>
+        <InlineEditor
+            value={tab.description || ''}
+            onSave={(newDesc) => onUpdate(tab.id, { description: newDesc })}
+            disabled={!canManage}
+            placeholder="Click to add description"
+            className="text-sm text-muted-foreground min-h-[20px]"
+        />
+      </div>
     );
 
     return (
@@ -947,6 +949,7 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
     
 
     
+
 
 
 
