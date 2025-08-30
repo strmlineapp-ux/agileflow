@@ -103,7 +103,7 @@ function AppBody({ children }: { children: React.ReactNode }) {
         if (isHighContrast) {
             luma = isDarkMode ? '100%' : '0%';
         } else {
-            luma = isDarkMode ? '40%' : '50%';
+            luma = isDarkMode ? '67%' : '40%';
         }
         root.style.setProperty('--foreground', `210 7% ${luma}`);
 

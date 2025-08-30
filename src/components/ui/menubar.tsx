@@ -61,16 +61,12 @@ const MenubarTrigger = React.forwardRef<
   const baseWeight = viewAsUser?.fontWeight || 400;
   const isBoldEmphasis = baseWeight === 700;
 
-  const emphasisClass = isBoldEmphasis
-    ? "data-[state=open]:text-primary"
-    : "data-[state=open]:font-emphasis";
-
   return (
     <MenubarPrimitive.Trigger
       ref={ref}
       className={cn(
-        "flex cursor-default select-none items-center rounded-sm px-3 py-1.5 text-sm font-normal outline-none focus-visible:ring-1 focus-visible:ring-ring/50",
-        emphasisClass,
+        "flex cursor-default select-none items-center rounded-sm px-3 py-1.5 text-sm font-normal outline-none focus-visible:ring-1 focus-visible:ring-ring/50 data-[state=open]:bg-muted/50",
+        isBoldEmphasis ? "data-[state=open]:text-primary" : "data-[state=open]:text-accent-foreground",
         className
       )}
       {...props}
@@ -89,16 +85,12 @@ const MenubarSubTrigger = React.forwardRef<
   const baseWeight = viewAsUser?.fontWeight || 400;
   const isBoldEmphasis = baseWeight === 700;
   
-  const emphasisClass = isBoldEmphasis
-    ? "focus:text-primary data-[state=open]:text-primary"
-    : "focus:font-emphasis data-[state=open]:font-emphasis";
-
   return (
     <MenubarPrimitive.SubTrigger
       ref={ref}
       className={cn(
-        "flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none",
-        emphasisClass,
+        "flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-muted/50 data-[state=open]:bg-muted/50",
+        isBoldEmphasis ? "focus:text-primary data-[state=open]:text-primary" : "focus:text-accent-foreground data-[state=open]:text-accent-foreground",
         inset && "pl-8",
         className
       )}
@@ -161,16 +153,12 @@ const MenubarItem = React.forwardRef<
   const baseWeight = viewAsUser?.fontWeight || 400;
   const isBoldEmphasis = baseWeight === 700;
 
-  const emphasisClass = isBoldEmphasis
-    ? "focus:text-primary"
-    : "focus:font-emphasis";
-
   return (
   <MenubarPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-      emphasisClass,
+      "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-muted/50 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      isBoldEmphasis ? "focus:text-primary" : "focus:font-emphasis",
       inset && "pl-8",
       className
     )}
@@ -188,16 +176,12 @@ const MenubarCheckboxItem = React.forwardRef<
   const baseWeight = viewAsUser?.fontWeight || 400;
   const isBoldEmphasis = baseWeight === 700;
 
-  const emphasisClass = isBoldEmphasis
-    ? "focus:text-primary"
-    : "focus:font-emphasis";
-
   return (
     <MenubarPrimitive.CheckboxItem
       ref={ref}
       className={cn(
-        "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-        emphasisClass,
+        "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:bg-muted/50 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        isBoldEmphasis ? "focus:text-primary" : "focus:text-accent-foreground",
         className
       )}
       checked={checked}
@@ -222,16 +206,12 @@ const MenubarRadioItem = React.forwardRef<
   const baseWeight = viewAsUser?.fontWeight || 400;
   const isBoldEmphasis = baseWeight === 700;
 
-  const emphasisClass = isBoldEmphasis
-    ? "focus:text-primary"
-    : "focus:font-emphasis";
-
   return (
   <MenubarPrimitive.RadioItem
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-      emphasisClass,
+      "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:bg-muted/50 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      isBoldEmphasis ? "focus:text-primary" : "focus:text-accent-foreground",
       className
     )}
     {...props}
