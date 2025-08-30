@@ -16,7 +16,7 @@ export interface AppTab {
   description?: string;
   componentKey: 'team_members' | 'badges' | 'locations' | 'workstations' | 'templates' | 'admins' | 'pages' | 'tabs' | 'overview' | 'tasks' | 'notifications' | 'settings' | 'calendar' | 'calendars' | 'teams' | 'projects' | 'events';
   contextTeamId?: string;
-  workspaceId?: string;
+  workspaceId: string;
 }
 
 export interface AppPage {
@@ -31,7 +31,7 @@ export interface AppPage {
     users: string[]; // User IDs
     teams: string[]; // Team IDs
   };
-  workspaceId?: string;
+  workspaceId: string;
 }
 
 export interface AppSettings {
@@ -39,8 +39,8 @@ export interface AppSettings {
   tabs: AppTab[];
   calendarManagementLabel?: string;
   teamManagementLabel?: string;
-  preApprovedEmails?: Array<{ email: string; invitedBy: string; workspaceId: string; }>;
-  workspaceId?: string;
+  preApprovedEmails: Array<{ email: string; invitedBy: string; workspaceId: string; }>;
+  workspaceId: string;
 }
 
 export interface Attendee {

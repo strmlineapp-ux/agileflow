@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -125,9 +124,10 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
   const preApprovedEmails = useMemo(() => appSettings.preApprovedEmails || [], [appSettings]);
 
   const handleAddPreApprovedEmail = () => {
+    if(!viewAsUser) return;
     const trimmedEmail = newUserEmail.trim();
     if (trimmedEmail && !preApprovedEmails.some(item => item.email === trimmedEmail)) {
-      const updatedEmails = [...preApprovedEmails, { email: trimmedEmail, invitedBy: viewAsUser.userId }];
+      const updatedEmails = [...preApprovedEmails, { email: trimmedEmail, invitedBy: viewAsUser.userId, workspaceId: viewAsUser.workspaceId }];
       updateAppSettings({ preApprovedEmails: updatedEmails });
       setNewUserEmail('');
     }
@@ -910,6 +910,7 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
 // #endregion
 
     
+
 
 
 

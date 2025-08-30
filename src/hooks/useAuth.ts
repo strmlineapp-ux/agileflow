@@ -8,6 +8,7 @@ import { type User, type Workspace } from '@/types';
 import { getAuthInstance, getDb, getCurrentWorkspaceId } from '@/lib/firebase';
 import { useToast } from './use-toast';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import { corePages, coreTabs } from '@/lib/core-data';
 
 const COMMON_EMAIL_DOMAINS = new Set([
     'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com', 'icloud.com', 'msn.com'
@@ -48,9 +49,9 @@ export function useAuth() {
                 setRealUser(userData);
             } else {
                 const workspaceId = getCurrentWorkspaceId();
-                const appSettingsRef = doc(db, 'app-settings', 'global');
+                const appSettingsRef = doc(db, 'app-settings', workspaceId);
                 const appSettingsDoc = await getDoc(appSettingsRef);
-                const preApprovedEmails = (appSettingsDoc.data()?.preApprovedEmails || []).filter((item: {email: string, workspaceId: string}) => item.workspaceId === workspaceId).map((item: {email: string}) => item.email);
+                const preApprovedEmails = (appSettingsDoc.data()?.preApprovedEmails || []).map((item: {email: string}) => item.email);
                 
                 const isPreApproved = preApprovedEmails.includes(firebaseUser.email!);
                 
@@ -101,6 +102,15 @@ export function useAuth() {
                         createdAt: new Date(),
                     };
                     batch.set(workspaceDocRef, newWorkspace);
+
+                    // Create workspace-specific app settings
+                    const newAppSettings = {
+                        pages: corePages.map(p => ({...p, workspaceId})),
+                        tabs: coreTabs.map(t => ({...t, workspaceId})),
+                        preApprovedEmails: [],
+                        workspaceId,
+                    };
+                    batch.set(appSettingsRef, newAppSettings);
                 }
                 
                 await batch.commit();
