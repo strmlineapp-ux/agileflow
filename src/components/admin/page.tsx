@@ -497,7 +497,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                     <TabsContent value="users" className="m-0 flex flex-col flex-1 min-h-0">
                         {renderSearchControl()}
                         <div className="flex-1 overflow-hidden">
-                          <ScrollArea className="h-64">
+                          <ScrollArea className="h-full max-h-64">
                             {filteredUsers.length > 0 ? (
                               <div className="p-1 space-y-1">
                                   {filteredUsers.map(user => {
@@ -519,7 +519,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                     <TabsContent value="teams" className="m-0 flex flex-col flex-1 min-h-0">
                         {renderSearchControl()}
                          <div className="flex-1 overflow-hidden">
-                          <ScrollArea className="h-64">
+                          <ScrollArea className="h-full max-h-64">
                             {filteredTeams.length > 0 ? (
                               <div className="p-1 space-y-1">
                                   {filteredTeams.map(team => {
@@ -606,7 +606,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
           />
         </div>
         <div className="flex-1 overflow-hidden">
-          <ScrollArea className="max-h-64">
+          <ScrollArea className="h-full max-h-64">
             {filteredTabs.length > 0 ? (
               <div className="p-1 space-y-1">
                   {filteredTabs.map(tab => {
@@ -947,6 +947,7 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
     
 
     
+
 
 
 
