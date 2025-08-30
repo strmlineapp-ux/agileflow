@@ -22,7 +22,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { TaskStatusBadge } from './task-status-badge';
-import { Badge as UiBadge } from '@/components/ui/badge';
+import { Badge as UiBadge } from '../ui/badge';
 import { useUser } from '@/context/user-context';
 import { PriorityBadge } from '../calendar/priority-badge';
 import { GoogleSymbol } from '../icons/google-symbol';
@@ -159,7 +159,7 @@ export function TaskList({ tasks, limit, onEdit, onDelete }: { tasks: Task[], li
                     <div key={status}>
                         <h3 className="text-xl mb-4 flex items-center gap-2 text-foreground">
                            <span>{statusLabels[status]}</span>
-                           <UiBadge variant="secondary">{tasksInGroup.length}</UiBadge>
+                           <UiBadge variant="outline">{tasksInGroup.length}</UiBadge>
                         </h3>
                         {renderTable(tasksInGroup)}
                     </div>

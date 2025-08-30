@@ -12,9 +12,9 @@ type StatusConfig = {
 const statusConfig: Record<Task['status'], StatusConfig> = {
   not_started: { label: 'Not Started', variant: 'outline', className: "text-foreground" },
   in_progress: { label: 'In Progress', variant: 'default', className: 'bg-primary text-primary-foreground' },
-  awaiting_review: { label: 'Awaiting Review', variant: 'secondary', className: 'bg-orange-500 text-white border-transparent hover:bg-orange-500/90' },
-  completed: { label: 'Completed', variant: 'secondary', className: 'bg-green-600 text-white border-transparent hover:bg-green-600/90' },
-  blocked: { label: 'Blocked', variant: 'destructive', className: 'bg-destructive text-destructive-foreground' },
+  awaiting_review: { label: 'Awaiting Review', variant: 'default', className: 'bg-orange-500 text-white border-transparent hover:bg-orange-500/90' },
+  completed: { label: 'Completed', variant: 'default', className: 'bg-green-600 text-white border-transparent hover:bg-green-600/90' },
+  blocked: { label: 'Blocked', variant: 'default', className: 'bg-destructive text-destructive-foreground' },
 };
 
 export function TaskStatusBadge({ status }: { status: Task['status'] }) {
