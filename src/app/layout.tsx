@@ -57,6 +57,17 @@ function AppBody({ children }: { children: React.ReactNode }) {
             
             const fontWeight = viewAsUser.fontWeight || 400;
             document.body.style.fontWeight = fontWeight.toString();
+
+            const emphasisWeightMap: { [key: number]: number } = {
+                100: 300, // Thin -> Light
+                300: 400, // Light -> Normal
+                400: 500, // Normal -> Medium
+                500: 700, // Medium -> Bold
+                700: 700  // Bold -> Bold (no change)
+            };
+            const emphasisWeight = emphasisWeightMap[fontWeight] || 500;
+            root.style.setProperty('--font-weight-emphasis', emphasisWeight.toString());
+            
             root.style.setProperty('--global-icon-weight', fontWeight.toString());
             
             const iconGrade = viewAsUser.iconGrade || 0;
