@@ -61,12 +61,16 @@ const MenubarTrigger = React.forwardRef<
   const baseWeight = viewAsUser?.fontWeight || 400;
   const isBoldEmphasis = baseWeight === 700;
 
+  const emphasisClass = isBoldEmphasis
+    ? "data-[state=open]:text-primary"
+    : "data-[state=open]:font-emphasis";
+
   return (
     <MenubarPrimitive.Trigger
       ref={ref}
       className={cn(
         "flex cursor-default select-none items-center rounded-sm px-3 py-1.5 text-sm font-normal outline-none focus-visible:ring-1 focus-visible:ring-ring/50",
-        !isBoldEmphasis ? "data-[state=open]:font-emphasis" : "data-[state=open]:text-primary",
+        emphasisClass,
         className
       )}
       {...props}
@@ -85,12 +89,16 @@ const MenubarSubTrigger = React.forwardRef<
   const baseWeight = viewAsUser?.fontWeight || 400;
   const isBoldEmphasis = baseWeight === 700;
   
+  const emphasisClass = isBoldEmphasis
+    ? "focus:text-primary data-[state=open]:text-primary"
+    : "focus:font-emphasis data-[state=open]:font-emphasis";
+
   return (
     <MenubarPrimitive.SubTrigger
       ref={ref}
       className={cn(
         "flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none",
-        !isBoldEmphasis ? "focus:font-emphasis data-[state=open]:font-emphasis" : "focus:text-primary data-[state=open]:text-primary",
+        emphasisClass,
         inset && "pl-8",
         className
       )}
@@ -153,12 +161,16 @@ const MenubarItem = React.forwardRef<
   const baseWeight = viewAsUser?.fontWeight || 400;
   const isBoldEmphasis = baseWeight === 700;
 
+  const emphasisClass = isBoldEmphasis
+    ? "focus:text-primary"
+    : "focus:font-emphasis";
+
   return (
   <MenubarPrimitive.Item
     ref={ref}
     className={cn(
       "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-      !isBoldEmphasis ? "focus:font-emphasis" : "focus:text-primary",
+      emphasisClass,
       inset && "pl-8",
       className
     )}
@@ -176,12 +188,16 @@ const MenubarCheckboxItem = React.forwardRef<
   const baseWeight = viewAsUser?.fontWeight || 400;
   const isBoldEmphasis = baseWeight === 700;
 
+  const emphasisClass = isBoldEmphasis
+    ? "focus:text-primary"
+    : "focus:font-emphasis";
+
   return (
     <MenubarPrimitive.CheckboxItem
       ref={ref}
       className={cn(
         "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-        !isBoldEmphasis ? "focus:font-emphasis" : "focus:text-primary",
+        emphasisClass,
         className
       )}
       checked={checked}
@@ -206,12 +222,16 @@ const MenubarRadioItem = React.forwardRef<
   const baseWeight = viewAsUser?.fontWeight || 400;
   const isBoldEmphasis = baseWeight === 700;
 
+  const emphasisClass = isBoldEmphasis
+    ? "focus:text-primary"
+    : "focus:font-emphasis";
+
   return (
   <MenubarPrimitive.RadioItem
     ref={ref}
     className={cn(
       "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-      !isBoldEmphasis ? "focus:font-emphasis" : "focus:text-primary",
+      emphasisClass,
       className
     )}
     {...props}

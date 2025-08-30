@@ -30,12 +30,16 @@ const DropdownMenuSubTrigger = React.forwardRef<
   const baseWeight = viewAsUser?.fontWeight || 400;
   const isBoldEmphasis = baseWeight === 700;
 
+  const emphasisClass = isBoldEmphasis
+    ? "focus:text-primary data-[state=open]:text-primary"
+    : "focus:font-emphasis data-[state=open]:font-emphasis";
+
   return (
     <DropdownMenuPrimitive.SubTrigger
       ref={ref}
       className={cn(
         "flex cursor-default gap-2 select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-transparent data-[state=open]:bg-transparent [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
-        !isBoldEmphasis ? "focus:font-emphasis data-[state=open]:font-emphasis" : "focus:text-primary data-[state=open]:text-primary",
+        emphasisClass,
         inset && "pl-8",
         className
       )}
@@ -92,13 +96,17 @@ const DropdownMenuItem = React.forwardRef<
   const { viewAsUser } = useUser();
   const baseWeight = viewAsUser?.fontWeight || 400;
   const isBoldEmphasis = baseWeight === 700;
+
+  const emphasisClass = isBoldEmphasis
+    ? "focus:text-primary"
+    : "focus:font-emphasis";
   
   return (
     <DropdownMenuPrimitive.Item
       ref={ref}
       className={cn(
         "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 focus:bg-transparent",
-        !isBoldEmphasis ? "focus:font-emphasis" : "focus:text-primary",
+        emphasisClass,
         inset && "pl-8",
         className
       )}
@@ -115,13 +123,17 @@ const DropdownMenuCheckboxItem = React.forwardRef<
   const { viewAsUser } = useUser();
   const baseWeight = viewAsUser?.fontWeight || 400;
   const isBoldEmphasis = baseWeight === 700;
+
+  const emphasisClass = isBoldEmphasis
+    ? "focus:text-primary"
+    : "focus:font-emphasis";
   
   return (
     <DropdownMenuPrimitive.CheckboxItem
       ref={ref}
       className={cn(
         "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50 focus:bg-transparent",
-        !isBoldEmphasis ? "focus:font-emphasis" : "focus:text-primary",
+        emphasisClass,
         className
       )}
       checked={checked}
@@ -146,12 +158,17 @@ const DropdownMenuRadioItem = React.forwardRef<
   const { viewAsUser } = useUser();
   const baseWeight = viewAsUser?.fontWeight || 400;
   const isBoldEmphasis = baseWeight === 700;
+
+  const emphasisClass = isBoldEmphasis
+    ? "focus:text-primary"
+    : "focus:font-emphasis";
+
   return (
     <DropdownMenuPrimitive.RadioItem
       ref={ref}
       className={cn(
         "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50 focus:bg-transparent",
-        !isBoldEmphasis ? "focus:font-emphasis" : "focus:text-primary",
+        emphasisClass,
         className
       )}
       {...props}
