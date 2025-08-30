@@ -26,11 +26,16 @@ const DropdownMenuSubTrigger = React.forwardRef<
     inset?: boolean
   }
 >(({ className, inset, children, ...props }, ref) => {
+  const { viewAsUser } = useUser();
+  const baseWeight = viewAsUser?.fontWeight || 400;
+  const isBoldEmphasis = baseWeight === 700;
+
   return (
     <DropdownMenuPrimitive.SubTrigger
       ref={ref}
       className={cn(
-        "flex cursor-default gap-2 select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent data-[state=open]:bg-accent [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+        "flex cursor-default gap-2 select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-transparent [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+        !isBoldEmphasis ? "focus:font-emphasis" : "focus:text-primary",
         inset && "pl-8",
         className
       )}
@@ -84,11 +89,16 @@ const DropdownMenuItem = React.forwardRef<
     inset?: boolean
   }
 >(({ className, inset, ...props }, ref) => {
+  const { viewAsUser } = useUser();
+  const baseWeight = viewAsUser?.fontWeight || 400;
+  const isBoldEmphasis = baseWeight === 700;
+  
   return (
     <DropdownMenuPrimitive.Item
       ref={ref}
       className={cn(
-        "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+        "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+        !isBoldEmphasis ? "focus:font-emphasis" : "focus:text-primary",
         inset && "pl-8",
         className
       )}
@@ -102,12 +112,16 @@ const DropdownMenuCheckboxItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.CheckboxItem>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.CheckboxItem>
 >(({ className, children, checked, ...props }, ref) => {
+  const { viewAsUser } = useUser();
+  const baseWeight = viewAsUser?.fontWeight || 400;
+  const isBoldEmphasis = baseWeight === 700;
   
   return (
     <DropdownMenuPrimitive.CheckboxItem
       ref={ref}
       className={cn(
-        "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        !isBoldEmphasis ? "focus:font-emphasis" : "focus:text-primary",
         className
       )}
       checked={checked}
@@ -129,11 +143,15 @@ const DropdownMenuRadioItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.RadioItem>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.RadioItem>
 >(({ className, children, ...props }, ref) => {
+  const { viewAsUser } = useUser();
+  const baseWeight = viewAsUser?.fontWeight || 400;
+  const isBoldEmphasis = baseWeight === 700;
   return (
     <DropdownMenuPrimitive.RadioItem
       ref={ref}
       className={cn(
-        "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        !isBoldEmphasis ? "focus:font-emphasis" : "focus:text-primary",
         className
       )}
       {...props}
