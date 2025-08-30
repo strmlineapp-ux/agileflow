@@ -125,9 +125,8 @@ export function ItemSelectionPopover({
                         key={item.id}
                         className={cn(
                           "flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer",
-                          isSelected ? "" : "text-muted-foreground"
+                          !isSelected && "text-muted-foreground"
                         )}
-                        style={itemStyle}
                         onClick={() => onSelectionChange(activeTab, item.id)}
                       >
                         {item.iconType === 'avatar' ? (
@@ -138,7 +137,7 @@ export function ItemSelectionPopover({
                         ) : (
                           <GoogleSymbol name={item.icon} style={iconStyle} />
                         )}
-                        <span>{item.name}</span>
+                        <span style={itemStyle}>{item.name}</span>
                       </div>
                     );
                   })
