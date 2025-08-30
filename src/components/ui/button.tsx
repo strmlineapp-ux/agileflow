@@ -1,12 +1,15 @@
 
+'use client';
+
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 
-import { cn } from "@/lib/utils"
+import { cn, getEmphasisStyle } from "@/lib/utils"
+import { useUser } from "@/context/user-context";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
@@ -19,7 +22,7 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground",
         ghost: "text-muted-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        circle: "rounded-full hover:bg-muted/50",
+        circle: "rounded-full",
       },
       size: {
         default: "h-10 px-4 py-2",
@@ -44,11 +47,24 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
+    const { viewAsUser } = useUser();
+    const [isHovered, setIsHovered] = React.useState(false);
     const Comp = asChild ? Slot : "button"
+    
+    const baseWeight = viewAsUser?.fontWeight || 400;
+    const hasText = !!props.children && typeof props.children === 'string';
+    const emphasisStyle = getEmphasisStyle({ baseWeight, hasText, isSelected: isHovered });
+    
+    // For ghost variant, we want the color to change. For others, we only want font-weight.
+    const styleToApply = variant === 'ghost' ? emphasisStyle : { fontWeight: emphasisStyle.fontWeight };
+
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        style={styleToApply}
         {...props}
       />
     )
