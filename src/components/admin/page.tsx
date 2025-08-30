@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -614,7 +613,7 @@ export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
     }, [addPage, toast]);
 
     const handleAddPage = () => {
-        addPage({} as AppPage);
+        addPage({});
     };
 
     const handleDeletePage = (pageId: string) => {
@@ -816,3 +815,5 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
     );
 };
 // #endregion
+
+    

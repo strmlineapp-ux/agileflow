@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -447,17 +446,32 @@ export function useData(realUser: User | null, authLoading: boolean) {
     setAppSettings(current => ({ ...current, ...settings }));
   }, [realUser]);
   
-  const addPage = useCallback(async (pageData: Omit<AppPage, 'id'>) => {
+  const addPage = useCallback(async (pageData: Partial<AppPage>) => {
     if (!realUser) return;
     const db = getDb();
-    const newPageData = { 
-        ...pageData, 
-        workspaceId: realUser.workspaceId,
-        owner: { type: 'user', id: realUser.userId },
-        description: '',
+    const tempId = crypto.randomUUID();
+    const newPageData: Omit<AppPage, 'id'> = {
+      name: 'New Page',
+      icon: 'article',
+      color: 'hsl(220, 13%, 47%)',
+      path: `/dashboard/page/${tempId}`,
+      description: '',
+      isDynamic: false,
+      associatedTabs: [],
+      access: { users: [], teams: [] },
+      owner: { type: 'user', id: realUser.userId },
+      workspaceId: realUser.workspaceId,
+      ...pageData,
     };
+    
     const docRef = await addDoc(collection(db, 'pages'), newPageData);
-    const newPage = { ...newPageData, id: docRef.id };
+    
+    // Now update path with real ID
+    const finalPageData: Partial<AppPage> = { path: `/dashboard/page/${docRef.id}` };
+    await updateDoc(docRef, finalPageData);
+
+    const newPage: AppPage = { ...newPageData, ...finalPageData, id: docRef.id };
+
     setAllPages(current => [...current, newPage]);
     setAppSettings(current => ({ ...current, pages: [...current.pages, newPage] }));
   }, [realUser]);
@@ -753,3 +767,6 @@ export function useData(realUser: User | null, authLoading: boolean) {
     seedDatabase, // Expose seed function
   };
 }
+
+
+    
