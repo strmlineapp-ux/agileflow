@@ -70,6 +70,7 @@ export function CardTemplate({
             descriptionAction ? "cursor-pointer hover:text-primary" : "text-muted-foreground"
         )}
         onClick={descriptionAction}
+        onPointerDown={(e) => e.stopPropagation()}
       >
         {entity.description}
       </p>
