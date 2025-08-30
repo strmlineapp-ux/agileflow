@@ -4,7 +4,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { cn, getEmphasisStyle } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -64,7 +64,11 @@ export function Sidebar() {
                       <Link
                         href={adminPage.path}
                         className='flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors md:h-8 md:w-8'
-                        style={getEmphasisStyle(baseWeight, false, usePathname().startsWith(adminPage.path))}
+                        style={getEmphasisStyle({
+                            baseWeight, 
+                            hasText: false, 
+                            isSelected: usePathname().startsWith(adminPage.path)
+                        })}
                       >
                         <GoogleSymbol name={adminPage.icon} className="text-4xl" />
                         <span className="sr-only">{adminPage.name}</span>
@@ -90,7 +94,11 @@ export function Sidebar() {
                       <Link
                         href={item.path}
                         className='relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors md:h-8 md:w-8'
-                        style={getEmphasisStyle(baseWeight, false, isActive)}
+                        style={getEmphasisStyle({
+                            baseWeight, 
+                            hasText: false, 
+                            isSelected: isActive
+                        })}
                       >
                         <GoogleSymbol name={item.icon} className="text-4xl" />
                         {isNotifications && unreadCount > 0 && (
@@ -116,7 +124,11 @@ export function Sidebar() {
                   <Link
                     href={notificationsPage.path}
                     className='relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors md:h-8 md:w-8'
-                    style={getEmphasisStyle(baseWeight, false, usePathname().startsWith(notificationsPage.path))}
+                     style={getEmphasisStyle({
+                        baseWeight, 
+                        hasText: false, 
+                        isSelected: usePathname().startsWith(notificationsPage.path)
+                    })}
                   >
                     <GoogleSymbol name={notificationsPage.icon} className="text-4xl" />
                     {unreadCount > 0 && (

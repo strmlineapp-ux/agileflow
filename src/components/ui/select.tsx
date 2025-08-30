@@ -120,15 +120,18 @@ const SelectItem = React.forwardRef<
   const { viewAsUser } = useUser();
   const baseWeight = viewAsUser?.fontWeight || 400;
   const isSelected = props['aria-selected'];
-  const selectedStyle = getEmphasisStyle(baseWeight, true, isSelected);
+  const selectedStyle = getEmphasisStyle({baseWeight, hasText: true, isSelected});
+  const [isHovered, setIsHovered] = React.useState(false);
 
   return (
     <SelectPrimitive.Item
       ref={ref}
       className={cn(
-        "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         className
       )}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       {...props}
     >
       <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
@@ -138,7 +141,7 @@ const SelectItem = React.forwardRef<
       </span>
 
       <SelectPrimitive.ItemText>
-        <span style={selectedStyle}>{children}</span>
+        <span style={isSelected ? selectedStyle : (isHovered ? getEmphasisStyle({baseWeight, hasText: true, isSelected: true}) : {})}>{children}</span>
       </SelectPrimitive.ItemText>
     </SelectPrimitive.Item>
   )
