@@ -499,27 +499,43 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                     
                     <TabsContent value="users" className="m-0">
                         {renderSearchControl()}
-                        <ScrollArea className="max-h-64"><div className="p-1 space-y-1">{filteredUsers.map(user => {
-                          const isSelected = access.users.includes(user.userId);
-                          return (
-                            <div key={user.userId} className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer" style={{ color: isSelected ? 'hsl(var(--primary))' : undefined }} onClick={() => handleToggle('users', user.userId)}>
-                              <Avatar className="h-7 w-7"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
-                              <span>{user.displayName}</span>
+                        <ScrollArea className="max-h-64">
+                          {filteredUsers.length > 0 ? (
+                            <div className="p-1 space-y-1">
+                                {filteredUsers.map(user => {
+                                const isSelected = access.users.includes(user.userId);
+                                return (
+                                    <div key={user.userId} className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer" style={{ color: isSelected ? 'hsl(var(--primary))' : undefined }} onClick={() => handleToggle('users', user.userId)}>
+                                    <Avatar className="h-7 w-7"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
+                                    <span>{user.displayName}</span>
+                                    </div>
+                                )
+                                })}
                             </div>
-                          )
-                        })}</div></ScrollArea>
+                          ) : (
+                            <p className="text-center text-sm text-muted-foreground p-4">No users found.</p>
+                          )}
+                        </ScrollArea>
                     </TabsContent>
                     <TabsContent value="teams" className="m-0">
                         {renderSearchControl()}
-                        <ScrollArea className="max-h-64"><div className="p-1 space-y-1">{filteredTeams.map(team => {
-                          const isSelected = access.teams.includes(team.id);
-                          return (
-                            <div key={team.id} className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer" style={{ color: isSelected ? team.color : undefined }} onClick={() => handleToggle('teams', team.id)}>
-                              <GoogleSymbol name={team.icon} />
-                              <span>{team.name}</span>
+                        <ScrollArea className="max-h-64">
+                          {filteredTeams.length > 0 ? (
+                            <div className="p-1 space-y-1">
+                                {filteredTeams.map(team => {
+                                const isSelected = access.teams.includes(team.id);
+                                return (
+                                    <div key={team.id} className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer" style={{ color: isSelected ? team.color : undefined }} onClick={() => handleToggle('teams', team.id)}>
+                                    <GoogleSymbol name={team.icon} />
+                                    <span>{team.name}</span>
+                                    </div>
+                                )
+                                })}
                             </div>
-                          )
-                        })}</div></ScrollArea>
+                          ) : (
+                             <p className="text-center text-sm text-muted-foreground p-4">No teams found.</p>
+                          )}
+                        </ScrollArea>
                     </TabsContent>
                 </Tabs>
             </PopoverContent>
@@ -574,23 +590,27 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
           />
         </div>
         <ScrollArea className="max-h-64">
-          <div className="p-1 space-y-1">
-            {filteredTabs.map(tab => {
-              const isAssociated = (page.associatedTabs || []).includes(tab.id);
-              
-              return (
-                <div 
-                    key={tab.id} 
-                    className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer")}
-                    style={{ color: isAssociated ? tab.color : undefined }}
-                    onClick={() => handleToggle(tab.id)}
-                >
-                    <GoogleSymbol name={tab.icon} />
-                    <span>{tab.name}</span>
-                </div>
-              );
-            })}
-          </div>
+          {filteredTabs.length > 0 ? (
+            <div className="p-1 space-y-1">
+                {filteredTabs.map(tab => {
+                const isAssociated = (page.associatedTabs || []).includes(tab.id);
+                
+                return (
+                    <div 
+                        key={tab.id} 
+                        className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer")}
+                        style={{ color: isAssociated ? tab.color : undefined }}
+                        onClick={() => handleToggle(tab.id)}
+                    >
+                        <GoogleSymbol name={tab.icon} />
+                        <span>{tab.name}</span>
+                    </div>
+                );
+                })}
+            </div>
+          ) : (
+            <p className="text-center text-sm text-muted-foreground p-4">No tabs found.</p>
+          )}
         </ScrollArea>
       </PopoverContent>
     </Popover>
@@ -609,7 +629,19 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
     const isPinned = page.isSystemPage;
 
     const displayPath = page.isDynamic ? `${page.path}/[...]` : page.path;
-    const { name, description, ...entityRest } = page;
+    const { name, ...entityRest } = page;
+
+    const descriptionContent = (
+      <div onPointerDown={(e) => e.stopPropagation()}>
+          <InlineEditor
+              value={page.description || ''}
+              onSave={(newDesc) => onUpdate(page.id, { description: newDesc })}
+              disabled={!canManage}
+              placeholder="Click to add a description..."
+              className="text-sm text-muted-foreground"
+          />
+      </div>
+    );
 
     return (
         <CardTemplate
@@ -621,17 +653,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
             isExpanded={isExpanded}
             onToggleExpand={onToggleExpand}
             descriptionAction={isPinned ? undefined : () => onUpdate(page.id, { isDynamic: !page.isDynamic })}
-            body={
-                <div onPointerDown={(e) => e.stopPropagation()}>
-                    <InlineEditor
-                        value={description || ''}
-                        onSave={(newDesc) => onUpdate(page.id, { description: newDesc })}
-                        disabled={!canManage}
-                        placeholder="Click to add a description..."
-                        className="text-sm text-muted-foreground"
-                    />
-                </div>
-            }
+            body={descriptionContent}
             headerControls={
                 <div className="flex items-center">
                     {!isPinned && <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />}
@@ -904,6 +926,7 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
 
 
     
+
 
 
 
