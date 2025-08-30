@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
@@ -345,7 +344,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                             </PopoverTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                            <p>Border Radius: <span className="font-semibold">{currentRadius.toFixed(2)}rem</span></p>
+                                            <p>Border Radius: <span className="font-semibold">{currentRadius.toFixed(2)}rem</span>. Modifier+Click to reset.</p>
                                         </TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
@@ -477,3 +476,5 @@ export function UserManagement({ showSearch = false, isActive = false }: { showS
         </div>
     )
 }
+
+    
