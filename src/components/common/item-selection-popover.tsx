@@ -104,8 +104,8 @@ export function ItemSelectionPopover({
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
               placeholder={`Search ${activeTab}...`}
-              autoFocus={true}
               isActive={true}
+              autoFocus={true}
               showColorFilter={showColorFilter}
               onColorSelect={setColorFilter}
               activeColorFilter={colorFilter}
@@ -123,10 +123,7 @@ export function ItemSelectionPopover({
                     return (
                       <div
                         key={item.id}
-                        className={cn(
-                          "flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer",
-                          !isSelected && "text-muted-foreground"
-                        )}
+                        className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer text-muted-foreground"
                         onClick={() => onSelectionChange(activeTab, item.id)}
                       >
                         {item.iconType === 'avatar' ? (
@@ -152,3 +149,4 @@ export function ItemSelectionPopover({
     </Popover>
   );
 }
+

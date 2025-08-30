@@ -121,7 +121,7 @@ export const getSelectedStyle = (baseWeight: number, hasText: boolean): React.CS
     500: 700, // Medium -> Bold
   };
 
-  const newWeight = weightMap[baseWeight];
+  const newWeight = weightMap[baseWeight] || baseWeight;
 
   if (baseWeight >= 700) { // This is the "Bold" case
     if (hasText) {
@@ -132,7 +132,7 @@ export const getSelectedStyle = (baseWeight: number, hasText: boolean): React.CS
     }
   }
 
-  // For other weights, just increase font weight. Color remains the same.
-  return { fontWeight: newWeight || baseWeight };
+  // For other weights, just increase font weight. Color remains the default muted-foreground.
+  return { fontWeight: newWeight };
 };
 
