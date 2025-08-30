@@ -29,7 +29,8 @@ export const coreTabs: Omit<AppTab, 'workspaceId'>[] = [
 ];
 
 // Core pages that are fundamental to the application's navigation.
-export const corePages: Omit<AppPage, 'workspaceId'>[] = [
+// These are not stored in Firestore, but are merged with user-created pages.
+export const systemPages: Omit<AppPage, 'workspaceId'>[] = [
     {
         id: 'page-admin-management',
         name: 'Admin',
@@ -39,6 +40,7 @@ export const corePages: Omit<AppPage, 'workspaceId'>[] = [
         isDynamic: false,
         associatedTabs: ['tab-admins', 'tab-admin-pages', 'tab-admin-tabs'],
         access: { users: [], teams: [] }, // Special-cased in hasAccess to only allow isAdmin
+        isSystemPage: true,
     },
     {
         id: 'page-overview',
@@ -49,6 +51,7 @@ export const corePages: Omit<AppPage, 'workspaceId'>[] = [
         isDynamic: false,
         associatedTabs: ['tab-overview'],
         access: { users: [], teams: [] }, // Public
+        isSystemPage: true,
     },
     {
         id: 'page-calendar',
@@ -59,6 +62,7 @@ export const corePages: Omit<AppPage, 'workspaceId'>[] = [
         isDynamic: false,
         associatedTabs: ['tab-calendar'],
         access: { users: [], teams: [] }, // Public
+        isSystemPage: true,
     },
     {
         id: 'page-tasks',
@@ -69,6 +73,7 @@ export const corePages: Omit<AppPage, 'workspaceId'>[] = [
         isDynamic: false,
         associatedTabs: ['tab-tasks'],
         access: { users: [], teams: [] },
+        isSystemPage: true,
     },
     {
         id: 'page-notifications',
@@ -79,6 +84,7 @@ export const corePages: Omit<AppPage, 'workspaceId'>[] = [
         isDynamic: false,
         associatedTabs: ['tab-notifications'],
         access: { users: [], teams: [] }, // Public
+        isSystemPage: true,
     },
     {
         id: 'page-settings',
@@ -89,5 +95,6 @@ export const corePages: Omit<AppPage, 'workspaceId'>[] = [
         isDynamic: false,
         associatedTabs: ['tab-settings'],
         access: { users: [], teams: [] }, // Public
+        isSystemPage: true,
     },
 ];
