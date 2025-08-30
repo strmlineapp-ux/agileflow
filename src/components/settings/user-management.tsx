@@ -96,20 +96,29 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
     const [isCalendarViewPopoverOpen, setIsCalendarViewPopoverOpen] = useState(false);
     const [isTimeFormatPopoverOpen, setIsTimeFormatPopoverOpen] = useState(false);
     
-    const handleSetPrimaryColor = (color: string | null) => {
-      updateUser(user.userId, { primaryColor: color });
-    }
+    const handleSettingChange = (
+      e: React.MouseEvent,
+      field: keyof User,
+      // The value to use for a normal click (e.g., toggling a boolean)
+      // Can be a direct value or a function that receives the current value.
+      clickValue: any | ((currentValue: any) => any),
+      // The value to use for a modifier+click (resetting to default)
+      resetValue: any,
+    ) => {
+        const isModifierClick = e.altKey || e.ctrlKey || e.metaKey || e.shiftKey;
+        
+        if (isModifierClick) {
+            e.preventDefault();
+            updateUser(user.userId, { [field]: resetValue });
+        } else {
+            const newValue = typeof clickValue === 'function' ? clickValue(user[field]) : clickValue;
+            updateUser(user.userId, { [field]: newValue });
+        }
+    };
     
     const handleThemeChange = () => {
         const newTheme = user.theme === 'dark' ? 'light' : 'dark';
         updateUser(user.userId, { theme: newTheme });
-    }
-
-    const handleResetColors = (e: React.MouseEvent) => {
-        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
-            e.preventDefault();
-            updateUser(user.userId, { primaryColor: null });
-        }
     }
     
     const handleFontWeightChange = (value: number[]) => {
@@ -214,7 +223,13 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" style={{ color: 'hsl(var(--primary))' }} onClick={handleResetColors}>
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="icon" 
+                                                    className="h-9 w-9 shrink-0" 
+                                                    style={{ color: 'hsl(var(--primary))' }}
+                                                    onClick={(e) => handleSettingChange(e, 'primaryColor', null, null)}
+                                                >
                                                     <GoogleSymbol name="radio_button_checked" />
                                                 </Button>
                                             </PopoverTrigger>
@@ -226,7 +241,11 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                     className="w-auto p-4" 
                                     onPointerDownCapture={(e) => e.stopPropagation()}
                                 >
-                                    <CustomColorPicker colorValue={user.primaryColor || null} onUpdate={handleSetPrimaryColor} onClose={() => setIsPrimaryColorPopoverOpen(false)} />
+                                    <CustomColorPicker 
+                                        colorValue={user.primaryColor || null} 
+                                        onUpdate={(color) => updateUser(user.userId, { primaryColor: color })} 
+                                        onClose={() => setIsPrimaryColorPopoverOpen(false)} 
+                                    />
                                 </PopoverContent>
                             </Popover>
                             
@@ -255,15 +274,12 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="icon" onClick={(e) => {
-                                            if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { e.preventDefault(); updateUser(user.userId, { highContrast: false }); }
-                                            else { updateUser(user.userId, { highContrast: !user.highContrast }); }
-                                        }} className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground">
+                                        <Button variant="ghost" size="icon" onClick={(e) => handleSettingChange(e, 'highContrast', !user.highContrast, false)} className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground">
                                             <GoogleSymbol name="contrast" />
                                         </Button>
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                        <p>High Contrast: <span className="font-semibold">{user.highContrast ? 'On' : 'Off'}</span></p>
+                                        <p>High Contrast: <span className="font-semibold">{user.highContrast ? 'On' : 'Off'}</span>. Modifier+Click to reset.</p>
                                     </TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>
@@ -271,15 +287,12 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                             <TooltipProvider>
                                 <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" onClick={(e) => {
-                                        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { e.preventDefault(); updateUser(user.userId, { iconFill: false }); }
-                                        else { updateUser(user.userId, { iconFill: !user.iconFill }); }
-                                     }} className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground">
+                                    <Button variant="ghost" size="icon" onClick={(e) => handleSettingChange(e, 'iconFill', !user.iconFill, false)} className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground">
                                         <GoogleSymbol name="opacity" />
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                    <p>Icon Fill: <span className="font-semibold">{user.iconFill ? 'On' : 'Off'}</span></p>
+                                    <p>Icon Fill: <span className="font-semibold">{user.iconFill ? 'On' : 'Off'}</span>. Modifier+Click to reset.</p>
                                 </TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>
@@ -289,13 +302,13 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <PopoverTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onClick={(e) => { if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { e.preventDefault(); updateUser(user.userId, { fontWeight: 400 }); } }}>
+                                      <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onClick={(e) => handleSettingChange(e, 'fontWeight', user.fontWeight, 400)}>
                                         <GoogleSymbol name="fitness_center" />
                                       </Button>
                                     </PopoverTrigger>
                                   </TooltipTrigger>
                                   <TooltipContent>
-                                    <p>Weight: <span className="font-semibold">{currentFontWeightLabel}</span></p>
+                                    <p>Weight: <span className="font-semibold">{currentFontWeightLabel}</span>. Modifier+Click to reset.</p>
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
@@ -315,13 +328,13 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onClick={(e) => { if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { e.preventDefault(); updateUser(user.userId, { iconGrade: -25 }); } }}>
+                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onClick={(e) => handleSettingChange(e, 'iconGrade', user.iconGrade, -25)}>
                                                     <GoogleSymbol name="tonality" />
                                                 </Button>
                                             </PopoverTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                            <p>Icon Grade: <span className="font-semibold">{currentIconGradeLabel}</span></p>
+                                            <p>Icon Grade: <span className="font-semibold">{currentIconGradeLabel}</span>. Modifier+Click to reset.</p>
                                         </TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
@@ -335,13 +348,13 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onClick={(e) => { if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { e.preventDefault(); updateUser(user.userId, { iconOpticalSize: 20 }); } }}>
+                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onClick={(e) => handleSettingChange(e, 'iconOpticalSize', user.iconOpticalSize, 20)}>
                                                     <GoogleSymbol name="visibility" />
                                                 </Button>
                                             </PopoverTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                            <p>Optical Size: <span className="font-semibold">{currentIconOpticalSizeLabel}</span></p>
+                                            <p>Optical Size: <span className="font-semibold">{currentIconOpticalSizeLabel}</span>. Modifier+Click to reset.</p>
                                         </TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
@@ -355,7 +368,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onClick={(e) => { if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { e.preventDefault(); updateUser(user.userId, { radius: 0.5 }); } }}>
+                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onClick={(e) => handleSettingChange(e, 'radius', user.radius, 0.5)}>
                                                     <GoogleSymbol name="rounded_corner" />
                                                 </Button>
                                             </PopoverTrigger>
@@ -375,13 +388,13 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onClick={(e) => { if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { e.preventDefault(); updateUser(user.userId, { defaultCalendarView: 'production-schedule' }); } }}>
+                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onClick={(e) => handleSettingChange(e, 'defaultCalendarView', user.defaultCalendarView, 'production-schedule')}>
                                                     <GoogleSymbol name="edit_calendar" />
                                                 </Button>
                                             </PopoverTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                            <p>Default Calendar View: <span className="font-semibold">{currentCalendarViewLabel}</span></p>
+                                            <p>Default Calendar View: <span className="font-semibold">{currentCalendarViewLabel}</span>. Modifier+Click to reset.</p>
                                         </TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
@@ -404,13 +417,13 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onClick={(e) => { if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { e.preventDefault(); updateUser(user.userId, { timeFormat: '12h' }); } }}>
+                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onClick={(e) => handleSettingChange(e, 'timeFormat', user.timeFormat, '12h')}>
                                                     <GoogleSymbol name="schedule" />
                                                 </Button>
                                             </PopoverTrigger>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                            <p>Time Format: <span className="font-semibold">{currentTimeFormatLabel}</span></p>
+                                            <p>Time Format: <span className="font-semibold">{currentTimeFormatLabel}</span>. Modifier+Click to reset.</p>
                                         </TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
@@ -431,15 +444,12 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                             <TooltipProvider>
                                 <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" onClick={(e) => {
-                                        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { e.preventDefault(); updateUser(user.userId, { easyBooking: false }); }
-                                        else { updateUser(user.userId, { easyBooking: !user.easyBooking }); }
-                                    }} className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground">
+                                    <Button variant="ghost" size="icon" onClick={(e) => handleSettingChange(e, 'easyBooking', !user.easyBooking, false)} className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground">
                                         <GoogleSymbol name={user.easyBooking ? 'toggle_on' : 'toggle_off'} />
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                    <p>Easy Booking: <span className="font-semibold">{user.easyBooking ? 'On' : 'Off'}</span>. Click empty calendar slots to quickly create events.</p>
+                                    <p>Easy Booking: <span className="font-semibold">{user.easyBooking ? 'On' : 'Off'}</span>. Click empty calendar slots to quickly create events. Modifier+Click to reset.</p>
                                 </TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>
