@@ -4,7 +4,7 @@
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useUser } from '@/context/user-context';
-import { type User, type AdminGroup, type AppPage, type AppTab, type Team } from '@/types';
+import { type User, type AdminGroup, type AppPage, type AppTab, type Team, type PreApprovedEmail } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -104,7 +104,7 @@ function UserDropZone({ id, users, children, onDeleteRequest }: { id: string, us
 
 export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
   const { toast } = useToast();
-  const { viewAsUser, users, updateUser, deleteUser, reorderUsers, appSettings, updateAppSettings } = useUser();
+  const { viewAsUser, users, updateUser, deleteUser, reorderUsers, appSettings, updateAppSettings, preApprovedEmails, addPreApprovedEmail, removePreApprovedEmail } = useUser();
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
   const [pendingUserMove, setPendingUserMove] = useState<{ user: User; fromListId: string; destListId: string } | null>(null);
   const [pendingUserDelete, setPendingUserDelete] = useState<User | null>(null);
@@ -123,21 +123,13 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
   const [isAddUserPopoverOpen, setIsAddUserPopoverOpen] = useState(false);
   const [newUserEmail, setNewUserEmail] = useState('');
   
-  const preApprovedEmails = useMemo(() => appSettings.preApprovedEmails || [], [appSettings]);
-
   const handleAddPreApprovedEmail = () => {
     if(!viewAsUser) return;
     const trimmedEmail = newUserEmail.trim();
-    if (trimmedEmail && !preApprovedEmails.some(item => item.email === trimmedEmail)) {
-      const updatedEmails = [...preApprovedEmails, { email: trimmedEmail, invitedBy: viewAsUser.userId, workspaceId: viewAsUser.workspaceId }];
-      updateAppSettings({ preApprovedEmails: updatedEmails });
+    if (trimmedEmail) {
+      addPreApprovedEmail(trimmedEmail);
       setNewUserEmail('');
     }
-  };
-
-  const handleRemovePreApprovedEmail = (emailToRemove: string) => {
-    const updatedEmails = preApprovedEmails.filter(item => item.email !== emailToRemove);
-    updateAppSettings({ preApprovedEmails: updatedEmails });
   };
 
   const adminUsers = useMemo(() => users.filter(u => u.isAdmin), [users]);
@@ -312,7 +304,7 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
                                                 {preApprovedEmails.map(item => (
                                                     <div key={item.email} className="flex items-center justify-between text-sm p-1 rounded-md">
                                                         <span>{item.email}</span>
-                                                        <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => handleRemovePreApprovedEmail(item.email)}>
+                                                        <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => removePreApprovedEmail(item.email)}>
                                                             <GoogleSymbol name="close" className="text-xs" />
                                                         </Button>
                                                     </div>
@@ -496,8 +488,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                     </TabsList>
                     <TabsContent value="users" className="m-0 flex flex-col flex-1 min-h-0">
                         {renderSearchControl()}
-                        <div className="flex-1 overflow-hidden">
-                            <div className="h-full overflow-y-auto">
+                        <ScrollArea className="h-64">
                             {filteredUsers.length > 0 ? (
                               <div className="p-1 space-y-1">
                                   {filteredUsers.map(user => {
@@ -513,13 +504,11 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                             ) : (
                               <p className="text-center text-sm text-muted-foreground p-4">No users found.</p>
                             )}
-                          </div>
-                        </div>
+                          </ScrollArea>
                     </TabsContent>
                     <TabsContent value="teams" className="m-0 flex flex-col flex-1 min-h-0">
                         {renderSearchControl()}
-                         <div className="flex-1 overflow-hidden">
-                          <div className="h-full overflow-y-auto">
+                         <ScrollArea className="h-64">
                             {filteredTeams.length > 0 ? (
                               <div className="p-1 space-y-1">
                                   {filteredTeams.map(team => {
@@ -535,8 +524,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
                             ) : (
                               <p className="text-center text-sm text-muted-foreground p-4">No teams found.</p>
                             )}
-                          </div>
-                        </div>
+                          </ScrollArea>
                     </TabsContent>
                 </Tabs>
             </PopoverContent>
@@ -605,8 +593,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
             activeColorFilter={colorFilter}
           />
         </div>
-        <div className="flex-1 overflow-hidden">
-          <div className="h-full overflow-y-auto">
+        <ScrollArea className="h-64">
             {filteredTabs.length > 0 ? (
               <div className="p-1 space-y-1">
                   {filteredTabs.map(tab => {
@@ -628,8 +615,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
             ) : (
               <p className="text-center text-sm text-muted-foreground p-4">No tabs found.</p>
             )}
-          </div>
-        </div>
+          </ScrollArea>
       </PopoverContent>
     </Popover>
   );

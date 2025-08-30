@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider, type User as FirebaseUser } from 'firebase/auth';
@@ -49,11 +50,9 @@ export function useAuth() {
                 setRealUser(userData);
             } else {
                 const workspaceId = getCurrentWorkspaceId();
-                const appSettingsRef = doc(db, 'app-settings', workspaceId);
-                const appSettingsDoc = await getDoc(appSettingsRef);
-                const preApprovedEmails = (appSettingsDoc.data()?.preApprovedEmails || []).map((item: {email: string}) => item.email);
-                
-                const isPreApproved = preApprovedEmails.includes(firebaseUser.email!);
+                const preApprovedQuery = query(collection(db, 'pre-approved-emails'), where('email', '==', firebaseUser.email!), where('workspaceId', '==', workspaceId));
+                const preApprovedSnapshot = await getDocs(preApprovedQuery);
+                const isPreApproved = !preApprovedSnapshot.empty;
                 
                 const usersCollectionRef = collection(db, 'users');
                 const firstUserQuery = query(usersCollectionRef, where("workspaceId", "==", workspaceId), limit(1));
@@ -107,10 +106,10 @@ export function useAuth() {
                     batch.set(workspaceDocRef, newWorkspace);
 
                     // Create workspace-specific app settings
+                    const appSettingsRef = doc(db, 'app-settings', workspaceId);
                     const newAppSettings = {
                         pages: corePages.map(p => ({...p, workspaceId})),
                         tabs: coreTabs.map(t => ({...t, workspaceId})),
-                        preApprovedEmails: [],
                         workspaceId,
                     };
                     batch.set(appSettingsRef, newAppSettings);
