@@ -50,6 +50,9 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, enableReset = false, onReset, onClick, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
+    const { viewAsUser } = useUser();
+    const baseWeight = viewAsUser?.fontWeight || 400;
+    const isBoldEmphasis = baseWeight === 700;
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
       if (enableReset && (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey)) {
@@ -59,10 +62,17 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         onClick?.(event);
       }
     };
+
+    const emphasisClass =
+      variant === "ghost"
+        ? !isBoldEmphasis
+          ? "hover:font-emphasis"
+          : "hover:text-primary"
+        : "";
     
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
+        className={cn(buttonVariants({ variant, size, className }), emphasisClass)}
         ref={ref}
         onClick={handleClick}
         {...props}
