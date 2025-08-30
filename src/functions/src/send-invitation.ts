@@ -9,11 +9,12 @@ const db = admin.firestore();
 
 /**
  * Firestore trigger that sends an invitation email when a new email is added
- * to the preApprovedEmails list in app settings.
+ * to the preApprovedEmails list in app settings for a specific workspace.
  * @param {Change<QueryDocumentSnapshot>} change The change object from the trigger.
+ * @param {EventContext} context The event context.
  * @return {Promise<void>} A promise that resolves when the function completes.
  */
-export const sendInvitation = onDocumentUpdated("app-settings/global", async (event) => {
+export const sendInvitation = onDocumentUpdated("app-settings/{workspaceId}", async (event) => {
     const beforeData = event.data?.before.data();
     const afterData = event.data?.after.data();
 
@@ -41,8 +42,7 @@ export const sendInvitation = onDocumentUpdated("app-settings/global", async (ev
     for (const item of newEmailObjects) {
         let inviterName = "An administrator";
         try {
-            // We can't guarantee the workspace of the inviter, but we can fetch their name.
-            // A more robust solution might store the inviter's workspaceId with the invitation.
+            // Fetch the inviter's user document to get their name
             const userDoc = await db.collection('users').doc(item.invitedBy).get();
             if (userDoc.exists) {
                 inviterName = userDoc.data()?.displayName || inviterName;

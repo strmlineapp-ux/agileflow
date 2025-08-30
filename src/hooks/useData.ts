@@ -31,7 +31,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
   const [calendars, setCalendars] = useState<SharedCalendar[]>([]);
   const [locations, setLocations] = useState<BookableLocation[]>([]);
   const [holidays, setHolidays] = useState<Holiday[]>([]);
-  const [appSettings, setAppSettings] = useState<AppSettings>({ pages: [], tabs: [] });
+  const [appSettings, setAppSettings] = useState<AppSettings>({ pages: [], tabs: [], preApprovedEmails: [], workspaceId: 'default' });
   const [allBadges, setAllBadges] = useState<Badge[]>([]);
   const [allBadgeCollections, setAllBadgeCollections] = useState<BadgeCollection[]>([]);
 
@@ -54,7 +54,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
           
           const [usersSnapshot, teamsSnap, calendarsSnap, locationsSnap, badgesSnap, collectionsSnap, projectsSnap] = await Promise.all(queries);
           
-          const appSettingsSnap = await getDoc(doc(db, 'app-settings', 'global'));
+          const appSettingsSnap = await getDoc(doc(db, 'app-settings', workspaceId));
           
           setUsers(usersSnapshot.docs.map(doc => {
             const data = doc.data();
@@ -74,6 +74,16 @@ export function useData(realUser: User | null, authLoading: boolean) {
           if (appSettingsSnap.exists()) {
             const settingsData = appSettingsSnap.data() as AppSettings;
               setAppSettings(settingsData);
+          } else {
+            // If for some reason settings don't exist for this workspace, create them.
+             const newAppSettings = {
+                pages: corePages.map(p => ({...p, workspaceId})),
+                tabs: coreTabs.map(t => ({...t, workspaceId})),
+                preApprovedEmails: [],
+                workspaceId,
+            };
+            await setDoc(doc(db, 'app-settings', workspaceId), newAppSettings);
+            setAppSettings(newAppSettings);
           }
         } catch (error) {
           console.error("Error loading data:", error);
@@ -392,11 +402,12 @@ export function useData(realUser: User | null, authLoading: boolean) {
   }, []);
 
   const updateAppSettings = useCallback(async (settings: Partial<AppSettings>) => {
+    if(!realUser) return;
     const db = getDb();
-    const settingsRef = doc(db, 'app-settings', 'global');
+    const settingsRef = doc(db, 'app-settings', realUser.workspaceId);
     await updateDoc(settingsRef, settings);
     setAppSettings(current => ({ ...current, ...settings }));
-  }, []);
+  }, [realUser]);
 
   const updateAppTab = useCallback(async (tabId: string, tabData: Partial<AppTab>) => {
     const newTabs = appSettings.tabs.map(t => t.id === tabId ? { ...t, ...tabData } : t);
