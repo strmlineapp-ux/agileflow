@@ -52,6 +52,7 @@ import { UserCard } from '@/components/common/user-card';
 import { DraggableGrid } from '../common/draggable-grid';
 import { SortableItem } from '../common/sortable-item';
 import { IconColorPicker } from '../common/icon-color-picker';
+import { InlineEditor } from '../common/inline-editor';
 
 // #region Admin Groups Management Tab
 
@@ -609,14 +610,9 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
 
     const displayPath = page.isDynamic ? `${page.path}/[...]` : page.path;
 
-    const entityWithDescription = {
-        ...page,
-        description: displayPath
-    };
-    
     return (
         <CardTemplate
-            entity={entityWithDescription}
+            entity={{...page, description: displayPath}}
             onUpdate={onUpdate}
             onDelete={() => onDelete(page.id)}
             canManage={canManage}
@@ -624,6 +620,15 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
             isExpanded={isExpanded}
             onToggleExpand={onToggleExpand}
             descriptionAction={isPinned ? undefined : () => onUpdate(page.id, { isDynamic: !page.isDynamic })}
+            body={
+                <InlineEditor
+                    value={page.description || ''}
+                    onSave={(newDesc) => onUpdate(page.id, { description: newDesc })}
+                    disabled={!canManage}
+                    placeholder="Click to add a description..."
+                    className="text-sm text-muted-foreground"
+                />
+            }
             headerControls={
                 <div className="flex items-center">
                     {!isPinned && <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />}
@@ -896,3 +901,4 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
 
 
     
+

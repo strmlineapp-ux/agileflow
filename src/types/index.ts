@@ -26,6 +26,7 @@ export interface AppPage {
   icon: string;
   color: string;
   path: string; // e.g., /dashboard/service-delivery or /dashboard/teams
+  description?: string;
   isDynamic: boolean; // True for paths like /dashboard/teams/:teamId
   associatedTabs: string[]; // Array of AppTab ids
   access: {
