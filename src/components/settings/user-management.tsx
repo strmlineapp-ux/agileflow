@@ -92,6 +92,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
     const [isFontWeightPopoverOpen, setIsFontWeightPopoverOpen] = useState(false);
     const [isIconGradePopoverOpen, setIsIconGradePopoverOpen] = useState(false);
     const [isIconOpticalSizePopoverOpen, setIsIconOpticalSizePopoverOpen] = useState(false);
+    const [isRadiusPopoverOpen, setIsRadiusPopoverOpen] = useState(false);
     const [isCalendarViewPopoverOpen, setIsCalendarViewPopoverOpen] = useState(false);
     const [isTimeFormatPopoverOpen, setIsTimeFormatPopoverOpen] = useState(false);
     
@@ -134,6 +135,11 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
             updateUser(user.userId, { iconOpticalSize: size });
         }
     }
+
+    const handleRadiusChange = (value: number[]) => {
+        const newRadius = value[0] / 10;
+        updateUser(user.userId, { radius: newRadius });
+    }
     
     const currentWeight = user.fontWeight || 400;
     const currentFontWeightLabel = fontWeightOptions.find(opt => opt.value === currentWeight)?.label || 'Normal';
@@ -147,6 +153,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
     const currentIconOpticalSizeLabel = iconOpticalSizeOptions.find(opt => opt.value === currentIconOpticalSize)?.label || 'Normal';
     const currentIconOpticalSizeIndex = iconOpticalSizeOptions.findIndex(opt => opt.value === currentIconOpticalSize);
 
+    const currentRadius = user.radius ?? 0.5;
     
     const calendarViewOptions = [
         { value: "month", label: "Month" },
@@ -324,6 +331,26 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                 </TooltipProvider>
                                 <PopoverContent className="w-48 p-4" align="center">
                                     <Slider value={[currentIconOpticalSizeIndex]} onValueChange={handleIconOpticalSizeChange} min={0} max={3} step={1} />
+                                </PopoverContent>
+                            </Popover>
+
+                            <Popover open={isRadiusPopoverOpen} onOpenChange={setIsRadiusPopoverOpen}>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <PopoverTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onClick={(e) => { if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { e.preventDefault(); updateUser(user.userId, { radius: 0.5 }); } }}>
+                                                    <GoogleSymbol name="rounded_corner" />
+                                                </Button>
+                                            </PopoverTrigger>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Border Radius: <span className="font-semibold">{currentRadius.toFixed(2)}rem</span></p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                <PopoverContent className="w-48 p-4" align="center">
+                                    <Slider value={[currentRadius * 10]} onValueChange={handleRadiusChange} min={0} max={15} step={1} />
                                 </PopoverContent>
                             </Popover>
 
