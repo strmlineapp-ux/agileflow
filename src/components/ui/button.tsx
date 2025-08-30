@@ -13,13 +13,9 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "text-foreground",
-        destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        default: "hover:bg-transparent",
         outline:
           "border border-input bg-transparent",
-        secondary:
-          "bg-background text-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         circle: "rounded-full",
       },
@@ -62,12 +58,9 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       }
     };
 
-    const emphasisClass =
-      variant === "default" || variant === 'outline' || variant === 'secondary'
-        ? isBoldEmphasis
-          ? "hover:text-primary focus:text-primary"
-          : "hover:font-emphasis focus:font-emphasis"
-        : "";
+    const emphasisClass = isBoldEmphasis
+      ? "hover:text-primary focus:text-primary"
+      : "hover:font-emphasis focus:font-emphasis";
     
     return (
       <Comp

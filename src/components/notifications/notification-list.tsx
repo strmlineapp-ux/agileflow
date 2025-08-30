@@ -63,7 +63,7 @@ export function NotificationList() {
                 {notification.type === 'access_request' && notification.status === 'pending' && isAdmin && (
                   <div className="flex gap-2 mt-2">
                     <Button size="sm" onClick={() => handleApproveAccessRequest(notification.id, true)}>Approve</Button>
-                    <Button size="sm" variant="destructive" onClick={() => handleApproveAccessRequest(notification.id, false)}>Reject</Button>
+                    <Button size="sm" variant="default" className="text-destructive" onClick={() => handleApproveAccessRequest(notification.id, false)}>Reject</Button>
                   </div>
                 )}
                  {notification.type === 'access_request' && notification.status !== 'pending' && (
