@@ -62,7 +62,7 @@ export function useAuth() {
                 
                 const isAdmin = isFirstUserOfWorkspace;
                 const accountType = isFirstUserOfWorkspace || isPreApproved ? 'Full' : 'Viewer';
-                const approvedBy = isFirstUserOfWorkspace ? 'system' : (isPreApproved ? 'pre-approved' : undefined);
+                const approvedByValue = isFirstUserOfWorkspace ? 'system' : (isPreApproved ? 'pre-approved' : undefined);
                 
                 const newUser: User = {
                     userId: firebaseUser.uid,
@@ -77,9 +77,12 @@ export function useAuth() {
                     theme: 'light',
                     dragActivationKey: 'shift',
                     createdAt: new Date(),
-                    approvedBy,
                     workspaceId,
                 };
+                
+                if (approvedByValue) {
+                    newUser.approvedBy = approvedByValue;
+                }
                 
                 const batch = writeBatch(db);
                 batch.set(userDocRef, newUser);
