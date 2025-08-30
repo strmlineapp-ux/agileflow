@@ -97,16 +97,12 @@ const DropdownMenuItem = React.forwardRef<
   const baseWeight = viewAsUser?.fontWeight || 400;
   const isBoldEmphasis = baseWeight === 700;
 
-  const emphasisClass = isBoldEmphasis
-    ? "focus:text-primary"
-    : "focus:font-emphasis";
-  
   return (
     <DropdownMenuPrimitive.Item
       ref={ref}
       className={cn(
         "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 focus:bg-transparent",
-        emphasisClass,
+        isBoldEmphasis ? "focus:text-primary" : "focus:font-emphasis",
         inset && "pl-8",
         className
       )}
@@ -123,17 +119,13 @@ const DropdownMenuCheckboxItem = React.forwardRef<
   const { viewAsUser } = useUser();
   const baseWeight = viewAsUser?.fontWeight || 400;
   const isBoldEmphasis = baseWeight === 700;
-
-  const emphasisClass = isBoldEmphasis
-    ? "focus:text-primary"
-    : "focus:font-emphasis";
   
   return (
     <DropdownMenuPrimitive.CheckboxItem
       ref={ref}
       className={cn(
         "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50 focus:bg-transparent",
-        emphasisClass,
+        isBoldEmphasis ? "focus:text-primary" : "focus:font-emphasis",
         className
       )}
       checked={checked}
@@ -159,16 +151,12 @@ const DropdownMenuRadioItem = React.forwardRef<
   const baseWeight = viewAsUser?.fontWeight || 400;
   const isBoldEmphasis = baseWeight === 700;
 
-  const emphasisClass = isBoldEmphasis
-    ? "focus:text-primary"
-    : "focus:font-emphasis";
-
   return (
     <DropdownMenuPrimitive.RadioItem
       ref={ref}
       className={cn(
         "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50 focus:bg-transparent",
-        emphasisClass,
+        isBoldEmphasis ? "focus:text-primary" : "focus:font-emphasis",
         className
       )}
       {...props}

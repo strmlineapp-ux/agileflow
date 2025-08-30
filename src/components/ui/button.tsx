@@ -16,7 +16,7 @@ const buttonVariants = cva(
         default: "hover:bg-transparent",
         outline:
           "border border-input bg-transparent",
-        link: "text-primary hover:underline",
+        link: "hover:underline",
         circle: "rounded-full",
       },
       size: {
@@ -58,13 +58,14 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       }
     };
 
-    const emphasisClass = isBoldEmphasis
-      ? "hover:text-primary focus:text-primary"
-      : "hover:font-emphasis focus:font-emphasis";
-    
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, className }), emphasisClass)}
+        className={cn(
+            buttonVariants({ variant, size, className }),
+            isBoldEmphasis 
+                ? 'text-foreground hover:text-primary focus:text-primary' 
+                : 'hover:font-emphasis focus:font-emphasis'
+        )}
         ref={ref}
         onClick={handleClick}
         {...props}
