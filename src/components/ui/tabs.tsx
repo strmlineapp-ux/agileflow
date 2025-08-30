@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -34,7 +35,6 @@ const TabsTrigger = React.forwardRef<
 >(({ className, ...props }, ref) => {
   const { viewAsUser } = useUser();
   const baseWeight = viewAsUser?.fontWeight || 400;
-  const selectedStyle = getSelectedStyle(baseWeight);
 
   return (
     <TabsPrimitive.Trigger
@@ -43,7 +43,7 @@ const TabsTrigger = React.forwardRef<
         "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-none",
         className
       )}
-      style={props['data-state'] === 'active' ? selectedStyle : {}}
+      style={props['data-state'] === 'active' ? getSelectedStyle(baseWeight, true) : {}}
       {...props}
     />
   )
