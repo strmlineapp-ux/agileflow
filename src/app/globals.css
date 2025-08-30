@@ -13,6 +13,7 @@
     /* Base theme colors */
     --background: 210 20% 92%;
     --component-bg: 210 20% 96%;
+    --foreground: 210 7% 40%;
     --primary: 210 70% 50%;
     --primary-foreground: 210 40% 98%;
     --destructive: 0 84.2% 60.2%;
@@ -25,6 +26,7 @@
   .dark {
     --background: 210 40% 9%;
     --component-bg: 210 40% 12%;
+    --foreground: 210 7% 50%;
     --primary: 25 88% 45%;
     --primary-foreground: 43 55% 95%;
     --destructive: 0 62.8% 30.6%;
