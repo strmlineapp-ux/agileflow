@@ -33,7 +33,6 @@ const TabsTrigger = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
 >(({ className, children, ...props }, ref) => {
   const { viewAsUser } = useUser();
-  const isSelected = props['data-state'] === 'active';
   const baseWeight = viewAsUser?.fontWeight || 400;
   const isBoldEmphasis = baseWeight === 700;
 
