@@ -4,8 +4,8 @@
 import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider, type User as FirebaseUser } from 'firebase/auth';
 import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where, limit, updateDoc, writeBatch } from 'firebase/firestore';
 import { useState, useEffect, useCallback } from 'react';
-import { type User, type Tenant } from '@/types';
-import { getAuthInstance, getDb, getCurrentTenantId } from '@/lib/firebase';
+import { type User, type Workspace } from '@/types';
+import { getAuthInstance, getDb, getCurrentWorkspaceId } from '@/lib/firebase';
 import { useToast } from './use-toast';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
@@ -47,21 +47,21 @@ export function useAuth() {
 
                 setRealUser(userData);
             } else {
-                const tenantId = getCurrentTenantId();
+                const workspaceId = getCurrentWorkspaceId();
                 const appSettingsRef = doc(db, 'app-settings', 'global');
                 const appSettingsDoc = await getDoc(appSettingsRef);
-                const preApprovedEmails = (appSettingsDoc.data()?.preApprovedEmails || []).filter((item: {email: string, tenantId: string}) => item.tenantId === tenantId).map((item: {email: string}) => item.email);
+                const preApprovedEmails = (appSettingsDoc.data()?.preApprovedEmails || []).filter((item: {email: string, workspaceId: string}) => item.workspaceId === workspaceId).map((item: {email: string}) => item.email);
                 
                 const isPreApproved = preApprovedEmails.includes(firebaseUser.email!);
                 
                 const usersCollectionRef = collection(db, 'users');
-                const firstUserQuery = query(usersCollectionRef, where("tenantId", "==", tenantId), limit(1));
+                const firstUserQuery = query(usersCollectionRef, where("workspaceId", "==", workspaceId), limit(1));
                 const firstUserSnapshot = await getDocs(firstUserQuery);
-                const isFirstUserOfTenant = firstUserSnapshot.empty;
+                const isFirstUserOfWorkspace = firstUserSnapshot.empty;
                 
-                const isAdmin = isFirstUserOfTenant;
-                const accountType = isFirstUserOfTenant || isPreApproved ? 'Full' : 'Viewer';
-                const approvedBy = isFirstUserOfTenant ? 'system' : (isPreApproved ? 'pre-approved' : undefined);
+                const isAdmin = isFirstUserOfWorkspace;
+                const accountType = isFirstUserOfWorkspace || isPreApproved ? 'Full' : 'Viewer';
+                const approvedBy = isFirstUserOfWorkspace ? 'system' : (isPreApproved ? 'pre-approved' : undefined);
                 
                 const newUser: User = {
                     userId: firebaseUser.uid,
@@ -77,30 +77,30 @@ export function useAuth() {
                     dragActivationKey: 'shift',
                     createdAt: new Date(),
                     approvedBy,
-                    tenantId,
+                    workspaceId,
                 };
                 
                 const batch = writeBatch(db);
                 batch.set(userDocRef, newUser);
 
-                if (isFirstUserOfTenant) {
-                    const tenantDocRef = doc(db, 'tenants', tenantId);
+                if (isFirstUserOfWorkspace) {
+                    const workspaceDocRef = doc(db, 'workspaces', workspaceId);
 
                     const emailDomain = firebaseUser.email!.split('@')[1];
-                    let companyName = "Workspace"; // Default for common domains
+                    let companyName = "Workspace";
 
                     if (!COMMON_EMAIL_DOMAINS.has(emailDomain)) {
                         const domainName = emailDomain.split('.')[0];
                         companyName = domainName.charAt(0).toUpperCase() + domainName.slice(1);
                     }
 
-                    const newTenant: Tenant = {
-                        id: tenantId,
+                    const newWorkspace: Workspace = {
+                        id: workspaceId,
                         name: companyName,
                         ownerId: firebaseUser.uid,
                         createdAt: new Date(),
                     };
-                    batch.set(tenantDocRef, newTenant);
+                    batch.set(workspaceDocRef, newWorkspace);
                 }
                 
                 await batch.commit();

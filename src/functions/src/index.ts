@@ -1,5 +1,4 @@
 
-
 // Import the necessary libraries
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions";
@@ -25,12 +24,12 @@ const mailTransport = nodemailer.createTransport({
 });
 
 /**
- * Helper function to get all administrator emails from Firestore.
- * @return {Promise<string[]>}
- * // A promise that resolves to an array of admin emails.
+ * Helper function to get all administrator emails from Firestore for a specific workspace.
+ * @param {string} workspaceId The ID of the workspace.
+ * @return {Promise<string[]>} A promise that resolves to an array of admin emails.
  */
-async function getAdminEmails(): Promise<string[]> {
-  const adminsRef = db.collection("users").where("isAdmin", "==", true);
+async function getAdminEmails(workspaceId: string): Promise<string[]> {
+  const adminsRef = db.collection("users").where("isAdmin", "==", true).where("workspaceId", "==", workspaceId);
   const snapshot = await adminsRef.get();
   const adminEmails: string[] = [];
   snapshot.forEach((doc) => {
@@ -75,20 +74,21 @@ export const onNewUserCreated = onDocumentCreated("users/{userId}", async (event
   const newUser = event.data?.data();
 
   // If user is 'Full' (pre-approved or first user), no notification needed.
-  if (!newUser || newUser.accountType !== "Viewer") {
-    console.log("User does not require approval. Exiting function.");
+  if (!newUser || newUser.accountType !== "Viewer" || !newUser.workspaceId) {
+    console.log("User does not require approval or has no workspaceId. Exiting function.");
     return null;
   }
   
   const newUserName = newUser.displayName || "A new user";
   const newUserEmail = newUser.email || "No email provided";
+  const workspaceId = newUser.workspaceId;
 
-  console.log(`New user "${newUserName}" requires approval.`);
+  console.log(`New user "${newUserName}" requires approval for workspace "${workspaceId}".`);
 
-  const adminEmails = await getAdminEmails();
+  const adminEmails = await getAdminEmails(workspaceId);
 
   if (adminEmails.length === 0) {
-    console.log("No administrators found to notify. Exiting function.");
+    console.log("No administrators found to notify for this workspace. Exiting function.");
     return null;
   }
 

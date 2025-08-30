@@ -41,6 +41,8 @@ export const sendInvitation = onDocumentUpdated("app-settings/global", async (ev
     for (const item of newEmailObjects) {
         let inviterName = "An administrator";
         try {
+            // We can't guarantee the workspace of the inviter, but we can fetch their name.
+            // A more robust solution might store the inviter's workspaceId with the invitation.
             const userDoc = await db.collection('users').doc(item.invitedBy).get();
             if (userDoc.exists) {
                 inviterName = userDoc.data()?.displayName || inviterName;
