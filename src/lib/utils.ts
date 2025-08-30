@@ -123,10 +123,10 @@ export const getSelectedStyle = (baseWeight: number, hasText: boolean): React.CS
 
   if (baseWeight >= 700) {
     // If base weight is Bold or higher, use primary color.
-    // Conditionally apply color only to text or icon.
     if (hasText) {
       return { color: 'hsl(var(--primary))' };
     } else {
+      // Icon-only element
       return { color: 'hsl(var(--primary))' };
     }
   }
@@ -137,3 +137,4 @@ export const getSelectedStyle = (baseWeight: number, hasText: boolean): React.CS
     color: 'hsl(var(--foreground))'
   };
 };
+
