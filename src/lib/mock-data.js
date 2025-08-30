@@ -1,333 +1,529 @@
 
-"use strict";
-var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
-    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
-        if (ar || !(i in from)) {
-            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
-            ar[i] = from[i];
-        }
+
+import { googleSymbolNames } from './google-symbols';
+
+export const mockUsers = [
+  {
+    userId: 'user-001',
+    displayName: 'Eleanor Vance',
+    email: 'eleanor@example.com',
+    isAdmin: true,
+    accountType: 'Full',
+    title: 'Lead Producer',
+    avatarUrl: 'https://placehold.co/100x100/A7C7E7/333333?text=EV',
+    googleCalendarLinked: true,
+    roles: ['badge-video-producer', 'badge-audio-engineer', 'badge-camera-operator'],
+    memberOfTeamIds: ['team-video-prod', 'team-exec'],
+    theme: 'dark',
+    primaryColor: 'hsl(25, 88%, 45%)',
+    defaultCalendarView: 'production-schedule',
+    easyBooking: true,
+    timeFormat: '12h',
+    dragActivationKey: 'shift',
+    createdAt: new Date('2023-01-10T09:00:00Z'),
+    tenantId: 'default'
+  },
+  {
+    userId: 'user-002',
+    displayName: 'Marcus Holloway',
+    email: 'marcus@example.com',
+    isAdmin: false,
+    accountType: 'Full',
+    title: 'Senior Editor',
+    avatarUrl: 'https://placehold.co/100x100/C1E1C1/333333?text=MH',
+    googleCalendarLinked: true,
+    roles: ['badge-editor', 'badge-colorist'],
+    memberOfTeamIds: ['team-video-prod'],
+    theme: 'light',
+    primaryColor: null,
+    defaultCalendarView: 'week',
+    easyBooking: false,
+    timeFormat: '24h',
+    dragActivationKey: 'alt',
+    createdAt: new Date('2023-01-15T11:30:00Z'),
+    tenantId: 'default'
+  },
+  {
+    userId: 'user-003',
+    displayName: 'Anya Sharma',
+    email: 'anya@example.com',
+    isAdmin: false,
+    accountType: 'Full',
+    title: 'Audio Engineer',
+    avatarUrl: 'https://placehold.co/100x100/F8D7DA/333333?text=AS',
+    googleCalendarLinked: false,
+    roles: ['badge-audio-engineer', 'badge-sound-mixer'],
+    memberOfTeamIds: ['team-audio-post'],
+    theme: 'dark',
+    primaryColor: null,
+    defaultCalendarView: 'day',
+    easyBooking: true,
+    timeFormat: '12h',
+    dragActivationKey: 'shift',
+    createdAt: new Date('2023-02-01T14:00:00Z'),
+    tenantId: 'default'
+  },
+  {
+    userId: 'user-004',
+    displayName: 'Liam Gallagher',
+    email: 'liam@example.com',
+    isAdmin: false,
+    accountType: 'Full',
+    title: 'Camera Operator',
+    avatarUrl: 'https://placehold.co/100x100/D4F1F4/333333?text=LG',
+    googleCalendarLinked: true,
+    roles: ['badge-camera-operator'],
+    memberOfTeamIds: ['team-video-prod', 'team-live-events'],
+    theme: 'light',
+    primaryColor: 'hsl(142, 71%, 45%)',
+    defaultCalendarView: 'day',
+    easyBooking: false,
+    timeFormat: '12h',
+    dragActivationKey: 'shift',
+    createdAt: new Date('2023-02-20T10:00:00Z'),
+    tenantId: 'default'
+  },
+  {
+    userId: 'user-005',
+    displayName: 'Chloe Kim',
+    email: 'chloe@example.com',
+    isAdmin: false,
+    accountType: 'Full',
+    title: 'Production Assistant',
+    avatarUrl: 'https://placehold.co/100x100/FDFD96/333333?text=CK',
+    googleCalendarLinked: true,
+    roles: ['badge-production-assistant'],
+    memberOfTeamIds: ['team-video-prod'],
+    theme: 'light',
+    primaryColor: null,
+    defaultCalendarView: 'week',
+    easyBooking: true,
+    timeFormat: '12h',
+    dragActivationKey: 'ctrl',
+    createdAt: new Date('2023-03-05T09:30:00Z'),
+    tenantId: 'default'
+  },
+  {
+    userId: 'user-006',
+    displayName: 'Javier Morales',
+    email: 'javier@example.com',
+    isAdmin: false,
+    accountType: 'Viewer',
+    title: 'VFX Artist',
+    avatarUrl: 'https://placehold.co/100x100/BDB2E1/333333?text=JM',
+    googleCalendarLinked: false,
+    roles: ['badge-vfx-artist'],
+    memberOfTeamIds: ['team-vfx'],
+    theme: 'dark',
+    primaryColor: null,
+    defaultCalendarView: 'day',
+    easyBooking: false,
+    timeFormat: '24h',
+    dragActivationKey: 'shift',
+    createdAt: new Date('2023-03-10T16:00:00Z'),
+    tenantId: 'default'
+  },
+  {
+    userId: 'user-007',
+    displayName: 'Isabella Rossi',
+    email: 'isabella@example.com',
+    isAdmin: true,
+    accountType: 'Full',
+    title: 'Head of Post-Production',
+    avatarUrl: 'https://placehold.co/100x100/FFDAB9/333333?text=IR',
+    googleCalendarLinked: true,
+    roles: ['badge-video-producer'],
+    memberOfTeamIds: ['team-audio-post', 'team-vfx', 'team-exec'],
+    theme: 'light',
+    primaryColor: 'hsl(347, 89%, 61%)',
+    defaultCalendarView: 'month',
+    easyBooking: false,
+    timeFormat: '12h',
+    dragActivationKey: 'shift',
+    createdAt: new Date('2023-01-11T09:00:00Z'),
+    tenantId: 'default'
+  },
+  {
+    userId: 'user-008',
+    displayName: 'Kenji Tanaka',
+    email: 'kenji@example.com',
+    isAdmin: false,
+    accountType: 'Full',
+    title: 'Sound Mixer',
+    avatarUrl: 'https://placehold.co/100x100/E6E6FA/333333?text=KT',
+    googleCalendarLinked: true,
+    roles: ['badge-sound-mixer'],
+    memberOfTeamIds: ['team-audio-post', 'team-live-events'],
+    theme: 'dark',
+    primaryColor: null,
+    defaultCalendarView: 'day',
+    easyBooking: true,
+    timeFormat: '12h',
+    dragActivationKey: 'shift',
+    createdAt: new Date('2023-04-02T13:00:00Z'),
+    tenantId: 'default'
+  }
+];
+
+export const mockCalendars = [
+  {
+    id: 'cal-001',
+    name: 'Studio A',
+    icon: 'meeting_room',
+    color: 'hsl(142, 71%, 45%)',
+    owner: { type: 'user', id: 'user-001' },
+    isShared: true,
+    defaultEventTitle: 'Studio A Booking',
+    roleAssignmentsLabel: 'Crew',
+    tenantId: 'default'
+  },
+  {
+    id: 'cal-002',
+    name: 'Edit Suite 1',
+    icon: 'desktop_windows',
+    color: 'hsl(221, 83%, 61%)',
+    owner: { type: 'user', id: 'user-001' },
+    isShared: true,
+    defaultEventTitle: 'Edit Session',
+    roleAssignmentsLabel: 'Personnel',
+    tenantId: 'default'
+  },
+  {
+    id: 'cal-003',
+    name: 'Audio Mix Room',
+    icon: 'surround_sound',
+    color: 'hsl(262, 88%, 66%)',
+    owner: { type: 'user', id: 'user-007' },
+    isShared: false,
+    defaultEventTitle: 'Mix Session',
+    roleAssignmentsLabel: 'Engineers',
+    tenantId: 'default'
+  },
+  {
+    id: 'cal-004',
+    name: 'Company Events',
+    icon: 'celebration',
+    color: 'hsl(347, 89%, 61%)',
+    owner: { type: 'user', id: 'user-001' },
+    isShared: true,
+    googleCalendarId: 'your-company-events-calendar-id@group.calendar.google.com',
+    tenantId: 'default'
+  }
+];
+
+export const mockTeams = [
+    {
+      id: 'team-video-prod',
+      name: 'Video Production',
+      icon: 'videocam',
+      color: 'hsl(25, 95%, 53%)',
+      owner: { type: 'user', id: 'user-001' },
+      isShared: true,
+      members: ['user-001', 'user-002', 'user-004', 'user-005'],
+      teamAdmins: ['user-001'],
+      activeBadgeCollections: ['coll-video-roles', 'coll-general-roles', 'coll-event-priority'],
+      pinnedLocations: ['Studio A', 'Studio B', 'Green Room'],
+      checkLocations: ['Studio A'],
+      locationCheckManagers: ['user-001'],
+      workstations: ['VFX Render Farm', 'Encoding Station'],
+      eventTemplates: [
+        { id: 'template-1', name: 'Standard Shoot', icon: 'videocam', color: 'hsl(25, 95%, 53%)', requestedRoles: ['Video Producer', 'Camera Operator', 'Production Assistant'] }
+      ],
+      tenantId: 'default'
+    },
+    {
+      id: 'team-audio-post',
+      name: 'Audio Post',
+      icon: 'graphic_eq',
+      color: 'hsl(262, 88%, 66%)',
+      owner: { type: 'user', id: 'user-007' },
+      isShared: false,
+      members: ['user-003', 'user-007', 'user-008'],
+      teamAdmins: ['user-007'],
+      activeBadgeCollections: ['coll-audio-roles', 'coll-general-roles'],
+      pinnedLocations: ['Audio Mix Room'],
+      workstations: ['Sound Booth 1', 'Sound Booth 2'],
+      tenantId: 'default'
+    },
+    {
+      id: 'team-vfx',
+      name: 'VFX',
+      icon: 'movie_filter',
+      color: 'hsl(188, 95%, 43%)',
+      owner: { type: 'user', id: 'user-007' },
+      isShared: true,
+      members: ['user-006', 'user-007'],
+      teamAdmins: ['user-007'],
+      tenantId: 'default'
+    },
+    {
+      id: 'team-live-events',
+      name: 'Live Events',
+      icon: 'podcasts',
+      color: 'hsl(347, 89%, 61%)',
+      owner: { type: 'user', id: 'user-001' },
+      isShared: true,
+      members: ['user-001', 'user-004', 'user-008'],
+      teamAdmins: ['user-001'],
+      tenantId: 'default'
+    },
+    {
+      id: 'team-exec',
+      name: 'Executive Team',
+      icon: 'business_center',
+      color: 'hsl(220, 13%, 47%)',
+      owner: { type: 'user', id: 'user-001' },
+      isShared: false,
+      members: ['user-001', 'user-007'],
+      teamAdmins: ['user-001'],
+      tenantId: 'default'
     }
-    return to.concat(ar || Array.prototype.slice.call(from));
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.mockNotifications = exports.mockTasks = exports.mockEvents = exports.mockHolidays = exports.mockTeams = exports.allMockBadgeCollections = exports.effortBadges = exports.starRatingBadges = exports.pScaleBadges = exports.liveEventsBadges = exports.videoProdBadges = exports.mockLocations = exports.mockCalendars = exports.mockUsers = exports.mockAppSettings = void 0;
-// This file now contains only the data that an administrator would dynamically
-// create and manage, such as new pages or teams. The core, stable application
-// structure is defined in `core-data.ts`.
-var dynamicPages = [
-    // Example of a dynamic page that an admin could create.
-    {
-        id: 'page-team-management',
-        name: 'Team Management',
-        icon: 'group_work',
-        color: '#EC4899',
-        path: '/dashboard/teams',
-        isDynamic: true,
-        associatedTabs: ['tab-team-members', 'tab-badges', 'tab-locations', 'tab-workstations', 'tab-templates', 'tab-calendars', 'tab-service-teams'],
-        access: {
-            users: [],
-            teams: ['video-production', 'live-events', 'production'], // This page is visible only to members of these teams.
-        }
+];
+
+export const videoProductionRoles = [
+  { id: 'badge-video-producer', owner: { type: 'user', id: 'user-001' }, ownerCollectionId: 'coll-video-roles', name: 'Video Producer', icon: 'movie', color: '#10B981', tenantId: 'default' },
+  { id: 'badge-camera-operator', owner: { type: 'user', id: 'user-001' }, ownerCollectionId: 'coll-video-roles', name: 'Camera Operator', icon: 'photo_camera', color: '#3B82F6', tenantId: 'default' },
+  { id: 'badge-editor', owner: { type: 'user', id: 'user-001' }, ownerCollectionId: 'coll-video-roles', name: 'Editor', icon: 'content_cut', color: '#6366F1', tenantId: 'default' },
+  { id: 'badge-colorist', owner: { type: 'user', id: 'user-001' }, ownerCollectionId: 'coll-video-roles', name: 'Colorist', icon: 'palette', color: '#A855F7', tenantId: 'default' },
+];
+
+export const audioPostRoles = [
+  { id: 'badge-audio-engineer', owner: { type: 'user', id: 'user-007' }, ownerCollectionId: 'coll-audio-roles', name: 'Audio Engineer', icon: 'graphic_eq', color: '#D946EF', tenantId: 'default' },
+  { id: 'badge-sound-mixer', owner: { type: 'user', id: 'user-007' }, ownerCollectionId: 'coll-audio-roles', name: 'Sound Mixer', icon: 'speaker_group', color: '#F43F5E', tenantId: 'default' },
+];
+
+export const vfxRoles = [
+  { id: 'badge-vfx-artist', owner: { type: 'user', id: 'user-007' }, ownerCollectionId: 'coll-vfx-roles', name: 'VFX Artist', icon: 'auto_awesome', color: '#0EA5E9', tenantId: 'default' },
+];
+
+export const generalRoles = [
+  { id: 'badge-production-assistant', owner: { type: 'user', id: 'user-001' }, ownerCollectionId: 'coll-general-roles', name: 'Production Assistant', icon: 'assistant', color: '#84CC16', tenantId: 'default' },
+  { id: 'badge-team-lead', owner: { type: 'user', id: 'user-001' }, ownerCollectionId: 'coll-general-roles', name: 'Team Lead', icon: 'star', color: '#FBBF24', tenantId: 'default' },
+];
+
+export const priorityBadges = [
+    { id: 'badge-priority-high', owner: { type: 'user', id: 'user-001'}, ownerCollectionId: 'coll-event-priority', name: 'High', icon: 'priority_high', color: 'hsl(0, 84%, 60%)', description: 'High Priority', tenantId: 'default' },
+    { id: 'badge-priority-medium', owner: { type: 'user', id: 'user-001'}, ownerCollectionId: 'coll-event-priority', name: 'Medium', icon: 'signal_cellular_alt_2_bar', color: 'hsl(45, 93%, 47%)', description: 'Medium Priority', tenantId: 'default' },
+    { id: 'badge-priority-low', owner: { type: 'user', id: 'user-001'}, ownerCollectionId: 'coll-event-priority', name: 'Low', icon: 'signal_cellular_alt_1_bar', color: 'hsl(142, 71%, 45%)', description: 'Low Priority', tenantId: 'default' },
+];
+
+export const allMockBadgeCollections = [
+  { id: 'coll-video-roles', name: 'Video Production Roles', icon: 'video_camera_back', color: 'hsl(25, 95%, 53%)', owner: { type: 'user', id: 'user-001' }, viewMode: 'list', badgeIds: videoProductionRoles.map(b => b.id), applications: ['team members', 'events'], isShared: true, tenantId: 'default' },
+  { id: 'coll-audio-roles', name: 'Audio Department Roles', icon: 'spatial_audio', color: 'hsl(262, 88%, 66%)', owner: { type: 'user', id: 'user-007' }, viewMode: 'grid', badgeIds: audioPostRoles.map(b => b.id), applications: ['team members'], isShared: true, tenantId: 'default' },
+  { id: 'coll-vfx-roles', name: 'VFX Roles', icon: 'movie_filter', color: 'hsl(188, 95%, 43%)', owner: { type: 'user', id: 'user-007' }, viewMode: 'compact', badgeIds: vfxRoles.map(b => b.id), applications: ['tasks'], isShared: false, tenantId: 'default' },
+  { id: 'coll-general-roles', name: 'General & Admin Roles', icon: 'admin_panel_settings', color: 'hsl(220, 13%, 47%)', owner: { type: 'user', id: 'user-001' }, viewMode: 'grid', badgeIds: generalRoles.map(b => b.id), applications: ['team members'], tenantId: 'default' },
+  { id: 'coll-event-priority', name: 'Event Priority', icon: 'flag', color: 'hsl(0, 84%, 60%)', owner: { type: 'user', id: 'user-001' }, viewMode: 'list', badgeIds: priorityBadges.map(b => b.id), applications: ['events'], tenantId: 'default' }
+];
+
+export const mockLocations = [
+  { id: 'loc-1', name: 'Studio A', tenantId: 'default' },
+  { id: 'loc-2', name: 'Studio B', tenantId: 'default' },
+  { id: 'loc-3', name: 'Green Room', tenantId: 'default' },
+  { id: 'loc-4', name: 'Audio Mix Room', tenantId: 'default' },
+  { id: 'loc-5', name: 'Conference Room', tenantId: 'default' },
+];
+
+export const mockHolidays = [
+  new Date('2024-01-01'), new Date('2024-07-04'), new Date('2024-12-25')
+];
+
+
+export const mockEvents = [
+  {
+    eventId: 'evt-001',
+    projectId: 'proj-corp-video',
+    calendarId: 'cal-001',
+    title: 'Corporate Shoot - Day 1',
+    startTime: new Date(new Date().setHours(9, 0, 0, 0)),
+    endTime: new Date(new Date().setHours(17, 0, 0, 0)),
+    location: 'Studio A',
+    priority: 'badge-priority-high',
+    attendees: [],
+    roleAssignments: {
+      'Video Producer': 'user-001',
+      'Camera Operator': 'user-004',
     },
+    attachments: [
+      { name: 'Shooting Schedule', type: 'sheets', url: '#' },
+      { name: 'Script v4.2', type: 'docs', url: '#' },
+    ],
+    createdBy: 'user-001',
+    createdAt: new Date(),
+    lastUpdated: new Date(),
+    tenantId: 'default'
+  },
+  {
+    eventId: 'evt-002',
+    projectId: 'proj-corp-video',
+    calendarId: 'cal-002',
+    title: 'Review Dailies',
+    startTime: new Date(new Date().setHours(10, 0, 0, 0)),
+    endTime: new Date(new Date().setHours(12, 30, 0, 0)),
+    location: 'Edit Suite 1',
+    priority: 'badge-priority-medium',
+    attendees: [
+        { userId: 'user-001', displayName: 'Eleanor Vance', email: 'eleanor@example.com' },
+    ],
+    roleAssignments: {
+      'Editor': 'user-002',
+    },
+    attachments: [],
+    createdBy: 'user-002',
+    createdAt: new Date(),
+    lastUpdated: new Date(),
+    tenantId: 'default'
+  },
+  {
+    eventId: 'evt-003',
+    projectId: 'proj-podcast',
+    calendarId: 'cal-003',
+    title: 'Podcast Ep 12 - Final Mix',
+    startTime: new Date(new Date().setHours(14, 0, 0, 0)),
+    endTime: new Date(new Date().setHours(18, 0, 0, 0)),
+    location: 'Audio Mix Room',
+    priority: 'badge-priority-low',
+    attendees: [],
+    roleAssignments: {
+      'Sound Mixer': 'user-008',
+      'Audio Engineer': 'user-003',
+    },
+    attachments: [],
+    createdBy: 'user-007',
+    createdAt: new Date(),
+    lastUpdated: new Date(),
+    tenantId: 'default'
+  },
+  {
+    eventId: 'evt-004',
+    projectId: 'proj-internal',
+    calendarId: 'cal-004',
+    title: 'All-Hands Meeting',
+    startTime: new Date(new Date(new Date().setDate(new Date().getDate() + 1)).setHours(11, 0, 0, 0)),
+    endTime: new Date(new Date(new Date().setDate(new Date().getDate() + 1)).setHours(12, 0, 0, 0)),
+    location: 'Conference Room',
+    priority: 'badge-priority-medium',
+    attendees: mockUsers.map(u => ({ userId: u.userId, displayName: u.displayName, email: u.email })),
+    roleAssignments: {},
+    attachments: [
+        { name: 'Q2 Performance Review', type: 'slides', url: '#' }
+    ],
+    createdBy: 'user-001',
+    createdAt: new Date(),
+    lastUpdated: new Date(),
+    tenantId: 'default'
+  }
 ];
-exports.mockAppSettings = {
-    pages: __spreadArray([], dynamicPages, true),
-    tabs: [], // Core tabs are now in core-data.ts
-};
-exports.mockUsers = [
-    { userId: '1', displayName: 'Bernardo Resende', email: 'bernardo.resende@google.com', isAdmin: true, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Video Production Lead', roles: ['badge-video-director', 'badge-dop'], theme: 'dark', defaultCalendarView: 'production-schedule', primaryColor: '#D8620E', linkedTeamIds: [], linkedCollectionIds: ['event-roles-collection'], linkedCalendarIds: ['dreamtek'], dragActivationKey: 'shift', memberOfTeamIds: ['video-production'] },
-    { userId: '2', displayName: 'Daniel Lazard', email: 'dlazard@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Senior Manager', roles: [], theme: 'light', defaultCalendarView: 'week', linkedTeamIds: [], linkedCollectionIds: [], linkedCalendarIds: [], dragActivationKey: 'shift', memberOfTeamIds: ['service-delivery'] },
-    { userId: '3', displayName: 'May-Kate Woods', email: 'maykate@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Event Technician', roles: ['badge-esop', 'badge-td'], theme: 'light', defaultCalendarView: 'week', linkedTeamIds: [], linkedCollectionIds: [], linkedCalendarIds: [], dragActivationKey: 'shift', memberOfTeamIds: ['live-events'] },
-    { userId: '4', displayName: 'Zoey Roberts', email: 'zoeyr@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Production Coordinator', roles: ['badge-1stad'], theme: 'light', defaultCalendarView: 'month', linkedTeamIds: [], linkedCollectionIds: [], linkedCalendarIds: [], dragActivationKey: 'shift', memberOfTeamIds: ['production'] },
-    { userId: '5', displayName: 'Bilal Merhi', email: 'merhi@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Senior Video Editor', roles: ['badge-editor', 'badge-motion'], theme: 'light', defaultCalendarView: 'day', linkedTeamIds: [], linkedCollectionIds: [], linkedCalendarIds: [], dragActivationKey: 'shift', memberOfTeamIds: ['video-production'] },
-    { userId: '6', displayName: 'Sam Walker', email: 'samwalker@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Creative Producer', roles: ['badge-creative-producer', 'badge-script'], theme: 'light', defaultCalendarView: 'day', linkedTeamIds: [], linkedCollectionIds: [], linkedCalendarIds: [], dragActivationKey: 'shift', memberOfTeamIds: ['video-production'] },
-    { userId: '7', displayName: 'Ashley Mulla', email: 'ashleymulla@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Video Editor', roles: ['badge-editor', 'badge-cameraop'], theme: 'light', defaultCalendarView: 'day', linkedTeamIds: [], linkedCollectionIds: [], linkedCalendarIds: [], dragActivationKey: 'shift', memberOfTeamIds: ['video-production'] },
-    { userId: '8', displayName: 'Perry Rogantin', email: 'rogantin@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Senior Event Technician (Audio)', roles: ['badge-audioeng', 'badge-audiomix'], theme: 'light', defaultCalendarView: 'week', linkedTeamIds: [], linkedCollectionIds: [], linkedCalendarIds: [], dragActivationKey: 'shift', memberOfTeamIds: ['live-events'] },
-    { userId: '9', displayName: 'Robby Atilla', email: 'robbyatilla@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'TD Vision Specialist', roles: ['badge-td', 'badge-cameraop'], theme: 'light', defaultCalendarView: 'week', linkedTeamIds: [], linkedCollectionIds: [], linkedCalendarIds: [], dragActivationKey: 'shift', memberOfTeamIds: ['live-events'] },
-    { userId: '10', displayName: 'Robert Messere', email: 'messere@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Event Technician', roles: ['badge-contentop', 'badge-1stad'], theme: 'light', defaultCalendarView: 'week', linkedTeamIds: [], linkedCollectionIds: [], linkedCalendarIds: [], dragActivationKey: 'shift', memberOfTeamIds: ['live-events'] },
-    { userId: '11', displayName: 'Reno Adriaanse', email: 'renoa@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Senior Event Technician (Visual)', roles: ['badge-cameraop', 'badge-dop'], theme: 'light', defaultCalendarView: 'week', linkedTeamIds: [], linkedCollectionIds: [], linkedCalendarIds: [], dragActivationKey: 'shift', memberOfTeamIds: ['live-events'] },
-    { userId: '12', displayName: 'Danny Smartt', email: 'dsmartt@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Event Technician', roles: ['badge-eventeditor'], theme: 'light', defaultCalendarView: 'week', linkedTeamIds: [], linkedCollectionIds: [], linkedCalendarIds: [], dragActivationKey: 'shift', memberOfTeamIds: ['live-events'] },
-    { userId: '13', displayName: 'Maciej Chamulak', email: 'chamulak@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Senior Event Technician', roles: ['badge-cameraop'], theme: 'light', defaultCalendarView: 'week', linkedTeamIds: [], linkedCollectionIds: [], linkedCalendarIds: [], dragActivationKey: 'shift', memberOfTeamIds: ['live-events'] },
-    { userId: '14', displayName: 'Milan Chohan', email: 'mchohan@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Event Technician', roles: ['badge-audioeng'], theme: 'light', defaultCalendarView: 'week', linkedTeamIds: [], linkedCollectionIds: [], linkedCalendarIds: [], dragActivationKey: 'shift', memberOfTeamIds: ['live-events'] },
-    { userId: '15', displayName: 'Molly Rose', email: 'mollyrose@google.com', isAdmin: false, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'Production Coordinator', roles: [], theme: 'light', defaultCalendarView: 'month', linkedTeamIds: [], linkedCollectionIds: [], linkedCalendarIds: [], dragActivationKey: 'shift', memberOfTeamIds: ['production'] },
-    { userId: '16', displayName: 'Chandra Patel', email: 'chandra.patel@google.com', isAdmin: true, accountType: 'Full', googleCalendarLinked: true, avatarUrl: 'https://placehold.co/40x40.png', title: 'System Administrator', roles: [], theme: 'light', defaultCalendarView: 'month', linkedTeamIds: [], linkedCollectionIds: [], linkedCalendarIds: [], dragActivationKey: 'shift', memberOfTeamIds: [] },
-    { userId: '17', displayName: 'John Doe', email: 'john.doe@google.com', isAdmin: false, accountType: 'Viewer', googleCalendarLinked: false, avatarUrl: 'https://placehold.co/40x40.png', title: 'New Hire', roles: [], theme: 'light', defaultCalendarView: 'day', linkedTeamIds: [], linkedCollectionIds: [], linkedCalendarIds: [], dragActivationKey: 'shift', memberOfTeamIds: [] }
+
+export const mockProjects = [
+  { id: 'proj-corp-video', name: 'Project Phoenix - Corporate Video', owner: {type: 'user', id: 'user-001'}, isShared: false, icon: 'movie', color: '#10B981', tenantId: 'default' },
+  { id: 'proj-podcast', name: 'The TechTrek Podcast', owner: {type: 'user', id: 'user-007'}, isShared: true, icon: 'podcasts', color: '#F97316', tenantId: 'default' },
+  { id: 'proj-internal', name: 'Internal Projects', owner: {type: 'user', id: 'user-001'}, isShared: false, icon: 'business_center', color: '#64748B', tenantId: 'default' },
 ];
-exports.mockCalendars = [
-    { id: 'production', name: 'Production', icon: 'campaign', color: '#22C55E', owner: { type: 'user', id: '4' }, defaultEventTitle: 'New Production Meeting' },
-    { id: 'video-production', name: 'Video Production', icon: 'movie', color: '#FBBF24', owner: { type: 'user', id: '1' }, defaultEventTitle: 'New Video Shoot' },
-    { id: 'live-events', name: 'Live Events', icon: 'videocam', color: '#3B82F6', owner: { type: 'user', id: '3' }, googleCalendarId: 'live-events-calendar@google.com', isShared: true, defaultEventTitle: 'New Live Event' },
-    { id: 'dreamtek', name: 'Dreamtek', icon: 'business_center', color: '#8B5CF6', owner: { type: 'user', id: '2' }, defaultEventTitle: 'New Dreamtek Event' },
+
+export const mockTasks = [
+  {
+    taskId: 'task-001',
+    projectId: 'proj-corp-video',
+    title: 'Finalize script for corporate video',
+    assignedTo: [mockUsers[0]],
+    dueDate: new Date(),
+    priority: 'badge-priority-high',
+    status: 'in_progress',
+    createdBy: 'user-002',
+    createdAt: new Date(),
+    lastUpdated: new Date(),
+    tenantId: 'default'
+  },
+  {
+    taskId: 'task-002',
+    projectId: 'proj-corp-video',
+    title: 'Scout locations for warehouse scene',
+    assignedTo: [mockUsers[4]],
+    dueDate: new Date(new Date().setDate(new Date().getDate() + 3)),
+    priority: 'badge-priority-medium',
+    status: 'not_started',
+    createdBy: 'user-001',
+    createdAt: new Date(),
+    lastUpdated: new Date(),
+    tenantId: 'default'
+  },
+  {
+    taskId: 'task-003',
+    projectId: 'proj-podcast',
+    title: 'Edit guest audio for Episode 12',
+    assignedTo: [mockUsers[2], mockUsers[7]],
+    dueDate: new Date(new Date().setDate(new Date().getDate() - 1)),
+    priority: 'badge-priority-high',
+    status: 'awaiting_review',
+    createdBy: 'user-007',
+    createdAt: new Date(),
+    lastUpdated: new Date(),
+    tenantId: 'default'
+  },
+  {
+    taskId: 'task-004',
+    projectId: 'proj-corp-video',
+    title: 'Source stock footage for b-roll',
+    assignedTo: [mockUsers[1]],
+    dueDate: new Date(new Date().setDate(new Date().getDate() + 5)),
+    priority: 'badge-priority-low',
+    status: 'not_started',
+    createdBy: 'user-001',
+    createdAt: new Date(),
+    lastUpdated: new Date(),
+    tenantId: 'default'
+  },
+  {
+    taskId: 'task-005',
+    projectId: 'proj-internal',
+    title: 'Update asset library with new logos',
+    assignedTo: [mockUsers[4]],
+    dueDate: new Date(new Date().setDate(new Date().getDate() - 5)),
+    priority: 'badge-priority-low',
+    status: 'completed',
+    createdBy: 'user-007',
+    createdAt: new Date(),
+    lastUpdated: new Date(),
+    tenantId: 'default'
+  }
 ];
-exports.mockLocations = [
-    { id: 'auditorium', name: 'Auditorium' },
-    { id: 'acr', name: 'ACR' },
-    { id: 'event-space-1', name: 'Event Space 1 (S2)' },
-    { id: 'event-space-2', name: 'Event Space 2 (S2)' },
-    { id: 'event-space-3', name: 'Event Space 3 (R7)' },
-    { id: 'event-space-4', name: 'Event Space 4 (R7)' },
-    { id: 'studio', name: 'Studio' },
-    { id: 'training-room', name: 'Training Room' },
-    { id: 'locke', name: 'Locke' },
-    { id: 'apgar', name: 'Apgar' },
-];
-// --- Badge Definitions ---
-// Bernardo Resende (userId: '1') owns these
-var videoProdCollectionId = 'video-prod-collection';
-exports.videoProdBadges = [
-    { id: 'badge-video-director', owner: { type: 'user', id: '1' }, ownerCollectionId: videoProdCollectionId, name: 'Video Director', icon: 'videocam', color: '#FCD34D', description: 'Oversees the creative and technical aspects of a video shoot.' },
-    { id: 'badge-dop', owner: { type: 'user', id: '1' }, ownerCollectionId: videoProdCollectionId, name: 'D.o.P.', icon: 'camera', color: '#FBBF24', description: 'Director of Photography' },
-    { id: 'badge-editor', owner: { type: 'user', id: '1' }, ownerCollectionId: videoProdCollectionId, name: 'Editor', icon: 'edit_note', color: '#F59E0B' },
-    { id: 'badge-motion', owner: { type: 'user', id: '1' }, ownerCollectionId: videoProdCollectionId, name: 'Motion Graphics', icon: 'animation', color: '#D97706' },
-    { id: 'badge-creative-producer', owner: { type: 'user', id: '1' }, ownerCollectionId: videoProdCollectionId, name: 'Creative Producer', icon: 'person', color: '#FEF08A' },
-    { id: 'badge-script', owner: { type: 'user', id: '1' }, ownerCollectionId: videoProdCollectionId, name: 'Script', icon: 'description', color: '#FDE68A' },
-];
-// May-Kate Woods (userId: '3') owns these
-var liveEventsCollectionId = 'event-roles-collection';
-exports.liveEventsBadges = [
-    { id: 'badge-td', owner: { type: 'user', id: '3' }, ownerCollectionId: liveEventsCollectionId, name: 'TD', icon: 'engineering', color: '#60A5FA', description: 'Technical Director for live events.' },
-    { id: 'badge-1stad', owner: { type: 'user', id: '3' }, ownerCollectionId: liveEventsCollectionId, name: '1st AD', icon: 'group', color: '#3B82F6' },
-    { id: 'badge-cameraop', owner: { type: 'user', id: '3' }, ownerCollectionId: liveEventsCollectionId, name: 'Camera Op.', icon: 'photo_camera', color: '#2563EB', description: 'Camera Operator' },
-    { id: 'badge-audioeng', owner: { type: 'user', id: '3' }, ownerCollectionId: liveEventsCollectionId, name: 'Audio Engineer', icon: 'mic', color: '#93C5FD' },
-    { id: 'badge-audiomix', owner: { type: 'user', id: '3' }, ownerCollectionId: liveEventsCollectionId, name: 'Audio Mix', icon: 'equalizer', color: '#BFDBFE' },
-    { id: 'badge-contentop', owner: { type: 'user', id: '3' }, ownerCollectionId: liveEventsCollectionId, name: 'Content Op', icon: 'article', color: '#1D4ED8' },
-    { id: 'badge-esop', owner: { type: 'user', id: '3' }, ownerCollectionId: liveEventsCollectionId, name: 'ES Operator', icon: 'slideshow', color: '#3B82F6' },
-    { id: 'badge-eventeditor', owner: { type: 'user', id: '3' }, ownerCollectionId: liveEventsCollectionId, name: 'Events Editor', icon: 'local_movies', color: '#60A5FA' },
-];
-// Daniel Lazard (userId: '2') owns these
-var pScaleCollectionId = 'p-scale-collection';
-var starRatingCollectionId = 'star-rating-collection';
-var effortCollectionId = 'effort-collection';
-exports.pScaleBadges = [
-    { id: 'p0', owner: { type: 'user', id: '2' }, ownerCollectionId: pScaleCollectionId, name: 'P0', icon: 'priority_high', color: '#EF4444', description: 'Highest priority' },
-    { id: 'p1', owner: { type: 'user', id: '2' }, ownerCollectionId: pScaleCollectionId, name: 'P1', icon: 'keyboard_arrow_up', color: '#F97316', description: 'High priority' },
-    { id: 'p2', owner: { type: 'user', id: '2' }, ownerCollectionId: pScaleCollectionId, name: 'P2', icon: 'remove', color: '#FBBF24', description: 'Medium priority' },
-    { id: 'p3', owner: { type: 'user', id: '2' }, ownerCollectionId: pScaleCollectionId, name: 'P3', icon: 'keyboard_arrow_down', color: '#22C55E', description: 'Low priority' },
-    { id: 'p4', owner: { type: 'user', id: '2' }, ownerCollectionId: pScaleCollectionId, name: 'P4', icon: 'remove', color: '#64748B', description: 'Lowest priority' },
-];
-exports.starRatingBadges = [
-    { id: 'star1', owner: { type: 'user', id: '2' }, ownerCollectionId: starRatingCollectionId, name: '1 Star', icon: 'star', color: '#64748B' },
-    { id: 'star2', owner: { type: 'user', id: '2' }, ownerCollectionId: starRatingCollectionId, name: '2 Stars', icon: 'star', color: '#64748B' },
-    { id: 'star3', owner: { type: 'user', id: '2' }, ownerCollectionId: starRatingCollectionId, name: '3 Stars', icon: 'star', color: '#64748B' },
-    { id: 'star4', owner: { type: 'user', id: '2' }, ownerCollectionId: starRatingCollectionId, name: '4 Stars', icon: 'star', color: '#64748B' },
-    { id: 'star5', owner: { type: 'user', id: '2' }, ownerCollectionId: starRatingCollectionId, name: '5 Stars', icon: 'star', color: '#64748B' },
-];
-exports.effortBadges = [
-    { id: 'task-high', owner: { type: 'user', id: '2' }, ownerCollectionId: effortCollectionId, name: 'High', icon: 'keyboard_double_arrow_up', color: '#EF4444' },
-    { id: 'task-medium', owner: { type: 'user', id: '2' }, ownerCollectionId: effortCollectionId, name: 'Medium', icon: 'drag_handle', color: '#FBBF24' },
-    { id: 'task-low', owner: { type: 'user', id: '2' }, ownerCollectionId: effortCollectionId, name: 'Low', icon: 'keyboard_double_arrow_down', color: '#22C55E' },
-];
-exports.allMockBadgeCollections = [
+
+export const mockNotifications = [
     {
-        id: videoProdCollectionId,
-        owner: { type: 'user', id: '1' }, // Bernardo
-        name: 'Video Production Roles',
-        icon: 'movie',
-        color: '#FBBF24',
-        viewMode: 'compact',
-        badgeIds: __spreadArray(__spreadArray([], exports.videoProdBadges.map(function (b) { return b.id; }), true), [
-            'badge-cameraop',
-            'badge-audioeng',
-            'badge-audiomix',
-            'badge-eventeditor',
-        ], false),
-        applications: ['team members', 'events'],
-        isShared: true,
+      id: 'notif-1',
+      type: 'standard',
+      user: { userId: 'user-002', displayName: 'Marcus Holloway', avatarUrl: mockUsers[1].avatarUrl },
+      content: 'commented on the "Corporate Shoot - Day 1" event.',
+      time: new Date(new Date().getTime() - 5 * 60 * 1000), // 5 minutes ago
+      read: false,
     },
     {
-        id: liveEventsCollectionId,
-        owner: { type: 'user', id: '3' }, // May-Kate
-        name: 'Event Roles',
-        icon: 'podcasts',
-        color: '#3B82F6',
-        viewMode: 'compact',
-        badgeIds: exports.liveEventsBadges.map(function (b) { return b.id; }),
-        applications: ['team members', 'events'],
-        isShared: true,
+      id: 'notif-2',
+      type: 'standard',
+      user: { userId: 'user-007', displayName: 'Isabella Rossi', avatarUrl: mockUsers[6].avatarUrl },
+      content: 'assigned you to the "Finalize script" task.',
+      time: new Date(new Date().getTime() - 2 * 60 * 60 * 1000), // 2 hours ago
+      read: false,
     },
     {
-        id: pScaleCollectionId,
-        owner: { type: 'user', id: '2' }, // Daniel
-        name: 'P# Scale',
-        icon: 'numbers',
-        color: '#A855F7',
-        viewMode: 'list',
-        badgeIds: exports.pScaleBadges.map(function (b) { return b.id; }),
-        applications: ['events'],
-        isShared: true,
+      id: 'notif-3',
+      type: 'access_request',
+      user: { userId: 'user-006', displayName: 'Javier Morales', avatarUrl: mockUsers[5].avatarUrl },
+      content: 'has requested access to the workspace.',
+      time: new Date(new Date().getTime() - 22 * 60 * 60 * 1000), // 22 hours ago
+      read: false,
+      status: 'pending',
+      data: {
+        email: 'javier@example.com',
+        displayName: 'Javier Morales'
+      }
     },
     {
-        id: starRatingCollectionId,
-        owner: { type: 'user', id: '2' }, // Daniel
-        name: 'Star Rating',
-        icon: 'stars',
-        color: '#F59E0B',
-        viewMode: 'compact',
-        badgeIds: exports.starRatingBadges.map(function (b) { return b.id; }),
-        applications: ['tasks'],
-        isShared: false,
-    },
-    {
-        id: effortCollectionId,
-        owner: { type: 'user', id: '2' }, // Daniel
-        name: 'Effort',
-        icon: 'fitness_center',
-        color: '#10B981',
-        viewMode: 'compact',
-        badgeIds: exports.effortBadges.map(function (b) { return b.id; }),
-        applications: ['tasks'],
-        isShared: false,
+      id: 'notif-4',
+      type: 'standard',
+      user: { userId: 'user-004', displayName: 'Liam Gallagher', avatarUrl: mockUsers[3].avatarUrl },
+      content: 'updated the location for "All-Hands Meeting".',
+      time: new Date(new Date().getTime() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+      read: true,
     }
-];
-exports.mockTeams = [
-    {
-        id: 'video-production',
-        name: 'Video Production',
-        icon: 'movie',
-        color: '#FBBF24',
-        owner: { type: 'user', id: '1' },
-        isShared: false,
-        members: ['1', '5', '6', '7'],
-        teamAdmins: ['1'],
-        teamAdminsLabel: 'Prod Team Leads',
-        membersLabel: 'Prod Team Members',
-        locationCheckManagers: ['1'],
-        pinnedLocations: ['Studio', 'ACR'],
-        checkLocations: ['Studio'],
-        workstations: ['EDIT 1', 'EDIT 2', 'Pro Tools Machine'],
-        eventTemplates: [
-            { id: 'template-1', name: 'Basic Studio Shoot', icon: 'theaters', requestedRoles: ['Video Director', 'Camera Op.', 'Audio Engineer'] },
-            { id: 'template-2', name: 'Voice Over Record', icon: 'record_voice_over', requestedRoles: ['Editor', 'Audio Mix'] }
-        ],
-        activeBadgeCollections: [videoProdCollectionId]
-    },
-    {
-        id: 'live-events',
-        name: 'Live Events',
-        icon: 'videocam',
-        color: '#3B82F6',
-        owner: { type: 'user', id: '3' },
-        isShared: false,
-        members: ['3', '8', '9', '10', '11', '12', '13', '14'],
-        teamAdmins: [],
-        locationCheckManagers: ['3'],
-        pinnedLocations: ['Auditorium', 'ACR', 'Event Space 1 (S2)', 'Event Space 2 (S2)'],
-        checkLocations: ['Auditorium'],
-        eventTemplates: [
-            { id: 'template-3', name: 'Standard Live Event', icon: 'podcasts', requestedRoles: ['TD', 'ES Operator', 'Camera Op.', 'Audio Engineer'] },
-            { id: 'template-4', name: 'Auditorium Presentation', icon: 'slideshow', requestedRoles: ['TD', 'Content Op'] }
-        ],
-    },
-    {
-        id: 'production',
-        name: 'Production',
-        icon: 'campaign',
-        color: '#22C55E',
-        owner: { type: 'user', id: '4' },
-        isShared: false,
-        members: ['4', '15'],
-        teamAdmins: [],
-        locationCheckManagers: ['4'],
-    },
-    {
-        id: 'service-delivery',
-        name: 'Service Delivery',
-        icon: 'business_center',
-        color: '#8B5CF6',
-        owner: { type: 'user', id: '2' },
-        isShared: false,
-        members: ['2'],
-        teamAdmins: ['2'],
-        locationCheckManagers: [],
-    }
-];
-var userToAttendee = function (user) { return ({
-    userId: user.userId,
-    email: user.email,
-    displayName: user.displayName,
-    avatarUrl: user.avatarUrl,
-}); };
-exports.mockHolidays = [
-    new Date(new Date().getFullYear(), 0, 1), // New Year's Day
-    new Date(new Date().getFullYear(), 6, 4), // Independence Day
-    new Date(new Date().getFullYear(), 11, 25), // Christmas Day
-];
-var now = new Date();
-exports.mockEvents = [
-    {
-        eventId: 'evt-1',
-        projectId: 'proj-1',
-        title: 'Project Kick-off Meeting',
-        calendarId: 'production',
-        startTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0).toISOString(),
-        endTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 11, 0).toISOString(),
-        attendees: [userToAttendee(exports.mockUsers[0]), userToAttendee(exports.mockUsers[1]), userToAttendee(exports.mockUsers[3])],
-        location: 'ACR',
-        priority: 'p1',
-        createdBy: '2',
-        createdAt: new Date().toISOString(),
-        lastUpdated: new Date().toISOString(),
-        attachments: [],
-    },
-    {
-        eventId: 'evt-2',
-        projectId: 'proj-1',
-        title: 'Q3 All Hands Rehearsal',
-        calendarId: 'live-events',
-        startTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 13, 0).toISOString(),
-        endTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 16, 30).toISOString(),
-        attendees: exports.mockUsers.slice(2, 10).map(userToAttendee),
-        location: 'Auditorium',
-        priority: 'p0',
-        roleAssignments: { 'TD': '9', 'Audio Engineer': '8', 'Camera Op.': '11', 'ES Operator': '3', 'Content Op': null },
-        templateId: 'template-3',
-        createdBy: '3',
-        createdAt: new Date().toISOString(),
-        lastUpdated: new Date().toISOString(),
-        attachments: [],
-    },
-    {
-        eventId: 'evt-3',
-        projectId: 'proj-2',
-        title: 'VFX Review',
-        calendarId: 'video-production',
-        startTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 11, 0).toISOString(),
-        endTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0).toISOString(),
-        attendees: [userToAttendee(exports.mockUsers[0]), userToAttendee(exports.mockUsers[4])],
-        location: 'EDIT 1',
-        priority: 'p2',
-        createdBy: '1',
-        createdAt: new Date().toISOString(),
-        lastUpdated: new Date().toISOString(),
-        attachments: [],
-    },
-    {
-        eventId: 'evt-4',
-        projectId: 'proj-1',
-        title: 'Weekly Sync',
-        calendarId: 'production',
-        startTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0).toISOString(),
-        endTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 30).toISOString(),
-        attendees: [userToAttendee(exports.mockUsers[3]), userToAttendee(exports.mockUsers[14])],
-        location: 'Training Room',
-        priority: 'p3',
-        createdBy: '4',
-        createdAt: new Date().toISOString(),
-        lastUpdated: new Date().toISOString(),
-        attachments: [],
-    },
-];
-exports.mockTasks = [
-    { taskId: 'task-1', projectId: 'proj-1', title: 'Draft Q4 Comms Strategy', assignedTo: [exports.mockUsers[5]], dueDate: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2).toISOString(), priority: 'task-high', status: 'in_progress', createdBy: '2', createdAt: new Date().toISOString(), lastUpdated: new Date().toISOString() },
-    { taskId: 'task-2', projectId: 'proj-2', title: 'Review new sizzle reel edit', assignedTo: [exports.mockUsers[0], exports.mockUsers[5]], dueDate: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString(), badges: { [effortCollectionId]: 'task-high', [starRatingCollectionId]: 'star5' }, status: 'awaiting_review', createdBy: '1', createdAt: new Date().toISOString(), lastUpdated: new Date().toISOString() },
-    { taskId: 'task-3', projectId: 'proj-2', title: 'Organize asset library', assignedTo: [exports.mockUsers[6]], dueDate: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7).toISOString(), badges: { [effortCollectionId]: 'task-medium' }, status: 'not_started', createdBy: '1', createdAt: new Date().toISOString(), lastUpdated: new Date().toISOString() },
-    { taskId: 'task-4', projectId: 'proj-1', title: 'Finalize audio mix for All-Hands', assignedTo: [exports.mockUsers[7]], dueDate: new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString(), badges: { [effortCollectionId]: 'task-high' }, status: 'completed', createdBy: '3', createdAt: new Date().toISOString(), lastUpdated: new Date().toISOString() },
-    { taskId: 'task-5', projectId: 'proj-1', title: 'Update presentation deck', assignedTo: [exports.mockUsers[9]], dueDate: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 3).toISOString(), badges: { [effortCollectionId]: 'task-low' }, status: 'in_progress', createdBy: '3', createdAt: new Date().toISOString(), lastUpdated: new Date().toISOString() },
-    { taskId: 'task-6', projectId: 'proj-2', title: 'Source new background music', assignedTo: [exports.mockUsers[4]], dueDate: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 5).toISOString(), badges: { [effortCollectionId]: 'task-medium' }, status: 'blocked', createdBy: '1', createdAt: new Date().toISOString(), lastUpdated: new Date().toISOString() },
-];
-exports.mockNotifications = [
-    { id: 'notif-1', type: 'standard', user: exports.mockUsers[2], content: 'approved your request for PTO.', time: new Date(Date.now() - 1000 * 60 * 5), read: false },
-    { id: 'notif-2', type: 'standard', user: exports.mockUsers[3], content: 'assigned you to the Q3 All Hands Rehearsal as ES Operator.', time: new Date(Date.now() - 1000 * 60 * 60 * 2), read: false },
-    { id: 'notif-3', type: 'standard', user: exports.mockUsers[0], content: 'completed the task "Finalize audio mix for All-Hands".', time: new Date(Date.now() - 1000 * 60 * 60 * 24), read: true },
-    { id: 'notif-4', type: 'access_request', status: 'pending', user: { displayName: 'new.user@example.com', avatarUrl: '', userId: '' }, content: 'has requested access to the workspace.', time: new Date(Date.now() - 1000 * 60 * 60 * 48), read: false, data: { email: 'new.user@example.com', displayName: 'New User' } },
 ];
