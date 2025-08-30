@@ -22,6 +22,7 @@ interface UserContextType {
   logout: (router: AppRouterInstance) => Promise<void>;
   loading: boolean;
   isFirebaseReady: boolean;
+  isDragModifierPressed: boolean;
 
   // Data & Actions
   holidays: Holiday[];
@@ -106,6 +107,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const dataHook = useData(realUser, authLoading);
   
   const [viewAsUserId, setViewAsUserId] = useState<string | null>(null);
+  const [isDragModifierPressed, setIsDragModifierPressed] = useState(false);
   const { setTheme, theme: currentTheme } = useTheme();
 
   const loading = authLoading || dataHook.loading;
@@ -120,6 +122,30 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     if (!viewAsUserId) return realUser;
     return dataHook.users.find(u => u.userId === viewAsUserId) || realUser;
   }, [dataHook.users, viewAsUserId, realUser]);
+  
+  const dragActivationKey = viewAsUser?.dragActivationKey || 'shift';
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key.toLowerCase() === dragActivationKey) {
+            setIsDragModifierPressed(true);
+        }
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+        if (e.key.toLowerCase() === dragActivationKey) {
+            setIsDragModifierPressed(false);
+        }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [dragActivationKey]);
+
 
   const contextValue = useMemo(() => {
     const setViewAsUserWithReset = (userId: string) => {
@@ -148,6 +174,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       logout,
       loading,
       isFirebaseReady,
+      isDragModifierPressed,
       ...dataHook,
       addTeam: addTeamWithUser,
       deleteUser: deleteUserWithUser,
@@ -160,7 +187,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       addProjectEvent: addProjectEventWithUser,
     };
   }, [
-    realUser, viewAsUser, googleLogin, logout, loading, isFirebaseReady, dataHook
+    realUser, viewAsUser, googleLogin, logout, loading, isFirebaseReady, isDragModifierPressed, dataHook
   ]);
 
   return (
