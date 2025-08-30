@@ -6,7 +6,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, writeBatch, query, where } from 'firebase/firestore';
 import { getDb } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
-import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeOwner, type Task, type Holiday, type Project, type AppPage } from '@/types';
+import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeOwner, type Task, type Holiday, type Project, type AppPage, type PreApprovedEmail } from '@/types';
 import { hasAccess } from '@/lib/permissions';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { systemPages, coreTabs } from '@/lib/core-data';
@@ -32,10 +32,11 @@ export function useData(realUser: User | null, authLoading: boolean) {
   const [calendars, setCalendars] = useState<SharedCalendar[]>([]);
   const [locations, setLocations] = useState<BookableLocation[]>([]);
   const [holidays, setHolidays] = useState<Holiday[]>([]);
-  const [appSettings, setAppSettings] = useState<AppSettings>({ pages: [], tabs: [], preApprovedEmails: [], workspaceId: 'default' });
+  const [appSettings, setAppSettings] = useState<AppSettings>({ pages: [], tabs: [], workspaceId: 'default' });
   const [allBadges, setAllBadges] = useState<Badge[]>([]);
   const [allBadgeCollections, setAllBadgeCollections] = useState<BadgeCollection[]>([]);
   const [allPages, setAllPages] = useState<AppPage[]>([]);
+  const [preApprovedEmails, setPreApprovedEmails] = useState<PreApprovedEmail[]>([]);
 
 
   const { toast } = useToast();
@@ -52,10 +53,10 @@ export function useData(realUser: User | null, authLoading: boolean) {
           const db = getDb();
           const workspaceId = realUser.workspaceId;
 
-          const collectionsToFetch = ['users', 'teams', 'calendars', 'locations', 'badges', 'badgeCollections', 'projects', 'pages'];
+          const collectionsToFetch = ['users', 'teams', 'calendars', 'locations', 'badges', 'badgeCollections', 'projects', 'pages', 'pre-approved-emails'];
           const queries = collectionsToFetch.map(c => getDocs(query(collection(db, c), where("workspaceId", "==", workspaceId))));
           
-          const [usersSnapshot, teamsSnap, calendarsSnap, locationsSnap, badgesSnap, collectionsSnap, projectsSnap, pagesSnap] = await Promise.all(queries);
+          const [usersSnapshot, teamsSnap, calendarsSnap, locationsSnap, badgesSnap, collectionsSnap, projectsSnap, pagesSnap, preApprovedEmailsSnap] = await Promise.all(queries);
           
           const appSettingsSnap = await getDoc(doc(db, 'app-settings', workspaceId));
           
@@ -73,12 +74,13 @@ export function useData(realUser: User | null, authLoading: boolean) {
           setLocations(locationsSnap.docs.map(d => ({ id: d.id, ...d.data() } as BookableLocation)));
           setAllBadges(badgesSnap.docs.map(d => ({ id: d.id, ...d.data() } as Badge)));
           setAllBadgeCollections(collectionsSnap.docs.map(d => ({ id: d.id, ...d.data() } as BadgeCollection)));
+          setPreApprovedEmails(preApprovedEmailsSnap.docs.map(d => ({...d.data(), createdAt: d.data().createdAt.toDate()} as PreApprovedEmail)));
           
           const userCreatedPages = pagesSnap.docs.map(d => ({ id: d.id, ...d.data() } as AppPage));
           setAllPages([...systemPages, ...userCreatedPages]);
 
           if (appSettingsSnap.exists()) {
-            const settingsData = appSettingsSnap.data() as AppSettings;
+            const settingsData = appSettingsSnap.data() as Omit<AppSettings, 'preApprovedEmails'>;
               setAppSettings({
                 ...settingsData,
                 pages: [...systemPages, ...userCreatedPages]
@@ -86,7 +88,6 @@ export function useData(realUser: User | null, authLoading: boolean) {
           } else {
              const newAppSettings = {
                 tabs: coreTabs.map(t => ({...t, workspaceId})),
-                preApprovedEmails: [],
                 workspaceId,
                 pages: []
             };
@@ -136,6 +137,35 @@ export function useData(realUser: User | null, authLoading: boolean) {
       await simulateApi();
       setUsers([...reorderedUsers]);
   }, []);
+  
+  const addPreApprovedEmail = useCallback(async (email: string, realUser: User) => {
+    if (!realUser) return;
+    if (preApprovedEmails.some(item => item.email === email)) {
+        toast({ variant: 'destructive', title: 'Email already exists' });
+        return;
+    }
+    const db = getDb();
+    const newEmail: Omit<PreApprovedEmail, 'id'> = {
+        email,
+        invitedBy: realUser.userId,
+        workspaceId: realUser.workspaceId,
+        createdAt: new Date(),
+    };
+    await addDoc(collection(db, 'pre-approved-emails'), newEmail);
+    setPreApprovedEmails(current => [...current, newEmail]);
+  }, [preApprovedEmails, toast]);
+
+  const removePreApprovedEmail = useCallback(async (email: string) => {
+      if (!realUser) return;
+      const db = getDb();
+      const q = query(collection(db, 'pre-approved-emails'), where('email', '==', email), where('workspaceId', '==', realUser.workspaceId));
+      const snapshot = await getDocs(q);
+      if (!snapshot.empty) {
+          const docToDelete = snapshot.docs[0];
+          await deleteDoc(doc(db, 'pre-approved-emails', docToDelete.id));
+          setPreApprovedEmails(current => current.filter(item => item.email !== email));
+      }
+  }, [realUser]);
 
   const handleApproveAccessRequest = useCallback(async (notificationId: string, approved: boolean, realUser: User) => {
     const notification = notifications.find(n => n.id === notificationId);
@@ -409,7 +439,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
     setLocations(current => current.filter(loc => loc.id !== locationId));
   }, []);
 
-  const updateAppSettings = useCallback(async (settings: Partial<Omit<AppSettings, 'pages'>>) => {
+  const updateAppSettings = useCallback(async (settings: Partial<AppSettings>) => {
     if(!realUser) return;
     const db = getDb();
     const settingsRef = doc(db, 'app-settings', realUser.workspaceId);
@@ -705,6 +735,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
   
   return {
     loading, users, teams, projects, appSettings: {...appSettings, pages: allPages}, calendars, locations, notifications, userStatusAssignments, allBadges, allBadgeCollections, holidays, allBookableLocations,
+    preApprovedEmails, addPreApprovedEmail, removePreApprovedEmail,
     setUsers, setTeams, setAllBadgeCollections, setAppSettings, setCalendars, setLocations, setNotifications, setUserStatusAssignments, setAllBadges,
     handleApproveAccessRequest, updateUser, addUser, deleteUser, reorderUsers, addTeam, updateTeam, deleteTeam, reorderTeams,
     addProject, updateProject, deleteProject,
@@ -712,8 +743,8 @@ export function useData(realUser: User | null, authLoading: boolean) {
     fetchProjectEvents, addProjectEvent, updateProjectEvent, deleteProjectEvent,
     fetchTasks,
     addTask, updateTask, deleteTask, addLocation, deleteLocation,
+    updateAppSettings: (settings: Partial<Omit<AppSettings, 'preApprovedEmails'>>) => updateAppSettings(settings),
     addPage, updatePage, deletePage, reorderPages,
-    updateAppSettings: (settings: Partial<Omit<AppSettings, 'pages'>>) => updateAppSettings(settings),
     updateAppTab, reorderTabs,
     addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, reorderBadgeCollections, addBadge, updateBadge, deleteBadge,
     reorderBadges, handleBadgeAssignment, handleBadgeUnassignment,

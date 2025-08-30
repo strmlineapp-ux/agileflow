@@ -3,7 +3,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
-import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeOwner, type Task, type Holiday, type Project } from '@/types';
+import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeOwner, type Task, type Holiday, type Project, type PreApprovedEmail } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { useAuth } from '@/hooks/useAuth';
@@ -35,6 +35,9 @@ interface UserContextType {
   allBookableLocations: BookableLocation[];
   notifications: Notification[];
   setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
+  preApprovedEmails: PreApprovedEmail[];
+  addPreApprovedEmail: (email: string) => Promise<void>;
+  removePreApprovedEmail: (email: string) => Promise<void>;
   userStatusAssignments: Record<string, UserStatusAssignment[]>;
   setUserStatusAssignments: React.Dispatch<React.SetStateAction<Record<string, UserStatusAssignment[]>>>;
   handleApproveAccessRequest: (notificationId: string, approved: boolean) => Promise<void>;
@@ -76,6 +79,10 @@ interface UserContextType {
   deleteLocation: (locationId: string) => Promise<void>;
 
   updateAppSettings: (settings: Partial<AppSettings>) => Promise<void>;
+  addPage: (pageData: Partial<AppPage>) => Promise<void>;
+  updatePage: (pageId: string, pageData: Partial<AppPage>) => Promise<void>;
+  deletePage: (pageId: string) => Promise<void>;
+  reorderPages: (reorderedPages: AppPage[]) => Promise<void>;
   updateAppTab: (tabId: string, tabData: Partial<AppTab>) => Promise<void>;
   reorderTabs: (reorderedTabs: AppTab[]) => Promise<void>;
 
@@ -165,6 +172,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const deleteBadgeWithUser = (badgeId: string, collectionId: string) => dataHook.deleteBadge(badgeId, collectionId, realUser!);
     const addTaskWithUser = (currentTasks: Task[], newTaskData: Omit<Task, 'taskId' | 'createdAt' | 'lastUpdated'>) => dataHook.addTask(currentTasks, newTaskData, realUser!);
     const addProjectEventWithUser = (projectId: string, currentEvents: Event[], newEventData: Omit<Event, 'eventId'>) => dataHook.addProjectEvent(projectId, currentEvents, newEventData, realUser!);
+    const addPreApprovedEmailWithUser = (email: string) => dataHook.addPreApprovedEmail(email, realUser!);
 
     return {
       realUser,
@@ -185,6 +193,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       deleteBadge: deleteBadgeWithUser,
       addTask: addTaskWithUser,
       addProjectEvent: addProjectEventWithUser,
+      addPreApprovedEmail: addPreApprovedEmailWithUser,
     };
   }, [
     realUser, viewAsUser, googleLogin, logout, loading, isFirebaseReady, isDragModifierPressed, dataHook

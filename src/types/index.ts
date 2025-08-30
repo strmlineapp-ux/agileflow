@@ -39,12 +39,18 @@ export interface AppPage {
   workspaceId: string;
 }
 
+export interface PreApprovedEmail {
+  email: string;
+  invitedBy: string; // userId of inviter
+  workspaceId: string;
+  createdAt: Date;
+}
+
 export interface AppSettings {
   pages: AppPage[];
   tabs: AppTab[];
   calendarManagementLabel?: string;
   teamManagementLabel?: string;
-  preApprovedEmails: Array<{ email: string; invitedBy: string; workspaceId: string; }>;
   workspaceId: string;
 }
 
