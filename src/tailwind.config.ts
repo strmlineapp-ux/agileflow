@@ -48,7 +48,7 @@ export default {
           DEFAULT: "hsl(var(--popover) / <alpha-value>)",
         },
         card: {
-          DEFAULT: "hsl(var(--card) / <alpha-value>)",
+          DEFAULT: "hsl(var(--background) / <alpha-value>)",
         },
       },
       borderRadius: {
