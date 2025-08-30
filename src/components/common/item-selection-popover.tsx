@@ -55,7 +55,6 @@ const ItemDisplay = ({ item, isSelected }: { item: Item, isSelected: boolean }) 
             className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer text-muted-foreground"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            style={itemStyle}
         >
             {item.iconType === 'avatar' ? (
                 <Avatar className="h-7 w-7">
@@ -63,7 +62,7 @@ const ItemDisplay = ({ item, isSelected }: { item: Item, isSelected: boolean }) 
                     <AvatarFallback>{item.name.slice(0, 2)}</AvatarFallback>
                 </Avatar>
             ) : (
-                <GoogleSymbol name={item.icon} style={{ ...iconStyle, color: finalIconColor }} />
+                <GoogleSymbol name={item.icon} style={{ ...iconStyle, color: item.color }} />
             )}
             <span style={itemStyle}>{item.name}</span>
         </div>
@@ -170,4 +169,3 @@ export function ItemSelectionPopover({
     </Popover>
   );
 }
-
