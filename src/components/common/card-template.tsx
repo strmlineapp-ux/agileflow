@@ -21,6 +21,7 @@ interface CardTemplateProps {
     icon: string;
     color: string;
     description?: React.ReactNode;
+    url?: string;
     isShared?: boolean;
     owner?: { type: string, id: string };
   };
@@ -63,7 +64,7 @@ export function CardTemplate({
     const { theme } = useTheme();
     const readableColor = getReadableColor(entity.color, theme);
     
-    const descriptionContent = (
+    const urlContent = (
       <p 
         className={cn(
             "text-sm text-muted-foreground", 
@@ -72,7 +73,7 @@ export function CardTemplate({
         onClick={descriptionAction}
         onPointerDown={(e) => { if (descriptionAction) e.stopPropagation(); }}
       >
-        {entity.description}
+        {entity.url}
       </p>
     );
 
@@ -137,8 +138,9 @@ export function CardTemplate({
                 </CardHeader>
                 {isExpanded && (entity.description || body) && (
                     <CardContent className="p-2 pt-0 flex-grow flex flex-col gap-2">
-                        {entity.description && descriptionContent}
+                        {entity.description && <p className="text-sm text-muted-foreground">{entity.description}</p>}
                         {body}
+                        {entity.url && urlContent}
                     </CardContent>
                 )}
                 {footer && <CardFooter className="p-2 pt-0">{footer}</CardFooter>}

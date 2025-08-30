@@ -612,7 +612,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
 
     return (
         <CardTemplate
-            entity={{...page, description: displayPath}}
+            entity={{...page, url: displayPath}}
             onUpdate={onUpdate}
             onDelete={() => onDelete(page.id)}
             canManage={canManage}
@@ -621,13 +621,15 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
             onToggleExpand={onToggleExpand}
             descriptionAction={isPinned ? undefined : () => onUpdate(page.id, { isDynamic: !page.isDynamic })}
             body={
-                <InlineEditor
-                    value={page.description || ''}
-                    onSave={(newDesc) => onUpdate(page.id, { description: newDesc })}
-                    disabled={!canManage}
-                    placeholder="Click to add a description..."
-                    className="text-sm text-muted-foreground"
-                />
+                <div onPointerDown={(e) => e.stopPropagation()}>
+                    <InlineEditor
+                        value={page.description || ''}
+                        onSave={(newDesc) => onUpdate(page.id, { description: newDesc })}
+                        disabled={!canManage}
+                        placeholder="Click to add a description..."
+                        className="text-sm text-muted-foreground"
+                    />
+                </div>
             }
             headerControls={
                 <div className="flex items-center">
@@ -901,4 +903,5 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
 
 
     
+
 
