@@ -85,6 +85,7 @@ export interface User {
   iconOpticalSize?: number;
   iconFill?: boolean;
   radius?: number;
+  highContrast?: boolean;
   linkedTeamIds?: string[];
   linkedBadgeCollectionIds?: string[];
   linkedCalendarIds?: string[];

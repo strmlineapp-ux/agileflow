@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
@@ -247,6 +248,22 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                         <p>
                                           {`Switch to ${user.theme === 'dark' ? 'Light' : 'Dark'} Theme.`}
                                         </p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button variant="ghost" size="icon" onClick={(e) => {
+                                            if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) { e.preventDefault(); updateUser(user.userId, { highContrast: false }); }
+                                            else { updateUser(user.userId, { highContrast: !user.highContrast }); }
+                                        }} className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground">
+                                            <GoogleSymbol name="contrast" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>High Contrast: <span className="font-semibold">{user.highContrast ? 'On' : 'Off'}</span></p>
                                     </TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>
