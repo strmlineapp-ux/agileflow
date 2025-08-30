@@ -40,6 +40,7 @@ export default {
         },
         muted: {
           DEFAULT: "hsl(var(--muted) / <alpha-value>)",
+          /** The default color for less important text. */
           foreground: "hsl(var(--muted-foreground) / <alpha-value>)",
         },
         accent: {
@@ -56,7 +57,6 @@ export default {
         },
         card: {
           DEFAULT: "hsl(var(--card) / <alpha-value>)",
-          foreground: "hsl(var(--card-foreground) / <alpha-value>)",
         },
       },
       borderRadius: {
