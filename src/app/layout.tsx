@@ -43,7 +43,7 @@ const DynamicStyles = () => {
 
 function AppBody({ children }: { children: React.ReactNode }) {
     const { viewAsUser } = useUser();
-    const { setTheme } = useTheme();
+    const { setTheme, theme } = useTheme();
 
     React.useEffect(() => {
         if (viewAsUser?.theme) {
@@ -84,7 +84,19 @@ function AppBody({ children }: { children: React.ReactNode }) {
         } else {
             root.style.removeProperty('--primary');
         }
-    }, [viewAsUser?.primaryColor, viewAsUser?.theme]);
+        
+        const isDarkMode = theme === 'dark';
+        const isHighContrast = viewAsUser?.highContrast;
+
+        let luma;
+        if (isHighContrast) {
+            luma = isDarkMode ? '100%' : '0%';
+        } else {
+            luma = isDarkMode ? '40%' : '50%';
+        }
+        root.style.setProperty('--foreground', `210 7% ${luma}`);
+
+    }, [viewAsUser?.primaryColor, viewAsUser?.theme, viewAsUser?.highContrast, theme]);
     
     return (
         <>
