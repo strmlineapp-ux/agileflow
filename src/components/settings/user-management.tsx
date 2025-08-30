@@ -99,23 +99,15 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
       updateUser(user.userId, { primaryColor: color });
     }
     
-    const handleThemeChange = (e: React.MouseEvent) => {
-        const isModifierPressed = e.altKey || e.ctrlKey || e.metaKey || e.shiftKey;
-        if (isModifierPressed) {
-            e.preventDefault();
-            // Just toggle the wash
-            updateUser(user.userId, { hideWash: !user.hideWash });
-        } else {
-            // Toggle theme and turn wash off
-            const newTheme = user.theme === 'dark' ? 'light' : 'dark';
-            updateUser(user.userId, { theme: newTheme, hideWash: true });
-        }
+    const handleThemeChange = () => {
+        const newTheme = user.theme === 'dark' ? 'light' : 'dark';
+        updateUser(user.userId, { theme: newTheme });
     }
 
     const handleResetColors = (e: React.MouseEvent) => {
         if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
             e.preventDefault();
-            updateUser(user.userId, { primaryColor: null, hideWash: true });
+            updateUser(user.userId, { primaryColor: null });
         }
     }
     
@@ -247,7 +239,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                     </TooltipTrigger>
                                     <TooltipContent>
                                         <p>
-                                          {`Switch to ${user.theme === 'dark' ? 'Light' : 'Dark'} Theme. Modifier+Click to toggle wash.`}
+                                          {`Switch to ${user.theme === 'dark' ? 'Light' : 'Dark'} Theme.`}
                                         </p>
                                     </TooltipContent>
                                 </Tooltip>

@@ -8,8 +8,6 @@
     --background: 0 0% 98%;
     --foreground: 222.2 47.4% 11.2%;
 
-    --wash: 0 0% 50%;
-
     --primary: 210 70% 50%;
     --primary-foreground: 210 40% 98%;
     
@@ -27,8 +25,6 @@
     --background: 0 0% 3%;
     --foreground: 210 40% 98%;
     
-    --wash: 217.2 32.6% 17.5%;
-
     --primary: 25 88% 45%;
     --primary-foreground: 43 55% 95%;
 
@@ -47,19 +43,6 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-roboto), sans-serif;
-  }
-
-  body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: hsl(var(--wash));
-    opacity: var(--wash-opacity, 0);
-    pointer-events: none;
-    z-index: -1;
   }
   
   h1, h2, h3, h4, h5, h6 {
@@ -87,4 +70,3 @@
     scrollbar-width: none;  /* Firefox */
   }
 }
-

@@ -20,7 +20,6 @@ const DynamicStyles = () => {
   const { viewAsUser, loading } = useUser();
 
   const primaryColor = viewAsUser?.primaryColor;
-  const hideWash = viewAsUser?.hideWash;
 
   React.useEffect(() => {
     const root = document.documentElement;
@@ -29,24 +28,12 @@ const DynamicStyles = () => {
         if(hslValues) {
             const primaryHsl = `${hslValues[1]} ${hslValues[2]}% ${hslValues[3]}%`;
             root.style.setProperty('--primary', primaryHsl);
-            // Always set wash to be the same as primary
-            root.style.setProperty('--wash', primaryHsl);
         }
     } else {
         root.style.removeProperty('--primary');
-        root.style.removeProperty('--wash');
     }
     
-    // Opacity is now only controlled by the hideWash flag
-    if (hideWash) {
-        root.style.setProperty('--wash-opacity', '0');
-    } else {
-        // If a custom color is set, and wash is not hidden, show it.
-        // Otherwise, it stays hidden.
-        root.style.setProperty('--wash-opacity', primaryColor ? '0.1' : '0');
-    }
-
-  }, [primaryColor, hideWash]);
+  }, [primaryColor]);
 
 
   if (loading) return null;
@@ -90,11 +77,9 @@ function AppBody({ children }: { children: React.ReactNode }) {
             if (hslValues) {
                 const primaryHsl = `${hslValues[1]} ${hslValues[2]}% ${hslValues[3]}%`;
                 root.style.setProperty('--primary', primaryHsl);
-                root.style.setProperty('--wash', primaryHsl);
             }
         } else {
             root.style.removeProperty('--primary');
-            root.style.removeProperty('--wash');
         }
     }, [viewAsUser?.primaryColor, viewAsUser?.theme]);
     
