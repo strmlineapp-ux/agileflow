@@ -48,13 +48,15 @@ export function useAuth() {
 
                 setRealUser(userData);
             } else {
+                const tenantId = getCurrentTenantId();
                 const appSettingsRef = doc(db, 'app-settings', 'global');
                 const appSettingsDoc = await getDoc(appSettingsRef);
                 const preApprovedEmails = (appSettingsDoc.data()?.preApprovedEmails || []).map((item: {email: string}) => item.email);
                 const isPreApproved = preApprovedEmails.includes(firebaseUser.email!);
                 
                 const usersCollectionRef = collection(db, 'users');
-                const firstUserQuery = query(usersCollectionRef, limit(1));
+                // Query for users only within the current tenant to check for first user
+                const firstUserQuery = query(usersCollectionRef, where("tenantId", "==", tenantId), limit(1));
                 const firstUserSnapshot = await getDocs(firstUserQuery);
                 const isFirstUser = firstUserSnapshot.empty;
                 
@@ -62,8 +64,6 @@ export function useAuth() {
                 const accountType = isFirstUser || isPreApproved ? 'Full' : 'Viewer';
                 const approvedBy = isFirstUser ? 'system' : (isPreApproved ? 'pre-approved' : undefined);
                 
-                const tenantId = getCurrentTenantId();
-
                 const newUser: User = {
                     userId: firebaseUser.uid,
                     displayName: firebaseUser.displayName || 'New User',

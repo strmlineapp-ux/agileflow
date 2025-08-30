@@ -4,6 +4,8 @@ import * as admin from "firebase-admin";
 import * as functions from "firebase-functions";
 import * as nodemailer from "nodemailer";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
+import { onDocumentUpdated } from "firebase-functions/v2/firestore";
+
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -22,12 +24,12 @@ const mailTransport = nodemailer.createTransport({
 });
 
 /**
- * Helper function to get all administrator emails from Firestore.
- * @return {Promise<string[]>}
- * // A promise that resolves to an array of admin emails.
+ * Helper function to get all administrator emails from Firestore for a specific tenant.
+ * @param {string} tenantId The ID of the tenant.
+ * @return {Promise<string[]>} A promise that resolves to an array of admin emails.
  */
-async function getAdminEmails(): Promise<string[]> {
-  const adminsRef = db.collection("users").where("isAdmin", "==", true);
+async function getAdminEmails(tenantId: string): Promise<string[]> {
+  const adminsRef = db.collection("users").where("isAdmin", "==", true).where("tenantId", "==", tenantId);
   const snapshot = await adminsRef.get();
   const adminEmails: string[] = [];
   snapshot.forEach((doc) => {
@@ -46,7 +48,7 @@ async function getAdminEmails(): Promise<string[]> {
  * @param {string} htmlBody The HTML body of the email.
  * @return {Promise<void>} A promise that resolves when the email is sent.
  */
-async function sendEmail(to: string[], subject: string, htmlBody: string): Promise<void> {
+export async function sendEmail(to: string[], subject: string, htmlBody: string): Promise<void> {
   const mailOptions = {
     from: "AgileFlow Notifications <noreply@firebase.com>",
     to: to.join(","),
@@ -71,20 +73,22 @@ async function sendEmail(to: string[], subject: string, htmlBody: string): Promi
 export const onNewUserCreated = onDocumentCreated("users/{userId}", async (event) => {
   const newUser = event.data?.data();
 
-  if (!newUser || newUser.accountType !== "Viewer") {
-    console.log("User does not require approval. Exiting function.");
+  // If user is 'Full' (pre-approved or first user), no notification needed.
+  if (!newUser || newUser.accountType !== "Viewer" || !newUser.tenantId) {
+    console.log("User does not require approval or has no tenantId. Exiting function.");
     return null;
   }
   
   const newUserName = newUser.displayName || "A new user";
   const newUserEmail = newUser.email || "No email provided";
+  const tenantId = newUser.tenantId;
 
-  console.log(`New user "${newUserName}" requires approval.`);
+  console.log(`New user "${newUserName}" requires approval for tenant "${tenantId}".`);
 
-  const adminEmails = await getAdminEmails();
+  const adminEmails = await getAdminEmails(tenantId);
 
   if (adminEmails.length === 0) {
-    console.log("No administrators found to notify. Exiting function.");
+    console.log("No administrators found to notify for this tenant. Exiting function.");
     return null;
   }
 
@@ -109,3 +113,5 @@ export const onNewUserCreated = onDocumentCreated("users/{userId}", async (event
   
   return null;
 });
+
+export { sendInvitation } from "./send-invitation";
