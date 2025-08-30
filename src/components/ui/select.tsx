@@ -6,6 +6,7 @@ import * as SelectPrimitive from "@radix-ui/react-select"
 import { GoogleSymbol } from "../icons/google-symbol"
 
 import { cn } from "@/lib/utils"
+import { useUser } from "@/context/user-context"
 
 const Select = SelectPrimitive.Root
 
@@ -116,11 +117,16 @@ const SelectItem = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
 >(({ className, children, ...props }, ref) => {
+  const { viewAsUser } = useUser();
+  const baseWeight = viewAsUser?.fontWeight || 400;
+  const isBoldEmphasis = baseWeight === 700;
+
   return (
     <SelectPrimitive.Item
       ref={ref}
       className={cn(
-        "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-transparent data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        !isBoldEmphasis ? "focus:font-emphasis" : "focus:text-primary",
         className
       )}
       {...props}

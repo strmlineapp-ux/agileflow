@@ -4,43 +4,39 @@
 
 @layer base {
   :root {
+    --font-weight-thin: 100;
+    --font-weight-light: 300;
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-bold: 700;
+
+    /* Base theme colors */
     --background: 210 20% 92%;
     --component-bg: 210 20% 96%;
-    
-    --foreground: 210 7% 50%;
-
     --primary: 210 70% 50%;
     --primary-foreground: 210 40% 98%;
-    
-    --accent: 210 40% 96%;
-
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-
     --muted: 210 40% 96.1%;
-
     --popover: 210 40% 100%;
-    
     --radius: 0.5rem;
+
+    /* Dynamic foreground color */
+    --foreground: 210 7% 50%;
   }
 
   .dark {
     --background: 210 40% 9%;
     --component-bg: 210 40% 12%;
-    
-    --foreground: 210 7% 40%;
-
     --primary: 25 88% 45%;
     --primary-foreground: 43 55% 95%;
-
-    --accent: 43 55% 71%;
-
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
     --muted: 210 40% 15%;
-
     --popover: 222.2 84% 4.9%;
+
+    /* Dynamic foreground color */
+    --foreground: 210 7% 40%;
   }
 
   * {
@@ -55,6 +51,20 @@
   h1, h2, h3, h4, h5, h6 {
       font-family: var(--font-roboto), sans-serif;
   }
+}
+
+@layer components {
+  /* Dynamic font-weight emphasis */
+  .font-emphasis {
+    font-weight: var(--font-weight-emphasis, 500); /* Default to medium */
+  }
+
+  /* Define emphasis logic based on global font weight */
+  body[style*="font-weight: 100"] .font-emphasis { --font-weight-emphasis: var(--font-weight-light); }
+  body[style*="font-weight: 300"] .font-emphasis { --font-weight-emphasis: var(--font-weight-normal); }
+  body[style*="font-weight: 400"] .font-emphasis { --font-weight-emphasis: var(--font-weight-medium); }
+  body[style*="font-weight: 500"] .font-emphasis { --font-weight-emphasis: var(--font-weight-bold); }
+  body[style*="font-weight: 700"] .font-emphasis { --font-weight-emphasis: var(--font-weight-bold); }
 }
 
 @layer utilities {
