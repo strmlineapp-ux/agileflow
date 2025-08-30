@@ -6,7 +6,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { useUser } from '@/context/user-context';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { type Team, type AppTab } from '@/types';
+import { type Team, type AppTab, type AppPage } from '@/types';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -16,12 +16,12 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { LocationCheckManagerManagement } from '../teams/location-check-manager-management';
 import { InlineEditor } from '../common/inline-editor';
 
-export function PinnedLocationManagement({ team, tab }: { team: Team, tab: AppTab }) {
+export function PinnedLocationManagement({ team, tab, page }: { team: Team, tab: AppTab, page: AppPage }) {
   if (!team) {
     return null;
   }
   
-  const { viewAsUser, locations, updateTeam, updateAppTab } = useUser();
+  const { viewAsUser, locations, updateTeam, updatePage } = useUser();
   const { toast } = useToast();
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -30,6 +30,19 @@ export function PinnedLocationManagement({ team, tab }: { team: Team, tab: AppTa
   const pinnedLocationNames = team.pinnedLocations || [];
   const checkLocationNames = new Set(team.checkLocations || []);
   const canManage = viewAsUser.isAdmin || team.teamAdmins?.includes(viewAsUser.userId);
+  const title = page.displayTitle ?? tab.name;
+
+  const handleTitleSave = (newTitle: string) => {
+    updatePage(page.id, { displayTitle: newTitle });
+  };
+
+  const handleTitleReset = (e: React.MouseEvent<HTMLHeadingElement>) => {
+    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
+        e.preventDefault();
+        updatePage(page.id, { displayTitle: null });
+        toast({title: "Title Reset", description: "The page title has been reset to its default."});
+    }
+  };
 
   const availableToPin = useMemo(() => {
     return locations
@@ -99,8 +112,9 @@ export function PinnedLocationManagement({ team, tab }: { team: Team, tab: AppTa
     <div className="space-y-6">
       <div className="flex items-center gap-2 mb-6">
           <InlineEditor
-            value={tab.name}
-            onSave={(newName) => updateAppTab(tab.id, {name: newName})}
+            value={title}
+            onSave={handleTitleSave}
+            onClick={handleTitleReset}
             className="h-auto p-0 font-headline text-2xl font-thin tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
             disabled={!canManage}
           />

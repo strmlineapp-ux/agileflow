@@ -37,8 +37,6 @@ interface CardTemplateProps {
   footer?: React.ReactNode;
   headerControls?: React.ReactNode;
   dragHandleProps?: any;
-  description?: string;
-  descriptionAction?: () => void;
 }
 
 export function CardTemplate({
@@ -57,8 +55,6 @@ export function CardTemplate({
   footer,
   headerControls,
   dragHandleProps,
-  description,
-  descriptionAction,
 }: CardTemplateProps) {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const { theme } = useTheme();

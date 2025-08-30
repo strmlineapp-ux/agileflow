@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { type Team, type EventTemplate, type AppTab, type Badge } from '@/types';
+import { type Team, type EventTemplate, type AppTab, type Badge, type AppPage } from '@/types';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Badge as UiBadge } from '../ui/badge';
 import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
@@ -157,12 +157,12 @@ function EventPresetForm({
 }
 
 
-export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab }) {
+export function EventTemplateManagement({ team, tab, page }: { team: Team, tab: AppTab, page: AppPage }) {
   if (!team) {
     return null;
   }
   
-  const { updateTeam, updateAppTab, viewAsUser } = useUser();
+  const { updateTeam, updatePage, viewAsUser } = useUser();
   const { toast } = useToast();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -171,7 +171,20 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
   
   const canManage = viewAsUser.isAdmin || team.teamAdmins?.includes(viewAsUser.userId);
   const presets = team.eventTemplates || [];
+  const title = page.displayTitle ?? tab.name;
 
+  const handleTitleSave = (newTitle: string) => {
+    updatePage(page.id, { displayTitle: newTitle });
+  };
+
+  const handleTitleReset = (e: React.MouseEvent<HTMLHeadingElement>) => {
+    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
+        e.preventDefault();
+        updatePage(page.id, { displayTitle: null });
+        toast({title: "Title Reset", description: "The page title has been reset to its default."});
+    }
+  };
+  
   const handleSavePresetName = (presetId: string, newName: string) => {
     const presetToEdit = presets.find(t => t.id === presetId);
     if (!presetToEdit) return;
@@ -224,8 +237,9 @@ export function EventTemplateManagement({ team, tab }: { team: Team, tab: AppTab
     <>
       <div className="flex items-center gap-2 mb-6">
         <InlineEditor
-            value={tab.name}
-            onSave={(newValue) => updateAppTab(tab.id, { name: newValue })}
+            value={title}
+            onSave={handleTitleSave}
+            onClick={handleTitleReset}
             className="h-auto p-0 font-headline text-2xl font-thin tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
             disabled={!canManage}
         />

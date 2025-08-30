@@ -606,7 +606,7 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
           />
         </div>
         <div className="flex-1 overflow-hidden">
-          <ScrollArea className="h-64">
+          <ScrollArea className="max-h-64">
             {filteredTabs.length > 0 ? (
               <div className="p-1 space-y-1">
                   {filteredTabs.map(tab => {
@@ -947,5 +947,6 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
     
 
     
+
 
 
