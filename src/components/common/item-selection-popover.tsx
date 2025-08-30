@@ -6,11 +6,12 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn, getHueFromHsl, isHueInRange } from '@/lib/utils';
+import { cn, getHueFromHsl, isHueInRange, getSelectedStyle } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CompactSearchInput } from './compact-search-input';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useUser } from '@/context/user-context';
 
 type Item = {
   id: string;
@@ -42,10 +43,14 @@ export function ItemSelectionPopover({
   tooltip,
   showColorFilter = false,
 }: ItemSelectionPopoverProps) {
+  const { viewAsUser } = useUser();
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(tabs[0].value);
   const [searchTerm, setSearchTerm] = useState('');
   const [colorFilter, setColorFilter] = useState<string | null>(null);
+
+  const baseWeight = viewAsUser?.fontWeight || 400;
+  const selectedStyle = getSelectedStyle(baseWeight);
 
   const filteredItems = useMemo(() => {
     const currentTab = tabs.find(t => t.value === activeTab);
@@ -112,13 +117,15 @@ export function ItemSelectionPopover({
                 {filteredItems.length > 0 ? (
                   filteredItems.map(item => {
                     const isSelected = tabs.find(t => t.value === activeTab)?.selectedIds.includes(item.id) || false;
+                    const itemStyle = isSelected ? selectedStyle : {};
                     return (
                       <div
                         key={item.id}
                         className={cn(
                           "flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer",
-                          isSelected ? "text-primary" : "text-muted-foreground"
+                          isSelected ? "" : "text-muted-foreground"
                         )}
+                        style={itemStyle}
                         onClick={() => onSelectionChange(activeTab, item.id)}
                       >
                         {item.iconType === 'avatar' ? (

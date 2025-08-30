@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useMemo } from 'react';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
+import { cn, getSelectedStyle } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal, DropdownMenuLabel } from '../ui/dropdown-menu';
 import { useUser } from '@/context/user-context';
@@ -42,6 +42,9 @@ export function Sidebar() {
         <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col border-r bg-card sm:flex" />
     );
   }
+  
+  const baseWeight = viewAsUser.fontWeight || 400;
+  const selectedStyle = getSelectedStyle(baseWeight);
 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col border-r bg-card sm:flex">
@@ -60,10 +63,8 @@ export function Sidebar() {
                     <TooltipTrigger asChild>
                       <Link
                         href={adminPage.path}
-                        className={cn(
-                          'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-primary md:h-8 md:w-8',
-                          usePathname().startsWith(adminPage.path) && 'text-primary'
-                        )}
+                        className='flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-primary md:h-8 md:w-8'
+                        style={usePathname().startsWith(adminPage.path) ? selectedStyle : {}}
                       >
                         <GoogleSymbol name={adminPage.icon} className="text-4xl" />
                         <span className="sr-only">{adminPage.name}</span>
@@ -88,10 +89,8 @@ export function Sidebar() {
                     <TooltipTrigger asChild>
                       <Link
                         href={item.path}
-                        className={cn(
-                          'relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-primary md:h-8 md:w-8',
-                          isActive && 'text-primary'
-                        )}
+                        className='relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-primary md:h-8 md:w-8'
+                        style={isActive ? selectedStyle : {}}
                       >
                         <GoogleSymbol name={item.icon} className="text-4xl" />
                         {isNotifications && unreadCount > 0 && (
@@ -116,10 +115,8 @@ export function Sidebar() {
                 <TooltipTrigger asChild>
                   <Link
                     href={notificationsPage.path}
-                    className={cn(
-                      'relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-primary md:h-8 md:w-8',
-                      usePathname().startsWith(notificationsPage.path) && 'text-primary'
-                    )}
+                    className='relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-primary md:h-8 md:w-8'
+                    style={usePathname().startsWith(notificationsPage.path) ? selectedStyle : {}}
                   >
                     <GoogleSymbol name={notificationsPage.icon} className="text-4xl" />
                     {unreadCount > 0 && (

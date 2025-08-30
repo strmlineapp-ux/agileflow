@@ -111,3 +111,17 @@ export const getHueFromHsl = (hsl: string | null): number | null => {
     const match = hsl.match(/hsl\((\d+)/);
     return match ? parseInt(match[1], 10) : null;
 };
+
+export const getSelectedStyle = (baseWeight: number): React.CSSProperties => {
+  const weightMap: Record<number, number> = {
+    100: 300,
+    300: 400,
+    400: 500,
+    500: 700,
+  };
+
+  if (baseWeight >= 700) {
+    return { color: 'hsl(var(--primary))' };
+  }
+  return { fontWeight: weightMap[baseWeight] || baseWeight };
+};
