@@ -7,7 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn, getHueFromHsl, isHueInRange, getEmphasisStyle } from '@/lib/utils';
+import { cn, getHueFromHsl, isHueInRange } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CompactSearchInput } from './compact-search-input';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -40,16 +40,12 @@ interface ItemSelectionPopoverProps {
 const ItemDisplay = ({ item, isSelected }: { item: Item, isSelected: boolean }) => {
     const { viewAsUser } = useUser();
     const [isHovered, setIsHovered] = useState(false);
-    const baseWeight = viewAsUser?.fontWeight || 400;
-
-    const itemStyle = getEmphasisStyle({ baseWeight, hasText: true, isSelected: isSelected || isHovered });
     
     return (
         <div
-            className="flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer text-foreground"
+            className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer", isSelected || isHovered ? "text-primary" : "text-foreground")}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            style={{ fontWeight: itemStyle.fontWeight, color: itemStyle.color }}
         >
             {item.iconType === 'avatar' ? (
                 <Avatar className="h-7 w-7">
@@ -57,7 +53,7 @@ const ItemDisplay = ({ item, isSelected }: { item: Item, isSelected: boolean }) 
                     <AvatarFallback>{item.name.slice(0, 2)}</AvatarFallback>
                 </Avatar>
             ) : (
-                <GoogleSymbol name={item.icon} style={{ color: item.color, fontWeight: itemStyle.fontWeight }} />
+                <GoogleSymbol name={item.icon} style={{ color: item.color }} />
             )}
             <span>{item.name}</span>
         </div>
