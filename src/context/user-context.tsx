@@ -3,7 +3,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
-import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeOwner, type Task, type Holiday, type Project, type PreApprovedEmail } from '@/types';
+import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeOwner, type Task, type Holiday, type Project, type AppPage, type PreApprovedEmail } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { useAuth } from '@/hooks/useAuth';
@@ -130,16 +130,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     return dataHook.users.find(u => u.userId === viewAsUserId) || realUser;
   }, [dataHook.users, viewAsUserId, realUser]);
   
-  const dragActivationKey = viewAsUser?.dragActivationKey || 'shift';
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key.toLowerCase() === dragActivationKey) {
+        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
             setIsDragModifierPressed(true);
         }
     };
     const handleKeyUp = (e: KeyboardEvent) => {
-        if (e.key.toLowerCase() === dragActivationKey) {
+         if (!e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
             setIsDragModifierPressed(false);
         }
     };
@@ -151,7 +149,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         window.removeEventListener('keydown', handleKeyDown);
         window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [dragActivationKey]);
+  }, []);
 
 
   const contextValue = useMemo(() => {

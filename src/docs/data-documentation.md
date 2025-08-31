@@ -86,10 +86,7 @@ This table details the information stored directly within each `User` object.
 | `defaultCalendarView?: 'month' \| 'week' \| 'day' \| 'production-schedule'` | **Internal.** A UI preference for the default calendar layout. |
 | `easyBooking?: boolean` | **Internal.** A UI preference for enabling quick event creation from the calendar. |
 | `timeFormat?: '12h' \| '24h'` | **Internal.** A UI preference for displaying time in 12-hour or 24-hour time format. |
-| `linkedTeamIds?: string[]` | **Internal.** An array of `teamId`s for shared teams that the user has chosen to display on their management board. |
-| `linkedBadgeCollectionIds?: string[]` | **Internal.** An array of `collectionId`s for shared Badge Collections that the user has chosen to display on their management board. |
-| `linkedCalendarIds?: string[]` | **Internal.** An array of `calendarId`s for shared calendars that the user has chosen to display on their management board. |
-| `dragActivationKey?: 'alt' \| 'ctrl' \| 'meta' \| 'shift'` | **Internal.** A user-selected modifier key that must be held down to initiate drag-and-drop operations on complex components. |
+| `linked...Ids` | Lists of IDs for shared Teams, Badge Collections, or Calendars that the user has chosen to link to their personal management boards. |
 | `createdAt: Date` | **Internal.** The timestamp when the user's account was first created in the system. |
 | `approvedBy?: string` | **Internal.** The `userId` of the administrator who approved the user's account from the 'Viewer' state. |
 
