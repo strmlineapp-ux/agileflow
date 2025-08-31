@@ -88,6 +88,7 @@ export interface User {
   linkedTeamIds?: string[];
   linkedBadgeCollectionIds?: string[];
   linkedCalendarIds?: string[];
+  modifierKey?: 'alt' | 'ctrl' | 'meta' | 'shift';
   createdAt: Date;
   approvedBy?: string;
   workspaceId: string;
