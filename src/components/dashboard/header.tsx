@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import Link from 'next/link';
@@ -57,7 +56,7 @@ export function Header() {
           <nav className="grid gap-6 text-lg font-normal">
             <Link
               href="/dashboard/overview"
-              className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg text-primary-foreground md:text-base"
+              className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg md:text-base"
             >
               <svg
                 width="24"
@@ -66,6 +65,7 @@ export function Header() {
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-5 w-5 transition-all group-hover:scale-110"
+                style={{ color: 'hsl(210 20% 95%)' }}
               >
                 <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
