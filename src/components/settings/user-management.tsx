@@ -93,12 +93,12 @@ const ModifierKeySetting = ({ user, onUpdate }: { user: User, onUpdate: (key: Us
 
 const CustomColorPicker = ({ colorValue, onUpdate, onClose }: { colorValue: string | null, onUpdate: (newColor: string | null) => void, onClose: () => void }) => {
     const [color, setColor] = useState(colorValue || 'hsl(221, 83%, 61%)');
-
+    
     const handleColorChange = (newColor: string) => {
         setColor(newColor);
         onUpdate(newColor);
     };
-    
+
     const handleSwatchClick = (newColor: string) => {
         handleColorChange(newColor);
         onClose();
@@ -236,7 +236,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                                 <Button 
                                                     variant="ghost" 
                                                     size="icon" 
-                                                    className="h-9 w-9 shrink-0" 
+                                                    className="h-9 w-9 shrink-0 text-foreground hover:bg-transparent hover:text-foreground"
                                                     style={{ color: user.primaryColor || 'hsl(var(--primary))' }}
                                                     enableReset={true}
                                                     onReset={() => updateUser(user.userId, { primaryColor: null })}
@@ -522,6 +522,7 @@ export function UserManagement({ showSearch = false, isActive = false }: { showS
 }
 
     
+
 
 
 
