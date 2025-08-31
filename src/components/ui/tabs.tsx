@@ -30,7 +30,7 @@ TabsList.displayName = TabsPrimitive.List.displayName
 const TabsTrigger = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
->(({ className, children, ...props }, ref) => (
+>(({ className, ...props }, ref) => (
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
@@ -39,16 +39,7 @@ const TabsTrigger = React.forwardRef<
       className
     )}
     {...props}
-  >
-      {React.Children.map(children, child => {
-        if (React.isValidElement(child) && (child.type as any).displayName === 'GoogleSymbol') {
-          return React.cloneElement(child as React.ReactElement<any>, { 
-            className: cn(child.props.className, 'transition-all'),
-          });
-        }
-        return child;
-      })}
-  </TabsPrimitive.Trigger>
+  />
 ))
 TabsTrigger.displayName = TabsPrimitive.Trigger.displayName
 

@@ -283,45 +283,30 @@ This pattern provides a dense, icon-driven interface for managing a series of us
 ### Typography
 - **Font**: The application exclusively uses the **Roboto** font family for a clean and consistent look for both headlines and body text.
 - **Headline Font**: All major titles (pages, tabs, prominent cards) use the `font-headline` utility class, which is configured to use a `font-thin` weight (`font-weight: 100`) from the Roboto family.
-- **Body Font**: All standard body text, labels, and buttons now use a `font-thin` weight.
+- **Body Font**: The user can now select their preferred global font weight.
+- **Emphasis**: See the "Emphasis Logic" section for details on how interaction states are handled.
 
 ### Icons & Hover Effects
-- **Icon Set**: We exclusively use **Google Material Symbols** via the `<GoogleSymbol />` component. This ensures a consistent visual language. The font library is a variable font, which means we can adjust its properties.
-- **Icon Sizing & Weight**:
-  - A `weight={100}` and `grade={-25}` is used for **all icons** to maintain a light, clean aesthetic.
-  - Icons inside pickers (like the icon picker) are `text-4xl` with `weight={100}` inside `h-8 w-8` buttons for clarity and ease of selection.
-  - Large, circular 'Add New' buttons use `text-4xl` for prominence.
-- **Filled Icons**: To use the filled style of an icon, pass the `filled` prop to the component: `<GoogleSymbol name="star" filled />`. This works with any of the three main styles.
-- **Hover Behavior**: The color of icons on hover is typically determined by their parent element. For example, an icon inside a `<Button variant="ghost">` will change to the primary theme color on hover because the button's text color changes, and the icon inherits that color. This creates a clean and predictable interaction.
+- **Icon Set**: We exclusively use **Google Material Symbols** via the `<GoogleSymbol />` component. This ensures a consistent visual language.
+- **Icon Customization**: The `GoogleSymbol` component reads CSS variables (`--global-icon-weight`, `--global-icon-grade`, etc.) to apply user-defined preferences for weight, grade, optical size, and fill across the entire application.
+- **Hover Behavior**: See the "Emphasis Logic" section.
 - **Destructive Actions**: Delete or other destructive action icons (like `delete`, `close`, `cancel`) are `text-muted-foreground` by default and become `text-destructive` on hover to provide a clear but not overwhelming visual warning.
 - **Tooltips for Clarity**: Icon-only buttons (those without visible text) and icons within pickers (like the **Icon Picker**) must always be wrapped in a `<Tooltip>` to provide context on their function. This is crucial for accessibility and user experience.
 
 ### Color Themes & Button Styles
 The application supports two distinct color themes, `light` and `dark`, which can be selected by the user in their preferences.
 
--   **Light Theme**:
-    -   **Aesthetic**: Clean, airy, and professional, using a light grey background (`--background: 0 0% 98%`) and dark text (`--foreground: 0 0% 20%`).
-    -   **Primary Color**: A muted, professional blue (`hsl(210 40% 55%)`) used for all key interactive elements.
-    -   **Accent Color**: A very light blue (`hsl(210 40% 96%)`) used in button hover gradients.
-
--   **Dark Theme**:
-    -   **Aesthetic**: Modern and focused, using a dark charcoal background (`--background: 0 0% 8%`) and light grey text (`--foreground: 0 0% 67%`).
-    -   **Primary Color**: A vibrant, energetic orange (`#D8620E` or `hsl(25 88% 45%)`) used for key actions.
-    -   **Accent Color**: A warm, golden yellow (`hsl(43 55% 71%)`) used in button hover gradients.
-
 - **Custom Primary Color**: Users can select a custom primary color using a color picker popover, as defined in the **Icon & Color Editing Flow** pattern. This custom color overrides the theme's default primary color.
-- **Primary Button Gradient**: Primary buttons have a special gradient effect on hover, which is unique to each theme. This provides a subtle but polished visual feedback for key actions.
-- **Button Hover**: For all non-primary button variants (`outline`, `secondary`, `ghost`, `link`), the hover state applies **no background change**.
+- **Button Hover**: See the "Emphasis Logic" section.
 
-### Global Focus & Highlight Style
-This is the single source of truth for indicating user interaction state across the entire application.
+### Emphasis Logic
+The application uses a sophisticated, user-configurable emphasis system for interactive elements. This system creates two distinct interaction styles based on the user's selected global font weight.
 
--   **Keyboard Focus (`focus-visible`)**: All interactive elements (buttons, inputs, checkboxes, custom cards, etc.) share a consistent focus indicator. When an element is focused via keyboard navigation, a subtle, `1px` ring with 50% opacity appears directly on its border (`focus-visible:ring-1 focus-visible:ring-ring/50`). This provides a clean, minimal, and non-intrusive focus indicator that aligns with the app's elegant aesthetic.
--   **Selected/Highlighted State**: To indicate a persistently selected or highlighted state (e.g., the designated "Team Admin" in a list), a clear icon badge (e.g., a "key" icon) is used, typically overlaid on the user's avatar. This avoids visually noisy outlines and provides a clear, universally understood symbol for elevated status.
-
-### List Item States (Dropdowns & Popovers)
-- **Hover & Focus**: When hovering over or navigating to list items (like in dropdowns or popovers) using the keyboard, the item's text color changes to `text-foreground`. **No background highlight is applied**, ensuring a clean and consistent look.
-- **Selection**: The currently selected item within a list is indicated by a checkmark icon, which also uses the standard foreground color.
+- **Mechanism**: The system checks the user's globally selected `fontWeight` (e.g., from `useUser().viewAsUser.fontWeight`).
+- **Logic**:
+    - **If Global Weight is `Thin`, `Light`, `Normal`, or `Medium`**: When a user hovers over or focuses on an interactive element (like a button or menu item), its **font weight increases** to the next available level (e.g., `Normal` becomes `Medium`). Color does not change.
+    - **If Global Weight is `Bold`**: When a user hovers over or focuses on an interactive element, its font weight does not change. Instead, its **color changes** to the theme's primary color (`--primary`).
+- **Implementation**: This is achieved by adding a `bold-emphasis` class to the `<body>` when a bold weight is selected. The `.font-emphasis` utility class in `globals.css` contains rules that react to the presence or absence of the `bold-emphasis` class to apply the correct styling.
 
 ### User Notifications
 
