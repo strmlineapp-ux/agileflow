@@ -502,7 +502,7 @@ export function UserManagement({ showSearch = false, isActive = false }: { showS
                     searchTerm={searchTerm} 
                     setSearchTerm={setSearchTerm} 
                     placeholder="Search users..." 
-                    isActive={isActive}
+                    autoFocus={isActive}
                   />
               </div>
           )}
