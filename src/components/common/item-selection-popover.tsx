@@ -126,7 +126,7 @@ export function ItemSelectionPopover({
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
               placeholder={`Search ${activeTab}...`}
-              isActive={isOpen}
+              isActive={true}
               autoFocus={true}
               showColorFilter={showColorFilter}
               onColorSelect={setColorFilter}
