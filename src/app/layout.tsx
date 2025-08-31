@@ -9,6 +9,7 @@ import { Roboto } from 'next/font/google';
 import { ThemeProvider, useTheme } from 'next-themes';
 import React, { useState, useEffect } from 'react';
 import { GoogleSymbol } from "@/components/icons/google-symbol";
+import { hexToHsl, getLuminance } from '@/lib/utils';
 
 const roboto = Roboto({
   subsets: ['latin'],
@@ -31,7 +32,7 @@ function AppBody({ children }: { children: React.ReactNode }) {
             const root = document.documentElement;
             
             const fontWeight = viewAsUser.fontWeight || 400;
-            const isBoldEmphasis = fontWeight === 700;
+            const isBoldEmphasis = fontWeight >= 500;
 
             document.body.style.fontWeight = fontWeight.toString();
 
@@ -60,24 +61,31 @@ function AppBody({ children }: { children: React.ReactNode }) {
             root.style.setProperty('--radius', `${radius}rem`);
 
              // Set emphasis color based on logic
-            const primaryColor = viewAsUser.primaryColor || (theme === 'dark' ? 'hsl(25 88% 45%)' : 'hsl(210 70% 50%)');
-            const foregroundColor = `hsl(${theme === 'dark' ? '210 7% 50%' : '210 7% 40%'})`;
-            
-            if (isBoldEmphasis) {
-                root.style.setProperty('--emphasis-color', primaryColor);
-            } else {
-                root.style.setProperty('--emphasis-color', foregroundColor);
-            }
+            const themePrimary = theme === 'dark' ? 'hsl(25 88% 55%)' : 'hsl(210 70% 50%)';
+            const themeForeground = theme === 'dark' ? '210 7% 60%' : '210 7% 40%';
 
             if (viewAsUser.primaryColor) {
-                // If a custom primary color is set, use it.
-                // You might need a function to convert hex to HSL string if user can provide hex.
-                root.style.setProperty('--primary', viewAsUser.primaryColor);
+                const hsl = hexToHsl(viewAsUser.primaryColor) || themePrimary.replace('hsl(', '').replace(')', '');
+                root.style.setProperty('--primary', hsl);
             } else {
-                // Otherwise, fall back to the theme default by removing the property
-                root.style.removeProperty('--primary');
+                 if (theme === 'dark') {
+                    root.style.setProperty('--primary', '25 88% 55%');
+                } else {
+                    root.style.setProperty('--primary', '210 70% 50%');
+                }
+            }
+            
+            if(viewAsUser.highContrast) {
+                root.style.setProperty('--foreground', theme === 'dark' ? '210 7% 80%' : '210 7% 20%');
+            } else {
+                root.style.setProperty('--foreground', themeForeground);
             }
 
+            if (isBoldEmphasis) {
+                root.style.setProperty('--emphasis-color', 'hsl(var(--primary))');
+            } else {
+                root.style.setProperty('--emphasis-color', 'hsl(var(--foreground))');
+            }
         }
     }, [viewAsUser, theme]);
     
