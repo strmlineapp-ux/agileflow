@@ -14,7 +14,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary/10 text-primary",
+        default: "text-foreground hover:bg-transparent",
         destructive: "bg-destructive text-destructive-foreground",
         outline: "border border-input bg-transparent",
         link: "hover:underline",
@@ -70,8 +70,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <Comp
         className={cn(
           buttonVariants({ variant, size, className }),
-          "font-emphasis",
-          isBold && "emphasis-color",
+          "font-emphasis"
         )}
         ref={ref}
         onMouseDown={handleMouseDown}
