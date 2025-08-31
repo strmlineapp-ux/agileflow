@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from "react"
@@ -62,11 +63,15 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       }
     };
     
+    const weight = viewAsUser?.fontWeight || 400;
+    const isBold = weight >= 500;
+
     return (
       <Comp
         className={cn(
           buttonVariants({ variant, size, className }),
-          "font-emphasis"
+          "font-emphasis",
+          isBold && "emphasis-color",
         )}
         ref={ref}
         onMouseDown={handleMouseDown}

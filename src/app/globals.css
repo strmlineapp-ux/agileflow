@@ -58,6 +58,12 @@
     .font-emphasis[data-state=open],
     .font-emphasis[data-state=active] {
         font-weight: var(--font-weight-emphasis) !important;
+    }
+
+    .emphasis-color .font-emphasis:hover,
+    .emphasis-color .font-emphasis:focus,
+    .emphasis-color .font-emphasis[data-state=open],
+    .emphasis-color .font-emphasis[data-state=active] {
         color: hsl(var(--emphasis-color)) !important;
     }
     
@@ -65,8 +71,14 @@
     .font-emphasis:focus .material-symbols-outlined,
     .font-emphasis[data-state=open] .material-symbols-outlined,
     .font-emphasis[data-state=active] .material-symbols-outlined {
-        color: hsl(var(--emphasis-color)) !important;
         font-variation-settings: 'FILL' var(--global-icon-fill, 0), 'wght' var(--font-weight-emphasis, 500), 'GRAD' var(--global-icon-grade, 0), 'opsz' var(--global-icon-optical-size, 24) !important;
+    }
+
+    .emphasis-color .font-emphasis:hover .material-symbols-outlined,
+    .emphasis-color .font-emphasis:focus .material-symbols-outlined,
+    .emphasis-color .font-emphasis[data-state=open] .material-symbols-outlined,
+    .emphasis-color .font-emphasis[data-state=active] .material-symbols-outlined {
+        color: hsl(var(--emphasis-color)) !important;
     }
 }
 

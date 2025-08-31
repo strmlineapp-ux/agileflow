@@ -35,6 +35,12 @@ function AppBody({ children }: { children: React.ReactNode }) {
             const isBoldEmphasis = fontWeight >= 500;
 
             document.body.style.fontWeight = fontWeight.toString();
+            
+            if (isBoldEmphasis) {
+                document.body.classList.add('emphasis-color');
+            } else {
+                document.body.classList.remove('emphasis-color');
+            }
 
             const emphasisWeightMap: { [key: number]: number } = {
                 100: 300,
@@ -87,7 +93,7 @@ function AppBody({ children }: { children: React.ReactNode }) {
                 root.style.setProperty('--emphasis-color', 'hsl(var(--foreground))');
             }
         }
-    }, [viewAsUser, theme, viewAsUser?.primaryColor, viewAsUser?.highContrast]);
+    }, [viewAsUser, theme, viewAsUser?.primaryColor, viewAsUser?.highContrast, viewAsUser?.fontWeight]);
     
     return (
         <>
