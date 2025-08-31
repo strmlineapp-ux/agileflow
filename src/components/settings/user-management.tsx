@@ -65,7 +65,7 @@ const ModifierKeySetting = ({ user, onUpdate }: { user: User, onUpdate: (key: Us
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <PopoverTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onReset={() => onUpdate('ctrl')} enableReset>
+                            <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground" onReset={() => onUpdate('shift')} enableReset>
                                 <GoogleSymbol name="keyboard_command_key" />
                             </Button>
                         </PopoverTrigger>
@@ -534,3 +534,5 @@ export function UserManagement({ showSearch = false, isActive = false }: { showS
         </div>
     )
 }
+
+    
