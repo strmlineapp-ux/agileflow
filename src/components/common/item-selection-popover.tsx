@@ -43,7 +43,7 @@ const ItemDisplay = ({ item, isSelected }: { item: Item, isSelected: boolean }) 
         <div
             className={cn(
                 "font-emphasis flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer",
-                isSelected ? "text-primary" : "text-foreground"
+                isSelected && "text-primary"
             )}
         >
             {item.iconType === 'avatar' ? (
@@ -114,8 +114,8 @@ export function ItemSelectionPopover({
           <TooltipContent><p>{tooltip}</p></TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <PopoverContent className="w-80 p-0 flex flex-col max-h-96" onPointerDownCapture={(e) => e.stopPropagation()}>
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full flex flex-col flex-1 min-h-0">
+      <PopoverContent className="w-80 p-0 flex flex-col max-h-96 min-h-0" onPointerDownCapture={(e) => e.stopPropagation()}>
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full flex flex-col">
           {tabs.length > 1 && (
             <TabsList className="grid w-full grid-cols-2">
               {tabs.map(tab => <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>)}
