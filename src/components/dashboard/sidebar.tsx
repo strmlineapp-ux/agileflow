@@ -43,12 +43,12 @@ export function Sidebar() {
   
   if (loading || !viewAsUser || !realUser) {
     return (
-        <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col bg-card sm:flex" />
+        <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col border-r bg-card sm:flex" />
     );
   }
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col bg-card sm:flex">
+    <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col border-r bg-card sm:flex">
         <nav className="flex flex-col items-center gap-4 px-2 pt-4 pb-2">
             <Link
               href="/dashboard/overview"
@@ -138,7 +138,7 @@ export function Sidebar() {
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <DropdownMenuTrigger asChild>
-                            <button className="font-emphasis flex h-9 w-9 items-center justify-center rounded-full md:h-8 md:w-8">
+                            <div className="font-emphasis flex h-9 w-9 items-center justify-center rounded-full md:h-8 md:w-8">
                                 <div className="relative">
                                     <Avatar className="h-8 w-8">
                                         <AvatarImage src={viewAsUser.avatarUrl} alt={viewAsUser.displayName} data-ai-hint="user avatar" />
@@ -158,7 +158,7 @@ export function Sidebar() {
                                     }}
                                     />
                                 </div>
-                            </button>
+                            </div>
                         </DropdownMenuTrigger>
                     </TooltipTrigger>
                     <TooltipContent side="right">
