@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -13,19 +12,19 @@ const Slider = React.forwardRef<
   <SliderPrimitive.Root
     ref={ref}
     className={cn(
-      "relative h-0 w-full touch-none select-none",
+      "relative flex h-0 w-full touch-none select-none items-center overflow-visible",
       className
     )}
     {...props}
   >
-    <SliderPrimitive.Track className="absolute w-full -translate-y-1/2 top-1/2 h-0.5 grow overflow-hidden rounded-full bg-foreground">
+    <SliderPrimitive.Track className="h-0.5 w-full grow overflow-hidden rounded-full bg-foreground">
         <div className="absolute w-full -translate-y-1/2 top-1/2 h-full flex justify-between">
             {[...Array(5)].map((_, i) => (
                 <div key={i} className="h-2 w-px bg-foreground" />
             ))}
         </div>
     </SliderPrimitive.Track>
-    <SliderPrimitive.Thumb className="absolute block h-5 w-5 rounded-full border-2 border-foreground bg-card transition-colors disabled:pointer-events-none disabled:opacity-50 -translate-y-1/2" />
+    <SliderPrimitive.Thumb className="block h-5 w-5 rounded-full border-2 border-foreground bg-card transition-colors disabled:pointer-events-none disabled:opacity-50" />
   </SliderPrimitive.Root>
 ))
 Slider.displayName = SliderPrimitive.Root.displayName
