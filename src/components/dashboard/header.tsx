@@ -13,6 +13,7 @@ import { useUser } from '@/context/user-context';
 import { Badge } from '@/components/ui/badge';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import Logo from '../icons/logo';
 
 export function Header() {
   const { realUser, viewAsUser, notifications, appSettings } = useUser();
@@ -58,19 +59,7 @@ export function Header() {
               href="/dashboard/overview"
               className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg md:text-base"
             >
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 transition-all group-hover:scale-110"
-                style={{ color: 'hsl(210 20% 95%)' }}
-              >
-                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+              <Logo className="text-primary-foreground" />
               <span className="sr-only">AgileFlow</span>
             </Link>
 

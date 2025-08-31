@@ -4,12 +4,12 @@ const Logo = ({ className, iconClassName }: { className?: string; iconClassName?
   return (
     <div className={cn("flex items-center gap-2 text-lg", className)}>
       <svg
-        width="18"
-        height="18"
+        width="1em"
+        height="1em"
         viewBox="0 0 24 24"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className={cn(iconClassName)}
+        className={cn("h-5 w-5", iconClassName)}
       >
         <path
           d="M12 2L2 7L12 12L22 7L12 2Z"
@@ -33,7 +33,7 @@ const Logo = ({ className, iconClassName }: { className?: string; iconClassName?
           strokeLinejoin="round"
         />
       </svg>
-      <span className="font-headline text-xl">AgileFlow</span>
+      <span className="sr-only">AgileFlow</span>
     </div>
   );
 };
