@@ -174,8 +174,6 @@ export function Sidebar() {
                     </div>
                 </DropdownMenuLabel>
                 
-                <DropdownMenuSeparator />
-
                  <DropdownMenuItem asChild>
                     <Link href="/dashboard/settings">
                         <GoogleSymbol name="settings" className="mr-2 text-lg" />
@@ -183,7 +181,7 @@ export function Sidebar() {
                     </Link>
                 </DropdownMenuItem>
 
-                {realUser.isAdmin && (
+                {realUser.isAdmin && users.length > 1 && (
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
                       <GoogleSymbol name="how_to_reg" className="mr-2 text-lg" />
@@ -192,12 +190,9 @@ export function Sidebar() {
                     <DropdownMenuPortal>
                       <DropdownMenuSubContent>
                         {isViewingAsSomeoneElse && (
-                          <>
-                            <DropdownMenuItem onSelect={() => setViewAsUser(realUser.userId)}>
-                              Return to your view ({realUser.displayName})
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                          </>
+                          <DropdownMenuItem onSelect={() => setViewAsUser(realUser.userId)}>
+                            Return to your view ({realUser.displayName})
+                          </DropdownMenuItem>
                         )}
                         {users.filter(u => u.userId !== realUser.userId).map(user => (
                           <DropdownMenuItem key={user.userId} onSelect={() => setViewAsUser(user.userId)}>
@@ -209,7 +204,6 @@ export function Sidebar() {
                   </DropdownMenuSub>
                 )}
                 
-                <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={() => logout(router)}>
                     <GoogleSymbol name="logout" className="mr-2 text-lg" />
                     <span>Logout</span>
@@ -220,3 +214,4 @@ export function Sidebar() {
     </aside>
   );
 }
+
