@@ -21,8 +21,8 @@ export default {
         body: ['"Roboto"', "sans-serif"],
       },
       colors: {
-        border: "hsl(var(--border) / 0.1)",
-        input: "hsl(var(--input) / 0.1)",
+        border: "hsl(var(--border) / 0)",
+        input: "hsl(var(--input) / 0)",
         ring: "hsl(var(--ring) / <alpha-value>)",
         background: "hsl(var(--background) / <alpha-value>)",
         foreground: "hsl(var(--foreground) / <alpha-value>)",
