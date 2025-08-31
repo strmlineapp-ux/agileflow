@@ -44,11 +44,11 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, enableReset, onReset, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, enableReset, onReset, onClick, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
     const { viewAsUser } = useUser();
     
-    const handleMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
       const modifierKey = viewAsUser?.modifierKey || 'shift';
       const isModifierPressed = 
         (modifierKey === 'shift' && e.shiftKey) ||
@@ -58,11 +58,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
       if (enableReset && onReset && isModifierPressed) {
         e.preventDefault();
+        e.stopPropagation();
         onReset();
-      }
-
-      if (props.onMouseDown) {
-        props.onMouseDown(e);
+      } else if (onClick) {
+        onClick(e);
       }
     };
 
@@ -73,7 +72,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           variant !== 'destructive' && "font-emphasis"
         )}
         ref={ref}
-        onMouseDown={handleMouseDown}
+        onClick={handleClick}
         {...props}
       />
     )
