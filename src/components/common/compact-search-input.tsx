@@ -113,7 +113,7 @@ export function CompactSearchInput({
           placeholder={placeholder}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1 w-full h-full p-0 bg-transparent border-0 placeholder:text-foreground focus-visible:outline-none focus-visible:ring-0"
+          className="flex-1 w-full h-full p-0 bg-transparent placeholder:text-foreground"
         />
         {showColorFilter && onColorSelect && (
             <Popover open={isColorPopoverOpen} onOpenChange={handleColorPopoverChange}>
