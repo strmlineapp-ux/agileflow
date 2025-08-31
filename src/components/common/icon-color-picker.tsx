@@ -14,6 +14,7 @@ import { HslStringColorPicker } from 'react-colorful';
 import { cn, getReadableColor } from '@/lib/utils';
 import { Separator } from '../ui/separator';
 import { useTheme } from 'next-themes';
+import { useUser } from '@/context/user-context';
 
 const PREDEFINED_COLORS = [
     'hsl(0, 84%, 60%)', 'hsl(25, 95%, 53%)', 'hsl(45, 93%, 47%)', 'hsl(88, 62%, 53%)', 'hsl(142, 71%, 45%)', 'hsl(160, 100%, 37%)',
@@ -36,6 +37,7 @@ interface IconColorPickerProps {
 }
 
 export function IconColorPicker({ icon, color, onUpdateIcon, onUpdateColor, disabled }: IconColorPickerProps) {
+  const { viewAsUser } = useUser();
   const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
   const [iconSearch, setIconSearch] = useState('');
   const [isColorPickerVisible, setIsColorPickerVisible] = useState(false);
@@ -67,7 +69,7 @@ export function IconColorPicker({ icon, color, onUpdateIcon, onUpdateColor, disa
                 <TooltipTrigger asChild>
                     <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={disabled}>
                         <Button variant="default" size="xlarge" className="h-10 w-12">
-                            <GoogleSymbol name={icon} style={{ fontSize: '36px', color: readableColor }} weight={100} grade={-25} />
+                            <GoogleSymbol name={icon} style={{ fontSize: '36px', color: readableColor }} weight={viewAsUser?.fontWeight} grade={viewAsUser?.iconGrade} />
                         </Button>
                     </PopoverTrigger>
                 </TooltipTrigger>
