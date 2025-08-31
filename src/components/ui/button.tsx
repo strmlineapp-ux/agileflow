@@ -10,13 +10,13 @@ import { cn } from "@/lib/utils"
 import { useUser } from "@/context/user-context";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm ring-offset-background transition-all disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
         default: "text-foreground font-emphasis",
         destructive: "bg-destructive text-destructive-foreground",
-        outline: "border border-input bg-transparent font-emphasis",
+        outline: "bg-transparent font-emphasis",
         ghost: "font-emphasis",
         circle: "rounded-full font-emphasis",
       },
