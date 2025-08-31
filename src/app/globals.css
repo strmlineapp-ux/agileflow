@@ -13,8 +13,8 @@
     --popover-foreground: 210 7% 40%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 210 40% 82%;
-    --input: 210 40% 82%;
+    --border: hsl(210 40% 82%);
+    --input: hsl(210 40% 82%);
     --ring: 210 70% 50%;
     --radius: 0.5rem;
 
@@ -37,8 +37,8 @@
     --popover-foreground: 210 7% 60%;
     --destructive: 0 62% 40%;
     --destructive-foreground: 0 0% 100%;
-    --border: 210 7% 60%;
-    --input: 210 7% 60%;
+    --border: hsl(210 7% 40%);
+    --input: hsl(210 7% 40%);
     --ring: 25 88% 55%;
     --emphasis-color: hsl(var(--foreground));
   }
@@ -65,6 +65,27 @@
     .font-emphasis:focus .material-symbols-outlined,
     .font-emphasis[data-state=open] .material-symbols-outlined,
     .font-emphasis[data-state=active] .material-symbols-outlined {
+        font-variation-settings: 'FILL' var(--global-icon-fill, 0), 'wght' var(--font-weight-emphasis, 500), 'GRAD' var(--global-icon-grade, 0), 'opsz' var(--global-icon-optical-size, 24) !important;
+    }
+
+    .bold-emphasis .font-emphasis:hover,
+    .bold-emphasis .font-emphasis:focus,
+    .bold-emphasis .font-emphasis[data-state=open],
+    .bold-emphasis .font-emphasis[data-state=active] {
+      color: hsl(var(--primary));
+    }
+
+    .bold-emphasis .font-emphasis:hover .material-symbols-outlined,
+    .bold-emphasis .font-emphasis:focus .material-symbols-outlined,
+    .bold-emphasis .font-emphasis[data-state=open] .material-symbols-outlined,
+    .bold-emphasis .font-emphasis[data-state=active] .material-symbols-outlined {
+        color: hsl(var(--primary));
+    }
+
+    .bold-emphasis .font-emphasis:hover .material-symbols-outlined,
+    .bold-emphasis .font-emphasis:focus .material-symbols-outlined,
+    .bold-emphasis .font-emphasis[data-state=open] .material-symbols-outlined,
+    .bold-emphasis .font-emphasis[data-state=active] .material-symbols-outlined {
         font-variation-settings: 'FILL' var(--global-icon-fill, 0), 'wght' var(--font-weight-emphasis, 500), 'GRAD' var(--global-icon-grade, 0), 'opsz' var(--global-icon-optical-size, 24) !important;
     }
 }
