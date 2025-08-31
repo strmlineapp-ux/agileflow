@@ -87,7 +87,7 @@ function AppBody({ children }: { children: React.ReactNode }) {
                 root.style.setProperty('--emphasis-color', 'hsl(var(--foreground))');
             }
         }
-    }, [viewAsUser, theme]);
+    }, [viewAsUser, theme, viewAsUser?.primaryColor, viewAsUser?.highContrast]);
     
     return (
         <>
