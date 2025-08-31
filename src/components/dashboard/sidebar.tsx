@@ -35,6 +35,7 @@ export function Sidebar() {
     const otherPages = appSettings.pages
       .filter(page => page.id !== 'page-admin-management' && page.id !== 'page-notifications' && page.id !== 'page-settings')
       .filter(page => hasAccess(viewAsUser, page))
+      .filter(page => page.associatedTabs && page.associatedTabs.length > 0) // Ensure page has tabs
       .filter(page => !!page.path); // Ensure page has a path
 
     return { adminPage, notificationsPage, otherPages };
