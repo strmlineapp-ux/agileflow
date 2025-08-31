@@ -134,38 +134,38 @@ export function Sidebar() {
             </TooltipProvider>
         )}
          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <button className="font-emphasis flex h-9 w-9 items-center justify-center rounded-full md:h-8 md:w-8 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="relative">
-                            <Avatar className="h-8 w-8">
-                                <AvatarImage src={viewAsUser.avatarUrl} alt={viewAsUser.displayName} data-ai-hint="user avatar" />
-                                <AvatarFallback>{viewAsUser.displayName.slice(0,2).toUpperCase()}</AvatarFallback>
-                            </Avatar>
-                            <span 
-                              className={cn(
-                                "absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-background",
-                                viewAsUser.googleCalendarLinked ? "bg-green-500" : "bg-gray-400",
-                                realUser.userId === viewAsUser.userId && !viewAsUser.googleCalendarLinked && "cursor-pointer"
-                              )}
-                              onClick={(e) => {
-                                if (realUser.userId === viewAsUser.userId && !viewAsUser.googleCalendarLinked) {
-                                  e.stopPropagation();
-                                  linkGoogleCalendar(realUser.userId);
-                                }
-                              }}
-                            />
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="right">
-                            <p>Google Calendar: {viewAsUser.googleCalendarLinked ? 'Connected' : realUser.userId === viewAsUser.userId ? 'Click to connect' : 'Not Connected'}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                </button>
-            </DropdownMenuTrigger>
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <DropdownMenuTrigger asChild>
+                            <button className="font-emphasis flex h-9 w-9 items-center justify-center rounded-full md:h-8 md:w-8 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                                <div className="relative">
+                                    <Avatar className="h-8 w-8">
+                                        <AvatarImage src={viewAsUser.avatarUrl} alt={viewAsUser.displayName} data-ai-hint="user avatar" />
+                                        <AvatarFallback>{viewAsUser.displayName.slice(0,2).toUpperCase()}</AvatarFallback>
+                                    </Avatar>
+                                    <span 
+                                    className={cn(
+                                        "absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-background",
+                                        viewAsUser.googleCalendarLinked ? "bg-green-500" : "bg-gray-400",
+                                        realUser.userId === viewAsUser.userId && !viewAsUser.googleCalendarLinked && "cursor-pointer"
+                                    )}
+                                    onClick={(e) => {
+                                        if (realUser.userId === viewAsUser.userId && !viewAsUser.googleCalendarLinked) {
+                                        e.stopPropagation();
+                                        linkGoogleCalendar(realUser.userId);
+                                        }
+                                    }}
+                                    />
+                                </div>
+                            </button>
+                        </DropdownMenuTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                        <p>Google Calendar: {viewAsUser.googleCalendarLinked ? 'Connected' : realUser.userId === viewAsUser.userId ? 'Click to connect' : 'Not Connected'}</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
             <DropdownMenuContent side="right" align="end" className="w-64">
                 <DropdownMenuLabel>
                     <div className="flex flex-col space-y-1">
@@ -214,3 +214,4 @@ export function Sidebar() {
     </aside>
   );
 }
+
