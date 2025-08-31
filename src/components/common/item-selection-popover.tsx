@@ -42,7 +42,7 @@ const ItemDisplay = ({ item, isSelected }: { item: Item, isSelected: boolean }) 
         <div
             className={cn(
                 "font-emphasis flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer",
-                 isSelected && "text-primary"
+                 isSelected && "font-semibold" // Keep it bold if selected
             )}
         >
             {item.iconType === 'avatar' ? (
@@ -71,8 +71,6 @@ export function ItemSelectionPopover({
   const [activeTab, setActiveTab] = useState(tabs[0].value);
   const [searchTerm, setSearchTerm] = useState('');
   const [colorFilter, setColorFilter] = useState<string | null>(null);
-
-  const baseWeight = viewAsUser?.fontWeight || 400;
 
   const filteredItems = useMemo(() => {
     const currentTab = tabs.find(t => t.value === activeTab);
@@ -133,12 +131,13 @@ export function ItemSelectionPopover({
               activeColorFilter={colorFilter}
             />
           </div>
-
-          <div className="flex-1 overflow-y-auto">
+          
+           <div className="overflow-y-auto">
               <div className="p-1 space-y-1">
                 {filteredItems.length > 0 ? (
                   filteredItems.map(item => {
-                    const isSelected = tabs.find(t => t.value === activeTab)?.selectedIds.includes(item.id) || false;
+                    const currentTab = tabs.find(t => t.value === activeTab);
+                    const isSelected = currentTab ? currentTab.selectedIds.includes(item.id) : false;
                     
                     return (
                       <div key={item.id} onClick={() => onSelectionChange(activeTab, item.id)}>
