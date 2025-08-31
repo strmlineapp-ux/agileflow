@@ -9,7 +9,7 @@ import { type User, type Workspace } from '@/types';
 import { getAuthInstance, getDb, getCurrentWorkspaceId } from '@/lib/firebase';
 import { useToast } from './use-toast';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import { corePages, coreTabs } from '@/lib/core-data';
+import { systemPages, coreTabs } from '@/lib/core-data';
 
 const COMMON_EMAIL_DOMAINS = new Set([
     'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com', 'icloud.com', 'msn.com'
@@ -74,7 +74,7 @@ export function useAuth() {
                     roles: [],
                     googleCalendarLinked: false,
                     theme: 'light',
-                    dragActivationKey: 'shift',
+                    modifierKey: 'shift',
                     createdAt: new Date(),
                     workspaceId,
                 };
@@ -108,7 +108,7 @@ export function useAuth() {
                     // Create workspace-specific app settings
                     const appSettingsRef = doc(db, 'app-settings', workspaceId);
                     const newAppSettings = {
-                        pages: corePages.map(p => ({...p, workspaceId})),
+                        pages: systemPages.map(p => ({...p, workspaceId})),
                         tabs: coreTabs.map(t => ({...t, workspaceId})),
                         workspaceId,
                     };
