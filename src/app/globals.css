@@ -10,7 +10,6 @@
     --font-weight-normal: 400;
     --font-weight-medium: 500;
     --font-weight-bold: 700;
-    --font-weight-emphasis: 500;
 
     /* Light Theme Colors */
     --background: 210 20% 95%;
@@ -20,9 +19,6 @@
     --primary-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --muted: 210 40% 96%;
-    --accent: 180 60% 40%;
-    --accent-foreground: 0 0% 100%;
     --border: 210 7% 40%;
     --input: 210 7% 40%;
     --ring: 210 70% 50%;
@@ -37,9 +33,6 @@
     --primary-foreground: 0 0% 100%;
     --destructive: 0 62% 40%;
     --destructive-foreground: 0 0% 100%;
-    --muted: 210 40% 15%;
-    --accent: 180 60% 50%;
-    --accent-foreground: 0 0% 100%;
     --border: 210 7% 60%;
     --input: 210 7% 60%;
     --ring: 25 88% 55%;
@@ -72,6 +65,7 @@
         font-variation-settings: 'FILL' var(--global-icon-fill, 0), 'wght' var(--font-weight-emphasis, 500), 'GRAD' var(--global-icon-grade, 0), 'opsz' var(--global-icon-optical-size, 24) !important;
     }
 }
+
 
 @layer utilities {
   .lunch-break-pattern {
