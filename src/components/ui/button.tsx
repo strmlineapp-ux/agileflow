@@ -13,7 +13,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-transparent text-foreground",
+        default: "bg-primary/10 text-primary",
         destructive: "bg-destructive text-destructive-foreground",
         outline: "border border-input bg-transparent",
         ghost: "hover:bg-transparent",
@@ -48,7 +48,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const Comp = asChild ? Slot : "button";
     const { viewAsUser } = useUser();
     
-    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const handleMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => {
       const modifierKey = viewAsUser?.modifierKey || 'shift';
       const isModifierPressed = 
         (modifierKey === 'shift' && e.shiftKey) ||
@@ -60,19 +60,18 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         e.preventDefault();
         e.stopPropagation();
         onReset();
-      } else if (onClick) {
-        onClick(e);
       }
     };
-
+    
     return (
       <Comp
         className={cn(
           buttonVariants({ variant, size, className }),
-          variant !== 'destructive' && "font-emphasis"
+          "font-emphasis"
         )}
         ref={ref}
-        onClick={handleClick}
+        onMouseDown={handleMouseDown}
+        onClick={onClick}
         {...props}
       />
     )
