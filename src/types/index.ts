@@ -1,5 +1,4 @@
 
-
 import type React from 'react';
 
 export interface Workspace {
@@ -89,7 +88,6 @@ export interface User {
   linkedTeamIds?: string[];
   linkedBadgeCollectionIds?: string[];
   linkedCalendarIds?: string[];
-  dragActivationKey?: 'alt' | 'ctrl' | 'meta' | 'shift';
   createdAt: Date;
   approvedBy?: string;
   workspaceId: string;
