@@ -43,16 +43,16 @@ export function Sidebar() {
   
   if (loading || !viewAsUser || !realUser) {
     return (
-        <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col border-r bg-card sm:flex" />
+        <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col bg-card sm:flex" />
     );
   }
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col border-r bg-card sm:flex">
+    <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col bg-card sm:flex">
         <nav className="flex flex-col items-center gap-4 px-2 pt-4 pb-2">
             <Link
               href="/dashboard/overview"
-              className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg md:h-8 md:w-8 md:text-base focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg md:h-8 md:w-8 md:text-base"
             >
               <Logo className="text-primary-foreground" />
               <span className="sr-only">AgileFlow</span>
@@ -63,7 +63,7 @@ export function Sidebar() {
                     <TooltipTrigger asChild>
                       <Link
                         href={adminPage.path}
-                        className={cn('font-emphasis flex h-9 w-9 items-center justify-center rounded-lg text-foreground transition-colors md:h-8 md:w-8 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring', {
+                        className={cn('font-emphasis flex h-9 w-9 items-center justify-center rounded-lg text-foreground transition-colors md:h-8 md:w-8', {
                             'bg-accent text-accent-foreground': pathname.startsWith(adminPage.path),
                         })}
                       >
@@ -89,7 +89,7 @@ export function Sidebar() {
                     <TooltipTrigger asChild>
                       <Link
                         href={item.path}
-                        className={cn('font-emphasis relative flex h-9 w-9 items-center justify-center rounded-lg text-foreground transition-colors md:h-8 md:w-8 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring', {
+                        className={cn('font-emphasis relative flex h-9 w-9 items-center justify-center rounded-lg text-foreground transition-colors md:h-8 md:w-8', {
                           'bg-accent text-accent-foreground': isActive,
                         })}
                       >
@@ -116,7 +116,7 @@ export function Sidebar() {
                 <TooltipTrigger asChild>
                   <Link
                     href={notificationsPage.path}
-                    className={cn('font-emphasis relative flex h-9 w-9 items-center justify-center rounded-lg text-foreground transition-colors md:h-8 md:w-8 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring', {
+                    className={cn('font-emphasis relative flex h-9 w-9 items-center justify-center rounded-lg text-foreground transition-colors md:h-8 md:w-8', {
                       'bg-accent text-accent-foreground': pathname.startsWith(notificationsPage.path),
                     })}
                   >
@@ -138,7 +138,7 @@ export function Sidebar() {
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <DropdownMenuTrigger asChild>
-                            <button className="font-emphasis flex h-9 w-9 items-center justify-center rounded-full md:h-8 md:w-8 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                            <button className="font-emphasis flex h-9 w-9 items-center justify-center rounded-full md:h-8 md:w-8">
                                 <div className="relative">
                                     <Avatar className="h-8 w-8">
                                         <AvatarImage src={viewAsUser.avatarUrl} alt={viewAsUser.displayName} data-ai-hint="user avatar" />
@@ -214,4 +214,3 @@ export function Sidebar() {
     </aside>
   );
 }
-
