@@ -9,14 +9,14 @@ Welcome to AgileFlow, your team's central hub for managing tasks, scheduling eve
 ### 1.1 Requesting Access
 To begin using AgileFlow, you must first be invited or request access to your company's specific workspace from an administrator.
 1.  Navigate to your company's unique AgileFlow URL (e.g., `your-company.agileflow.app`).
-2.  Click the "Sign up" link.
-3.  Enter your email address to request access to the workspace.
-4.  An administrator for your company will review your request and grant you access.
+2.  Click the "Sign up with Google" button.
+3.  If you have not been pre-approved by an administrator, your account will be created in a "pending" state.
+4.  An administrator for your company will review your request and grant you access. You will receive an email notification when this happens.
 
 ### 1.2 Signing In
 Once your access has been approved, you can sign in:
 1.  Navigate to your company's login page.
-2.  Enter your email and password.
+2.  Click "Sign in with Google".
 3.  You will be taken to your default calendar view.
 
 ## 2. Navigating the App
@@ -74,14 +74,19 @@ The **Notifications** page keeps you informed. This page has no visible header; 
 
 Access your preferences by clicking your avatar in the bottom-left corner of the sidebar and selecting **"Account Settings"**. This page has no visible header; the user search bar is automatically focused to make finding other users easier.
 
-Your user preferences appear in a compact, icon-driven row on your user card. Hover over each icon to see its function.
+Your user preferences appear in a compact, icon-driven row on your user card. Hover over each icon to see its function. To reset a preference to its default value, hold down your chosen modifier key (e.g., `Shift`) and click the preference icon.
 
 - **Set Custom Primary Colour**: Click the palette icon to open a color picker and choose a custom color that overrides your theme's default.
 - **Change Colour Scheme**: Click the sun/moon icon to instantly toggle between `light` and `dark` themes.
+- **Toggle High Contrast**: Click the contrast icon to switch to a higher-contrast text color for better readability.
+- **Toggle Icon Fill**: Click the opacity icon to toggle between outlined and filled icons across the app.
+- **Font & Icon Weights**: Use the popover sliders to adjust the global font weight and icon "grade" (boldness).
+- **Icon Optical Size**: Use the popover slider to adjust the global size of icons.
+- **Border Radius**: Use the popover slider to adjust the roundness of corners on cards and other elements.
 - **Set Default Calendar View**: Click the calendar icon to open a compact popover menu and select which calendar view you want to see when you log in.
 - **Set Time Format**: Click the clock icon to choose between 12-hour and 24-hour time display from a popover menu.
 - **Enable Easy Booking**: Click the toggle icon to turn on or off the ability to quickly create events by clicking on empty calendar slots. The current status (**On** or **Off**) is shown in the tooltip.
-- **Set Drag Modifier Key**: Click the `smart_button` icon to set a custom modifier key (`Shift`, `Alt`, `Control`, or `Meta`) that must be held down to initiate drag-and-drop actions. The tooltip for this icon will show the currently selected key.
+- **Set Modifier Key**: Click the `keyboard_command_key` icon to set a custom modifier key (`Shift`, `Alt`, `Control`, or `Meta`) that must be held down to trigger secondary actions like reordering items or resetting preferences.
 - **Link Google Calendar**: To connect your Google Calendar, hover over the status dot on your avatar in the sidebar user menu. If disconnected, a tooltip will prompt you to click to connect. A simulated Google sign-in will appear and, once complete, will enable features like creating Google Meet links for your events.
 
 ## 8. Management Pages (Admin & Manager Roles)
@@ -90,6 +95,7 @@ Your user preferences appear in a compact, icon-driven row on your user card. Ho
 This is the central control panel for configuring the application itself. It does not have a page header.
 - **Admin Management**: Manage system administrators and users.
     - **Assigning Admins**: Drag and drop a user from the "Users" list to the "Admins" list to grant them administrative privileges. This action is secured by a 2-Factor Authentication code. For safety, the system prevents you from removing the last system administrator.
+    - **Pre-approving Users**: Use the `add_circle` button in the "Users" card header to add an email address to the pre-approved list, allowing them to gain immediate access upon signing in.
     - **Deleting Users**: Hover over a user in the "Users" list to reveal a `cancel` icon. Clicking this will trigger the 2FA dialog to confirm deletion.
 - **Pages**: Configure the application's navigation. You can intuitively reorder pages by holding down your chosen modifier key (e.g., `Shift`) and dragging them in the grid. Key system pages are pinned and cannot be moved. You can also instantly duplicate any page by dragging it onto the "Add New Page" (+) button.
 - **Tabs**: Manage the reusable content blocks (tabs) that appear on pages. The order of this list can be changed via drag-and-drop and affects the default order in which tabs appear in popovers. You can also reorder tabs directly on a page by holding down your modifier key and dragging them.
@@ -98,13 +104,13 @@ This is the central control panel for configuring the application itself. It doe
 ### 8.2 Team Management (`/dashboard/teams/[teamId]`)
 This page is for managing the specifics of an individual team.
 -   **Members Tab**: This tab provides a drag-and-drop interface for managing team roles and badge assignments.
-    -   **Assigning Team Admins**: To designate a user as a Team Admin, hold down your drag modifier key (e.g., `Shift`) and drag their card from the "Members" list on the right to the "Team Admins" list on the left. To revoke admin status, drag their card back.
+    -   **Assigning Team Admins**: To designate a user as a Team Admin, hold down your modifier key (e.g., `Shift`) and drag their card from the "Members" list on the right to the "Team Admins" list on the left. To revoke admin status, drag their card back.
     -   **Reordering Members**: You can reorder users within the "Admins" or "Members" lists by holding down your modifier key and dragging their cards into a new position.
     -   **Re-assigning Badges**: To quickly move a badge from one member to another, simply drag the badge from the source member's card and drop it onto the target member's card.
 - **Badge Management Tab**: Create and manage your team's badge collections. To share a collection, simply drag its card to the "Shared Collections" panel. To link a collection from another team, drag it from the shared panel onto your main board. To **activate** a collection for your team, click on its ghosted card; clicking an active card will deactivate it. To **delete** a collection you own, use the dropdown menu on its card.
 - **Pinned Locations Tab**: Pin locations to the team's Production Schedule. You can also designate locations as "check locations."
 - **Workstations Tab**: Manage a list of bookable workstations or machines for the team.
-- **Event Templates Tab**: Create reusable templates for common events. You can edit a template's name by clicking on it directly. Click the edit icon on the template card to manage its requested roles.
+- **Event Presets Tab**: Create reusable Presets for common events. You can edit a Preset's name by clicking on it directly. Click the edit icon on the Preset card to manage its requested roles.
 - **Location Check Managers Tab**: Assign users who are allowed to manage the daily check assignments for this team's locations.
 
 ### 8.3 View As Another User (Admin Only)
@@ -113,4 +119,3 @@ Administrators can view the application from another user's perspective.
 2.  Select "View as" from the dropdown menu.
 3.  Choose a user from the list.
 4.  A banner will appear at the top of the screen indicating whose view you are using. To return to your own view, repeat the process and select "Return to your view".
-

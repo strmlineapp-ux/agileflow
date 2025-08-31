@@ -42,11 +42,11 @@ This pattern provides a clean, minimal interface for search functionality, espec
 - **Interaction:**
   - The search input is initially hidden behind an icon-only button (e.g., `<GoogleSymbol name="search" />`), which **must have a tooltip**.
   - Clicking the button reveals the input field.
-  - **Crucially, the input must have a transparent background and no borders or box-shadow**, ensuring it blends seamlessly into the UI.
 - **Behavior:**
-  - **Automatic Focus**: For specific single-view pages like **Account Settings**, an `autoFocus={true}` prop can be passed to focus the input on initial load.
+  - **Automatic Focus**: For specific single-view pages like **Account Settings** or within popovers, an `autoFocus={true}` prop can be passed to focus the input on initial load. The component is responsible for handling this focus action reliably.
   - **Manual Focus**: Clicking the search icon will always expand the input and focus it.
   - **Collapse on Blur**: The input always collapses back to its icon-only state when it loses focus (`onBlur`) and the field is empty.
+  - **Always Active**: An `isActive` prop can be passed to make the input field permanently visible, bypassing the icon toggle. This is useful in contexts like the **Icon Picker Popover** where search is a primary action.
 - **Application:** Used for filtering lists of icons, users, or other filterable content within popovers and management pages like the Admin screen.
 
 ---
@@ -70,27 +70,39 @@ This pattern transforms standard form inputs into minimalist, text-like elements
 ### 5. Integrated Add Button
 This pattern replaces large, card-style "Add New" buttons with a more compact and contextually relevant control.
 
-- **Appearance:** A circular, icon-only button. The `<GoogleSymbol>` inside must use a name like `add_circle`, be `text-4xl`, and have `weight={100}` for a large but light appearance. The icon color **must** be `text-muted-foreground`.
-- **Tooltip**: The button **must** be wrapped in a `<Tooltip>` to describe its action (e.g., "Add New Page").
-- **Placement:** The button's placement is contextual. It can be positioned directly adjacent to a section title (e.g., on the Admin Management pages) or in a dedicated action area.
+- **Appearance:** A circular button containing a plus (`+`) or `add_circle` icon. It uses `text-4xl` and `weight={100}` for a large but light appearance.
+- **Placement:** The button's placement is contextual. It can be positioned directly adjacent to a section title (e.g., on the Admin Management pages) or in a dedicated action area, such as below the tab navigation on the Tasks page.
 - **Behavior:** Clicking the button initiates the process of adding a new item, typically by opening a dialog or form.
 - **Application:** Used for creating new items in a list or grid, such as adding a new page, team, or task.
 
 ---
 
 ### 6. Icon & Color Editing Flow
-This is the consistent reference pattern for allowing a user to change both an icon and its color.
+This is the consistent, hardcoded blueprint for allowing a user to change both an icon and its associated color for an entity.
 
-- **Trigger:** A single, interactive unit composed of a primary icon button and a smaller color swatch badge overlaid on its corner.
-- **Icon Sizing**: The trigger button's icon should be large and prominent, specifically using a `h-10 w-12` button. The `GoogleSymbol` inside should have its `style={{fontSize: '36px'}}`, `opticalSize={20}`, and `grade={-25}` to create a "large but thin" aesthetic.
-- **Interaction:**
-  - **Icon Picker**: Clicking the main part of the button opens an icon picker popover. This popover uses the **Compact Search Input** pattern for filtering. The icons inside this picker are rendered at `text-4xl` with `weight={100}` inside `h-8 w-8` buttons for clarity and ease of selection.
-  - **Color Picker**: Clicking the color swatch badge opens the standard color picker popover.
-- **Color Picker UI**: The popover must contain two elements for a comprehensive user experience:
-    1.  A color wheel and saturation box using the `react-colorful` library's `<HexColorPicker />`.
-    2.  A text input for the HEX color code using `<HexColorInput />`.
-    3.  A grid of predefined color swatches for quick selection.
-    All interactions—changing the color via the wheel, hex input, or clicking a swatch—apply the color change instantly. Clicking a predefined swatch also closes the popover.
+- **Component**: `<IconColorPicker />` from `src/components/common/icon-color-picker.tsx`.
+- **Trigger:** A single, interactive icon button located on the main entity card.
+- **Icon Sizing**: The trigger button itself must be sized `h-10 w-12`. The `<GoogleSymbol>` inside must have `style={{fontSize: '36px'}}`, `weight={100}`, and `grade={-25}` to create the "large but thin" aesthetic.
+- **Main Popover (Icon Picker)**:
+    - **Trigger**: Clicking the main icon button.
+    - **Layout**: The `<PopoverContent>` must be a flex container with a fixed width (`w-80`) to ensure stability.
+    - **Header**: Contains a `CompactSearchInput` (with `isActive` and `autoFocus` enabled) on the left and the color picker trigger on the right. The header element must have minimal vertical padding (`p-1`) for a compact feel.
+    - **Color Picker Trigger**: A `Button` component containing a filled `circle` icon, dynamically colored to match the entity's current color.
+    - **Icon Grid**:
+        - A scrollable area (`<ScrollArea>`) with a fixed height (`h-52`) to display approximately six rows of icons.
+        - The grid must use six columns (`grid-cols-6`) with a `gap-4` for adequate spacing.
+        - All icons in the grid are rendered at `text-4xl` with `weight={100}`.
+    - **Icon Sorting**: The list of icons must be sorted to show a predefined list of most-used icons first.
+    - **Selection Behavior**:
+        - Clicking an icon instantly updates the entity's icon and closes the popover.
+        - The currently selected icon is highlighted with a button whose background is the entity's dynamic color (`entity.color`). The icon symbol inside this button must be colored with the theme's muted background color (`bg-muted`) to create a high-contrast, "punched out" look.
+- **Side Panel (Color Picker)**:
+    - **Trigger**: The color picker trigger button in the main popover's header. Clicking this badge toggles the visibility of the color picker panel.
+    - **Layout**: The color picker panel is a conditionally rendered flex item inside the main popover. When it appears, the total width of the popover expands to accommodate it without compressing the icon grid.
+    - **UI**: The panel contains:
+        1.  The `react-colorful` `<HslStringColorPicker />` component. This component must have no extra header or title above it.
+        2.  A grid of predefined color swatches.
+    - **Behavior**: Changing the color via the wheel or clicking a swatch instantly applies the change. Clicking a predefined swatch also closes the entire popover.
 - **Application:** This is the required pattern for editing the icon and color of any major entity, such as Pages, Calendars, Teams, and Badge Collections.
 
 ---
@@ -271,45 +283,30 @@ This pattern provides a dense, icon-driven interface for managing a series of us
 ### Typography
 - **Font**: The application exclusively uses the **Roboto** font family for a clean and consistent look for both headlines and body text.
 - **Headline Font**: All major titles (pages, tabs, prominent cards) use the `font-headline` utility class, which is configured to use a `font-thin` weight (`font-weight: 100`) from the Roboto family.
-- **Body Font**: All standard body text, labels, and buttons now use a `font-thin` weight.
+- **Body Font**: The user can now select their preferred global font weight.
+- **Emphasis**: See the "Emphasis Logic" section for details on how interaction states are handled.
 
 ### Icons & Hover Effects
-- **Icon Set**: We exclusively use **Google Material Symbols** via the `<GoogleSymbol />` component. This ensures a consistent visual language. The font library is a variable font, which means we can adjust its properties.
-- **Icon Sizing & Weight**:
-  - A `weight={100}` and `grade={-25}` is used for **all icons** to maintain a light, clean aesthetic.
-  - Icons inside pickers (like the icon picker) are `text-4xl` with `weight={100}` inside `h-8 w-8` buttons for clarity and ease of selection.
-  - Large, circular 'Add New' buttons use `text-4xl` for prominence.
-- **Filled Icons**: To use the filled style of an icon, pass the `filled` prop to the component: `<GoogleSymbol name="star" filled />`. This works with any of the three main styles.
-- **Hover Behavior**: The color of icons on hover is typically determined by their parent element. For example, an icon inside a `<Button variant="ghost">` will change to the primary theme color on hover because the button's text color changes, and the icon inherits that color. This creates a clean and predictable interaction.
+- **Icon Set**: We exclusively use **Google Material Symbols** via the `<GoogleSymbol />` component. This ensures a consistent visual language.
+- **Icon Customization**: The `GoogleSymbol` component reads CSS variables (`--global-icon-weight`, `--global-icon-grade`, etc.) to apply user-defined preferences for weight, grade, optical size, and fill across the entire application.
+- **Hover Behavior**: See the "Emphasis Logic" section.
 - **Destructive Actions**: Delete or other destructive action icons (like `delete`, `close`, `cancel`) are `text-muted-foreground` by default and become `text-destructive` on hover to provide a clear but not overwhelming visual warning.
 - **Tooltips for Clarity**: Icon-only buttons (those without visible text) and icons within pickers (like the **Icon Picker**) must always be wrapped in a `<Tooltip>` to provide context on their function. This is crucial for accessibility and user experience.
 
 ### Color Themes & Button Styles
 The application supports two distinct color themes, `light` and `dark`, which can be selected by the user in their preferences.
 
--   **Light Theme**:
-    -   **Aesthetic**: Clean, airy, and professional, using a light grey background (`--background: 0 0% 98%`) and dark text (`--foreground: 0 0% 20%`).
-    -   **Primary Color**: A muted, professional blue (`hsl(210 40% 55%)`) used for all key interactive elements.
-    -   **Accent Color**: A very light blue (`hsl(210 40% 96%)`) used in button hover gradients.
-
--   **Dark Theme**:
-    -   **Aesthetic**: Modern and focused, using a dark charcoal background (`--background: 0 0% 8%`) and light grey text (`--foreground: 0 0% 67%`).
-    -   **Primary Color**: A vibrant, energetic orange (`#D8620E` or `hsl(25 88% 45%)`) used for key actions.
-    -   **Accent Color**: A warm, golden yellow (`hsl(43 55% 71%)`) used in button hover gradients.
-
 - **Custom Primary Color**: Users can select a custom primary color using a color picker popover, as defined in the **Icon & Color Editing Flow** pattern. This custom color overrides the theme's default primary color.
-- **Primary Button Gradient**: Primary buttons have a special gradient effect on hover, which is unique to each theme. This provides a subtle but polished visual feedback for key actions.
-- **Button Hover**: For all non-primary button variants (`outline`, `secondary`, `ghost`, `link`), the hover state applies **no background change**.
+- **Button Hover**: See the "Emphasis Logic" section.
 
-### Global Focus & Highlight Style
-This is the single source of truth for indicating user interaction state across the entire application.
+### Emphasis Logic
+The application uses a sophisticated, user-configurable emphasis system for interactive elements. This system creates two distinct interaction styles based on the user's selected global font weight.
 
--   **Keyboard Focus (`focus-visible`)**: All interactive elements (buttons, inputs, checkboxes, custom cards, etc.) share a consistent focus indicator. When an element is focused via keyboard navigation, a subtle, `1px` ring with 50% opacity appears directly on its border (`focus-visible:ring-1 focus-visible:ring-ring/50`). This provides a clean, minimal, and non-intrusive focus indicator that aligns with the app's elegant aesthetic.
--   **Selected/Highlighted State**: To indicate a persistently selected or highlighted state (e.g., the designated "Team Admin" in a list), a clear icon badge (e.g., a "key" icon) is used, typically overlaid on the user's avatar. This avoids visually noisy outlines and provides a clear, universally understood symbol for elevated status.
-
-### List Item States (Dropdowns & Popovers)
-- **Hover & Focus**: When hovering over or navigating to list items (like in dropdowns or popovers) using the keyboard, the item's text color changes to `text-foreground`. **No background highlight is applied**, ensuring a clean and consistent look.
-- **Selection**: The currently selected item within a list is indicated by a checkmark icon, which also uses the standard foreground color.
+- **Mechanism**: The system checks the user's globally selected `fontWeight` (e.g., from `useUser().viewAsUser.fontWeight`).
+- **Logic**:
+    - **If Global Weight is `Thin`, `Light`, `Normal`, or `Medium`**: When a user hovers over or focuses on an interactive element (like a button or menu item), its **font weight increases** to the next available level (e.g., `Normal` becomes `Medium`). Color does not change.
+    - **If Global Weight is `Bold`**: When a user hovers over or focuses on an interactive element, its font weight does not change. Instead, its **color changes** to the theme's primary color (`--primary`).
+- **Implementation**: This is achieved by adding a `bold-emphasis` class to the `<body>` when a bold weight is selected. The `.font-emphasis` utility class in `globals.css` contains rules that react to the presence or absence of the `bold-emphasis` class to apply the correct styling.
 
 ### User Notifications
 
@@ -330,4 +327,3 @@ This is the single source of truth for indicating user interaction state across 
       - **Ownership Status**: `absolute -top-0 -right-3`.
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Compact View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
-
