@@ -22,7 +22,7 @@ const TabsList = React.forwardRef<
       )}
       {...props}
     />
-    <Separator className="absolute -bottom-px" />
+    <Separator className="absolute -bottom-px bg-border" />
   </div>
 ))
 TabsList.displayName = TabsPrimitive.List.displayName
