@@ -123,7 +123,7 @@ export default function DynamicPage() {
     
     return (
       <Tabs defaultValue={pageTabs[0].id} className="flex flex-col flex-1 gap-6">
-        <ScrollArea className="w-full whitespace-nowrap">
+        <ScrollArea>
             <TabsList>
                 {pageTabs.map(tab => (
                     <TabsTrigger key={tab.id} value={tab.id} className="gap-2">
