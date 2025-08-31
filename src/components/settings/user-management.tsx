@@ -92,6 +92,10 @@ const ModifierKeySetting = ({ user, onUpdate }: { user: User, onUpdate: (key: Us
 }
 
 const CustomColorPicker = ({ colorValue, onUpdate, onClose }: { colorValue: string | null, onUpdate: (newColor: string | null) => void, onClose: () => void }) => {
+    const handleUpdate = (newColor: string) => {
+      onUpdate(newColor);
+    };
+
     const handleSwatchClick = (newColor: string) => {
         onUpdate(newColor);
         onClose();
@@ -99,7 +103,7 @@ const CustomColorPicker = ({ colorValue, onUpdate, onClose }: { colorValue: stri
 
     return (
         <div className="space-y-4">
-             <HslStringColorPicker color={colorValue || 'hsl(221, 83%, 61%)'} onChange={onUpdate} className="!w-full" />
+             <HslStringColorPicker color={colorValue || 'hsl(221, 83%, 61%)'} onChange={handleUpdate} className="!w-full" />
              <div className="grid grid-cols-8 gap-1">
                 {predefinedColors.map(c => (
                     <button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => handleSwatchClick(c)} />
@@ -230,7 +234,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                                     variant="ghost" 
                                                     size="icon" 
                                                     className="h-9 w-9 shrink-0" 
-                                                    style={{ color: 'hsl(var(--primary))' }}
+                                                    style={{ color: user.primaryColor || 'hsl(var(--primary))' }}
                                                     enableReset={true}
                                                     onReset={() => updateUser(user.userId, { primaryColor: null })}
                                                 >
