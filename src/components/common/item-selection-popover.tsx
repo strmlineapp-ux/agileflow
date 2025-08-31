@@ -42,8 +42,8 @@ const ItemDisplay = ({ item, isSelected }: { item: Item, isSelected: boolean }) 
     return (
         <div
             className={cn(
-                "group flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer", 
-                isSelected ? "text-primary" : "text-foreground group-hover:text-primary"
+                "font-emphasis flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer text-foreground", 
+                isSelected && "text-primary"
             )}
         >
             {item.iconType === 'avatar' ? (
