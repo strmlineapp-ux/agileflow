@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -39,13 +38,13 @@ interface ItemSelectionPopoverProps {
 
 const ItemDisplay = ({ item, isSelected }: { item: Item, isSelected: boolean }) => {
     const { viewAsUser } = useUser();
-    const [isHovered, setIsHovered] = useState(false);
     
     return (
         <div
-            className={cn("flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer", isSelected || isHovered ? "text-primary" : "text-foreground")}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
+            className={cn(
+                "group flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer", 
+                isSelected ? "text-primary" : "text-foreground group-hover:text-primary"
+            )}
         >
             {item.iconType === 'avatar' ? (
                 <Avatar className="h-7 w-7">
