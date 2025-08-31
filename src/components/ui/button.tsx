@@ -62,9 +62,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         onReset();
       }
     };
-    
-    const weight = viewAsUser?.fontWeight || 400;
-    const isBold = weight >= 500;
 
     return (
       <Comp

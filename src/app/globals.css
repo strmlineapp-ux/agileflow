@@ -54,18 +54,12 @@
 }
 
 @layer components {
+    /* Default emphasis: increase font weight */
     .font-emphasis:hover,
     .font-emphasis:focus,
     .font-emphasis[data-state=open],
     .font-emphasis[data-state=active] {
         font-weight: var(--font-weight-emphasis) !important;
-    }
-
-    .emphasis-color .font-emphasis:hover,
-    .emphasis-color .font-emphasis:focus,
-    .emphasis-color .font-emphasis[data-state=open],
-    .emphasis-color .font-emphasis[data-state=active] {
-        color: hsl(var(--emphasis-color)) !important;
     }
     
     .font-emphasis:hover .material-symbols-outlined,
@@ -75,11 +69,21 @@
         font-variation-settings: 'FILL' var(--global-icon-fill, 0), 'wght' var(--font-weight-emphasis, 500), 'GRAD' var(--global-icon-grade, 0), 'opsz' var(--global-icon-optical-size, 24) !important;
     }
 
-    .emphasis-color .font-emphasis:hover .material-symbols-outlined,
-    .emphasis-color .font-emphasis:focus .material-symbols-outlined,
-    .emphasis-color .font-emphasis[data-state=open] .material-symbols-outlined,
-    .emphasis-color .font-emphasis[data-state=active] .material-symbols-outlined {
-        color: hsl(var(--emphasis-color)) !important;
+    /* Bold emphasis: change color, do not change weight */
+    .bold-emphasis .font-emphasis:hover,
+    .bold-emphasis .font-emphasis:focus,
+    .bold-emphasis .font-emphasis[data-state=open],
+    .bold-emphasis .font-emphasis[data-state=active] {
+        color: hsl(var(--primary)) !important;
+        font-weight: var(--font-weight-bold) !important; /* Keep original bold weight */
+    }
+
+    .bold-emphasis .font-emphasis:hover .material-symbols-outlined,
+    .bold-emphasis .font-emphasis:focus .material-symbols-outlined,
+    .bold-emphasis .font-emphasis[data-state=open] .material-symbols-outlined,
+    .bold-emphasis .font-emphasis[data-state=active] .material-symbols-outlined {
+        color: hsl(var(--primary)) !important;
+        font-variation-settings: 'FILL' var(--global-icon-fill, 0), 'wght' var(--font-weight-bold, 700), 'GRAD' var(--global-icon-grade, 0), 'opsz' var(--global-icon-optical-size, 24) !important;
     }
 }
 

@@ -10,6 +10,7 @@ import { ThemeProvider, useTheme } from 'next-themes';
 import React, { useState, useEffect } from 'react';
 import { GoogleSymbol } from "@/components/icons/google-symbol";
 import { hexToHsl, getLuminance } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 const roboto = Roboto({
   subsets: ['latin'],
@@ -32,14 +33,14 @@ function AppBody({ children }: { children: React.ReactNode }) {
             const root = document.documentElement;
             
             const fontWeight = viewAsUser.fontWeight || 400;
-            const isBoldEmphasis = fontWeight >= 500;
+            const isBoldEmphasis = fontWeight >= 700;
 
             document.body.style.fontWeight = fontWeight.toString();
             
             if (isBoldEmphasis) {
-                document.body.classList.add('emphasis-color');
+                document.body.classList.add('bold-emphasis');
             } else {
-                document.body.classList.remove('emphasis-color');
+                document.body.classList.remove('bold-emphasis');
             }
 
             const emphasisWeightMap: { [key: number]: number } = {
@@ -47,7 +48,7 @@ function AppBody({ children }: { children: React.ReactNode }) {
                 300: 400,
                 400: 500,
                 500: 700,
-                700: 700
+                700: 700 // For bold, emphasis doesn't change weight
             };
             const emphasisWeight = emphasisWeightMap[fontWeight] || 500;
             root.style.setProperty('--font-weight-emphasis', emphasisWeight.toString());
@@ -66,12 +67,9 @@ function AppBody({ children }: { children: React.ReactNode }) {
             const radius = viewAsUser.radius ?? 0.5;
             root.style.setProperty('--radius', `${radius}rem`);
 
-             // Set emphasis color based on logic
-            const themePrimary = theme === 'dark' ? 'hsl(25 88% 55%)' : 'hsl(210 70% 50%)';
-            const themeForeground = theme === 'dark' ? '210 7% 60%' : '210 7% 40%';
-
+             // Set primary color
             if (viewAsUser.primaryColor) {
-                const hsl = hexToHsl(viewAsUser.primaryColor) || themePrimary.replace('hsl(', '').replace(')', '');
+                const hsl = hexToHsl(viewAsUser.primaryColor) || (theme === 'dark' ? '25 88% 55%' : '210 70% 50%');
                 root.style.setProperty('--primary', hsl);
             } else {
                  if (theme === 'dark') {
@@ -81,25 +79,24 @@ function AppBody({ children }: { children: React.ReactNode }) {
                 }
             }
             
+            // Set foreground/contrast
+            const themeForeground = theme === 'dark' ? '210 7% 60%' : '210 7% 40%';
             if(viewAsUser.highContrast) {
                 root.style.setProperty('--foreground', theme === 'dark' ? '210 7% 80%' : '210 7% 20%');
             } else {
                 root.style.setProperty('--foreground', themeForeground);
             }
-
-            if (isBoldEmphasis) {
-                root.style.setProperty('--emphasis-color', 'hsl(var(--primary))');
-            } else {
-                root.style.setProperty('--emphasis-color', 'hsl(var(--foreground))');
-            }
         }
-    }, [viewAsUser, theme, viewAsUser?.primaryColor, viewAsUser?.highContrast, viewAsUser?.fontWeight]);
+    }, [viewAsUser, theme]);
     
     return (
-        <>
+        <body className={cn(
+            `${roboto.variable} antialiased`,
+            (viewAsUser?.fontWeight || 400) >= 700 ? 'bold-emphasis' : ''
+        )}>
             {children}
             <Toaster />
-        </>
+        </body>
     );
 }
 
@@ -138,22 +135,20 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
         />
       </head>
-      <body className={`${roboto.variable} antialiased`}>
-        <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-          <UserProvider>
-            <ClientOnly>
-                <AppBody>
-                  {children}
-                </AppBody>
-            </ClientOnly>
-          </UserProvider>
-        </ThemeProvider>
-      </body>
+      <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+        <UserProvider>
+          <ClientOnly>
+              <AppBody>
+                {children}
+              </AppBody>
+          </ClientOnly>
+        </UserProvider>
+      </ThemeProvider>
     </html>
   );
 }
