@@ -26,6 +26,7 @@ import { CalendarPageContent } from '@/components/dashboard/tabs/calendar-tab';
 import { ProjectsContent } from '@/components/dashboard/tabs/projects-tab';
 import { EventsContent } from '@/components/dashboard/tabs/events-tab';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 
 const componentMap = {
@@ -122,14 +123,16 @@ export default function DynamicPage() {
     
     return (
       <Tabs defaultValue={pageTabs[0].id} className="flex flex-col flex-1 gap-6">
-        <TabsList className="w-full justify-around">
-            {pageTabs.map(tab => (
-                <TabsTrigger key={tab.id} value={tab.id} className="gap-2">
-                    <GoogleSymbol name={tab.icon} className="text-lg" />
-                    {tab.name}
-                </TabsTrigger>
-            ))}
-        </TabsList>
+        <ScrollArea className="w-full whitespace-nowrap">
+            <TabsList className="w-full justify-around">
+                {pageTabs.map(tab => (
+                    <TabsTrigger key={tab.id} value={tab.id} className="gap-2">
+                        <GoogleSymbol name={tab.icon} className="text-lg" />
+                        {tab.name}
+                    </TabsTrigger>
+                ))}
+            </TabsList>
+        </ScrollArea>
          <div className="flex-1 overflow-y-auto">
             {pageTabs.map(tab => {
                 const Component = componentMap[tab.componentKey as keyof typeof componentMap];
