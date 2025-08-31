@@ -9,7 +9,6 @@ import { Roboto } from 'next/font/google';
 import { ThemeProvider, useTheme } from 'next-themes';
 import React, { useState, useEffect } from 'react';
 import { GoogleSymbol } from "@/components/icons/google-symbol";
-import { hexToHsl, getLuminance } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 
 const roboto = Roboto({
@@ -69,7 +68,8 @@ function AppBody({ children }: { children: React.ReactNode }) {
 
              // Set primary color
             if (viewAsUser.primaryColor) {
-                const hsl = hexToHsl(viewAsUser.primaryColor) || (theme === 'dark' ? '25 88% 55%' : '210 70% 50%');
+                // The color is already in HSL string format, so we can use it directly.
+                const hsl = viewAsUser.primaryColor.replace(/hsl\(|\)/g, "");
                 root.style.setProperty('--primary', hsl);
             } else {
                  if (theme === 'dark') {
