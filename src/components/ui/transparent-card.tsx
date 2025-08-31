@@ -10,7 +10,7 @@ const TransparentCard = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "rounded-lg text-foreground",
+      "rounded-lg text-foreground bg-transparent border-transparent",
       className
     )}
     {...props}
@@ -24,7 +24,7 @@ const TransparentCardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex flex-col space-y-1.5 p-2", className)}
+    className={cn("flex flex-col space-y-1.5", className)}
     {...props}
   />
 ))
@@ -61,7 +61,7 @@ const TransparentCardContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("p-2 pt-0", className)} {...props} />
+  <div ref={ref} className={cn("", className)} {...props} />
 ))
 TransparentCardContent.displayName = "TransparentCardContent"
 
@@ -71,7 +71,7 @@ const TransparentCardFooter = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex items-center p-2 pt-0", className)}
+    className={cn("flex items-center", className)}
     {...props}
   />
 ))
