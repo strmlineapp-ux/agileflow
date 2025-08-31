@@ -14,8 +14,8 @@
     --popover-foreground: 210 7% 40%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: var(--foreground);
-    --input: var(--foreground);
+    --border: hsl(var(--foreground) / <alpha-value>);
+    --input: hsl(var(--foreground) / <alpha-value>);
     --ring: 210 70% 50%;
     --radius: 0.5rem;
 
@@ -38,8 +38,7 @@
     --popover-foreground: 210 7% 60%;
     --destructive: 0 62% 40%;
     --destructive-foreground: 0 0% 100%;
-    --border: var(--foreground);
-    --input: var(--foreground);
+    --input: hsl(var(--foreground) / <alpha-value>);
     --ring: 25 88% 55%;
     --emphasis-color: hsl(var(--foreground));
   }
