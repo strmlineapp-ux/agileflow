@@ -45,7 +45,6 @@ function AssignedBadge({ badge, canManage, contextId }: { badge: Badge, canManag
                         canManage && 'cursor-grab',
                         isDragging && 'opacity-50'
                     )}
-                    style={{ borderColor: badge.color }}
                 >
                     <GoogleSymbol
                     name={badge.icon}

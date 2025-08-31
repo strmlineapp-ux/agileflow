@@ -15,7 +15,7 @@ const buttonVariants = cva(
       variant: {
         default: "hover:bg-transparent",
         destructive: "bg-background text-foreground hover:text-destructive",
-        outline: "border border-input bg-transparent",
+        outline: "border bg-transparent",
         ghost: "hover:bg-muted/50",
         link: "hover:underline",
         circle: "rounded-full",
