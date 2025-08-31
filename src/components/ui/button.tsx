@@ -46,9 +46,17 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, enableReset, onReset, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
+    const { viewAsUser } = useUser();
     
     const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-      if (enableReset && onReset && (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey)) {
+      const modifierKey = viewAsUser?.modifierKey || 'shift';
+      const isModifierPressed = 
+        (modifierKey === 'shift' && e.shiftKey) ||
+        (modifierKey === 'alt' && e.altKey) ||
+        (modifierKey === 'ctrl' && e.ctrlKey) ||
+        (modifierKey === 'meta' && e.metaKey);
+
+      if (enableReset && onReset && isModifierPressed) {
         e.preventDefault();
         onReset();
       } else if (props.onClick) {
