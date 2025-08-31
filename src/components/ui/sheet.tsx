@@ -4,7 +4,6 @@
 import * as React from "react"
 import * as SheetPrimitive from "@radix-ui/react-dialog"
 import { cva, type VariantProps } from "class-variance-authority"
-import { GoogleSymbol } from "../icons/google-symbol"
 
 import { cn } from "@/lib/utils"
 
@@ -105,7 +104,7 @@ const SheetTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SheetPrimitive.Title
     ref={ref}
-    className={cn("font-headline text-lg", className)}
+    className={cn("font-headline text-lg font-thin", className)}
     {...props}
   />
 ))
