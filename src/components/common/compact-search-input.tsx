@@ -113,7 +113,7 @@ export function CompactSearchInput({
           placeholder={placeholder}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1 w-full h-full p-0 bg-transparent placeholder:text-foreground"
+          className="flex-1 w-full h-full p-0 bg-transparent placeholder:text-foreground focus-visible:ring-0 focus-visible:outline-none"
         />
         {showColorFilter && onColorSelect && (
             <Popover open={isColorPopoverOpen} onOpenChange={handleColorPopoverChange}>
@@ -130,7 +130,7 @@ export function CompactSearchInput({
                             max="360"
                             value={currentHue}
                             onChange={handleHueChange}
-                            className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                            className="w-full h-2 rounded-full appearance-none cursor-pointer focus-visible:outline-none focus-visible:ring-0"
                         />
                         <Button
                           variant="default" 
