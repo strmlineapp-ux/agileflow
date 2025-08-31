@@ -68,9 +68,11 @@ function AppBody({ children }: { children: React.ReactNode }) {
 
              // Set primary color
             if (viewAsUser.primaryColor) {
-                // The color is already in HSL string format, so we can use it directly.
-                const hsl = viewAsUser.primaryColor.replace(/hsl\(|\)/g, "");
-                root.style.setProperty('--primary', hsl);
+                const match = viewAsUser.primaryColor.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
+                if (match) {
+                    const [, h, s, l] = match;
+                    root.style.setProperty('--primary', `${h} ${s}% ${l}%`);
+                }
             } else {
                  if (theme === 'dark') {
                     root.style.setProperty('--primary', '25 88% 55%');
