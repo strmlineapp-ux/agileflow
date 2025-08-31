@@ -1,3 +1,4 @@
+
 import type {Config} from "tailwindcss";
 
 export default {
@@ -20,7 +21,7 @@ export default {
         emphasis: "var(--font-weight-emphasis, 500)",
       },
       colors: {
-        border: "hsl(var(--foreground) / <alpha-value>)",
+        border: "hsl(var(--border) / <alpha-value>)",
         input: "hsl(var(--foreground) / <alpha-value>)",
         ring: "hsl(var(--primary) / <alpha-value>)",
         background: "hsl(var(--background) / <alpha-value>)",
