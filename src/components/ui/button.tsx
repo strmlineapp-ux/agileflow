@@ -17,7 +17,7 @@ const buttonVariants = cva(
         default: "text-foreground",
         destructive: "bg-destructive text-destructive-foreground",
         outline: "border border-input bg-transparent",
-        ghost: "hover:bg-transparent hover:text-primary",
+        ghost: "hover:bg-transparent",
         circle: "rounded-full",
       },
       size: {
