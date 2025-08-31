@@ -18,6 +18,7 @@ import { CompactSearchInput } from '../common/compact-search-input';
 import { HslStringColorPicker } from 'react-colorful';
 import { Slider } from '../ui/slider';
 import { UserCard } from '@/components/common/user-card';
+import { TransparentCard, TransparentCardContent } from '../ui/transparent-card';
 
 const predefinedColors = [
     'hsl(0, 84%, 60%)', 'hsl(25, 95%, 53%)', 'hsl(45, 93%, 47%)', 'hsl(88, 62%, 53%)', 'hsl(142, 71%, 45%)', 'hsl(160, 100%, 37%)',
@@ -324,7 +325,9 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
-                              <PopoverContent className="w-48 p-4 bg-transparent border-none shadow-none">
+                              <PopoverContent className="w-48 p-0" asChild>
+                                <TransparentCard>
+                                  <TransparentCardContent>
                                     <Slider
                                       value={[currentWeightIndex]}
                                       onValueChange={handleFontWeightChange}
@@ -332,6 +335,8 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                       max={4}
                                       step={1}
                                     />
+                                  </TransparentCardContent>
+                                </TransparentCard>
                               </PopoverContent>
                             </Popover>
 
@@ -350,8 +355,12 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                         </TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
-                                <PopoverContent className="w-48 p-4 bg-transparent border-none shadow-none">
-                                    <Slider value={[currentIconGradeIndex]} onValueChange={handleIconGradeChange} min={0} max={2} step={1} />
+                                <PopoverContent className="w-48 p-0" asChild>
+                                  <TransparentCard>
+                                    <TransparentCardContent>
+                                      <Slider value={[currentIconGradeIndex]} onValueChange={handleIconGradeChange} min={0} max={2} step={1} />
+                                    </TransparentCardContent>
+                                  </TransparentCard>
                                 </PopoverContent>
                             </Popover>
                             
@@ -370,8 +379,12 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                         </TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
-                                <PopoverContent className="w-48 p-4 bg-transparent border-none shadow-none">
-                                  <Slider value={[currentIconOpticalSizeIndex]} onValueChange={handleIconOpticalSizeChange} min={0} max={3} step={1} />
+                                <PopoverContent className="w-48 p-0" asChild>
+                                  <TransparentCard>
+                                    <TransparentCardContent>
+                                      <Slider value={[currentIconOpticalSizeIndex]} onValueChange={handleIconOpticalSizeChange} min={0} max={3} step={1} />
+                                    </TransparentCardContent>
+                                  </TransparentCard>
                                 </PopoverContent>
                             </Popover>
 
@@ -390,8 +403,12 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                         </TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
-                                <PopoverContent className="w-48 p-4 bg-transparent border-none shadow-none">
-                                  <Slider value={[currentRadius * 10]} onValueChange={handleRadiusChange} min={0} max={15} step={1} />
+                                <PopoverContent className="w-48 p-0" asChild>
+                                  <TransparentCard>
+                                    <TransparentCardContent>
+                                      <Slider value={[currentRadius * 10]} onValueChange={handleRadiusChange} min={0} max={15} step={1} />
+                                    </TransparentCardContent>
+                                  </TransparentCard>
                                 </PopoverContent>
                             </Popover>
 
