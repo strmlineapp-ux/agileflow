@@ -245,3 +245,5 @@ This represents a specific, functional role or skill.
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
+
+    

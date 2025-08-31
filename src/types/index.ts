@@ -262,3 +262,5 @@ export interface Tenant {
     ownerId: string;
     createdAt: Date;
 }
+
+    
