@@ -22,7 +22,6 @@ const TabsList = React.forwardRef<
       )}
       {...props}
     />
-    <Separator className="absolute -bottom-px bg-border/20" />
   </div>
 ))
 TabsList.displayName = TabsPrimitive.List.displayName
@@ -50,7 +49,7 @@ const TabsContent = React.forwardRef<
   <TabsPrimitive.Content
     ref={ref}
     className={cn(
-      "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+      "mt-2 ring-offset-background",
       className
     )}
     {...props}
