@@ -1,28 +1,94 @@
-"use client"
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-import * as React from "react"
-import * as ProgressPrimitive from "@radix-ui/react-progress"
+@layer base {
+  :root {
+    --background: 210 20% 95%;
+    --card: 210 20% 98%;
+    --popover: 210 20% 98%;
+    --primary: 210 70% 50%;
+    --primary-foreground: 0 0% 100%;
+    --foreground: 210 7% 40%;
+    --popover-foreground: 210 7% 40%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 210 7% 40%;
+    --input: 210 7% 40%;
+    --ring: 210 70% 50%;
+    --radius: 0.5rem;
 
-import { cn } from "@/lib/utils"
+    --font-weight-thin: 100;
+    --font-weight-light: 300;
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-bold: 700;
+    --font-weight-emphasis: 500;
+    --emphasis-color: hsl(var(--foreground));
+  }
 
-const Progress = React.forwardRef<
-  React.ElementRef<typeof ProgressPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root>
->(({ className, value, ...props }, ref) => (
-  <ProgressPrimitive.Root
-    ref={ref}
-    className={cn(
-      "relative h-4 w-full overflow-hidden rounded-full bg-background",
-      className
-    )}
-    {...props}
-  >
-    <ProgressPrimitive.Indicator
-      className="h-full w-full flex-1 bg-primary transition-all"
-      style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
-    />
-  </ProgressPrimitive.Root>
-))
-Progress.displayName = ProgressPrimitive.Root.displayName
+  .dark {
+    --background: 210 40% 9%;
+    --card: 210 40% 12%;
+    --popover: 210 40% 12%;
+    --primary: 25 88% 55%;
+    --primary-foreground: 0 0% 100%;
+    --foreground: 210 7% 60%;
+    --popover-foreground: 210 7% 60%;
+    --destructive: 0 62% 40%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 210 7% 60%;
+    --input: 210 7% 60%;
+    --ring: 25 88% 55%;
+    --emphasis-color: hsl(var(--foreground));
+  }
 
-export { Progress }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-roboto), sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+      font-family: var(--font-roboto), sans-serif;
+  }
+}
+
+@layer components {
+    .font-emphasis:hover,
+    .font-emphasis:focus,
+    .font-emphasis[data-state=open],
+    .font-emphasis[data-state=active] {
+        font-weight: var(--font-weight-emphasis) !important;
+        color: hsl(var(--emphasis-color)) !important;
+    }
+    
+    .font-emphasis:hover .material-symbols-outlined,
+    .font-emphasis:focus .material-symbols-outlined,
+    .font-emphasis[data-state=open] .material-symbols-outlined,
+    .font-emphasis[data-state=active] .material-symbols-outlined {
+        color: hsl(var(--emphasis-color)) !important;
+        font-variation-settings: 'FILL' var(--global-icon-fill, 0), 'wght' var(--font-weight-emphasis, 500), 'GRAD' var(--global-icon-grade, 0), 'opsz' var(--global-icon-optical-size, 24) !important;
+    }
+}
+
+
+@layer utilities {
+  .lunch-break-pattern {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 5px,
+      hsl(var(--foreground) / 0.06) 5px,
+      hsl(var(--foreground) / 0.06) 10px
+    );
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
