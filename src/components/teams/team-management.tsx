@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -414,7 +413,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
             </DraggableGrid>
             <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96 p-2" : "w-0 p-0")}>
                 <TeamManagementDropZone id="shared-teams-panel" type="team-card" className="h-full">
-                    <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
+                    <Card className={cn("transition-opacity duration-300 h-full flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
                         <CardHeader>
                             <div className="flex items-center justify-between">
                                 <CardTitle>Shared Teams</CardTitle>

@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
@@ -539,7 +538,7 @@ export function CalendarManagement({ tab, page }: { tab: AppTab; page: AppPage }
       <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96" : "w-0")}>
         <div className={cn("h-full rounded-lg transition-all", isSharedPanelOpen ? "p-2" : "p-0")}>
           <CalendarDropZone id="shared-calendars-panel" type="shared-calendar-panel" className="h-full">
-              <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
+              <Card className={cn("transition-opacity duration-300 h-full flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
               <CardHeader>
                   <div className="flex items-center justify-between">
                   <CardTitle className="font-headline font-thin text-xl">Shared Calendars</CardTitle>
