@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
@@ -91,36 +92,14 @@ const ModifierKeySetting = ({ user, onUpdate }: { user: User, onUpdate: (key: Us
 }
 
 const CustomColorPicker = ({ colorValue, onUpdate, onClose }: { colorValue: string | null, onUpdate: (newColor: string | null) => void, onClose: () => void }) => {
-    const [color, setColor] = useState(colorValue || 'hsl(221, 83%, 61%)');
-    const popoverRef = useRef<HTMLDivElement>(null);
-    
-    const handleColorChange = (newColor: string) => {
-        setColor(newColor);
-        onUpdate(newColor);
-    };
-
     const handleSwatchClick = (newColor: string) => {
-        setColor(newColor);
         onUpdate(newColor);
         onClose();
     };
 
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
-                onClose();
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [onClose]);
-
     return (
-        <div ref={popoverRef} className="space-y-4">
-             <HslStringColorPicker color={color} onChange={handleColorChange} className="!w-full" />
+        <div className="space-y-4">
+             <HslStringColorPicker color={colorValue || 'hsl(221, 83%, 61%)'} onChange={onUpdate} className="!w-full" />
              <div className="grid grid-cols-8 gap-1">
                 {predefinedColors.map(c => (
                     <button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => handleSwatchClick(c)} />
