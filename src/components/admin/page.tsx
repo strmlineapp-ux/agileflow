@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -53,6 +54,7 @@ import { SortableItem } from '../common/sortable-item';
 import { IconColorPicker } from '../common/icon-color-picker';
 import { InlineEditor } from '../common/inline-editor';
 import { ItemSelectionPopover, type ItemSelectionTab } from '../common/item-selection-popover';
+import { hasAccess } from '@/lib/permissions';
 
 // #region Admin Groups Management Tab
 
@@ -532,7 +534,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
     onToggleExpand: () => void;
 }) {
     const { viewAsUser } = useUser();
-    const canManage = viewAsUser.isAdmin || page.owner?.id === viewAsUser.userId;
+    const canManage = hasAccess(viewAsUser, page);
     const isPinned = page.isSystemPage;
 
     const displayPath = page.isDynamic 

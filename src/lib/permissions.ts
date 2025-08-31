@@ -65,15 +65,20 @@ export const getAllUserRoles = (user: User, teams: Team[]): string[] => {
  */
 export const hasAccess = (user: User, page: AppPage): boolean => {
 
-    // Global pages accessible to all authenticated users
-    const globalPages = ['page-overview', 'page-calendar', 'page-tasks', 'page-notifications'];
-    if (user && globalPages.includes(page.id)) {
+    // System admin has universal access
+    if (user.isAdmin) {
         return true;
     }
 
-    // Special case for the admin management page
-    if (page.id === 'page-admin-management') {
-        return user.isAdmin;
+    // Check if the user is the owner of the page
+    if (page.owner?.id === user.userId) {
+        return true;
+    }
+
+    // Global pages accessible to all authenticated users
+    const globalPages = ['page-overview', 'page-calendar', 'page-tasks', 'page-notifications', 'page-settings'];
+    if (user && globalPages.includes(page.id)) {
+        return true;
     }
 
     const access = page.access;
