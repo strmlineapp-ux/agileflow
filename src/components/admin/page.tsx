@@ -251,7 +251,7 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
     <div className="space-y-6">
         <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="flex flex-col h-full bg-transparent border-0 shadow-none">
+                <Card className="flex flex-col h-full bg-transparent shadow-none">
                     <CardHeader>
                         <div className="flex items-center justify-between gap-4">
                             <CardTitle className="text-foreground">Admins ({filteredAdminUsers.length})</CardTitle>
@@ -269,7 +269,7 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
                         <UserDropZone id="admin-list" users={filteredAdminUsers} />
                     </CardContent>
                   </Card>
-                  <Card className="flex flex-col h-full bg-transparent border-0 shadow-none">
+                  <Card className="flex flex-col h-full bg-transparent shadow-none">
                     <CardHeader>
                         <div className="flex items-center justify-between gap-4">
                              <div className="flex items-center gap-2">

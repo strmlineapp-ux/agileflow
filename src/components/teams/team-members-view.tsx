@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useUser } from '@/context/user-context';
@@ -64,7 +63,7 @@ function SortableTeamMember({ member, team, onSetAdmin, onRemoveUser }: { member
   };
 
   return (
-    <div ref={combinedRef} style={style} className={cn("relative rounded-md", isDragging && "shadow-xl")}>
+    <div ref={combinedRef} style={style} className={cn("relative rounded-md border", isDragging && "shadow-xl")}>
       <div {...attributes} {...listeners} className="relative group">
         <TeamMemberCard member={member} team={team} onSetAdmin={onSetAdmin} isOver={isOver} />
         {canManage && (

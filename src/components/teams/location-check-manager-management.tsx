@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState } from 'react';
@@ -33,7 +32,7 @@ export function LocationCheckManagerManagement({ team }: { team: Team }) {
 
   return (
     <>
-      <Card className="bg-transparent">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             Location Check Managers

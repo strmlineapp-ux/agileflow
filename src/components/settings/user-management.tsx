@@ -458,7 +458,7 @@ export function UserManagement({ showSearch = false, isActive = false }: { showS
 
     return (
         <div className="space-y-6">
-          {currentUser && <CurrentUserCard user={currentUser} isCurrentUser={isCurrentUser} canEditPreferences={canEditPreferences} className="border-0" />}
+          {currentUser && <CurrentUserCard user={currentUser} isCurrentUser={isCurrentUser} canEditPreferences={canEditPreferences} className="" />}
 
           {showSearch && (
               <div className="flex justify-end mb-4">

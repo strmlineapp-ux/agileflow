@@ -85,7 +85,7 @@ export function TeamMemberCard({ member, team, onSetAdmin, isOver }: { member: U
   const isTeamAdmin = (team.teamAdmins || []).includes(member.userId);
 
   return (
-      <Card className={cn("transition-colors", isOver && "ring-1 ring-inset ring-primary")}>
+      <div className={cn("transition-colors", isOver && "ring-1 ring-inset ring-primary")}>
         <CardHeader>
           <div className="flex items-center gap-4">
              <div 
@@ -135,6 +135,6 @@ export function TeamMemberCard({ member, team, onSetAdmin, isOver }: { member: U
                 </div>
             </CardContent>
         )}
-      </Card>
+      </div>
   );
 }
