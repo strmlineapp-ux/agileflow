@@ -66,7 +66,7 @@ const ModifierKeySetting = ({ user, onUpdate }: { user: User, onUpdate: (key: Us
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <PopoverTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground font-emphasis" onReset={() => onUpdate('shift')} enableReset>
+                            <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground" enableReset onReset={() => onUpdate('shift')}>
                                 <GoogleSymbol name="keyboard_command_key" />
                             </Button>
                         </PopoverTrigger>
@@ -497,15 +497,13 @@ export function UserManagement({ showSearch = false, isActive = false }: { showS
           {currentUser && <CurrentUserCard user={currentUser} isCurrentUser={isCurrentUser} canEditPreferences={canEditPreferences} className="" />}
 
           {showSearch && (
-              <div className="flex justify-end mb-4">
-                  <div className="w-64">
+              <div className="flex justify-end mb-4 w-64 ml-auto">
                     <CompactSearchInput 
                         searchTerm={searchTerm} 
                         setSearchTerm={setSearchTerm} 
                         placeholder="Search users..." 
                         autoFocus={isActive}
                     />
-                  </div>
               </div>
           )}
           
