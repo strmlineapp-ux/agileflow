@@ -42,8 +42,8 @@ const ItemDisplay = ({ item, isSelected }: { item: Item, isSelected: boolean }) 
     return (
         <div
             className={cn(
-                "font-emphasis flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer text-foreground", 
-                isSelected && "text-primary"
+                "font-emphasis flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer",
+                isSelected ? "text-primary" : "text-foreground"
             )}
         >
             {item.iconType === 'avatar' ? (
@@ -52,7 +52,7 @@ const ItemDisplay = ({ item, isSelected }: { item: Item, isSelected: boolean }) 
                     <AvatarFallback>{item.name.slice(0, 2)}</AvatarFallback>
                 </Avatar>
             ) : (
-                <GoogleSymbol name={item.icon} style={{ color: item.color }} />
+                <GoogleSymbol name={item.icon} style={{ color: item.color || 'hsl(var(--foreground))' }} />
             )}
             <span>{item.name}</span>
         </div>
