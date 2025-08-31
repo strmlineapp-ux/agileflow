@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useEffect, useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react';
@@ -162,12 +163,12 @@ export const WeekView = React.memo(({ date, events, containerRef, zoomLevel, onE
                                     {format(day, 'd')}
                                 </p>
                                 {!showWeekends && format(day, 'EEE') === 'Fri' && (
-                                    <Button variant="ghost" size="icon" className="absolute right-0 top-1/2 -translate-y-1/2 h-full rounded-none" onClick={() => setShowWeekends(true)}>
+                                    <Button variant="default" size="icon" className="absolute right-0 top-1/2 -translate-y-1/2 h-full rounded-none" onClick={() => setShowWeekends(true)}>
                                         <GoogleSymbol name="keyboard_double_arrow_right" weight={100} />
                                     </Button>
                                 )}
                                 {showWeekends && format(day, 'EEE') === 'Sun' && (
-                                    <Button variant="ghost" size="icon" className="absolute left-0 top-1/2 -translate-y-1/2 h-full rounded-none" onClick={() => setShowWeekends(false)}>
+                                    <Button variant="default" size="icon" className="absolute left-0 top-1/2 -translate-y-1/2 h-full rounded-none" onClick={() => setShowWeekends(false)}>
                                         <GoogleSymbol name="keyboard_double_arrow_left" weight={100} />
                                     </Button>
                                 )}
