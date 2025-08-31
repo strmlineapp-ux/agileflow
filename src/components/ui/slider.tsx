@@ -13,12 +13,12 @@ const Slider = React.forwardRef<
   <SliderPrimitive.Root
     ref={ref}
     className={cn(
-      "relative flex h-0 w-full touch-none select-none items-center",
+      "relative flex h-0 w-full touch-none select-none",
       className
     )}
     {...props}
   >
-    <SliderPrimitive.Track className="relative h-0.5 w-full grow overflow-hidden rounded-full bg-foreground">
+    <SliderPrimitive.Track className="absolute w-full -translate-y-1/2 top-1/2 h-0.5 grow overflow-hidden rounded-full bg-foreground">
         <div className="absolute w-full -translate-y-1/2 top-1/2 h-full flex justify-between">
             {[...Array(5)].map((_, i) => (
                 <div key={i} className="h-2 w-px bg-foreground" />
