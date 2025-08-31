@@ -498,12 +498,14 @@ export function UserManagement({ showSearch = false, isActive = false }: { showS
 
           {showSearch && (
               <div className="flex justify-end mb-4">
-                  <CompactSearchInput 
-                    searchTerm={searchTerm} 
-                    setSearchTerm={setSearchTerm} 
-                    placeholder="Search users..." 
-                    autoFocus={isActive}
-                  />
+                  <div className="w-64">
+                    <CompactSearchInput 
+                        searchTerm={searchTerm} 
+                        setSearchTerm={setSearchTerm} 
+                        placeholder="Search users..." 
+                        autoFocus={isActive}
+                    />
+                  </div>
               </div>
           )}
           
