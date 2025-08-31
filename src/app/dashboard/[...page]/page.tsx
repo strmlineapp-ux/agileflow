@@ -18,6 +18,10 @@ import { PinnedLocationManagement } from '@/components/settings/pinned-location-
 import { WorkstationManagement } from '@/components/settings/workstation-management';
 import { EventTemplateManagement } from '@/components/teams/event-template-management';
 import { TeamMembersView } from '@/components/teams/team-members-view';
+import { OverviewContent } from '@/components/dashboard/tabs/overview-tab';
+import { TasksContent } from '@/components/dashboard/tabs/tasks-tab';
+import { NotificationsContent } from '@/components/dashboard/tabs/notifications-tab';
+import { SettingsContent } from '@/components/dashboard/tabs/settings-tab';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 
@@ -32,6 +36,10 @@ const componentMap = {
   workstations: WorkstationManagement,
   templates: EventTemplateManagement,
   team_members: TeamMembersView,
+  overview: OverviewContent,
+  tasks: TasksContent,
+  notifications: NotificationsContent,
+  settings: SettingsContent,
   // Add other mappings as needed
 };
 
