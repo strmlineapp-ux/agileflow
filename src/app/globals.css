@@ -10,35 +10,39 @@
     --font-weight-normal: 400;
     --font-weight-medium: 500;
     --font-weight-bold: 700;
-    --font-weight-emphasis: 500; /* Default emphasis */
+    --font-weight-emphasis: 500;
 
-    /* Base theme colors */
-    --background: 210 20% 92%;
-    --component-bg: 210 20% 96%;
+    /* Light Theme Colors */
+    --background: 210 20% 95%;
     --foreground: 210 7% 40%;
+    --card: 210 20% 98%;
     --primary: 210 70% 50%;
-    --primary-foreground: 210 40% 98%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --muted: 210 40% 96.1%;
-    --popover: 210 40% 100%;
-    --radius: 0.5rem;
+    --primary-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --muted: 210 40% 96%;
+    --accent: 180 60% 40%;
+    --accent-foreground: 0 0% 100%;
     --border: 210 7% 40%;
-
-    --emphasis-color: hsl(var(--foreground)); /* Default emphasis to foreground */
+    --input: 210 7% 40%;
+    --ring: 210 70% 50%;
+    --radius: 0.5rem;
   }
 
   .dark {
     --background: 210 40% 9%;
-    --component-bg: 210 40% 12%;
-    --foreground: 210 7% 50%;
-    --primary: 25 88% 45%;
-    --primary-foreground: 43 55% 95%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --foreground: 210 7% 60%;
+    --card: 210 40% 12%;
+    --primary: 25 88% 55%;
+    --primary-foreground: 0 0% 100%;
+    --destructive: 0 62% 40%;
+    --destructive-foreground: 0 0% 100%;
     --muted: 210 40% 15%;
-    --popover: 222.2 84% 4.9%;
-    --border: 210 7% 50%;
+    --accent: 180 60% 50%;
+    --accent-foreground: 0 0% 100%;
+    --border: 210 7% 60%;
+    --input: 210 7% 60%;
+    --ring: 25 88% 55%;
   }
 
   body {
@@ -57,14 +61,14 @@
     .font-emphasis[data-state=open],
     .font-emphasis[data-state=active] {
         font-weight: var(--font-weight-emphasis) !important;
-        color: var(--emphasis-color) !important;
+        color: hsl(var(--primary)) !important;
     }
     
     .font-emphasis:hover .material-symbols-outlined,
     .font-emphasis:focus .material-symbols-outlined,
     .font-emphasis[data-state=open] .material-symbols-outlined,
     .font-emphasis[data-state=active] .material-symbols-outlined {
-        color: var(--emphasis-color) !important;
+        color: hsl(var(--primary)) !important;
         font-variation-settings: 'FILL' var(--global-icon-fill, 0), 'wght' var(--font-weight-emphasis, 500), 'GRAD' var(--global-icon-grade, 0), 'opsz' var(--global-icon-optical-size, 24) !important;
     }
 }
@@ -75,8 +79,8 @@
       -45deg,
       transparent,
       transparent 5px,
-      hsl(var(--foreground) / var(--lunch-break-opacity, 0.06)) 5px,
-      hsl(var(--foreground) / var(--lunch-break-opacity, 0.06)) 10px
+      hsl(var(--foreground) / 0.06) 5px,
+      hsl(var(--foreground) / 0.06) 10px
     );
   }
 
@@ -85,7 +89,7 @@
   }
 
   .no-scrollbar {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }
