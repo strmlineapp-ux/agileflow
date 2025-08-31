@@ -114,8 +114,8 @@ export function ItemSelectionPopover({
           <TooltipContent><p>{tooltip}</p></TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <PopoverContent className="w-80 p-0 flex flex-col max-h-96 min-h-0" onPointerDownCapture={(e) => e.stopPropagation()}>
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full flex flex-col">
+      <PopoverContent className="w-80 p-0 flex flex-col max-h-96" onPointerDownCapture={(e) => e.stopPropagation()}>
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full flex flex-col flex-1 min-h-0">
           {tabs.length > 1 && (
             <TabsList className="grid w-full grid-cols-2">
               {tabs.map(tab => <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>)}
@@ -135,8 +135,7 @@ export function ItemSelectionPopover({
             />
           </div>
 
-          <div className="flex-1 overflow-hidden">
-            <ScrollArea className="h-full">
+          <ScrollArea className="flex-1 min-h-0">
               <div className="p-1 space-y-1">
                 {filteredItems.length > 0 ? (
                   filteredItems.map(item => {
@@ -152,8 +151,7 @@ export function ItemSelectionPopover({
                   <p className="text-center text-sm text-foreground p-4">No {activeTab} found.</p>
                 )}
               </div>
-            </ScrollArea>
-          </div>
+          </ScrollArea>
         </Tabs>
       </PopoverContent>
     </Popover>
