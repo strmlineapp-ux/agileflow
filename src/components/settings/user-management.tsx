@@ -94,9 +94,9 @@ const ModifierKeySetting = ({ user, onUpdate }: { user: User, onUpdate: (key: Us
 const CustomColorPicker = ({ colorValue, onUpdate, onClose }: { colorValue: string | null, onUpdate: (newColor: string | null) => void, onClose: () => void }) => {
     const [color, setColor] = useState(colorValue || 'hsl(221, 83%, 61%)');
 
-    const handleUpdate = (newColor: string) => {
-        setColor(newColor);
-        onUpdate(newColor);
+    const handleSave = () => {
+        onUpdate(color);
+        onClose();
     };
 
     const handleSwatchClick = (newColor: string) => {
@@ -107,12 +107,13 @@ const CustomColorPicker = ({ colorValue, onUpdate, onClose }: { colorValue: stri
 
     return (
         <div className="space-y-4">
-             <HslStringColorPicker color={color} onChange={handleUpdate} className="!w-full" />
+             <HslStringColorPicker color={color} onChange={setColor} className="!w-full" />
              <div className="grid grid-cols-8 gap-1">
                 {predefinedColors.map(c => (
                     <button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => handleSwatchClick(c)} />
                 ))}
             </div>
+            <Button onClick={handleSave} className="w-full bg-primary">Set Color</Button>
         </div>
     );
 };
@@ -523,4 +524,5 @@ export function UserManagement({ showSearch = false, isActive = false }: { showS
 }
 
     
+
 
