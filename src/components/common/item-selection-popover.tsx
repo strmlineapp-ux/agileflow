@@ -43,7 +43,7 @@ const ItemDisplay = ({ item, isSelected }: { item: Item, isSelected: boolean }) 
         <div
             className={cn(
                 "font-emphasis flex items-center gap-3 p-2 rounded-md text-sm cursor-pointer",
-                isSelected && "text-primary"
+                 isSelected && "text-primary"
             )}
         >
             {item.iconType === 'avatar' ? (
@@ -135,7 +135,8 @@ export function ItemSelectionPopover({
             />
           </div>
 
-          <ScrollArea className="flex-1 min-h-0">
+          <div className="flex-1 relative">
+            <ScrollArea className="absolute h-full w-full">
               <div className="p-1 space-y-1">
                 {filteredItems.length > 0 ? (
                   filteredItems.map(item => {
@@ -151,7 +152,8 @@ export function ItemSelectionPopover({
                   <p className="text-center text-sm text-foreground p-4">No {activeTab} found.</p>
                 )}
               </div>
-          </ScrollArea>
+            </ScrollArea>
+          </div>
         </Tabs>
       </PopoverContent>
     </Popover>
