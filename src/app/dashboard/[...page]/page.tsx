@@ -123,7 +123,8 @@ export default function DynamicPage() {
     
     return (
       <Tabs defaultValue={pageTabs[0].id} className="flex flex-col flex-1 gap-6">
-        <ScrollArea>
+        <ScrollArea className="w-full whitespace-nowrap">
+          <div className="w-max">
             <TabsList>
                 {pageTabs.map(tab => (
                     <TabsTrigger key={tab.id} value={tab.id} className="gap-2">
@@ -132,6 +133,7 @@ export default function DynamicPage() {
                     </TabsTrigger>
                 ))}
             </TabsList>
+          </div>
         </ScrollArea>
          <div className="flex-1 overflow-y-auto">
             {pageTabs.map(tab => {
