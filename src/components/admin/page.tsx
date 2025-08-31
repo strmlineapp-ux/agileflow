@@ -55,6 +55,7 @@ import { IconColorPicker } from '../common/icon-color-picker';
 import { InlineEditor } from '../common/inline-editor';
 import { ItemSelectionPopover, type ItemSelectionTab } from '../common/item-selection-popover';
 import { hasAccess } from '@/lib/permissions';
+import { TransparentCard, TransparentCardContent } from '../ui/transparent-card';
 
 // #region Admin Groups Management Tab
 
@@ -253,7 +254,7 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
     <div className="space-y-6">
         <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="flex flex-col h-full">
+                <TransparentCard className="flex flex-col h-full">
                     <CardHeader>
                         <div className="flex items-center justify-between gap-4">
                             <CardTitle className="text-foreground">Admins ({filteredAdminUsers.length})</CardTitle>
@@ -270,8 +271,8 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
                     <CardContent className="flex-grow">
                         <UserDropZone id="admin-list" users={filteredAdminUsers} />
                     </CardContent>
-                  </Card>
-                  <Card className="flex flex-col h-full">
+                  </TransparentCard>
+                  <TransparentCard className="flex flex-col h-full">
                     <CardHeader>
                         <div className="flex items-center justify-between gap-4">
                              <div className="flex items-center gap-2">
@@ -331,7 +332,7 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
                      <CardContent className="flex-grow">
                          <UserDropZone id="user-list" users={filteredNonAdminUsers} onDeleteRequest={handleDeleteUserRequest} />
                     </CardContent>
-                  </Card>
+                  </TransparentCard>
             </div>
             <DragOverlay modifiers={[snapCenterToCursor]}>
                 {activeDragUser ? (
