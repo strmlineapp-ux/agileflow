@@ -51,7 +51,7 @@ export function Sidebar() {
         <nav className="flex flex-col items-center gap-4 px-2 pt-4 pb-2">
             <Link
               href="/dashboard/overview"
-              className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg text-primary-foreground md:h-8 md:w-8 md:text-base"
+              className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg md:h-8 md:w-8 md:text-base"
             >
               <Logo className="text-primary-foreground" />
               <span className="sr-only">AgileFlow</span>
