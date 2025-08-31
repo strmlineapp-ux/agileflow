@@ -61,14 +61,14 @@
     .font-emphasis[data-state=open],
     .font-emphasis[data-state=active] {
         font-weight: var(--font-weight-emphasis) !important;
-        color: hsl(var(--primary)) !important;
+        color: hsl(var(--emphasis-color)) !important;
     }
     
     .font-emphasis:hover .material-symbols-outlined,
     .font-emphasis:focus .material-symbols-outlined,
     .font-emphasis[data-state=open] .material-symbols-outlined,
     .font-emphasis[data-state=active] .material-symbols-outlined {
-        color: hsl(var(--primary)) !important;
+        color: hsl(var(--emphasis-color)) !important;
         font-variation-settings: 'FILL' var(--global-icon-fill, 0), 'wght' var(--font-weight-emphasis, 500), 'GRAD' var(--global-icon-grade, 0), 'opsz' var(--global-icon-optical-size, 24) !important;
     }
 }
