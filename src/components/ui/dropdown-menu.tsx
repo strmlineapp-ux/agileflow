@@ -28,8 +28,8 @@ const DropdownMenuSubTrigger = React.forwardRef<
   <DropdownMenuPrimitive.SubTrigger
     ref={ref}
     className={cn(
-      "flex cursor-default gap-2 select-none items-center rounded-sm px-2 py-1.5 text-sm data-[state=open]:bg-transparent [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
-      "font-emphasis",
+      "flex cursor-default gap-2 select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[state=open]:text-primary [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+      "focus:bg-muted/50",
       inset && "pl-8",
       className
     )}
@@ -85,8 +85,8 @@ const DropdownMenuItem = React.forwardRef<
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50 focus:bg-transparent",
-      "font-emphasis",
+      "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "focus:bg-muted/50",
       inset && "pl-8",
       className
     )}
@@ -102,8 +102,8 @@ const DropdownMenuCheckboxItem = React.forwardRef<
   <DropdownMenuPrimitive.CheckboxItem
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50 focus:bg-transparent",
-      "font-emphasis",
+      "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "focus:bg-muted/50",
       className
     )}
     checked={checked}
@@ -111,7 +111,7 @@ const DropdownMenuCheckboxItem = React.forwardRef<
   >
     <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
       <DropdownMenuPrimitive.ItemIndicator>
-        <GoogleSymbol name="check" className="text-base" />
+        <GoogleSymbol name="check" className="text-base" weight={100} opticalSize={20} />
       </DropdownMenuPrimitive.ItemIndicator>
     </span>
     {children}
@@ -127,15 +127,15 @@ const DropdownMenuRadioItem = React.forwardRef<
   <DropdownMenuPrimitive.RadioItem
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50 focus:bg-transparent",
-      "font-emphasis",
+      "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "focus:bg-muted/50",
       className
     )}
     {...props}
   >
     <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
       <DropdownMenuPrimitive.ItemIndicator>
-        <GoogleSymbol name="circle" className="h-2 w-2 fill-current" />
+        <GoogleSymbol name="circle" className="h-2 w-2 fill-current" weight={100} opticalSize={20} />
       </DropdownMenuPrimitive.ItemIndicator>
     </span>
     {children}
