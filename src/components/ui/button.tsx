@@ -14,11 +14,11 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "text-foreground",
+        default: "text-foreground font-emphasis",
         destructive: "bg-destructive text-destructive-foreground",
-        outline: "border border-input bg-transparent",
-        ghost: "hover:bg-transparent",
-        circle: "rounded-full",
+        outline: "border border-input bg-transparent font-emphasis",
+        ghost: "font-emphasis",
+        circle: "rounded-full font-emphasis",
       },
       size: {
         default: "h-10 px-4 py-2",

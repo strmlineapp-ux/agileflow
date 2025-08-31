@@ -68,7 +68,7 @@ export function IconColorPicker({ icon, color, onUpdateIcon, onUpdateColor, disa
             <Tooltip>
                 <TooltipTrigger asChild>
                     <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={disabled}>
-                        <Button variant="default" size="xlarge" className="h-10 w-12">
+                        <Button variant="default" size="xlarge" className="h-10 w-12 font-emphasis">
                             <GoogleSymbol name={icon} style={{ fontSize: '36px', color: readableColor }} weight={viewAsUser?.fontWeight} grade={viewAsUser?.iconGrade} />
                         </Button>
                     </PopoverTrigger>
