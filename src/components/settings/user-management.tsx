@@ -327,7 +327,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                               </TooltipProvider>
                               <PopoverContent className="w-48" asChild>
                                 <TransparentCard>
-                                  <TransparentCardContent className="p-4">
+                                  <TransparentCardContent>
                                     <Slider
                                       value={[currentWeightIndex]}
                                       onValueChange={handleFontWeightChange}
@@ -357,7 +357,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                 </TooltipProvider>
                                 <PopoverContent className="w-48" asChild>
                                     <TransparentCard>
-                                        <TransparentCardContent className="p-4">
+                                        <TransparentCardContent>
                                             <Slider value={[currentIconGradeIndex]} onValueChange={handleIconGradeChange} min={0} max={2} step={1} />
                                         </TransparentCardContent>
                                     </TransparentCard>
@@ -381,7 +381,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                 </TooltipProvider>
                                 <PopoverContent className="w-48" asChild>
                                   <TransparentCard>
-                                    <TransparentCardContent className="p-4">
+                                    <TransparentCardContent>
                                       <Slider value={[currentIconOpticalSizeIndex]} onValueChange={handleIconOpticalSizeChange} min={0} max={3} step={1} />
                                     </TransparentCardContent>
                                   </TransparentCard>
@@ -405,7 +405,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                 </TooltipProvider>
                                 <PopoverContent className="w-48" asChild>
                                   <TransparentCard>
-                                    <TransparentCardContent className="p-4">
+                                    <TransparentCardContent>
                                       <Slider value={[currentRadius * 10]} onValueChange={handleRadiusChange} min={0} max={15} step={1} />
                                     </TransparentCardContent>
                                   </TransparentCard>
