@@ -119,7 +119,7 @@ export function ItemSelectionPopover({
             </TabsList>
           )}
 
-          <div className="p-2 border-b">
+          <div className="p-2">
             <CompactSearchInput
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
