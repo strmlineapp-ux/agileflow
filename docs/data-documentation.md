@@ -22,37 +22,38 @@ AgileFlow employs a highly scalable, on-demand data-fetching strategy that is op
     *   **Performance**: Memory usage is kept to a minimum by only holding the data relevant to the current view.
     *   **NoSQL Optimization**: This model aligns perfectly with NoSQL best practices, which favor fetching specific documents by ID over performing large, complex queries.
 
-## Multi-Tenant Architecture
+## Multi-Workspace Architecture: A Flexible Hybrid Model
 
-AgileFlow is designed as a multi-tenant application, where each company or organization (a "tenant") operates within its own completely isolated Firebase project. This ensures the highest level of data privacy, security, and scalability.
+AgileFlow is designed with a flexible, hybrid multi-workspace architecture. This approach allows the application to scale efficiently by supporting two distinct models for workspace data isolation, which can be chosen based on a customer's needs or tier.
 
-### Tenant Identification & Configuration
+### Model 1: Shared Database with Logical Isolation (Default)
 
-1.  **Tenant ID**: Each tenant is identified by a unique ID, which typically corresponds to a subdomain (e.g., `tenant-a.agileflow.app`).
-2.  **Dynamic Configuration**: The application uses a dynamic lookup mechanism (simulated in `/src/lib/firebase.ts`) to fetch the specific Firebase configuration for the tenant making a request.
-3.  **Data Isolation**: Because each tenant has a unique `projectId`, all their data—including Firestore documents, Storage files, and authenticated users—resides in a separate, dedicated Google Cloud project. There is no possibility of data crossover between tenants.
+This is the standard model for most workspaces, balancing cost-effectiveness and ease of management.
 
-### Tenant Onboarding & Provisioning
+1.  **Shared Firebase Project**: Multiple workspaces coexist within a single, primary Firebase project.
+2.  **`workspaceId` Field**: Every document in Firestore (e.g., users, projects, tasks) includes a `workspaceId` field. This field is the key to ensuring data privacy.
+3.  **Mandatory Query Filtering**: **Every single database query must be filtered by the current user's `workspaceId`**. This is a strict development discipline that prevents one workspace's data from ever being visible to another. For example, fetching a list of teams would require a `where("workspaceId", "==", currentUser.workspaceId)` clause.
+4.  **Benefits**: Lower operational overhead, easier to manage migrations, and more cost-effective for smaller workspaces.
 
-**Important Security Note:** The process of creating a new tenant and configuring their Firebase project is a privileged, administrative action. **A UI should NOT be created for tenants to enter their own Firebase details**, as this would be a significant security risk.
+### Model 2: Dedicated Database with Physical Isolation (Premium)
 
-The correct, secure workflow is as follows:
-1.  **Admin Provisioning**: When a new tenant signs up, a system administrator for AgileFlow uses secure, backend scripts (e.g., Google Cloud SDK) to programmatically create a new, dedicated Firebase project for that tenant.
-2.  **Secure Key Management**: The configuration keys for this new project are then securely added to the application's central tenant configuration store (currently simulated in `firebase.ts`, but would be a secure database in production).
-3.  **Tenant Access**: The tenant is then given their unique subdomain (e.g., `new-company.agileflow.app`) to access their isolated environment. They never handle API keys directly.
+This model is ideal for enterprise clients or those with stringent data residency or security requirements.
 
-### Tenant Parameters & Independence
+1.  **Separate Firebase Project**: Each workspace is provisioned with their own completely independent Firebase project. This provides the highest possible level of data isolation.
+2.  **No `workspaceId` Field Needed**: Because the data is physically isolated at the project level, there is no need for a `workspaceId` field within the documents or for special query filtering. The connection itself is already scoped to that workspace.
+3.  **Benefits**: Maximum security and performance, as the database resources are not shared. This also allows for workspace-specific customizations to security rules and cloud infrastructure.
 
-Each tenant's configuration consists of a standard set of Firebase project keys. It is essential that each tenant has its own unique set of these keys, as they point to their independent cloud resources.
+### How the Hybrid Model Works in Practice
 
-| Parameter | Purpose & Importance for Isolation |
-| :--- | :--- |
-| `apiKey` | **API Key.** Authorizes requests to Firebase services for this specific project. |
-| `authDomain` | **Authentication Domain.** The dedicated domain for Firebase Authentication actions (e.g., `tenant-a.firebaseapp.com`). |
-| `projectId` | **Project ID.** The globally unique identifier for the tenant's Google Cloud project. **This is the most critical key for ensuring database and resource isolation.** |
-| `storageBucket` | **Cloud Storage Bucket.** The unique bucket for storing files like user uploads or images. |
-| `messagingSenderId` | **Sender ID.** Used for Firebase Cloud Messaging (push notifications). |
-| `appId` | **App ID.** A unique identifier for the specific Firebase web app instance within the tenant's project. |
+The application uses a dynamic lookup mechanism to seamlessly support both models.
+
+1.  **Workspace Identification**: The application identifies the current workspace based on the hostname (e.g., `workspace-a.agileflow.app`).
+2.  **Dynamic Configuration**: The system looks up the workspace's configuration from a secure, central store.
+    *   A standard workspace might resolve to the configuration for the **shared** Firebase project.
+    *   An enterprise workspace (`megacorp.agileflow.app`) would resolve to the unique configuration for **their own dedicated** Firebase project.
+3.  **Data Access**: The application's data hooks and services use the retrieved configuration to connect to the correct database and apply the appropriate querying strategy (with or without `workspaceId` filtering).
+
+This hybrid approach provides the flexibility to offer different service tiers without being locked into a single architectural pattern, ensuring the application can adapt to a wide range of customer needs.
 
 
 **Important Architectural Note:** Application pages are configured within the `AppSettings` object and are not hardcoded entities. Any references to them in documentation are purely as examples of how a dynamic page can be constructed. The codebase should not treat these pages as special or distinct from any other page an administrator might create.
@@ -85,10 +86,14 @@ This table details the information stored directly within each `User` object.
 | `defaultCalendarView?: 'month' \| 'week' \| 'day' \| 'production-schedule'` | **Internal.** A UI preference for the default calendar layout. |
 | `easyBooking?: boolean` | **Internal.** A UI preference for enabling quick event creation from the calendar. |
 | `timeFormat?: '12h' \| '24h'` | **Internal.** A UI preference for displaying time in 12-hour or 24-hour time format. |
-| `linkedTeamIds?: string[]` | **Internal.** An array of `teamId`s for shared teams that the user has chosen to display on their management board. |
-| `linkedBadgeCollectionIds?: string[]` | **Internal.** An array of `collectionId`s for shared Badge Collections that the user has chosen to display on their management board. |
-| `linkedCalendarIds?: string[]` | **Internal.** An array of `calendarId`s for shared calendars that the user has chosen to display on their management board. |
-| `dragActivationKey?: 'alt' \| 'ctrl' \| 'meta' \| 'shift'` | **Internal.** A user-selected modifier key that must be held down to initiate drag-and-drop operations on complex components. |
+| `modifierKey?: 'alt' \| 'ctrl' \| 'meta' \| 'shift'` | **Internal.** A user-selected modifier key that must be held down to trigger secondary actions. |
+| `fontWeight?: number` | **Internal.** The user's preferred global font weight (e.g., 100, 400, 700). |
+| `iconGrade?: number` | **Internal.** The user's preferred grade for Google Material Symbols. |
+| `iconOpticalSize?: number` | **Internal.** The user's preferred optical size for Google Material Symbols. |
+| `iconFill?: boolean` | **Internal.** A flag to determine if icons should use the 'filled' style. |
+| `radius?: number` | **Internal.** The user's preferred border-radius value in 'rem' units. |
+| `highContrast?: boolean` | **Internal.** A flag to enable a higher contrast text color for accessibility. |
+| `linked...Ids` | Lists of IDs for shared Teams, Badge Collections, or Calendars that the user has chosen to link to their personal management boards. |
 | `createdAt: Date` | **Internal.** The timestamp when the user's account was first created in the system. |
 | `approvedBy?: string` | **Internal.** The `userId` of the administrator who approved the user's account from the 'Viewer' state. |
 
@@ -159,7 +164,7 @@ Tasks are always associated with a parent `Project`.
 | `badges?: Record<string, string>` | A map where the key is a `badgeCollectionId` and the value is the `badgeId` of the selected badge from that collection. |
 | `createdBy: string` | The `userId` of the user who created the task. |
 | `createdAt: Date` | The timestamp when the task was created. |
-| `lastUpdated: Date` | The timestamp when the task was last modified. |
+| `lastUpdated: Date` | The timestamp when the event was last modified. |
 
 ---
 ## Shared Calendar Entity
@@ -246,3 +251,5 @@ This represents a specific, functional role or skill.
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
+
+    
