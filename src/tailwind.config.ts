@@ -20,8 +20,8 @@ export default {
         emphasis: "var(--font-weight-emphasis, 500)",
       },
       colors: {
-        border: "hsl(var(--border) / 0.1)",
-        input: "hsl(var(--border) / 0.1)",
+        border: "hsl(var(--foreground) / 0.4)",
+        input: "hsl(var(--foreground) / 0.4)",
         ring: "hsl(var(--primary) / <alpha-value>)",
         background: "hsl(var(--background) / <alpha-value>)",
         foreground: "hsl(var(--foreground) / <alpha-value>)",
