@@ -86,6 +86,7 @@ This table details the information stored directly within each `User` object.
 | `defaultCalendarView?: 'month' \| 'week' \| 'day' \| 'production-schedule'` | **Internal.** A UI preference for the default calendar layout. |
 | `easyBooking?: boolean` | **Internal.** A UI preference for enabling quick event creation from the calendar. |
 | `timeFormat?: '12h' \| '24h'` | **Internal.** A UI preference for displaying time in 12-hour or 24-hour time format. |
+| `modifierKey?: 'alt' \| 'ctrl' \| 'meta' \| 'shift'` | **Internal.** A user-selected modifier key that must be held down to trigger secondary actions. |
 | `linked...Ids` | Lists of IDs for shared Teams, Badge Collections, or Calendars that the user has chosen to link to their personal management boards. |
 | `createdAt: Date` | **Internal.** The timestamp when the user's account was first created in the system. |
 | `approvedBy?: string` | **Internal.** The `userId` of the administrator who approved the user's account from the 'Viewer' state. |

@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
@@ -131,13 +130,26 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, [dataHook.users, viewAsUserId, realUser]);
   
   useEffect(() => {
+    if (!viewAsUser) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
+        const modifierKey = viewAsUser.modifierKey || 'shift';
+        if (
+            (modifierKey === 'shift' && e.shiftKey) ||
+            (modifierKey === 'alt' && e.altKey) ||
+            (modifierKey === 'ctrl' && e.ctrlKey) ||
+            (modifierKey === 'meta' && e.metaKey)
+        ) {
             setIsDragModifierPressed(true);
         }
     };
     const handleKeyUp = (e: KeyboardEvent) => {
-         if (!e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+        const modifierKey = viewAsUser.modifierKey || 'shift';
+        if (
+            (modifierKey === 'shift' && !e.shiftKey) ||
+            (modifierKey === 'alt' && !e.altKey) ||
+            (modifierKey === 'ctrl' && !e.ctrlKey) ||
+            (modifierKey === 'meta' && !e.metaKey)
+        ) {
             setIsDragModifierPressed(false);
         }
     };
@@ -149,7 +161,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         window.removeEventListener('keydown', handleKeyDown);
         window.removeEventListener('keyup', handleKeyUp);
     };
-  }, []);
+  }, [viewAsUser]);
 
 
   const contextValue = useMemo(() => {

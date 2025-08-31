@@ -45,6 +45,51 @@ const iconOpticalSizeOptions = [
     { value: 48, label: 'Extra Large' },
 ];
 
+const ModifierKeySetting = ({ user, onUpdate }: { user: User, onUpdate: (key: User['modifierKey']) => void }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const keyInput = user.modifierKey || 'shift';
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        e.preventDefault();
+        const key = e.key.toLowerCase();
+        if (['alt', 'control', 'meta', 'shift'].includes(key)) {
+            const newKey = key === 'control' ? 'ctrl' : key as 'alt' | 'meta' | 'shift';
+            onUpdate(newKey);
+            setIsOpen(false);
+        }
+    };
+
+    return (
+        <Popover open={isOpen} onOpenChange={setIsOpen}>
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <PopoverTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground">
+                                <GoogleSymbol name="keyboard_command_key" />
+                            </Button>
+                        </PopoverTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Modifier Key: <span className="font-semibold capitalize">{keyInput}</span>. Click to change.</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+            <PopoverContent className="w-auto p-2" align="start">
+                <div className="flex flex-col items-center gap-2">
+                    <p className="text-sm text-muted-foreground">Press a modifier key...</p>
+                    <Input
+                        value={keyInput.charAt(0).toUpperCase() + keyInput.slice(1)}
+                        onKeyDown={handleKeyDown}
+                        className="text-center w-24"
+                        readOnly
+                    />
+                </div>
+            </PopoverContent>
+        </Popover>
+    )
+}
+
 const CustomColorPicker = ({ colorValue, onUpdate, onClose }: { colorValue: string | null, onUpdate: (newColor: string | null) => void, onClose: () => void }) => {
     const [color, setColor] = useState(colorValue || 'hsl(221, 83%, 61%)');
     const popoverRef = useRef<HTMLDivElement>(null);
@@ -433,6 +478,11 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                 </TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>
+
+                            <ModifierKeySetting 
+                                user={user}
+                                onUpdate={(newKey) => updateUser(user.userId, { modifierKey: newKey })}
+                            />
                         </div>
                     )}
                 </div>
