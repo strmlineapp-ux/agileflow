@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
@@ -94,6 +93,10 @@ const ModifierKeySetting = ({ user, onUpdate }: { user: User, onUpdate: (key: Us
 const CustomColorPicker = ({ colorValue, onUpdate, onClose }: { colorValue: string | null, onUpdate: (newColor: string | null) => void, onClose: () => void }) => {
     const [color, setColor] = useState(colorValue || 'hsl(221, 83%, 61%)');
     
+    useEffect(() => {
+        setColor(colorValue || 'hsl(221, 83%, 61%)');
+    }, [colorValue]);
+    
     const handleColorChange = (newColor: string) => {
         setColor(newColor);
         onUpdate(newColor);
@@ -125,11 +128,6 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
     const [isRadiusPopoverOpen, setIsRadiusPopoverOpen] = useState(false);
     const [isCalendarViewPopoverOpen, setIsCalendarViewPopoverOpen] = useState(false);
     const [isTimeFormatPopoverOpen, setIsTimeFormatPopoverOpen] = useState(false);
-    
-    const handleThemeChange = () => {
-        const newTheme = user.theme === 'dark' ? 'light' : 'dark';
-        updateUser(user.userId, { theme: newTheme });
-    }
     
     const handleFontWeightChange = (value: number[]) => {
         const index = value[0];
@@ -267,7 +265,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                             variant="ghost"
                                             size="icon"
                                             className="h-9 w-9 text-foreground"
-                                            onClick={handleThemeChange}
+                                            onClick={() => updateUser(user.userId, { theme: user.theme === 'dark' ? 'light' : 'dark' })}
                                             enableReset={true}
                                             onReset={() => updateUser(user.userId, { theme: 'light' })}
                                         >
