@@ -18,44 +18,6 @@ const TransparentCard = React.forwardRef<
 ))
 TransparentCard.displayName = "TransparentCard"
 
-const TransparentCardHeader = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("flex flex-col space-y-1.5", className)}
-    {...props}
-  />
-))
-TransparentCardHeader.displayName = "TransparentCardHeader"
-
-const TransparentCardTitle = React.forwardRef<
-  HTMLHeadingElement,
-  React.HTMLAttributes<HTMLHeadingElement>
->(({ className, ...props }, ref) => (
-  <h3
-    ref={ref}
-    className={cn(
-      "leading-none tracking-tight break-words",
-      className
-    )}
-    {...props}
-  />
-))
-TransparentCardTitle.displayName = "TransparentCardTitle"
-
-const TransparentCardDescription = React.forwardRef<
-  HTMLParagraphElement,
-  React.HTMLAttributes<HTMLParagraphElement>
->(({ className, ...props }, ref) => (
-  <p
-    ref={ref}
-    className={cn("text-sm text-foreground", className)}
-    {...props}
-  />
-))
-TransparentCardDescription.displayName = "TransparentCardDescription"
 
 const TransparentCardContent = React.forwardRef<
   HTMLDivElement,
@@ -65,16 +27,5 @@ const TransparentCardContent = React.forwardRef<
 ))
 TransparentCardContent.displayName = "TransparentCardContent"
 
-const TransparentCardFooter = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("flex items-center", className)}
-    {...props}
-  />
-))
-TransparentCardFooter.displayName = "TransparentCardFooter"
 
-export { TransparentCard, TransparentCardHeader, TransparentCardFooter, TransparentCardTitle, TransparentCardDescription, TransparentCardContent }
+export { TransparentCard, TransparentCardContent }
