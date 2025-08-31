@@ -5,7 +5,6 @@ import React, { useState, useMemo } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn, getHueFromHsl, isHueInRange } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CompactSearchInput } from './compact-search-input';
@@ -135,8 +134,7 @@ export function ItemSelectionPopover({
             />
           </div>
 
-          <div className="flex-1 relative">
-            <ScrollArea className="absolute h-full w-full">
+          <div className="flex-1 overflow-y-auto">
               <div className="p-1 space-y-1">
                 {filteredItems.length > 0 ? (
                   filteredItems.map(item => {
@@ -152,7 +150,6 @@ export function ItemSelectionPopover({
                   <p className="text-center text-sm text-foreground p-4">No {activeTab} found.</p>
                 )}
               </div>
-            </ScrollArea>
           </div>
         </Tabs>
       </PopoverContent>
