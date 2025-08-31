@@ -48,7 +48,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const Comp = asChild ? Slot : "button";
     const { viewAsUser } = useUser();
     
-    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const handleMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => {
       const modifierKey = viewAsUser?.modifierKey || 'shift';
       const isModifierPressed = 
         (modifierKey === 'shift' && e.shiftKey) ||
@@ -59,8 +59,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       if (enableReset && onReset && isModifierPressed) {
         e.preventDefault();
         onReset();
-      } else if (props.onClick) {
-        props.onClick(e);
+      }
+
+      if (props.onMouseDown) {
+        props.onMouseDown(e);
       }
     };
 
@@ -71,7 +73,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           variant !== 'destructive' && "font-emphasis"
         )}
         ref={ref}
-        onClick={handleClick}
+        onMouseDown={handleMouseDown}
         {...props}
       />
     )
