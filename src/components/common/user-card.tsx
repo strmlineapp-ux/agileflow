@@ -4,12 +4,13 @@
 
 import React from 'react';
 import { type User } from '@/types';
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { TransparentCard } from '../ui/transparent-card';
 
 interface UserCardProps {
     user: User;
@@ -21,7 +22,7 @@ interface UserCardProps {
 export function UserCard({ user, isDeletable, onDelete, className }: UserCardProps) {
 
     return (
-        <Card className={cn("group transition-colors bg-transparent", className)}>
+        <TransparentCard className={cn("group transition-colors", className)}>
             <CardHeader className="p-2 flex-row items-center justify-between">
                 <div className="flex items-center gap-2">
                     <Avatar>
@@ -52,7 +53,7 @@ export function UserCard({ user, isDeletable, onDelete, className }: UserCardPro
                     </TooltipProvider>
                 )}
             </CardHeader>
-        </Card>
+        </TransparentCard>
     );
 }
 
