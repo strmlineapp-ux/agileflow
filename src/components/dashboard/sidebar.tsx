@@ -52,7 +52,7 @@ export function Sidebar() {
         <nav className="flex flex-col items-center gap-4 px-2 pt-4 pb-2">
             <Link
               href="/dashboard/overview"
-              className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg md:h-8 md:w-8 md:text-base"
+              className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg md:h-8 md:w-8 md:text-base focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
               <Logo className="text-primary-foreground" />
               <span className="sr-only">AgileFlow</span>
@@ -63,7 +63,7 @@ export function Sidebar() {
                     <TooltipTrigger asChild>
                       <Link
                         href={adminPage.path}
-                        className={cn('font-emphasis flex h-9 w-9 items-center justify-center rounded-lg text-foreground transition-colors md:h-8 md:w-8', {
+                        className={cn('font-emphasis flex h-9 w-9 items-center justify-center rounded-lg text-foreground transition-colors md:h-8 md:w-8 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring', {
                             'bg-accent text-accent-foreground': pathname.startsWith(adminPage.path),
                         })}
                       >
@@ -89,7 +89,7 @@ export function Sidebar() {
                     <TooltipTrigger asChild>
                       <Link
                         href={item.path}
-                        className={cn('font-emphasis relative flex h-9 w-9 items-center justify-center rounded-lg text-foreground transition-colors md:h-8 md:w-8', {
+                        className={cn('font-emphasis relative flex h-9 w-9 items-center justify-center rounded-lg text-foreground transition-colors md:h-8 md:w-8 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring', {
                           'bg-accent text-accent-foreground': isActive,
                         })}
                       >
@@ -116,7 +116,7 @@ export function Sidebar() {
                 <TooltipTrigger asChild>
                   <Link
                     href={notificationsPage.path}
-                    className={cn('font-emphasis relative flex h-9 w-9 items-center justify-center rounded-lg text-foreground transition-colors md:h-8 md:w-8', {
+                    className={cn('font-emphasis relative flex h-9 w-9 items-center justify-center rounded-lg text-foreground transition-colors md:h-8 md:w-8 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring', {
                       'bg-accent text-accent-foreground': pathname.startsWith(notificationsPage.path),
                     })}
                   >
@@ -135,7 +135,7 @@ export function Sidebar() {
         )}
          <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <button className="font-emphasis flex h-9 w-9 items-center justify-center rounded-full md:h-8 md:w-8 focus-visible:outline-none">
+                <button className="font-emphasis flex h-9 w-9 items-center justify-center rounded-full md:h-8 md:w-8 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
