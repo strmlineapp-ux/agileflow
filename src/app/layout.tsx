@@ -43,11 +43,11 @@ function AppBody({ children }: { children: React.ReactNode }) {
             }
 
             const emphasisWeightMap: { [key: number]: number } = {
-                100: 300,
-                300: 400,
-                400: 500,
+                100: 400,
+                300: 500,
+                400: 700,
                 500: 700,
-                700: 700 // For bold, emphasis doesn't change weight
+                700: 700
             };
             const emphasisWeight = emphasisWeightMap[fontWeight] || 500;
             root.style.setProperty('--font-weight-emphasis', emphasisWeight.toString());
