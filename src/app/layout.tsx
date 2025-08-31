@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { Toaster } from "@/components/ui/toaster";
@@ -7,8 +6,7 @@ import './globals.css';
 import { UserProvider, useUser } from '@/context/user-context';
 import { Roboto } from 'next/font/google';
 import { ThemeProvider, useTheme } from 'next-themes';
-import React, { useState, useEffect } from 'react';
-import { GoogleSymbol } from "@/components/icons/google-symbol";
+import React from 'react';
 import { cn } from '@/lib/utils';
 
 const roboto = Roboto({
@@ -17,7 +15,7 @@ const roboto = Roboto({
   variable: '--font-roboto',
 });
 
-function AppBody({ children }: { children: React.ReactNode }) {
+function AppThemeController({ children }: { children: React.ReactNode }) {
     const { viewAsUser } = useUser();
     const { setTheme, theme } = useTheme();
 
@@ -102,26 +100,6 @@ function AppBody({ children }: { children: React.ReactNode }) {
     );
 }
 
-// Wrapper to prevent rendering on the server and during initial hydration
-function ClientOnly({ children }: { children: React.ReactNode }) {
-  const [hasMounted, setHasMounted] = useState(false);
-
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
-
-  if (!hasMounted) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-background">
-        <GoogleSymbol name="progress_activity" className="h-16 w-16 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  return <>{children}</>;
-}
-
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -144,11 +122,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
         <UserProvider>
-          <ClientOnly>
-              <AppBody>
+            <AppThemeController>
                 {children}
-              </AppBody>
-          </ClientOnly>
+            </AppThemeController>
         </UserProvider>
       </ThemeProvider>
     </html>
