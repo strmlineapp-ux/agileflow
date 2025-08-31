@@ -16,7 +16,6 @@ const buttonVariants = cva(
         default: "bg-primary/10 text-primary",
         destructive: "bg-destructive text-destructive-foreground",
         outline: "border border-input bg-transparent",
-        ghost: "hover:bg-transparent",
         link: "hover:underline",
         circle: "rounded-full",
       },

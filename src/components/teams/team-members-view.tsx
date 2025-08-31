@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useUser } from '@/context/user-context';
@@ -71,7 +72,7 @@ function SortableTeamMember({ member, team, onSetAdmin, onRemoveUser }: { member
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <Button
-                            variant="ghost"
+                            variant="default"
                             size="icon"
                             className={cn("absolute top-0 right-0 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity", isDragModifierPressed && "hidden")}
                             onClick={(e) => { e.stopPropagation(); onRemoveUser();}}

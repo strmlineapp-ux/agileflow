@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
@@ -67,7 +68,7 @@ export function CardTemplate({
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <Button
-                                variant="destructive"
+                                variant="default"
                                 size="sm"
                                 className="absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity z-10 p-0"
                                 onPointerDown={(e) => {
@@ -126,7 +127,7 @@ export function CardTemplate({
                 {footer && <CardFooter className="p-2 pt-0">{footer}</CardFooter>}
                 {(body) && (
                     <div className="absolute -bottom-1 right-0">
-                        <Button variant="ghost" size="icon" onClick={onToggleExpand} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
+                        <Button variant="default" size="icon" onClick={onToggleExpand} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
                             <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
                         </Button>
                     </div>
@@ -138,7 +139,7 @@ export function CardTemplate({
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="hover:text-destructive p-0 hover:bg-transparent" onClick={() => { onDelete(entity); setIsDeleteDialogOpen(false); }}>
+                            <Button variant="default" size="icon" className="hover:text-destructive p-0 hover:bg-transparent" onClick={() => { onDelete(entity); setIsDeleteDialogOpen(false); }}>
                               <GoogleSymbol name="delete" className="text-4xl" />
                               <span className="sr-only">Delete</span>
                             </Button>
@@ -158,7 +159,3 @@ export function CardTemplate({
         </>
     );
 }
-
-    
-
-    

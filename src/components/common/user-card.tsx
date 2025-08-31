@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React from 'react';
@@ -37,7 +38,7 @@ export function UserCard({ user, isDeletable, onDelete, className }: UserCardPro
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Button
-                                    variant="ghost"
+                                    variant="default"
                                     size="icon"
                                     className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100"
                                     onClick={(e) => { e.stopPropagation(); onDelete(user); }}

@@ -9,24 +9,38 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { type Team, type AppTab } from '@/types';
+import { type Team, type AppTab, type AppPage } from '@/types';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { InlineEditor } from '../common/inline-editor';
 
-export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }) {
+export function WorkstationManagement({ team, tab, page }: { team: Team, tab: AppTab, page: AppPage }) {
   if (!team) {
     return null;
   }
   
-  const { updateTeam, updateAppTab } = useUser();
+  const { updateTeam, updatePage, viewAsUser } = useUser();
   const { toast } = useToast();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [workstationToDelete, setWorkstationToDelete] = useState<string | null>(null);
   const [newWorkstationName, setNewWorkstationName] = useState('');
-
+  
+  const canManage = viewAsUser.isAdmin || team.teamAdmins?.includes(viewAsUser.userId);
   const teamWorkstations = team.workstations || [];
+  const title = page.displayTitle ?? tab.name;
+
+  const handleTitleSave = (newTitle: string) => {
+    updatePage(page.id, { displayTitle: newTitle });
+  };
+
+  const handleTitleReset = (e: React.MouseEvent<HTMLHeadingElement>) => {
+    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
+        e.preventDefault();
+        updatePage(page.id, { displayTitle: null });
+        toast({title: "Title Reset", description: "The page title has been reset to its default."});
+    }
+  };
 
   const handleUpdateTeamWorkstations = (newWorkstations: string[]) => {
     updateTeam(team.id, { workstations: newWorkstations.sort() });
@@ -74,9 +88,11 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
     <>
       <div className="flex items-center gap-2 mb-6">
         <InlineEditor
-            value={tab.name}
-            onSave={(newValue) => updateAppTab(tab.id, { name: newValue })}
+            value={title}
+            onSave={handleTitleSave}
+            onClick={handleTitleReset}
             className="h-auto p-0 font-headline text-2xl font-thin tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+            disabled={!canManage}
         />
       </div>
       <Card>
@@ -85,7 +101,7 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
             <div>
               <CardTitle className="flex items-center gap-2">
                   Workstation List
-                   <Button variant="circle" size="icon" onClick={() => setIsAddDialogOpen(true)}>
+                   <Button variant="circle" size="icon" onClick={() => setIsAddDialogOpen(true)} disabled={!canManage}>
                     <GoogleSymbol name="add_circle" />
                     <span className="sr-only">Add New Workstation</span>
                   </Button>
@@ -104,11 +120,12 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
                   value={ws}
                   onSave={(newValue) => handleSaveEdit(ws, newValue)}
                   className="font-medium text-sm"
+                  disabled={!canManage}
                 />
                  <button
                     type="button"
                     className="ml-1 h-5 w-5 hover:bg-destructive/20 rounded-full inline-flex items-center justify-center opacity-50 group-hover:opacity-100 transition-opacity"
-                    onClick={() => setWorkstationToDelete(ws)}
+                    onClick={() => canManage && setWorkstationToDelete(ws)}
                   >
                     <GoogleSymbol name="close" className="text-xs" />
                     <span className="sr-only">Delete {ws}</span>
@@ -124,7 +141,7 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="max-w-md">
            <div className="absolute top-4 right-4">
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSaveNew}>
+              <Button variant="default" size="icon" className="h-8 w-8" onClick={handleSaveNew}>
                 <GoogleSymbol name="check" />
                 <span className="sr-only">Save New Workstation</span>
               </Button>
@@ -149,7 +166,7 @@ export function WorkstationManagement({ team, tab }: { team: Team, tab: AppTab }
       <Dialog open={!!workstationToDelete} onOpenChange={(isOpen) => !isOpen && setWorkstationToDelete(null)}>
         <DialogContent className="max-w-md" onPointerDownCapture={(e) => e.stopPropagation()}>
             <div className="absolute top-4 right-4">
-                <Button variant="ghost" size="icon" className="hover:text-destructive p-0 hover:bg-transparent" onClick={handleDelete}>
+                <Button variant="default" size="icon" className="hover:text-destructive p-0 hover:bg-transparent" onClick={handleDelete}>
                     <GoogleSymbol name="delete" />
                     <span className="sr-only">Delete Workstation</span>
                 </Button>

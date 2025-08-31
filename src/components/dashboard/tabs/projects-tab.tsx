@@ -106,7 +106,7 @@ export function ProjectsContent() {
                    <TooltipProvider>
                       <Tooltip>
                           <TooltipTrigger asChild>
-                              <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); updateProject(project.id, { isShared: !project.isShared }); }}>
+                              <Button variant="default" size="icon" onClick={(e) => { e.stopPropagation(); updateProject(project.id, { isShared: !project.isShared }); }}>
                                   <GoogleSymbol name={project.isShared ? 'share' : 'share_off'} />
                               </Button>
                           </TooltipTrigger>
@@ -115,8 +115,8 @@ export function ProjectsContent() {
                           </TooltipContent>
                       </Tooltip>
                    </TooltipProvider>
-                  <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleEdit(project);}}><GoogleSymbol name="edit" /></Button>
-                  <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); deleteProject(project.id);}}><GoogleSymbol name="delete" className="text-destructive" /></Button>
+                  <Button variant="default" size="icon" onClick={(e) => { e.stopPropagation(); handleEdit(project);}}><GoogleSymbol name="edit" /></Button>
+                  <Button variant="default" size="icon" onClick={(e) => { e.stopPropagation(); deleteProject(project.id);}}><GoogleSymbol name="delete" className="text-destructive" /></Button>
                 </div>
               </div>
             ))}

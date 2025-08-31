@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef, useCallback, useLayoutEffect } from 'react';
@@ -70,7 +71,7 @@ const ManageStatusDialog = ({ isOpen, onOpenChange, day, initialAssignments, use
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-xl">
                  <div className="absolute top-4 right-4">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSaveChanges}>
+                    <Button variant="default" size="icon" className="h-8 w-8" onClick={handleSaveChanges}>
                         <GoogleSymbol name="check" className="text-xl" weight={100} />
                         <span className="sr-only">Save Changes</span>
                     </Button>
@@ -99,7 +100,7 @@ const ManageStatusDialog = ({ isOpen, onOpenChange, day, initialAssignments, use
                                                 <span className="font-normal">{user.displayName}</span>
                                                 <UserStatusBadge status={status}>{status}</UserStatusBadge>
                                             </div>
-                                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleRemoveStatusAssignment(userId)}>
+                                            <Button variant="default" size="icon" className="h-6 w-6" onClick={() => handleRemoveStatusAssignment(userId)}>
                                                 <GoogleSymbol name="cancel" className="text-sm" weight={100} />
                                                 <span className="sr-only">Remove status</span>
                                             </Button>
@@ -221,7 +222,7 @@ const ProductionScheduleLocationRow = React.memo(({
     const assignmentControl = (
          <Popover>
             <PopoverTrigger asChild>
-                <Button variant="ghost" size={assignedUser ? "sm" : "icon"} className={cn("h-6 text-xs", assignedUser ? "w-auto px-1.5" : "w-6 ml-1")}>
+                <Button variant="default" size={assignedUser ? "sm" : "icon"} className={cn("h-6 text-xs", assignedUser ? "w-auto px-1.5" : "w-6 ml-1")}>
                     {assignedUser ? `${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}` : <GoogleSymbol name="person_add" weight={100} />}
                 </Button>
             </PopoverTrigger>
@@ -229,7 +230,7 @@ const ProductionScheduleLocationRow = React.memo(({
                 <div className="p-2 border-b"><p className="text-sm font-normal text-center">{alias || location}</p></div>
                 <div className="flex flex-col gap-1 max-h-48 overflow-y-auto p-1">
                     {dailyCheckUsers.length > 0 ? dailyCheckUsers.filter(user => user.userId !== assignedUserId).map(user => (
-                        <Button key={user.userId} variant="ghost" className="justify-start h-8" onClick={() => handleAssignCheck(dayIso, location, user.userId)}>
+                        <Button key={user.userId} variant="default" className="justify-start h-8" onClick={() => handleAssignCheck(dayIso, location, user.userId)}>
                             <Avatar className="h-6 w-6 mr-2"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
                             <span className="text-sm">{user.displayName}</span>
                         </Button>
@@ -600,7 +601,7 @@ export const ProductionScheduleView = React.memo(({ date, events, containerRef, 
                                                 <div className="p-2 border-b"><p className="text-sm font-normal text-center">{locationAliasMap[location] || location}</p></div>
                                                 <div className="flex flex-col gap-1 max-h-48 overflow-y-auto p-1">
                                                     {dailyCheckUsers.length > 0 ? dailyCheckUsers.filter(user => user.userId !== assignedUserId).map(user => (
-                                                        <Button key={user.userId} variant="ghost" className="justify-start h-8" onClick={() => handleAssignCheck(dayIso, location, user.userId)}>
+                                                        <Button key={user.userId} variant="default" className="justify-start h-8" onClick={() => handleAssignCheck(dayIso, location, user.userId)}>
                                                             <Avatar className="h-6 w-6 mr-2"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
                                                             <span className="text-sm">{user.displayName}</span>
                                                         </Button>
@@ -627,7 +628,7 @@ export const ProductionScheduleView = React.memo(({ date, events, containerRef, 
                                             <TooltipProvider>
                                                 <Tooltip>
                                                     <TooltipTrigger asChild>
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                                                        <Button variant="default" size="icon" className="h-8 w-8 rounded-full">
                                                             <GoogleSymbol name="playlist_add_check_circle" weight={100} />
                                                         </Button>
                                                     </TooltipTrigger>
@@ -661,7 +662,7 @@ export const ProductionScheduleView = React.memo(({ date, events, containerRef, 
                                 )}
                             </div>
                             <div className="flex-1 flex justify-center items-center">
-                                <Button variant="ghost" className="h-8" onClick={() => toggleDayCollapse(dayIso)}>
+                                <Button variant="default" className="h-8" onClick={() => toggleDayCollapse(dayIso)}>
                                     <span className={cn("font-normal text-sm", { "text-primary": isDayToday })}>{format(day, 'EEE, MMMM d, yyyy').toUpperCase()}</span>
                                     {isDayCollapsed ? <GoogleSymbol name="chevron_right" weight={100} /> : <GoogleSymbol name="expand_more" weight={100} />}
                                 </Button>
@@ -675,7 +676,7 @@ export const ProductionScheduleView = React.memo(({ date, events, containerRef, 
                                     <TooltipProvider>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenStatusDialog(dayIso)}><GoogleSymbol name="account_circle_off" weight={100} /><span className="sr-only">Edit user statuses</span></Button>
+                                                <Button variant="default" size="icon" className="h-8 w-8" onClick={() => handleOpenStatusDialog(dayIso)}><GoogleSymbol name="account_circle_off" weight={100} /><span className="sr-only">Edit user statuses</span></Button>
                                             </TooltipTrigger>
                                             <TooltipContent><p>Manage User Statuses</p></TooltipContent>
                                         </Tooltip>
