@@ -131,9 +131,6 @@ export function CompactSearchInput({
                             value={currentHue}
                             onChange={handleHueChange}
                             className="w-full h-2 rounded-full appearance-none cursor-pointer"
-                            style={{
-                                background: 'linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)'
-                            }}
                         />
                         <Button
                           variant="default" 
