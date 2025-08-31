@@ -48,10 +48,6 @@
   h1, h2, h3, h4, h5, h6 {
       font-family: var(--font-roboto), sans-serif;
   }
-
-  .border {
-    --tw-border-opacity: 0.4;
-  }
 }
 
 @layer components {
