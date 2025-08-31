@@ -281,9 +281,8 @@ This pattern provides a dense, icon-driven interface for managing a series of us
 ## Visual & Theming Elements
 
 ### Typography
-- **Font**: The application exclusively uses the **Roboto** font family for a clean and consistent look for both headlines and body text.
-- **Headline Font**: All major titles (pages, tabs, prominent cards) use the `font-headline` utility class, which is configured to use a `font-thin` weight (`font-weight: 100`) from the Roboto family.
-- **Body Font**: The user can now select their preferred global font weight.
+- **Font**: The application exclusively uses the **Roboto** font family for a clean and consistent look.
+- **Body Font**: The user can select their preferred global font weight.
 - **Emphasis**: See the "Emphasis Logic" section for details on how interaction states are handled.
 
 ### Icons & Hover Effects
@@ -302,11 +301,11 @@ The application supports two distinct color themes, `light` and `dark`, which ca
 ### Emphasis Logic
 The application uses a sophisticated, user-configurable emphasis system for interactive elements. This system creates two distinct interaction styles based on the user's selected global font weight.
 
-- **Mechanism**: The system checks the user's globally selected `fontWeight` (e.g., from `useUser().viewAsUser.fontWeight`).
+- **Mechanism**: A `bold-emphasis` class is dynamically added to the `<body>` tag based on the user's selected `fontWeight`. The application's global CSS contains rules that react to the presence or absence of this class.
 - **Logic**:
-    - **If Global Weight is `Thin`, `Light`, `Normal`, or `Medium`**: When a user hovers over or focuses on an interactive element (like a button or menu item), its **font weight increases** to the next available level (e.g., `Normal` becomes `Medium`). Color does not change.
-    - **If Global Weight is `Bold`**: When a user hovers over or focuses on an interactive element, its font weight does not change. Instead, its **color changes** to the theme's primary color (`--primary`).
-- **Implementation**: This is achieved by adding a `bold-emphasis` class to the `<body>` when a bold weight is selected. The `.font-emphasis` utility class in `globals.css` contains rules that react to the presence or absence of the `bold-emphasis` class to apply the correct styling.
+    - **If Global Weight is `Thin`, `Light`, `Normal`, or `Medium`**: The `bold-emphasis` class is absent. When a user hovers over an interactive element with the `.font-emphasis` class, its **font weight increases** to the next available level. Color does not change.
+    - **If Global Weight is `Bold`**: The `bold-emphasis` class is present. When a user hovers over an interactive element with the `.font-emphasis` class, its font weight does not change. Instead, its **color changes** to the theme's primary color.
+- **Implementation**: This is achieved by adding the `font-emphasis` class to interactive components. The logic is handled entirely by the CSS rules in `globals.css`.
 
 ### User Notifications
 
