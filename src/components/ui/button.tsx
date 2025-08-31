@@ -18,7 +18,6 @@ const buttonVariants = cva(
         destructive: "bg-destructive text-destructive-foreground",
         outline: "border border-input bg-transparent",
         ghost: "hover:bg-transparent hover:text-primary",
-        link: "hover:underline",
         circle: "rounded-full",
       },
       size: {
@@ -49,7 +48,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const Comp = asChild ? Slot : "button";
     const { viewAsUser } = useUser();
     
-    const handleMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
       const modifierKey = viewAsUser?.modifierKey || 'shift';
       const isModifierPressed = 
         (modifierKey === 'shift' && e.shiftKey) ||
@@ -61,6 +60,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         e.preventDefault();
         e.stopPropagation();
         onReset();
+      } else if (onClick) {
+        onClick(e);
       }
     };
 
@@ -71,8 +72,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           "font-emphasis"
         )}
         ref={ref}
-        onMouseDown={handleMouseDown}
-        onClick={onClick}
+        onClick={handleClick}
         {...props}
       />
     )
