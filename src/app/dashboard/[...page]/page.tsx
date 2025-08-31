@@ -22,6 +22,9 @@ import { OverviewContent } from '@/components/dashboard/tabs/overview-tab';
 import { TasksContent } from '@/components/dashboard/tabs/tasks-tab';
 import { NotificationsContent } from '@/components/dashboard/tabs/notifications-tab';
 import { SettingsContent } from '@/components/dashboard/tabs/settings-tab';
+import { CalendarPageContent } from '@/components/dashboard/tabs/calendar-tab';
+import { ProjectsContent } from '@/components/dashboard/tabs/projects-tab';
+import { EventsContent } from '@/components/dashboard/tabs/events-tab';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 
@@ -40,6 +43,9 @@ const componentMap = {
   tasks: TasksContent,
   notifications: NotificationsContent,
   settings: SettingsContent,
+  calendar: CalendarPageContent,
+  projects: ProjectsContent,
+  events: EventsContent,
   // Add other mappings as needed
 };
 
