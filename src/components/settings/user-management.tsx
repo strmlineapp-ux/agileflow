@@ -282,6 +282,8 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                             size="icon"
                                             className="h-9 w-9 text-foreground hover:bg-transparent hover:text-foreground"
                                             onClick={handleThemeChange}
+                                            enableReset={true}
+                                            onReset={() => updateUser(user.userId, { theme: 'light' })}
                                         >
                                             <GoogleSymbol
                                                 name={user.theme === 'dark' ? 'dark_mode' : 'light_mode'}
@@ -290,7 +292,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                     </TooltipTrigger>
                                     <TooltipContent>
                                         <p>
-                                          {`Switch to ${user.theme === 'dark' ? 'Light' : 'Dark'} Theme.`}
+                                          {`Switch to ${user.theme === 'dark' ? 'Light' : 'Dark'} Theme. Modifier+Click to reset.`}
                                         </p>
                                     </TooltipContent>
                                 </Tooltip>
