@@ -6,7 +6,7 @@ import './globals.css';
 import { UserProvider, useUser } from '@/context/user-context';
 import { Roboto } from 'next/font/google';
 import { ThemeProvider, useTheme } from 'next-themes';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 const roboto = Roboto({
@@ -15,17 +15,17 @@ const roboto = Roboto({
   variable: '--font-roboto',
 });
 
-function AppThemeController({ children }: { children: React.ReactNode }) {
+function StyleProvider({ children }: { children: React.ReactNode }) {
     const { viewAsUser } = useUser();
     const { setTheme, theme } = useTheme();
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (viewAsUser?.theme) {
             setTheme(viewAsUser.theme);
         }
     }, [viewAsUser?.theme, setTheme]);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (viewAsUser) {
             const root = document.documentElement;
             
@@ -64,7 +64,6 @@ function AppThemeController({ children }: { children: React.ReactNode }) {
             const radius = viewAsUser.radius ?? 0.5;
             root.style.setProperty('--radius', `${radius}rem`);
 
-             // Set primary color
             if (viewAsUser.primaryColor) {
                 const match = viewAsUser.primaryColor.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
                 if (match) {
@@ -79,7 +78,6 @@ function AppThemeController({ children }: { children: React.ReactNode }) {
                 }
             }
             
-            // Set foreground/contrast
             const themeForeground = theme === 'dark' ? '210 7% 60%' : '210 7% 40%';
             if(viewAsUser.highContrast) {
                 root.style.setProperty('--foreground', theme === 'dark' ? '210 7% 80%' : '210 7% 20%');
@@ -88,16 +86,16 @@ function AppThemeController({ children }: { children: React.ReactNode }) {
             }
         }
     }, [viewAsUser, theme]);
-    
+
     return (
-        <body className={cn(
+        <div className={cn(
             `${roboto.variable} antialiased`,
             (viewAsUser?.fontWeight || 400) >= 700 ? 'bold-emphasis' : ''
         )}>
             {children}
             <Toaster />
-        </body>
-    );
+        </div>
+    )
 }
 
 export default function RootLayout({
@@ -115,18 +113,20 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
         />
       </head>
-      <ThemeProvider
+      <body>
+        <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-        <UserProvider>
-            <AppThemeController>
-                {children}
-            </AppThemeController>
-        </UserProvider>
-      </ThemeProvider>
+          <UserProvider>
+            <StyleProvider>
+              {children}
+            </StyleProvider>
+          </UserProvider>
+        </ThemeProvider>
+      </body>
     </html>
   );
 }
