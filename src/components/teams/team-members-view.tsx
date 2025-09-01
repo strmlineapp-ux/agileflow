@@ -21,6 +21,7 @@ import { useDroppable } from '@dnd-kit/core';
 import { InlineEditor } from '../common/inline-editor';
 import { PageTitle } from '../common/page-title';
 import { TeamSelection } from '../common/team-selection';
+import { useToast } from '@/hooks/use-toast';
 
 
 function DroppableUserList({ id, children, className }: { id: string, children: React.ReactNode, className?: string }) {
@@ -332,4 +333,3 @@ export function TeamMembersView({ team: teamFromProps, tab, page }: { team?: Tea
       </div>
     );
 }
-
