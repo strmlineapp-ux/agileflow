@@ -27,6 +27,7 @@ import { ProjectsContent } from '@/components/dashboard/tabs/projects-tab';
 import { EventsContent } from '@/components/dashboard/tabs/events-tab';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { CenteredTabList } from '@/components/common/centered-tab-list';
+import { InlineEditor } from '@/components/common/inline-editor';
 
 
 const componentMap = {
@@ -156,6 +157,7 @@ export default function DynamicPage() {
                     value={page.displayTitle || page.name}
                     onSave={(newTitle) => updatePage(page.id, { displayTitle: newTitle })}
                     disabled={!viewAsUser.isAdmin}
+                    className="font-headline"
                 />
             </h1>
        )}
