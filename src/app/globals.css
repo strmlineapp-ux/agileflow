@@ -22,7 +22,6 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     --input: 210 7% 40%;
-    --ring: 210 70% 50%;
     --radius: 0.5rem;
 
     --font-weight-thin: 100;
@@ -45,7 +44,6 @@
     --destructive: 0 62% 40%;
     --destructive-foreground: 0 0% 100%;
     --input: 210 7% 60%;
-    --ring: 25 88% 55%;
     --emphasis-color: hsl(var(--foreground));
   }
 

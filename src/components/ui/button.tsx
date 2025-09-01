@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils"
 import { useUser } from "@/context/user-context";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm ring-offset-background transition-all disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm ring-offset-background transition-all focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useMemo } from 'react';
@@ -41,7 +42,7 @@ function AssignedBadge({ badge, canManage, contextId }: { badge: Badge, canManag
                     {...listeners}
                     {...attributes}
                     className={cn(
-                        'h-7 w-7 rounded-full flex items-center justify-center bg-card focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50',
+                        'h-7 w-7 rounded-full flex items-center justify-center bg-card focus-visible:outline-none',
                         canManage && 'cursor-grab',
                         isDragging && 'opacity-50'
                     )}
