@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -33,6 +34,7 @@ interface ItemSelectionPopoverProps {
   trigger: React.ReactNode;
   tooltip: string;
   showColorFilter?: boolean;
+  disableTrigger?: boolean;
 }
 
 const ItemDisplay = ({ item, isSelected }: { item: Item, isSelected: boolean }) => {
@@ -65,6 +67,7 @@ export function ItemSelectionPopover({
   trigger,
   tooltip,
   showColorFilter = false,
+  disableTrigger = false,
 }: ItemSelectionPopoverProps) {
   const { viewAsUser } = useUser();
   const [isOpen, setIsOpen] = useState(false);
@@ -99,12 +102,23 @@ export function ItemSelectionPopover({
     setColorFilter(null);
   }
 
+  const handleOpenChange = (open: boolean) => {
+    if (disableTrigger && open) return;
+    setIsOpen(open);
+  }
+
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
+    <Popover open={isOpen} onOpenChange={handleOpenChange}>
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
+            <PopoverTrigger asChild onPointerDown={(e) => {
+                if(disableTrigger) {
+                    e.preventDefault();
+                    return;
+                }
+                e.stopPropagation();
+            }}>
               {trigger}
             </PopoverTrigger>
           </TooltipTrigger>

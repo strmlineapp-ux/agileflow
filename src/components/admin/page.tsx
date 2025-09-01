@@ -568,10 +568,10 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
         shareIconTitle = 'Owned & Shared by you';
     } else if (!isOwned && !isSharedPreview) { 
         shareIcon = 'link';
-        shareIconTitle = `Owned by ${ownerUser?.displayName || 'another user'}`;
+        shareIconTitle = `Owned by ${ownerUser?.displayName || 'System'}`;
     } else if (isSharedPreview) { 
         shareIcon = 'change_circle';
-        shareIconTitle = `Owned by ${ownerUser?.displayName || 'another user'}`;
+        shareIconTitle = `Owned by ${ownerUser?.displayName || 'System'}`;
     }
 
     const bodyContent = (
@@ -833,6 +833,7 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
 // #endregion
 
     
+
 
 
 
