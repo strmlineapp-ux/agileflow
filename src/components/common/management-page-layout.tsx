@@ -8,7 +8,7 @@ import { useUser } from '@/context/user-context';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { DndContext, type DragEndEvent, type DragStartEvent, useSensor, useSensors, PointerSensor, KeyboardSensor, sortableKeyboardCoordinates } from '@dnd-kit/core';
+import { DndContext, type DragEndEvent, type DragStartEvent, useSensor, useSensors, PointerSensor, KeyboardSensor, sortableKeyboardCoordinates, DragOverlay } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { DraggableGrid } from './draggable-grid';
 import { CompactSearchInput } from './compact-search-input';
@@ -192,7 +192,6 @@ export function ManagementPageLayout<T extends TEntity>({
               onDragEnd={onDragEnd}
               renderItem={renderItem}
               renderDragOverlay={(item) => renderDragOverlay(item as T)}
-              id={`${entityType}-list`}
             >
               {displayedItems.length === 0 && <p className="text-center text-sm text-muted-foreground p-4">No {entityType}s to display.</p>}
             </DraggableGrid>
