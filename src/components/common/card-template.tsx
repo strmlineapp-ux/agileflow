@@ -130,7 +130,7 @@ export function CardTemplate({
                                     value={entity.name} 
                                     onSave={(newName) => onUpdate(entity.id, { name: newName })}
                                     disabled={!canManage}
-                                    className="break-words text-muted-foreground"
+                                    className="break-words text-muted-foreground font-emphasis"
                                 />
                                 {user?.title && <p className="text-sm text-foreground">{user.title}</p>}
                             </div>
