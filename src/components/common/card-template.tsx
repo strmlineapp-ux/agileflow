@@ -62,7 +62,7 @@ export function CardTemplate({
     
     return (
         <>
-            <Card className="group relative bg-card flex flex-col h-full" {...dragHandleProps}>
+            <Card className="group relative bg-card flex flex-col h-full shadow-md" {...dragHandleProps}>
                 {!isPinned && canManage && !isSharedPreview && (
                 <TooltipProvider>
                     <Tooltip>
