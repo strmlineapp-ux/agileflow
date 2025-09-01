@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useCallback, useMemo } from 'react';
@@ -204,7 +205,7 @@ export function ManagementPageLayout<T extends TEntity>({
           description={`Drag a ${entityType} you own here to share it. Drag a ${entityType} to your board to link it.`}
           items={sharedItems}
           searchTerm={sharedSearchTerm}
-          setSearchTerm={setSearchTerm}
+          setSearchTerm={setSharedSearchTerm}
           renderItem={(item, isDragging) => renderItem(item as T, isDragging)}
           renderDragOverlay={(item) => renderDragOverlay(item as T)}
           emptyMessage={`No other ${entityType}s are currently shared.`}
