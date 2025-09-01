@@ -131,7 +131,7 @@ export function CompactSearchInput({
                             max="360"
                             value={currentHue}
                             onChange={handleHueChange}
-                            className="w-full h-2 rounded-full appearance-none cursor-pointer focus-visible:outline-none focus-visible:ring-0"
+                            className="w-full h-2 rounded-full appearance-none cursor-pointer focus-visible:outline-none focus-visible:ring-0 hue-gradient-track"
                         />
                         <Button
                           variant="default" 
