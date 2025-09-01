@@ -213,7 +213,7 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
                 </DialogContent>
               </Dialog>
             )}
-             <div className="flex items-center gap-1 border-r pr-2">
+             <div className="flex items-center gap-1 pr-2">
                 <Button variant="default" size="icon" onClick={handlePrev}><GoogleSymbol name="chevron_left" /></Button>
                 <Button variant="default" size="sm" onClick={goToToday}>Today</Button>
                 <Button variant="default" size="icon" onClick={handleNext}><GoogleSymbol name="chevron_right" /></Button>

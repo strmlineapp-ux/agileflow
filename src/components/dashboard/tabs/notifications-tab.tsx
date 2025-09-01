@@ -13,6 +13,7 @@ export function NotificationsContent() {
 
   return (
     <div className="flex flex-col gap-6">
+      <h1 className="text-2xl">Notifications</h1>
       <NotificationList />
     </div>
   );

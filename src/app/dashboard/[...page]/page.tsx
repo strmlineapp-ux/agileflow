@@ -92,7 +92,7 @@ export default function DynamicPage() {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <div className="text-center">
-          <h2 className="font-headline text-2xl font-thin mb-2">Page Not Found</h2>
+          <h2 className="text-2xl mb-2">Page Not Found</h2>
           <p className="text-muted-foreground">The page you are looking for does not exist or you do not have permission to view it.</p>
         </div>
       </div>
@@ -146,7 +146,7 @@ export default function DynamicPage() {
   return (
     <div className="flex flex-col h-full gap-6">
        {!seamlessPageIds.includes(page.id) && (
-            <h1 className="font-headline text-2xl text-muted-foreground flex items-center gap-2">
+            <h1 className="text-2xl flex items-center gap-2">
                 <GoogleSymbol name={page.icon} style={{color: page.color}} />
                 {teamContext ? `${teamContext.name}: ${page.name}` : page.name}
             </h1>

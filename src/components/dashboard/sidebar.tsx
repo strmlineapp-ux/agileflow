@@ -48,7 +48,7 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col bg-card sm:flex">
+    <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col bg-card sm:flex shadow-lg">
         <nav className="flex flex-col items-center gap-4 px-2 pt-4 pb-2">
             <Link
               href="/dashboard/overview"
