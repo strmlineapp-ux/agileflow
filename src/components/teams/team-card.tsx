@@ -209,7 +209,7 @@ export function TeamCard(props: TeamCardProps) {
         <CardTemplate
             entity={team}
             onUpdate={onUpdate}
-            onDelete={onDelete}
+            onDelete={() => onDelete(team)}
             canManage={canManageTeam}
             isExpanded={isExpanded}
             onToggleExpand={onToggleExpand}
