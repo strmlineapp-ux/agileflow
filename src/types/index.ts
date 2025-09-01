@@ -1,4 +1,5 @@
 
+
 import type React from 'react';
 
 export interface Workspace {
@@ -28,6 +29,7 @@ export interface AppPage {
   description?: string;
   displayTitle?: string | null;
   isDynamic: boolean; // True for paths like /dashboard/teams/:teamId
+  isShared?: boolean;
   associatedTabs: string[]; // Array of AppTab ids
   access: {
     users: string[]; // User IDs
@@ -88,6 +90,7 @@ export interface User {
   linkedTeamIds?: string[];
   linkedBadgeCollectionIds?: string[];
   linkedCalendarIds?: string[];
+  linkedPageIds?: string[];
   modifierKey?: 'alt' | 'ctrl' | 'meta' | 'shift';
   createdAt: Date;
   approvedBy?: string;
@@ -241,7 +244,6 @@ export interface Notification {
   user: Pick<User, 'userId' | 'displayName' | 'avatarUrl'>; // The user who *caused* the notification
   content: string;
   time: Date;
-  read?: boolean;
   data?: { // payload for access_requests
     email: string;
     displayName: string;
