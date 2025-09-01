@@ -82,7 +82,7 @@ export default function ProjectDetailsPage() {
     
     return (
       <Tabs defaultValue={pageTabs[0].id} className="flex flex-col flex-1 gap-6">
-        <div className="flex justify-center">
+        <div className="flex justify-center overflow-x-auto no-scrollbar">
             <TabsList>
                 {pageTabs.map(tab => (
                     <TabsTrigger key={tab.id} value={tab.id} className="gap-2">
