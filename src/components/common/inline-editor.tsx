@@ -82,7 +82,7 @@ export function InlineEditor({
         onKeyDown={handleKeyDown}
         onBlur={handleSave}
         className={cn(
-          "h-auto p-0 border-0 rounded-none bg-transparent break-words",
+          "h-auto p-0 border-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 break-words w-full shadow-none",
           className
         )}
         placeholder={placeholder}
