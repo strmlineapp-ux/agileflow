@@ -563,7 +563,7 @@ function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
 }
 
 export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: AppPage; isActive: boolean }) {
-    const { viewAsUser, users, appSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, updateUser, teams, setAllBadgeCollections, reorderBadgeCollections } = useUser();
+    const { viewAsUser, users, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, updateUser, teams, setAllBadgeCollections, reorderBadgeCollections, updatePage } = useUser();
     const { toast } = useToast();
 
     const [activeDragItem, setActiveDragItem] = useState<{type: string, id: string, data: any} | null>(null);
@@ -586,7 +586,20 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
         });
     }, []);
 
-    const title = tab.name;
+    const title = page.displayTitle ?? tab.name;
+    const canManage = viewAsUser.isAdmin;
+
+    const handleTitleSave = (newTitle: string) => {
+        updatePage(page.id, { displayTitle: newTitle });
+    };
+
+    const handleTitleReset = (e: React.MouseEvent<HTMLHeadingElement>) => {
+        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
+            e.preventDefault();
+            updatePage(page.id, { displayTitle: null });
+            toast({title: "Title Reset", description: "The page title has been reset to its default."});
+        }
+    };
 
     const displayedCollections = useMemo(() => {
         if (!viewAsUser) return [];
@@ -836,7 +849,13 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
                 <div className="flex-1 flex flex-col overflow-hidden">
                     <div className="flex items-center justify-between mb-6 shrink-0">
                         <div className="flex items-center gap-2">
-                            <h2 className="font-headline text-2xl font-thin tracking-tight">{title}</h2>
+                            <InlineEditor 
+                                value={title}
+                                onSave={handleTitleSave}
+                                onClick={handleTitleReset}
+                                className="h-auto p-0 font-headline text-2xl font-thin tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                disabled={!canManage}
+                            />
                             <DuplicateZone id="duplicate-collection-zone" onAdd={() => addBadgeCollection(viewAsUser)} />
                         </div>
                         <div className="flex items-center gap-1">

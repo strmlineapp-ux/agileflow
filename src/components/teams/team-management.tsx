@@ -83,6 +83,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     const [colorFilter, setColorFilter] = useState<string | null>(null);
     
     const title = page.displayTitle ?? tab.name;
+    const canManagePage = viewAsUser.isAdmin;
     
     const onToggleExpand = useCallback((teamId: string) => {
         setExpandedTeams(prev => {
@@ -370,7 +371,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                                 onSave={handleTitleSave}
                                 onClick={handleTitleReset}
                                 className="h-auto p-0 font-headline text-2xl font-thin tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                                disabled={!viewAsUser.isAdmin}
+                                disabled={!canManagePage}
                             />
                             <DuplicateZone id="duplicate-team-zone" onAdd={() => handleAddTeam()} />
                         </div>
