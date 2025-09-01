@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState } from 'react';
@@ -29,7 +28,7 @@ export default function AdminPage() {
   return (
     <div className="flex flex-col h-full gap-6">
         <Tabs defaultValue="admins" onValueChange={setActiveTabKey} className="flex flex-col flex-1 gap-6">
-             <div className="flex justify-center">
+            <div className="flex justify-center overflow-x-auto no-scrollbar">
                 <TabsList>
                     {adminTabs.map(tab => (
                         <TabsTrigger key={tab.key} value={tab.key} className="gap-2">
