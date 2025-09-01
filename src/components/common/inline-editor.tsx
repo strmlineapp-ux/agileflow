@@ -11,6 +11,7 @@ interface InlineEditorProps {
   className?: string;
   placeholder?: string;
   disabled?: boolean;
+  onClick?: (e: React.MouseEvent) => void;
 }
 
 export function InlineEditor({
@@ -19,6 +20,7 @@ export function InlineEditor({
   className,
   placeholder,
   disabled = false,
+  onClick
 }: InlineEditorProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [currentValue, setCurrentValue] = useState(value);
@@ -66,7 +68,8 @@ export function InlineEditor({
     }
   };
 
-  const handleDisplayClick = () => {
+  const handleDisplayClick = (e: React.MouseEvent) => {
+    if (onClick) onClick(e);
     if (!disabled) {
       setIsEditing(true);
     }
@@ -92,6 +95,7 @@ export function InlineEditor({
   return (
     <span
       onClick={handleDisplayClick}
+      onPointerDown={(e) => e.stopPropagation()}
       className={cn(className, !disabled && "cursor-text", !value && "italic text-foreground/70")}
     >
       {value || placeholder || "Click to edit"}
