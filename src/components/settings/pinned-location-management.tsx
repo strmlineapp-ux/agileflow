@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { LocationCheckManagerManagement } from '../teams/location-check-manager-management';
 import { InlineEditor } from '../common/inline-editor';
+import { PageTitle } from '../common/page-title';
 
 export function PinnedLocationManagement({ team, tab, page }: { team: Team, tab: AppTab, page: AppPage }) {
   if (!team) {
@@ -36,7 +37,7 @@ export function PinnedLocationManagement({ team, tab, page }: { team: Team, tab:
     updatePage(page.id, { displayTitle: newTitle });
   };
 
-  const handleTitleReset = (e: React.MouseEvent<HTMLHeadingElement>) => {
+  const handleTitleReset = (e: React.MouseEvent) => {
     if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
         e.preventDefault();
         updatePage(page.id, { displayTitle: null });
@@ -110,15 +111,12 @@ export function PinnedLocationManagement({ team, tab, page }: { team: Team, tab:
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 mb-6">
-          <InlineEditor
-            value={title}
+       <PageTitle 
+            title={title}
             onSave={handleTitleSave}
-            onClick={handleTitleReset}
-            className="h-auto p-0 font-headline text-2xl font-thin tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+            onReset={handleTitleReset}
             disabled={!canManage}
-          />
-      </div>
+        />
       <LocationCheckManagerManagement team={team} />
       <Card>
         <CardHeader>

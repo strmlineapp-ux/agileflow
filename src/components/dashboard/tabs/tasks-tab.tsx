@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -89,23 +90,13 @@ export function TasksContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageTitle 
-        title={title}
-        onSave={handleTitleSave}
-        onReset={handleTitleReset}
-        disabled={!canManagePage || !page}
-      />
-       <div className="flex items-center justify-between">
-         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="w-full">
-            <CenteredTabList>
-                <TabsList>
-                    <TabsTrigger value="my-tasks">My Tasks</TabsTrigger>
-                    <TabsTrigger value="all">All Tasks</TabsTrigger>
-                </TabsList>
-            </CenteredTabList>
-        </Tabs>
-      </div>
-      <div className="flex">
+      <div className="flex items-center justify-between">
+        <PageTitle 
+          title={title}
+          onSave={handleTitleSave}
+          onReset={handleTitleReset}
+          disabled={!canManagePage || !page}
+        />
         <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
             <DialogTrigger asChild>
                 <TooltipProvider>
@@ -127,6 +118,17 @@ export function TasksContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
             </DialogContent>
         </Dialog>
       </div>
+      <div className="flex items-center justify-between">
+         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="w-full">
+            <CenteredTabList>
+                <TabsList>
+                    <TabsTrigger value="my-tasks">My Tasks</TabsTrigger>
+                    <TabsTrigger value="all">All Tasks</TabsTrigger>
+                </TabsList>
+            </CenteredTabList>
+        </Tabs>
+      </div>
+      
       {loading ? (
         <div className="space-y-4">
             <Skeleton className="h-10 w-1/3" />

@@ -178,7 +178,7 @@ export function EventTemplateManagement({ team, tab, page }: { team: Team, tab: 
     updatePage(page.id, { displayTitle: newTitle });
   };
 
-  const handleTitleReset = (e: React.MouseEvent<HTMLHeadingElement>) => {
+  const handleTitleReset = (e: React.MouseEvent) => {
     if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
         e.preventDefault();
         updatePage(page.id, { displayTitle: null });

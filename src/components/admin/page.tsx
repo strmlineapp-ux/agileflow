@@ -55,6 +55,7 @@ import { InlineEditor } from '../common/inline-editor';
 import { ItemSelectionPopover, type ItemSelectionTab } from '../common/item-selection-popover';
 import { hasAccess } from '@/lib/permissions';
 import { TransparentCard, TransparentCardContent } from '../ui/transparent-card';
+import { PageTitle } from '../common/page-title';
 
 // #region Admin Groups Management Tab
 
@@ -687,50 +688,53 @@ export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
     ), [handleUpdatePage, handleDeletePage, expandedPages, onToggleExpand]);
 
     return (
-        <DraggableGrid
-            items={filteredPages}
-            setItems={reorderPages}
-            onDragEnd={(event) => {
-                const { active, over } = event;
-                if (over?.id === 'duplicate-page-zone') {
-                    const pageToDuplicate = appSettings.pages.find(p => p.id === active.id);
-                    if (pageToDuplicate) {
-                        handleDuplicatePage(pageToDuplicate);
+        <div className="space-y-6">
+            <PageTitle title="Pages" />
+            <DraggableGrid
+                items={filteredPages}
+                setItems={reorderPages}
+                onDragEnd={(event) => {
+                    const { active, over } = event;
+                    if (over?.id === 'duplicate-page-zone') {
+                        const pageToDuplicate = appSettings.pages.find(p => p.id === active.id);
+                        if (pageToDuplicate) {
+                            handleDuplicatePage(pageToDuplicate);
+                        }
+                        return;
                     }
-                    return;
-                }
-                
-                if (over && active.id !== over.id) {
-                    const oldIndex = appSettings.pages.findIndex(p => p.id === active.id);
-                    const newIndex = appSettings.pages.findIndex(p => p.id === over.id);
+                    
+                    if (over && active.id !== over.id) {
+                        const oldIndex = appSettings.pages.findIndex(p => p.id === active.id);
+                        const newIndex = appSettings.pages.findIndex(p => p.id === over.id);
 
-                    const activeIsPinned = pinnedIds.has(active.id.toString());
-                    const overIsPinned = pinnedIds.has(over.id.toString());
-                    
-                    if (activeIsPinned !== overIsPinned) return;
-                    
-                    reorderPages(arrayMove(appSettings.pages, oldIndex, newIndex));
-                }
-            }}
-            renderItem={(item, isDragging) => renderPageCard(item as AppPage)}
-            renderDragOverlay={(item) => <GoogleSymbol name={item.icon} style={{ color: item.color, fontSize: '48px' }} />}
-            className="space-y-4"
-        >
-            <div className="flex items-center justify-between">
-                <DuplicateZone onAdd={handleAddPage} id="duplicate-page-zone" />
-                <div className="flex items-center">
-                    <CompactSearchInput
-                      searchTerm={searchTerm}
-                      setSearchTerm={setSearchTerm}
-                      placeholder="Search pages..."
-                      autoFocus={isActive}
-                      showColorFilter={true}
-                      onColorSelect={setColorFilter}
-                      activeColorFilter={colorFilter}
-                    />
+                        const activeIsPinned = pinnedIds.has(active.id.toString());
+                        const overIsPinned = pinnedIds.has(over.id.toString());
+                        
+                        if (activeIsPinned !== overIsPinned) return;
+                        
+                        reorderPages(arrayMove(appSettings.pages, oldIndex, newIndex));
+                    }
+                }}
+                renderItem={(item, isDragging) => renderPageCard(item as AppPage)}
+                renderDragOverlay={(item) => <GoogleSymbol name={item.icon} style={{ color: item.color, fontSize: '48px' }} />}
+                className="space-y-4"
+            >
+                <div className="flex items-center justify-between">
+                    <DuplicateZone onAdd={handleAddPage} id="duplicate-page-zone" />
+                    <div className="flex items-center">
+                        <CompactSearchInput
+                          searchTerm={searchTerm}
+                          setSearchTerm={setSearchTerm}
+                          placeholder="Search pages..."
+                          autoFocus={isActive}
+                          showColorFilter={true}
+                          onColorSelect={setColorFilter}
+                          activeColorFilter={colorFilter}
+                        />
+                    </div>
                 </div>
-            </div>
-        </DraggableGrid>
+            </DraggableGrid>
+        </div>
     );
 };
 // #endregion
@@ -828,30 +832,32 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
     ), [handleUpdateTab, expandedTabs, onToggleExpand]);
 
     return (
-        <DraggableGrid
-            items={filteredTabs}
-            setItems={reorderTabs}
-            renderItem={(item) => renderTabCard(item as AppTab)}
-            renderDragOverlay={(item) => <GoogleSymbol name={item.icon} style={{ color: item.color, fontSize: '48px' }} />}
-            className="space-y-4"
-        >
-            <div className="flex items-center justify-end">
-                 <div className="flex items-center">
-                    <CompactSearchInput
-                      searchTerm={searchTerm}
-                      setSearchTerm={setSearchTerm}
-                      placeholder="Search by name or desc..."
-                      autoFocus={isActive}
-                      showColorFilter={true}
-                      onColorSelect={setColorFilter}
-                      activeColorFilter={colorFilter}
-                    />
+        <div className="space-y-6">
+            <PageTitle title="Tabs" />
+            <DraggableGrid
+                items={filteredTabs}
+                setItems={reorderTabs}
+                renderItem={(item) => renderTabCard(item as AppTab)}
+                renderDragOverlay={(item) => <GoogleSymbol name={item.icon} style={{ color: item.color, fontSize: '48px' }} />}
+                className="space-y-4"
+            >
+                <div className="flex items-center justify-end">
+                     <div className="flex items-center">
+                        <CompactSearchInput
+                          searchTerm={searchTerm}
+                          setSearchTerm={setSearchTerm}
+                          placeholder="Search by name or desc..."
+                          autoFocus={isActive}
+                          showColorFilter={true}
+                          onColorSelect={setColorFilter}
+                          activeColorFilter={colorFilter}
+                        />
+                    </div>
                 </div>
-            </div>
-        </DraggableGrid>
+            </DraggableGrid>
+        </div>
     );
 };
 // #endregion
 
     
-
