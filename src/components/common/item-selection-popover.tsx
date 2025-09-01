@@ -105,6 +105,10 @@ export function ItemSelectionPopover({
   const handleOpenChange = (open: boolean) => {
     if (disableTrigger && open) return;
     setIsOpen(open);
+    if (!open) {
+        setSearchTerm('');
+        setColorFilter(null);
+    }
   }
 
   return (
@@ -128,7 +132,7 @@ export function ItemSelectionPopover({
       <PopoverContent className="w-80 p-0 flex flex-col max-h-96" onPointerDownCapture={(e) => e.stopPropagation()}>
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full flex flex-col flex-1 min-h-0">
           {tabs.length > 1 && (
-            <div className="flex justify-center">
+            <div className="flex justify-center p-1 border-b">
                 <TabsList className="grid w-full grid-cols-2">
                   {tabs.map(tab => <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>)}
                 </TabsList>
@@ -139,7 +143,7 @@ export function ItemSelectionPopover({
             <CompactSearchInput
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
-              placeholder={`Search ${activeTab}...`}
+              placeholder={`Search ${tabs.find(t => t.value === activeTab)?.label || 'items'}...`}
               isActive={true}
               autoFocus={true}
               showColorFilter={showColorFilter}
@@ -156,13 +160,13 @@ export function ItemSelectionPopover({
                     const isSelected = currentTab ? currentTab.selectedIds.includes(item.id) : false;
                     
                     return (
-                      <div key={item.id} onClick={() => onSelectionChange(activeTab, item.id)}>
+                      <div key={item.id} onClick={() => {onSelectionChange(activeTab, item.id); setIsOpen(false)}}>
                           <ItemDisplay item={item} isSelected={isSelected} />
                       </div>
                     );
                   })
                 ) : (
-                  <p className="text-center text-sm text-foreground p-4">No {activeTab} found.</p>
+                  <p className="text-center text-sm text-foreground p-4">No {tabs.find(t => t.value === activeTab)?.label.toLowerCase() || 'items'} found.</p>
                 )}
               </div>
           </div>

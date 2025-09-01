@@ -66,7 +66,6 @@ export function CardTemplate({
 }: CardTemplateProps) {
     const { viewAsUser, users, isDragModifierPressed } = useUser();
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-    const [isOwnershipPopoverOpen, setIsOwnershipPopoverOpen] = useState(false);
     const { theme } = useTheme();
     const readableColor = getReadableColor(entity.color || '', theme);
     
@@ -96,7 +95,6 @@ export function CardTemplate({
     const handleOwnershipChange = (type: string, id: string) => {
         const newOwner = id === 'system' ? { type: 'system', id: 'system' } : { type: 'user', id };
         onUpdate(entity.id, { owner: newOwner });
-        setIsOwnershipPopoverOpen(false);
     };
 
     const userItemData = users.map(u => ({
@@ -106,11 +104,15 @@ export function CardTemplate({
         iconType: 'avatar' as const,
     }));
     
-    const systemItemData = [{ id: 'system', name: 'System Owned', icon: 'shield_person', iconType: 'symbol' as const }];
+    const systemItem = { id: 'system', name: 'System Owned', icon: 'shield_person', iconType: 'symbol' as const, color: 'hsl(var(--muted-foreground))' };
     
     const ownershipTabs: ItemSelectionTab[] = [
-        { value: 'users', label: 'Users', items: userItemData, selectedIds: [entity.owner?.id || ''] },
-        { value: 'system', label: 'System', items: systemItemData, selectedIds: [entity.owner?.id || ''] },
+        {
+            value: 'users',
+            label: 'Users',
+            items: [systemItem, ...userItemData],
+            selectedIds: [entity.owner?.id || ''],
+        },
     ];
     
     const ownershipTrigger = (
@@ -227,4 +229,3 @@ export function CardTemplate({
         </>
     );
 }
-
