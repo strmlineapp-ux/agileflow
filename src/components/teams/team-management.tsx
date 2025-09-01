@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -40,111 +39,20 @@ import { SortableItem } from '../common/sortable-item';
 import { InlineEditor } from '../common/inline-editor';
 import { ScrollArea } from '../ui/scroll-area';
 import { SharedItemsPanel } from '../common/shared-items-panel';
+import { ManagementPageLayout } from '../common/management-page-layout';
 
-function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
-  const { setNodeRef, isOver } = useDroppable({ id });
-  
-  return (
-    <div
-      ref={setNodeRef}
-      className={cn(
-        "rounded-full transition-all p-0.5",
-        isOver && "ring-1 ring-border ring-inset"
-      )}
-    >
-      <TooltipProvider>
-          <Tooltip>
-              <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={onAdd} onPointerDown={(e) => e.stopPropagation()}>
-                    <GoogleSymbol name="add_circle" className="text-4xl" />
-                    <span className="sr-only">New Team or Drop to Duplicate</span>
-                  </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                  <p>{isOver ? 'Drop to Duplicate' : 'Add New Team'}</p>
-              </TooltipContent>
-          </Tooltip>
-      </TooltipProvider>
-    </div>
-  );
-}
-
-export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: AppTab; page: AppPage; isSingleTabPage?: boolean }) {
-    const { viewAsUser, users, teams, appSettings, addTeam, updateTeam, deleteTeam, reorderTeams, updatePage, updateUser } = useUser();
+export function TeamManagement({ tab, page, isSingleTabPage = false, isActive = false }: { tab: AppTab; page: AppPage; isSingleTabPage?: boolean, isActive?: boolean }) {
+    const { viewAsUser, users, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updatePage, updateUser } = useUser();
     const router = useRouter();
-    const pathname = usePathname();
     const { toast } = useToast();
 
     const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
-    const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
-    const [sharedSearchTerm, setSharedSearchTerm] = useState('');
-    const [expandedTeams, setExpandedTeams] = useState<Set<string>>(new Set());
-    
-    const [searchTerm, setSearchTerm] = useState('');
-    const [colorFilter, setColorFilter] = useState<string | null>(null);
-    
-    const title = page.displayTitle ?? tab.name;
-    const canManagePage = viewAsUser.isAdmin;
-    
-    const onToggleExpand = useCallback((teamId: string) => {
-        setExpandedTeams(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(teamId)) {
-                newSet.delete(teamId);
-            } else {
-                newSet.add(teamId);
-            }
-            return newSet;
-        });
-    }, []);
 
     const canManageTeam = useCallback((team: Team) => {
         if (!viewAsUser) return false;
         return team.owner.id === viewAsUser.userId || (team.teamAdmins || []).includes(viewAsUser.userId);
     }, [viewAsUser]);
-
-    const handleTitleSave = (newTitle: string) => {
-        updatePage(page.id, { displayTitle: newTitle });
-    };
-
-    const handleTitleReset = (e: React.MouseEvent<HTMLHeadingElement>) => {
-        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
-            e.preventDefault();
-            updatePage(page.id, { displayTitle: null });
-            toast({title: "Title Reset", description: "The page title has been reset to its default."});
-        }
-    };
     
-    const handleAddTeam = (sourceTeam?: Team) => {
-        const owner: BadgeCollectionOwner = { type: 'user', id: viewAsUser!.userId };
-        let newTeamData: Omit<Team, 'id'>;
-
-        if (sourceTeam) {
-            newTeamData = {
-                ...JSON.parse(JSON.stringify(sourceTeam)),
-                name: `${sourceTeam.name} (Copy)`,
-                owner,
-                isShared: false,
-                members: sourceTeam.members,
-                teamAdmins: sourceTeam.teamAdmins,
-            };
-        } else {
-             newTeamData = {
-                name: `New Team ${teams.length + 1}`,
-                icon: 'group',
-                color: '#64748B',
-                owner: owner,
-                isShared: false,
-                members: [],
-                teamAdmins: [],
-                locationCheckManagers: [],
-                activeBadgeCollections: [],
-            };
-        }
-        
-        addTeam(newTeamData);
-    };
-
     const handleUpdate = (teamId: string, data: Partial<Team>) => updateTeam(teamId, data);
     
     const handleDelete = (team: Team) => {
@@ -196,120 +104,30 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
         updateTeam(teamId, { members: updatedMembers, teamAdmins: newTeamAdmins });
         toast({ title: 'User Removed' });
 
-        if (viewAsUser.userId === userId) {
-            const currentPageId = page.path.split('/')[2];
-            if (teamId === currentPageId) {
-                router.push('/dashboard/notifications');
-            }
-        }
-    }, [teams, updateTeam, toast, canManageTeam, viewAsUser.userId, page.path, router]);
-
-    const confirmDelete = () => {
-        if (!teamToDelete) return;
-        deleteTeam(teamToDelete.id, router, pathname);
-        setTeamToDelete(null);
-    };
+    }, [teams, updateTeam, toast, canManageTeam]);
     
-    const displayedTeams = useMemo(() => {
-        if (!viewAsUser) return [];
+    const handleAddTeam = (sourceTeam?: Team) => {
+        addTeam(sourceTeam || {});
+        toast({ title: sourceTeam ? 'Team Duplicated' : 'New Team Added' });
+    };
 
-        const teamIdSet = new Set([
-            ...(viewAsUser.memberOfTeamIds || []),
-            ...teams.filter(t => t.owner.id === viewAsUser.userId).map(t => t.id),
-            ...(viewAsUser.linkedTeamIds || [])
-        ]);
+    const handleLinkTeam = (teamId: string) => {
+        const updatedLinkedIds = [...(viewAsUser.linkedTeamIds || []), teamId];
+        updateUser(viewAsUser.userId, { linkedTeamIds: Array.from(new Set(updatedLinkedIds)) });
+        toast({ title: 'Team Linked' });
+    };
 
-        let filtered = Array.from(teamIdSet)
-            .map(id => teams.find(t => t.id === id))
-            .filter((t): t is Team => !!t)
-            .filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
-
-        if (colorFilter) {
-            const targetHue = getHueFromHsl(colorFilter);
-            if (targetHue !== null) {
-                filtered = filtered.filter(t => {
-                    const itemHue = getHueFromHsl(t.color);
-                    return itemHue !== null && isHueInRange(targetHue, itemHue);
-                });
-            }
-        }
-        return filtered;
-    }, [teams, viewAsUser, searchTerm, colorFilter]);
+    const allTeams = useMemo(() => {
+         return teams
+            .filter(t => t.owner.id === viewAsUser.userId || (viewAsUser.linkedTeamIds || []).includes(t.id));
+    }, [teams, viewAsUser]);
 
     const sharedTeams = useMemo(() => {
-        const displayedIds = new Set(displayedTeams.map(c => c.id));
-        return teams
-            .filter(team => team.isShared && team.owner.id !== viewAsUser.userId && !displayedIds.has(team.id))
-            .filter(t => t.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
-    }, [teams, displayedTeams, viewAsUser.userId, sharedSearchTerm]);
+        const displayedIds = new Set(allTeams.map(c => c.id));
+        return teams.filter(c => c.isShared && c.owner.id !== viewAsUser.userId && !displayedIds.has(c.id));
+    }, [teams, allTeams, viewAsUser.userId]);
 
-    const onDragEnd = (result: DragEndEvent) => {
-        const { active, over } = result;
-        if (!over) return;
-        
-        const activeType = active.data.current?.type;
-        const overType = over.data.current?.type;
-        
-        if (activeType === 'user') {
-            const user = active.data.current?.user as User;
-            const destTeamId = over.data.current?.teamId;
-            if (destTeamId && user) {
-                handleAddUserToTeam(destTeamId, user.userId);
-            }
-            return;
-        }
-
-        if (activeType === 'team-card') {
-             if (over.id === 'shared-teams-panel') {
-                const teamToDrop = teams.find(t => t.id === active.id) as Team;
-                if (!teamToDrop) return;
-
-                const isOwner = teamToDrop.owner.id === viewAsUser.userId;
-                if (isOwner) {
-                    updateTeam(teamToDrop.id, { isShared: !teamToDrop.isShared });
-                    toast({ title: teamToDrop.isShared ? 'Team Unshared' : 'Team Shared' });
-                } else { 
-                    const updatedLinkedTeamIds = (viewAsUser.linkedTeamIds || []).filter(id => id !== teamToDrop.id);
-                    updateUser(viewAsUser.userId, { linkedTeamIds: updatedLinkedTeamIds });
-                    toast({ title: "Team Unlinked", description: `"${teamToDrop.name}" has been unlinked.`});
-                }
-                return;
-            }
-
-            if(active.data.current?.isSharedPreview && over.id === 'teams-list') {
-                 updateUser(viewAsUser.userId, { 
-                    linkedTeamIds: Array.from(new Set([...(viewAsUser.linkedTeamIds || []), active.id as string]))
-                });
-                toast({ title: 'Team Linked' });
-                return;
-            }
-            
-            if (over.id === 'duplicate-team-zone') {
-                 const teamToDuplicate = displayedTeams.find(t => t.id === active.id) || sharedTeams.find(t => t.id === active.id);
-                 if(teamToDuplicate) {
-                    handleAddTeam(teamToDuplicate);
-                    const wasLinked = (viewAsUser.linkedTeamIds || []).includes(teamToDuplicate.id);
-                    if (wasLinked) {
-                        const updatedLinkedTeamIds = (viewAsUser.linkedTeamIds || []).filter(id => id !== teamToDuplicate.id);
-                        updateUser(viewAsUser.userId, { linkedTeamIds: updatedLinkedTeamIds });
-                        toast({ title: 'Team Copied', description: 'A new, independent team has been created.' });
-                    }
-                }
-                return;
-            }
-
-            const overIsCard = over.data.current?.type === 'team-card';
-            if (overIsCard && active.id !== over.id) {
-                const oldIndex = displayedTeams.findIndex(t => t.id === active.id);
-                const newIndex = displayedTeams.findIndex(t => t.id === over.id);
-                if (oldIndex > -1 && newIndex > -1) {
-                  reorderTeams(arrayMove(displayedTeams, oldIndex, newIndex));
-                }
-            }
-        }
-    };
-    
-    const renderTeamCard = (team: Team) => (
+    const renderTeamCard = (team: Team, isDragging: boolean) => (
       <SortableItem key={team.id} id={team.id} data={{ type: 'team-card', team, isSharedPreview: false }}>
         {(isDragging) => (
           <TeamCard
@@ -321,14 +139,14 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
             onAddUser={handleAddUserToTeam}
             onSetAdmin={handleSetAdmin}
             isDragging={isDragging}
-            isExpanded={expandedTeams.has(team.id)}
-            onToggleExpand={() => onToggleExpand(team.id)}
+            isExpanded={true} // For simplicity in this layout, always expanded
+            onToggleExpand={() => {}}
           />
         )}
       </SortableItem>
     );
 
-    const renderSharedTeamCard = (team: Team) => (
+    const renderSharedTeamCard = (team: Team, isDragging: boolean) => (
       <SortableItem key={team.id} id={team.id} data={{ type: 'team-card', team, isSharedPreview: true }}>
          {(isDragging) => (
           <TeamCard
@@ -341,8 +159,8 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
             onSetAdmin={handleSetAdmin}
             isSharedPreview={true}
             isDragging={isDragging}
-            isExpanded={expandedTeams.has(team.id)}
-            onToggleExpand={() => onToggleExpand(team.id)}
+            isExpanded={true}
+            onToggleExpand={() => {}}
           />
         )}
       </SortableItem>
@@ -362,87 +180,28 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     };
 
     return (
-        <DndContext onDragEnd={onDragEnd}>
-            <div className="flex flex-1 h-full gap-4">
-                <div className="flex-1 flex flex-col min-h-0">
-                    <div className="flex items-center justify-between mb-6 shrink-0">
-                        <div className="flex items-center gap-2">
-                            <InlineEditor 
-                                value={title}
-                                onSave={handleTitleSave}
-                                onClick={handleTitleReset}
-                                className="h-auto p-0 font-headline text-2xl font-thin tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                                disabled={!canManagePage}
-                            />
-                            <DuplicateZone id="duplicate-team-zone" onAdd={() => handleAddTeam()} />
-                        </div>
-                        <div className="flex items-center gap-1">
-                            <CompactSearchInput
-                              searchTerm={searchTerm}
-                              setSearchTerm={setSearchTerm}
-                              placeholder="Search teams..."
-                              showColorFilter={true}
-                              onColorSelect={setColorFilter}
-                              activeColorFilter={colorFilter}
-                            />
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
-                                            <GoogleSymbol name="dynamic_feed" />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>Show Shared Teams</p></TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        </div>
-                    </div>
-                    <ScrollArea className="flex-1 min-h-0">
-                        <DraggableGrid
-                            items={displayedTeams}
-                            onDragEnd={onDragEnd}
-                            renderItem={renderTeamCard}
-                            renderDragOverlay={renderDragOverlay}
-                            setItems={reorderTeams}
-                        />
-                    </ScrollArea>
-                </div>
-                
-                <SharedItemsPanel
-                    isOpen={isSharedPanelOpen}
-                    type="teams"
-                    title="Shared Teams"
-                    description="Drag a team you own here to share it. Drag a team to your board to link it."
-                    items={sharedTeams}
-                    searchTerm={sharedSearchTerm}
-                    setSearchTerm={setSharedSearchTerm}
-                    renderItem={renderSharedTeamCard}
-                    renderDragOverlay={renderDragOverlay}
-                    emptyMessage="No other teams are currently shared."
-                />
-                
-                <Dialog open={!!teamToDelete} onOpenChange={() => setTeamToDelete(null)}>
-                    <DialogContent className="max-w-md">
-                        <div className="absolute top-4 right-4">
-                                <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button variant="ghost" className="text-destructive p-0" onClick={confirmDelete}>
-                                            <GoogleSymbol name="delete" className="text-4xl" />
-                                            <span className="sr-only">Delete Team</span>
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>Delete Team</p></TooltipContent>
-                                </Tooltip>
-                                </TooltipProvider>
-                        </div>
-                        <DialogHeader>
-                            <UIDialogTitle className="font-headline font-thin">Delete "{teamToDelete?.name}"?</UIDialogTitle>
-                            <DialogDescription>This action cannot be undone. This will permanently delete the team and all of its associated data.</DialogDescription>
-                        </DialogHeader>
-                    </DialogContent>
-                </Dialog>
-            </div>
-        </DndContext>
+        <ManagementPageLayout
+            pageTitle={page.displayTitle ?? tab.name}
+            onPageTitleSave={(newTitle) => updatePage(page.id, { displayTitle: newTitle })}
+            onPageTitleReset={(e) => {
+                if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
+                    e.preventDefault();
+                    updatePage(page.id, { displayTitle: null });
+                    toast({ title: "Title Reset" });
+                }
+            }}
+            canManagePage={viewAsUser.isAdmin}
+            entityType="team"
+            allItems={allTeams}
+            allSharedItems={sharedTeams}
+            onAddItem={handleAddTeam}
+            onUpdateItem={handleUpdate}
+            onDeleteItem={handleDelete}
+            onReorderItems={reorderTeams}
+            onLinkItem={handleLinkTeam}
+            renderItem={renderTeamCard}
+            renderDragOverlay={renderDragOverlay}
+            isActive={isActive}
+        />
     );
 }
