@@ -27,6 +27,7 @@ import { ProjectsContent } from '@/components/dashboard/tabs/projects-tab';
 import { EventsContent } from '@/components/dashboard/tabs/events-tab';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { InlineEditor } from '@/components/common/inline-editor';
+import { CenteredTabList } from '../common/centered-tab-list';
 
 
 const componentMap = {
@@ -123,20 +124,16 @@ export default function DynamicPage() {
     
     return (
        <Tabs defaultValue={pageTabs[0].id} className="flex flex-col h-full gap-6">
-          <div className="center-and-scroll no-scrollbar">
+          <CenteredTabList>
             <TabsList>
                 {pageTabs.map(tab => (
                   <TabsTrigger key={tab.id} value={tab.id} className="gap-2">
                      <GoogleSymbol name={tab.icon} className="text-4xl" weight={100} />
-                    <InlineEditor 
-                        value={tab.name}
-                        onSave={(newName) => updateAppTab(tab.id, { name: newName })}
-                        disabled={!viewAsUser.isAdmin}
-                    />
+                     <span>{tab.name}</span>
                   </TabsTrigger>
                 ))}
             </TabsList>
-          </div>
+          </CenteredTabList>
          <div className="flex-1">
             {pageTabs.map(tab => {
                 const Component = componentMap[tab.componentKey as keyof typeof componentMap];
