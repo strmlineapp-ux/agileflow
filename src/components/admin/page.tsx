@@ -559,7 +559,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
     const ownerUser = users.find(u => u.userId === page.owner?.id);
 
     let shareIcon: string | null = null;
-    let shareIconTitle: string = 'System Owned';
+    let shareIconTitle: string = '';
     const shareIconColor = 'hsl(220, 13%, 47%)';
 
     const isOwned = ownerUser?.userId === viewAsUser.userId;
@@ -576,10 +576,6 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
     } else if(page.owner?.type === 'system') {
         shareIcon = 'shield_person';
         shareIconTitle = 'System Owned';
-    }
-
-    if (protectedSystemPages.includes(page.id)) {
-        shareIcon = null;
     }
 
 
@@ -737,25 +733,23 @@ export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
     ), [handleUpdate, expandedPages, onToggleExpand]);
 
     return (
-        <div className="flex flex-col h-full">
-            <ManagementPageLayout
-                pageTitle="Pages"
-                onPageTitleSave={() => {}} // No page title to save on this tab
-                canManagePage={false}
-                entityType="page"
-                allItems={displayedPages}
-                allSharedItems={sharedPages}
-                onAddItem={(sourcePage) => addPage(sourcePage || {})}
-                onUpdateItem={handleUpdate}
-                onDeleteItem={handleDelete}
-                onReorderItems={reorderPages}
-                onLinkItem={handleLinkPage}
-                renderItem={renderPageCard}
-                renderSharedItem={renderSharedPageCard}
-                renderDragOverlay={(item) => <GoogleSymbol name={item.icon} style={{ color: item.color, fontSize: '48px' }} />}
-                isActive={isActive}
-            />
-        </div>
+        <ManagementPageLayout
+            pageTitle="Pages"
+            onPageTitleSave={() => {}} // No page title to save on this tab
+            canManagePage={false}
+            entityType="page"
+            allItems={displayedPages}
+            allSharedItems={sharedPages}
+            onAddItem={(sourcePage) => addPage(sourcePage || {})}
+            onUpdateItem={handleUpdate}
+            onDeleteItem={handleDelete}
+            onReorderItems={reorderPages}
+            onLinkItem={handleLinkPage}
+            renderItem={renderPageCard}
+            renderSharedItem={renderSharedPageCard}
+            renderDragOverlay={(item) => <GoogleSymbol name={item.icon} style={{ color: item.color, fontSize: '48px' }} />}
+            isActive={isActive}
+        />
     );
 };
 // #endregion
