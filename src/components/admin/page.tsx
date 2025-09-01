@@ -542,14 +542,13 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
 }) {
     const { viewAsUser, users, isDragModifierPressed } = useUser();
     
-    // An admin can manage any page.
     const canManage = viewAsUser.isAdmin;
     
     const isPinned = page.isSystemPage;
     
     const protectedSystemPages = ['page-admin-management', 'page-settings', 'page-notifications'];
-    const isDeletable = viewAsUser.isAdmin && !protectedSystemPages.includes(page.id);
-    const canBeDeleted = !isPinned || isDeletable;
+    const isDeletable = viewAsUser.isAdmin && (!page.isSystemPage || !protectedSystemPages.includes(page.id));
+    const canBeDeleted = isDeletable;
     
     const canChangeOwnership = viewAsUser.isAdmin && !protectedSystemPages.includes(page.id);
 
@@ -577,6 +576,10 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
     } else if(page.owner?.type === 'system') {
         shareIcon = 'shield_person';
         shareIconTitle = 'System Owned';
+    }
+
+    if (protectedSystemPages.includes(page.id)) {
+        shareIcon = null;
     }
 
 
@@ -682,19 +685,19 @@ export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
             const ownedPages = appSettings.pages.filter(p => p.owner?.id === viewAsUser.userId);
             const linkedPageIds = new Set(viewAsUser.linkedPageIds || []);
             const linkedPages = appSettings.pages.filter(p => linkedPageIds.has(p.id));
-            const publicSystemPages = appSettings.pages.filter(p => p.isSystemPage && p.id !== 'page-admin-management');
+            const publicSystemPages = appSettings.pages.filter(p => p.isSystemPage && hasAccess(viewAsUser, p) && p.id !== 'page-admin-management');
 
             const combined = [...publicSystemPages, ...ownedPages, ...linkedPages];
             pagesToShow = Array.from(new Map(combined.map(p => [p.id, p])).values());
         }
 
-        // Sort system pages to the top, then by some other metric if needed.
+        // Sort system pages to the top, then by name
         return pagesToShow.sort((a, b) => {
             const aIsSystem = a.isSystemPage;
             const bIsSystem = b.isSystemPage;
             if (aIsSystem && !bIsSystem) return -1;
             if (!aIsSystem && bIsSystem) return 1;
-            return 0; // maintain original order for non-system pages
+            return a.name.localeCompare(b.name);
         });
     }, [appSettings.pages, viewAsUser]);
 
@@ -734,23 +737,25 @@ export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
     ), [handleUpdate, expandedPages, onToggleExpand]);
 
     return (
-        <ManagementPageLayout
-            pageTitle="Pages"
-            onPageTitleSave={() => {}} // No page title to save on this tab
-            canManagePage={false}
-            entityType="page"
-            allItems={displayedPages}
-            allSharedItems={sharedPages}
-            onAddItem={(sourcePage) => addPage(sourcePage || {})}
-            onUpdateItem={handleUpdate}
-            onDeleteItem={handleDelete}
-            onReorderItems={reorderPages}
-            onLinkItem={handleLinkPage}
-            renderItem={renderPageCard}
-            renderSharedItem={renderSharedPageCard}
-            renderDragOverlay={(item) => <GoogleSymbol name={item.icon} style={{ color: item.color, fontSize: '48px' }} />}
-            isActive={isActive}
-        />
+        <div className="flex flex-col h-full">
+            <ManagementPageLayout
+                pageTitle="Pages"
+                onPageTitleSave={() => {}} // No page title to save on this tab
+                canManagePage={false}
+                entityType="page"
+                allItems={displayedPages}
+                allSharedItems={sharedPages}
+                onAddItem={(sourcePage) => addPage(sourcePage || {})}
+                onUpdateItem={handleUpdate}
+                onDeleteItem={handleDelete}
+                onReorderItems={reorderPages}
+                onLinkItem={handleLinkPage}
+                renderItem={renderPageCard}
+                renderSharedItem={renderSharedPageCard}
+                renderDragOverlay={(item) => <GoogleSymbol name={item.icon} style={{ color: item.color, fontSize: '48px' }} />}
+                isActive={isActive}
+            />
+        </div>
     );
 };
 // #endregion
@@ -878,3 +883,4 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
     );
 };
 // #endregion
+
