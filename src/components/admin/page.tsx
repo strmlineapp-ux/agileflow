@@ -689,7 +689,23 @@ export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
 
     return (
         <div className="space-y-6">
-            <PageTitle title="Pages" />
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <PageTitle title="Pages" />
+                    <DuplicateZone onAdd={handleAddPage} id="duplicate-page-zone" />
+                </div>
+                <div className="flex items-center">
+                    <CompactSearchInput
+                        searchTerm={searchTerm}
+                        setSearchTerm={setSearchTerm}
+                        placeholder="Search pages..."
+                        autoFocus={isActive}
+                        showColorFilter={true}
+                        onColorSelect={setColorFilter}
+                        activeColorFilter={colorFilter}
+                    />
+                </div>
+            </div>
             <DraggableGrid
                 items={filteredPages}
                 setItems={reorderPages}
@@ -719,20 +735,6 @@ export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
                 renderDragOverlay={(item) => <GoogleSymbol name={item.icon} style={{ color: item.color, fontSize: '48px' }} />}
                 className="space-y-4"
             >
-                <div className="flex items-center justify-between">
-                    <DuplicateZone onAdd={handleAddPage} id="duplicate-page-zone" />
-                    <div className="flex items-center">
-                        <CompactSearchInput
-                          searchTerm={searchTerm}
-                          setSearchTerm={setSearchTerm}
-                          placeholder="Search pages..."
-                          autoFocus={isActive}
-                          showColorFilter={true}
-                          onColorSelect={setColorFilter}
-                          activeColorFilter={colorFilter}
-                        />
-                    </div>
-                </div>
             </DraggableGrid>
         </div>
     );
