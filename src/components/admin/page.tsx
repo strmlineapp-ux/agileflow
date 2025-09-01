@@ -540,16 +540,18 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
     onToggleExpand: () => void;
     isSharedPreview?: boolean;
 }) {
-    const { viewAsUser, users } = useUser();
+    const { viewAsUser, users, isDragModifierPressed } = useUser();
     
     // An admin can manage any page.
-    const canManage = viewAsUser.isAdmin || hasAccess(viewAsUser, page);
-
+    const canManage = viewAsUser.isAdmin;
+    
     const isPinned = page.isSystemPage;
     
     const protectedSystemPages = ['page-admin-management', 'page-settings', 'page-notifications'];
     const isDeletable = viewAsUser.isAdmin && !protectedSystemPages.includes(page.id);
     const canBeDeleted = !isPinned || isDeletable;
+    const canChangeOwnership = viewAsUser.isAdmin && !protectedSystemPages.includes(page.id);
+
 
     const displayPath = page.isDynamic 
         ? `${page.path.replace('/dashboard/', '')}/[...]` 
@@ -558,7 +560,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
     const ownerUser = users.find(u => u.userId === page.owner?.id);
 
     let shareIcon: string | null = null;
-    let shareIconTitle: string = '';
+    let shareIconTitle: string = 'System Owned';
     const shareIconColor = 'hsl(220, 13%, 47%)';
 
     const isOwned = ownerUser?.userId === viewAsUser.userId;
@@ -613,6 +615,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
             shareIcon={shareIcon || undefined}
             shareIconTitle={shareIconTitle}
             shareIconColor={shareIconColor}
+            canChangeOwnership={canChangeOwnership}
             body={bodyContent}
             headerControls={
                 <div className="flex items-center">
@@ -663,11 +666,28 @@ export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
     };
 
     const displayedPages = useMemo(() => {
-        if (viewAsUser.isAdmin) {
-            return appSettings.pages.sort((a, b) => (a.isSystemPage === b.isSystemPage) ? 0 : a.isSystemPage ? -1 : 1);
-        }
-        return appSettings.pages.filter(p => (p.owner?.id === viewAsUser.userId || (viewAsUser.linkedPageIds || []).includes(p.id)) && !p.isSystemPage);
+        if (!viewAsUser) return [];
+
+        const isViewingAdmin = viewAsUser.isAdmin;
+        const ownedPages = appSettings.pages.filter(p => p.owner?.id === viewAsUser.userId);
+        const linkedPageIds = new Set(viewAsUser.linkedPageIds || []);
+        const linkedPages = appSettings.pages.filter(p => linkedPageIds.has(p.id));
+
+        const systemAndAdminPages = isViewingAdmin ? appSettings.pages.filter(p => p.isSystemPage) : [];
+
+        const combined = [...systemAndAdminPages, ...ownedPages, ...linkedPages];
+        const uniquePages = Array.from(new Map(combined.map(p => [p.id, p])).values());
+
+        // Sort system pages to the top, then by some other metric if needed.
+        return uniquePages.sort((a, b) => {
+            const aIsSystem = a.isSystemPage;
+            const bIsSystem = b.isSystemPage;
+            if (aIsSystem && !bIsSystem) return -1;
+            if (!aIsSystem && bIsSystem) return 1;
+            return 0; // maintain original order for non-system pages
+        });
     }, [appSettings.pages, viewAsUser]);
+
 
     const sharedPages = useMemo(() => {
         const displayedIds = new Set(displayedPages.map(p => p.id));
@@ -687,6 +707,21 @@ export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
             )}
         </SortableItem>
     ), [handleUpdate, handleDelete, expandedPages, onToggleExpand]);
+    
+    const renderSharedPageCard = useCallback((page: AppPage) => (
+        <SortableItem key={page.id} id={page.id} data={{ type: 'page-card', page, isSharedPreview: true }}>
+            {(isDragging: boolean) => (
+                <SortablePageCard
+                    page={page}
+                    onUpdate={handleUpdate}
+                    onDelete={() => {}} // Can't delete/unlink from shared panel directly
+                    isSharedPreview={true}
+                    isExpanded={expandedPages.has(page.id)}
+                    onToggleExpand={() => onToggleExpand(page.id)}
+                />
+            )}
+        </SortableItem>
+    ), [handleUpdate, expandedPages, onToggleExpand]);
 
     return (
         <ManagementPageLayout
@@ -702,6 +737,7 @@ export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
             onReorderItems={reorderPages}
             onLinkItem={handleLinkPage}
             renderItem={renderPageCard}
+            renderSharedItem={renderSharedPageCard}
             renderDragOverlay={(item) => <GoogleSymbol name={item.icon} style={{ color: item.color, fontSize: '48px' }} />}
             isActive={isActive}
         />
@@ -736,8 +772,9 @@ function SortableTabCard({ tab, onUpdate, isExpanded, onToggleExpand }: {
         <CardTemplate
             entity={tab}
             onUpdate={onUpdate}
-            onDelete={() => {}} // Tabs cannot be deleted
+            onDelete={() => {}} // Tabs cannot be deleted from here
             canManage={canManage}
+            canDelete={false} // Explicitly disable delete
             isPinned={false}
             isExpanded={isExpanded}
             onToggleExpand={onToggleExpand}
@@ -831,9 +868,3 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
     );
 };
 // #endregion
-
-    
-
-
-
-

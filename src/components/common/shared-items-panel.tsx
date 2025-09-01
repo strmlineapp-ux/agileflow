@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React from 'react';
@@ -8,6 +9,7 @@ import { DraggableGrid } from './draggable-grid';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { cn } from '@/lib/utils';
 import { useDroppable } from '@dnd-kit/core';
+import { ScrollArea } from '../ui/scroll-area';
 
 interface SharedItemsPanelProps<T extends { id: string, name: string, icon: string, color: string }> {
   isOpen: boolean;
@@ -49,14 +51,16 @@ export function SharedItemsPanel<T extends { id: string, name: string, icon: str
             <CardDescription>{description}</CardDescription>
           </CardHeader>
           <CardContent className="flex-1 p-2 overflow-hidden">
-            <DraggableGrid
-              items={items}
-              setItems={() => {}}
-              renderItem={renderItem}
-              renderDragOverlay={renderDragOverlay}
-            >
-              {items.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">{emptyMessage}</p>}
-            </DraggableGrid>
+            <ScrollArea className="h-full">
+              <DraggableGrid
+                items={items}
+                setItems={() => {}}
+                renderItem={renderItem}
+                renderDragOverlay={renderDragOverlay}
+              >
+                {items.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">{emptyMessage}</p>}
+              </DraggableGrid>
+            </ScrollArea>
           </CardContent>
         </Card>
       </div>
