@@ -37,6 +37,7 @@ import { CompactSearchInput } from '@/components/common/compact-search-input';
 import { TeamCard } from './team-card';
 import { SortableItem } from '../common/sortable-item';
 import { InlineEditor } from '../common/inline-editor';
+import { ScrollArea } from '../ui/scroll-area';
 
 
 function TeamManagementDropZone({id, type, children, className}: {id: string, type: string, children: React.ReactNode, className?: string}) {
@@ -370,14 +371,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
 
     return (
         <div className="flex gap-4 h-full">
-            <DraggableGrid
-                items={displayedTeams}
-                onDragEnd={onDragEnd}
-                renderItem={renderTeamCard}
-                renderDragOverlay={renderDragOverlay}
-                setItems={reorderTeams}
-                className="flex-1"
-            >
+            <div className="flex-1 flex flex-col overflow-hidden">
                 <div className="flex items-center justify-between mb-6 shrink-0">
                     <div className="flex items-center gap-2">
                         <InlineEditor 
@@ -410,31 +404,47 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                         </TooltipProvider>
                     </div>
                 </div>
-            </DraggableGrid>
-            <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96 p-2" : "w-0 p-0")}>
-                <TeamManagementDropZone id="shared-teams-panel" type="team-card" className="h-full">
-                    <Card className={cn("transition-opacity duration-300 h-full flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
-                        <CardHeader>
-                            <div className="flex items-center justify-between">
-                                <CardTitle>Shared Teams</CardTitle>
-                                <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." tooltipText="Search Shared Teams" />
-                            </div>
-                            <CardDescription>Drag a team you own here to share it. Drag a team to your board to link it.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex-1 p-2 overflow-hidden">
-                            <DraggableGrid
-                                items={sharedTeams}
-                                onDragEnd={onDragEnd}
-                                renderItem={renderSharedTeamCard}
-                                renderDragOverlay={renderDragOverlay}
-                                setItems={() => {}}
-                            >
-                                {sharedTeams.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No other teams are currently shared.</p>}
-                            </DraggableGrid>
-                        </CardContent>
-                    </Card>
-                </TeamManagementDropZone>
+
+                <div className="flex-1 min-h-0">
+                    <ScrollArea className="h-full">
+                        <DraggableGrid
+                            items={displayedTeams}
+                            onDragEnd={onDragEnd}
+                            renderItem={renderTeamCard}
+                            renderDragOverlay={renderDragOverlay}
+                            setItems={reorderTeams}
+                        />
+                    </ScrollArea>
+                </div>
             </div>
+            
+            <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96" : "w-0")}>
+                 <div className={cn("h-full rounded-lg transition-all", isSharedPanelOpen ? "p-2" : "p-0")}>
+                    <TeamManagementDropZone id="shared-teams-panel" type="team-card" className="h-full">
+                        <Card className={cn("transition-opacity duration-300 h-full flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
+                            <CardHeader>
+                                <div className="flex items-center justify-between">
+                                    <CardTitle>Shared Teams</CardTitle>
+                                    <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." tooltipText="Search Shared Teams" />
+                                </div>
+                                <CardDescription>Drag a team you own here to share it. Drag a team to your board to link it.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="flex-1 p-2 overflow-hidden">
+                                <DraggableGrid
+                                    items={sharedTeams}
+                                    onDragEnd={onDragEnd}
+                                    renderItem={renderSharedTeamCard}
+                                    renderDragOverlay={renderDragOverlay}
+                                    setItems={() => {}}
+                                >
+                                    {sharedTeams.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No other teams are currently shared.</p>}
+                                </DraggableGrid>
+                            </CardContent>
+                        </Card>
+                    </TeamManagementDropZone>
+                </div>
+            </div>
+            
             <Dialog open={!!teamToDelete} onOpenChange={() => setTeamToDelete(null)}>
                 <DialogContent className="max-w-md">
                     <div className="absolute top-4 right-4">
