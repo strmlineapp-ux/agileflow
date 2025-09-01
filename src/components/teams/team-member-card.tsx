@@ -41,7 +41,7 @@ function AssignedBadge({ badge, canManage, contextId }: { badge: Badge, canManag
                     {...listeners}
                     {...attributes}
                     className={cn(
-                        'h-7 w-7 rounded-full border flex items-center justify-center bg-card focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50',
+                        'h-7 w-7 rounded-full flex items-center justify-center bg-card focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50',
                         canManage && 'cursor-grab',
                         isDragging && 'opacity-50'
                     )}
@@ -121,7 +121,7 @@ export function TeamMemberCard({ member, team, onSetAdmin, isOver }: { member: U
         </CardHeader>
         {canManage && (
             <CardContent ref={setNodeRef} className="p-2 pt-0 mt-2">
-                <div className="transition-colors min-h-[48px] rounded-md border p-2 bg-muted/20 flex flex-wrap gap-1.5 items-center">
+                <div className="transition-colors min-h-[48px] rounded-md p-2 bg-muted/20 flex flex-wrap gap-1.5 items-center">
                     <SortableContext items={assignedBadges.map(b => `badge-assigned:${member.userId}:${b.id}`)} strategy={verticalListSortingStrategy}>
                         {assignedBadges.length > 0 ? (
                             assignedBadges.map(badge => (

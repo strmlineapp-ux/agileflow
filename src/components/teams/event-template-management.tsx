@@ -88,7 +88,7 @@ function EventPresetForm({
       </DialogHeader>
       <div className="grid gap-4 py-4">
         <div className="space-y-2">
-            <div className="flex items-center gap-2 border rounded-md px-2 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+            <div className="flex items-center gap-2 rounded-md px-2 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
                 <IconColorPicker 
                     icon={icon} 
                     color={color}
@@ -106,7 +106,7 @@ function EventPresetForm({
         </div>
         <div className="space-y-2">
             <p className="text-sm text-muted-foreground">Requested Badges</p>
-            <div className="flex flex-wrap gap-2 items-center min-h-[40px] p-2 border rounded-md bg-muted/50">
+            <div className="flex flex-wrap gap-2 items-center min-h-[40px] p-2 rounded-md bg-muted/50">
               {requestedRoles.map(role => (
                 <UiBadge key={role} variant="outline" className="group text-base py-1 pl-3 pr-1 rounded-full">
                     <span className="font-medium">{role}</span>

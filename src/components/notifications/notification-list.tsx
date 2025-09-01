@@ -44,10 +44,10 @@ export function NotificationList() {
         <CardDescription>You have {unreadCount} unread messages.</CardDescription>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="divide-y divide-border">
+        <div className="divide-y">
           {notifications.map((notification) => (
             <div key={notification.id} className={cn('flex items-start gap-4 p-3', !notification.read && 'bg-accent/20')}>
-              <Avatar className="h-10 w-10 border">
+              <Avatar className="h-10 w-10">
                  <AvatarImage src={notification.user.avatarUrl} alt={notification.user.displayName} data-ai-hint="user avatar" />
                 <AvatarFallback>{notification.user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
               </Avatar>
