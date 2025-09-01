@@ -52,8 +52,8 @@ export function NotificationList() {
                 <AvatarFallback>{notification.user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div className="grid gap-1 flex-1">
-                <p className="text-sm font-normal">
-                  <span className="font-normal">{notification.user.displayName}</span>
+                <p className="text-sm">
+                  <span>{notification.user.displayName}</span>
                   {' '}
                   {notification.content}
                 </p>
@@ -67,7 +67,7 @@ export function NotificationList() {
                   </div>
                 )}
                  {notification.type === 'access_request' && notification.status !== 'pending' && (
-                  <p className="text-xs font-semibold text-muted-foreground">{notification.status === 'approved' ? 'Access Approved' : 'Access Rejected'}</p>
+                  <p className="text-xs">{notification.status === 'approved' ? 'Access Approved' : 'Access Rejected'}</p>
                 )}
               </div>
               {!notification.read && notification.type === 'standard' && (

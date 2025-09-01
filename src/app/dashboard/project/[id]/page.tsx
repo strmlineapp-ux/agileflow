@@ -60,7 +60,7 @@ export default function ProjectDetailsPage() {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <div className="text-center">
-          <h2 className="font-headline text-2xl font-thin mb-2">Project Not Found</h2>
+          <h2 className="text-2xl mb-2">Project Not Found</h2>
           <p className="text-muted-foreground">The project you are looking for does not exist or you do not have permission to view it.</p>
         </div>
       </div>
@@ -106,7 +106,7 @@ export default function ProjectDetailsPage() {
   
   return (
     <div className="flex flex-col h-full gap-6">
-        <h1 className="font-headline text-2xl text-muted-foreground flex items-center gap-2">
+        <h1 className="text-2xl flex items-center gap-2">
             <GoogleSymbol name={page.icon} style={{color: page.color}} />
             {projectContext.name}
         </h1>
