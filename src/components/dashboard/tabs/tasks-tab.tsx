@@ -71,7 +71,7 @@ export function TasksContent() {
     <div className="flex flex-col gap-6">
        <div className="flex items-center justify-between">
          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="w-full">
-            <div className="flex justify-center overflow-x-auto no-scrollbar">
+            <div className="center-and-scroll no-scrollbar">
                 <TabsList>
                     <TabsTrigger value="my-tasks">My Tasks</TabsTrigger>
                     <TabsTrigger value="all">All Tasks</TabsTrigger>
