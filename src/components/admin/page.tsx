@@ -48,7 +48,6 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { HslStringColorPicker } from 'react-colorful';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
-import { UserCard } from '@/components/common/user-card';
 import { DraggableGrid } from '../common/draggable-grid';
 import { SortableItem } from '../common/sortable-item';
 import { IconColorPicker } from '../common/icon-color-picker';
@@ -59,7 +58,7 @@ import { TransparentCard, TransparentCardContent } from '../ui/transparent-card'
 
 // #region Admin Groups Management Tab
 
-function SortableUserCard({ user, listId, onDeleteRequest }: { user: User, listId: string, onDeleteRequest?: (user: User) => void }) {
+function SortableUserCard({ user, listId, onDeleteRequest, isExpanded, onToggleExpand }: { user: User, listId: string, onDeleteRequest?: (user: User) => void, isExpanded: boolean, onToggleExpand: () => void }) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: `user-dnd-${user.userId}-${listId}`,
         data: { type: 'user', user, fromListId: listId },
@@ -80,8 +79,8 @@ function SortableUserCard({ user, listId, onDeleteRequest }: { user: User, listI
                 entity={{ id: user.userId, name: user.displayName }}
                 onUpdate={() => {}}
                 onDelete={canDelete && onDeleteRequest ? () => onDeleteRequest(user) : () => {}}
-                isExpanded={true}
-                onToggleExpand={() => {}}
+                isExpanded={isExpanded}
+                onToggleExpand={onToggleExpand}
                 canManage={canDelete}
                 body={<p className="text-sm text-foreground">{user.email || <span className="italic">No email provided</span>}</p>}
             />
@@ -89,7 +88,14 @@ function SortableUserCard({ user, listId, onDeleteRequest }: { user: User, listI
     );
 }
 
-function UserDropZone({ id, users, children, onDeleteRequest }: { id: string, users: User[], children: React.ReactNode, onDeleteRequest?: (user: User) => void }) {
+function UserDropZone({ id, users, children, onDeleteRequest, expandedUsers, onToggleUserExpand }: { 
+  id: string, 
+  users: User[], 
+  children: React.ReactNode, 
+  onDeleteRequest?: (user: User) => void,
+  expandedUsers: Set<string>,
+  onToggleUserExpand: (userId: string) => void
+}) {
   const { setNodeRef, isOver } = useDroppable({ id, data: { type: 'user-list' }});
   
   const sortableUserIds = users.map(u => `user-dnd-${u.userId}-${id}`);
@@ -102,7 +108,14 @@ function UserDropZone({ id, users, children, onDeleteRequest }: { id: string, us
         <SortableContext items={sortableUserIds} strategy={verticalListSortingStrategy}>
             <div className="gap-4 [column-fill:_balance] columns-1 sm:columns-2 md:columns-1 lg:columns-2 xl:columns-3 2xl:columns-4">
                 {users.map((user) => (
-                    <SortableUserCard key={user.userId} user={user} listId={id} onDeleteRequest={onDeleteRequest} />
+                    <SortableUserCard 
+                        key={user.userId} 
+                        user={user} 
+                        listId={id} 
+                        onDeleteRequest={onDeleteRequest}
+                        isExpanded={expandedUsers.has(user.userId)}
+                        onToggleExpand={() => onToggleUserExpand(user.userId)}
+                    />
                 ))}
             </div>
         </SortableContext>
@@ -131,6 +144,19 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
   const [activeDragUser, setActiveDragUser] = useState<User | null>(null);
   const [isAddUserPopoverOpen, setIsAddUserPopoverOpen] = useState(false);
   const [newUserEmail, setNewUserEmail] = useState('');
+  const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
+
+  const handleToggleUserExpand = useCallback((userId: string) => {
+    setExpandedUsers(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(userId)) {
+            newSet.delete(userId);
+        } else {
+            newSet.add(userId);
+        }
+        return newSet;
+    });
+  }, []);
   
   const handleAddPreApprovedEmail = () => {
     if(!viewAsUser) return;
@@ -275,7 +301,7 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
                         </div>
                     </CardHeader>
                     <CardContent className="flex-grow">
-                        <UserDropZone id="admin-list" users={filteredAdminUsers} />
+                        <UserDropZone id="admin-list" users={filteredAdminUsers} expandedUsers={expandedUsers} onToggleUserExpand={handleToggleUserExpand} />
                     </CardContent>
                   </TransparentCard>
                   <TransparentCard className="flex flex-col h-full">
@@ -336,7 +362,7 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
                         </div>
                     </CardHeader>
                      <CardContent className="flex-grow">
-                         <UserDropZone id="user-list" users={filteredNonAdminUsers} onDeleteRequest={handleDeleteUserRequest} />
+                         <UserDropZone id="user-list" users={filteredNonAdminUsers} onDeleteRequest={handleDeleteUserRequest} expandedUsers={expandedUsers} onToggleUserExpand={handleToggleUserExpand} />
                     </CardContent>
                   </TransparentCard>
             </div>
