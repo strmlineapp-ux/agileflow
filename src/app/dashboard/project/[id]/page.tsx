@@ -11,6 +11,7 @@ import { type AppTab, type Project } from '@/types';
 import { EventsContent } from '@/components/dashboard/tabs/events-tab';
 import { TasksContent } from '@/components/dashboard/tabs/tasks-tab';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { PageTitle } from '@/components/common/page-title';
 
 
 const componentMap = {
@@ -21,7 +22,7 @@ const componentMap = {
 
 export default function ProjectDetailsPage() {
   const params = useParams();
-  const { appSettings, viewAsUser, loading, projects } = useUser();
+  const { appSettings, viewAsUser, loading, projects, updateProject } = useUser();
   const { id: projectId } = params;
 
   const { page, projectContext } = useMemo(() => {
@@ -108,10 +109,13 @@ export default function ProjectDetailsPage() {
   
   return (
     <div className="flex flex-col h-full gap-6">
-        <h1 className="text-2xl flex items-center gap-2">
-            <GoogleSymbol name={page.icon} style={{color: page.color}} />
-            {projectContext.name}
-        </h1>
+        <PageTitle 
+            title={projectContext.name}
+            icon={page.icon}
+            iconColor={page.color}
+            onSave={(newName) => updateProject(projectContext.id, { name: newName })}
+            disabled={projectContext.owner.id !== viewAsUser.userId}
+        />
        {renderContent()}
     </div>
   )
