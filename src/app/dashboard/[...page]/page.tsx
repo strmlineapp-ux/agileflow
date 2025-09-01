@@ -123,7 +123,7 @@ export default function DynamicPage() {
     
     return (
        <Tabs defaultValue={pageTabs[0].id} className="flex flex-col h-full gap-6">
-          <ScrollArea className="w-full whitespace-nowrap rounded-lg">
+          <ScrollArea className="w-full">
             <div className="w-max">
               <TabsList>
                 {pageTabs.map(tab => (
