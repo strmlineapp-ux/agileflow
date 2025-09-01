@@ -27,7 +27,7 @@ import { ProjectsContent } from '@/components/dashboard/tabs/projects-tab';
 import { EventsContent } from '@/components/dashboard/tabs/events-tab';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { CenteredTabList } from '@/components/common/centered-tab-list';
-import { InlineEditor } from '@/components/common/inline-editor';
+import { PageTitle } from '@/components/common/page-title';
 
 
 const componentMap = {
@@ -107,7 +107,7 @@ export default function DynamicPage() {
   const renderContent = () => {
     if (page.associatedTabs.length === 1 && activeTab) {
       const Component = componentMap[activeTab.componentKey as keyof typeof componentMap];
-      return Component ? <Component tab={activeTab} page={page} team={teamContext} isSingleTabPage={true} /> : null;
+      return Component ? <Component tab={activeTab} page={page} team={teamContext} isSingleTabPage={true} isActive={true} /> : null;
     }
     
     const pageTabs = page.associatedTabs
@@ -151,15 +151,13 @@ export default function DynamicPage() {
   return (
     <div className="flex flex-col h-full gap-6">
        {!seamlessPageIds.includes(page.id) && (
-            <h1 className="text-2xl flex items-center gap-2">
-                <GoogleSymbol name={page.icon} style={{color: page.color}} />
-                 <InlineEditor
-                    value={page.displayTitle || page.name}
-                    onSave={(newTitle) => updatePage(page.id, { displayTitle: newTitle })}
-                    disabled={!viewAsUser.isAdmin}
-                    className="font-headline"
-                />
-            </h1>
+            <PageTitle 
+              title={page.displayTitle || page.name}
+              icon={page.icon}
+              iconColor={page.color}
+              onSave={(newTitle) => updatePage(page.id, { displayTitle: newTitle })}
+              disabled={!viewAsUser.isAdmin}
+            />
        )}
        {renderContent()}
     </div>
