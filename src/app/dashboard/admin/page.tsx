@@ -23,28 +23,12 @@ export default function AdminPage() {
 
   const activeTabData = appSettings.tabs.find(t => t.id === adminTabs.find(at => at.key === activeTabKey)?.id);
   
-  const handleTitleSave = (newTitle: string) => {
-    if (adminPage) {
-      updatePage(adminPage.id, { displayTitle: newTitle });
-    }
-  };
-
-  const handleTitleReset = (e: React.MouseEvent) => {
-    if (adminPage && (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey)) {
-        e.preventDefault();
-        updatePage(adminPage.id, { displayTitle: null });
-        toast({title: "Title Reset", description: "The page title has been reset to its default."});
-    }
-  };
-  
-  const title = adminPage?.displayTitle ?? adminPage?.name ?? 'Admin';
-
   if (!adminPage) return null;
 
   return (
     <div className="flex flex-col h-full gap-6">
         <Tabs defaultValue="admins" onValueChange={setActiveTabKey} className="flex flex-col flex-1 gap-6">
-            <div className="flex items-center justify-end">
+            <div className="flex items-center justify-start">
                 <TabsList>
                     {adminTabs.map(tab => (
                         <TabsTrigger key={tab.key} value={tab.key} className="gap-2">
