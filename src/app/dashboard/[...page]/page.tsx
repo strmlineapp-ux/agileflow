@@ -123,7 +123,7 @@ export default function DynamicPage() {
     
     return (
        <Tabs defaultValue={pageTabs[0].id} className="flex flex-col h-full gap-6">
-          <div className="flex justify-center overflow-x-auto no-scrollbar">
+          <div className="center-and-scroll no-scrollbar">
             <TabsList>
                 {pageTabs.map(tab => (
                   <TabsTrigger key={tab.id} value={tab.id} className="gap-2">
