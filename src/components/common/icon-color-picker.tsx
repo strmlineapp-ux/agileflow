@@ -114,17 +114,17 @@ export function IconColorPicker({ icon, color, onUpdateIcon, onUpdateColor, disa
                                             <Button
                                                 variant="default"
                                                 size="icon"
+                                                data-state={isSelected ? 'active' : 'inactive'}
                                                 onClick={() => {
                                                     onUpdateIcon(iconName);
                                                     setIsIconPopoverOpen(false);
                                                 }}
-                                                className={cn("h-8 w-8 p-0 font-emphasis", isSelected && "!text-foreground")}
-                                                style={isSelected ? { backgroundColor: color } : {}}
+                                                className="h-8 w-8 p-0 font-emphasis"
                                             >
                                                 <GoogleSymbol
                                                     name={iconName}
-                                                    className={cn("text-4xl", isSelected && "text-muted")}
-                                                    style={!isSelected ? { color: readableColor } : { color: 'hsl(var(--muted))' }}
+                                                    className="text-4xl"
+                                                    style={{ color: readableColor }}
                                                     weight={100}
                                                 />
                                             </Button>
