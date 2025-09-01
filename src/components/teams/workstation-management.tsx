@@ -13,6 +13,7 @@ import { type Team, type AppTab, type AppPage } from '@/types';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { InlineEditor } from '../common/inline-editor';
+import { PageTitle } from '../common/page-title';
 
 export function WorkstationManagement({ team, tab, page }: { team: Team, tab: AppTab, page: AppPage }) {
   if (!team) {
@@ -87,11 +88,10 @@ export function WorkstationManagement({ team, tab, page }: { team: Team, tab: Ap
   return (
     <>
       <div className="flex items-center gap-2 mb-6">
-        <InlineEditor
-            value={title}
+        <PageTitle 
+            title={title}
             onSave={handleTitleSave}
-            onClick={handleTitleReset}
-            className="h-auto p-0 font-headline text-2xl font-thin tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+            onReset={handleTitleReset}
             disabled={!canManage}
         />
       </div>

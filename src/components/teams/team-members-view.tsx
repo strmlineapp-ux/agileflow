@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { useDroppable } from '@dnd-kit/core';
 import { InlineEditor } from '../common/inline-editor';
+import { PageTitle } from '../common/page-title';
 
 
 function DroppableUserList({ id, children, className }: { id: string, children: React.ReactNode, className?: string }) {
@@ -203,11 +204,10 @@ export function TeamMembersView({ team, tab, page }: { team: Team; tab: AppTab, 
             const user = active.data.current?.member as User;
             const sourceList = adminIds.includes(`member:${user.userId}`) ? 'admins' : 'members';
             
-            const overId = over.id.toString();
             let destinationListId;
 
-            if (overId === 'admins' || overId === 'members') {
-                destinationListId = overId;
+            if (over.id.toString() === 'admins' || over.id.toString() === 'members') {
+                destinationListId = over.id.toString();
             } else if (over.data.current?.type === 'member-card') {
                 const overUser = over.data.current?.member as User;
                 destinationListId = adminIds.includes(`member:${overUser.userId}`) ? 'admins' : 'members';
@@ -249,15 +249,12 @@ export function TeamMembersView({ team, tab, page }: { team: Team; tab: AppTab, 
         <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
             <div className="flex-1 flex flex-col overflow-hidden">
                 <div className="flex items-center justify-between mb-6 shrink-0">
-                    <div className="flex items-center gap-2">
-                        <InlineEditor
-                            value={title}
-                            onSave={handleTitleSave}
-                            onClick={handleTitleReset}
-                            className="h-auto p-0 font-headline text-2xl font-thin tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                            disabled={!canManagePage}
-                        />
-                    </div>
+                     <PageTitle 
+                        title={title}
+                        onSave={handleTitleSave}
+                        onReset={handleTitleReset}
+                        disabled={!canManagePage}
+                    />
                 </div>
                 <div className="flex-1 overflow-y-auto pr-2 -mr-2">
                     <div className={cn("flex flex-col gap-6", admins.length > 0 && "lg:flex-row")}>
@@ -266,7 +263,7 @@ export function TeamMembersView({ team, tab, page }: { team: Team; tab: AppTab, 
                                 <InlineEditor
                                     value={adminsLabel}
                                     onSave={(newValue) => updateTeam(team.id, { teamAdminsLabel: newValue })}
-                                    className="font-headline font-thin text-xl"
+                                    className="text-xl"
                                     disabled={!canManage}
                                 />
                                 <DroppableUserList id="admins" className="space-y-4">
@@ -283,7 +280,7 @@ export function TeamMembersView({ team, tab, page }: { team: Team; tab: AppTab, 
                              <InlineEditor
                                 value={membersLabel}
                                 onSave={(newValue) => updateTeam(team.id, { membersLabel: newValue })}
-                                className="font-headline font-thin text-xl"
+                                className="text-xl"
                                 disabled={!canManage}
                              />
                             {members.length > 0 && (
