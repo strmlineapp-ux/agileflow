@@ -12,6 +12,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useUser } from '@/context/user-context';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { CenteredTabList } from '@/components/common/centered-tab-list';
 // A new form component will be needed for adding/editing tasks. Let's assume its creation.
 // For now, we'll imagine a placeholder. A real implementation would require a TaskForm component.
 
@@ -71,12 +72,12 @@ export function TasksContent() {
     <div className="flex flex-col gap-6">
        <div className="flex items-center justify-between">
          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="w-full">
-            <div className="center-and-scroll no-scrollbar">
+            <CenteredTabList>
                 <TabsList>
                     <TabsTrigger value="my-tasks">My Tasks</TabsTrigger>
                     <TabsTrigger value="all">All Tasks</TabsTrigger>
                 </TabsList>
-            </div>
+            </CenteredTabList>
         </Tabs>
       </div>
       <div className="flex">

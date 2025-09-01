@@ -7,8 +7,7 @@ import { AdminsManagement, PagesManagement, TabsManagement } from '@/components/
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { useUser } from '@/context/user-context';
-import { InlineEditor } from '@/components/common/inline-editor';
-import { toast } from '@/hooks/use-toast';
+import { CenteredTabList } from '@/components/common/centered-tab-list';
 
 export default function AdminPage() {
   const { appSettings, updateAppTab, updatePage } = useUser();
@@ -29,7 +28,7 @@ export default function AdminPage() {
   return (
     <div className="flex flex-col h-full gap-6">
         <Tabs defaultValue="admins" onValueChange={setActiveTabKey} className="flex flex-col flex-1 gap-6">
-            <div className="center-and-scroll no-scrollbar">
+            <CenteredTabList>
                 <TabsList>
                     {adminTabs.map(tab => (
                         <TabsTrigger key={tab.key} value={tab.key} className="gap-2">
@@ -38,7 +37,7 @@ export default function AdminPage() {
                         </TabsTrigger>
                     ))}
                 </TabsList>
-            </div>
+            </CenteredTabList>
             <div className="flex-1 overflow-y-auto">
                 {adminTabs.map(tab => {
                   const Component = tab.component;

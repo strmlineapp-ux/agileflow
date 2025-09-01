@@ -18,6 +18,7 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { type Event, type AppPage } from '@/types';
 import { EventDetailsDialog } from '@/components/calendar/event-details-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { CenteredTabList } from '@/components/common/centered-tab-list';
 
 export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
   const { viewAsUser, calendars, fetchEvents, addEvent, updateEvent, deleteEvent } = useUser();
@@ -247,14 +248,14 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
                 )}
               </TooltipProvider>
               <Tabs value={view} onValueChange={(v) => setView(v as any)} className="w-auto">
-                <div className="center-and-scroll no-scrollbar">
+                <CenteredTabList>
                   <TabsList>
                       <TabsTrigger value="month">Month</TabsTrigger>
                       <TabsTrigger value="week">Week</TabsTrigger>
                       <TabsTrigger value="day">Day</TabsTrigger>
                       <TabsTrigger value="production-schedule">Production Schedule</TabsTrigger>
                   </TabsList>
-                </div>
+                </CenteredTabList>
               </Tabs>
           </div>
         </div>
