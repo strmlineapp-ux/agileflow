@@ -541,8 +541,15 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
     isSharedPreview?: boolean;
 }) {
     const { viewAsUser, users } = useUser();
-    const canManage = hasAccess(viewAsUser, page);
+    
+    // An admin can manage any page.
+    const canManage = viewAsUser.isAdmin || hasAccess(viewAsUser, page);
+
     const isPinned = page.isSystemPage;
+    
+    const protectedSystemPages = ['page-admin-management', 'page-settings', 'page-notifications'];
+    const isDeletable = viewAsUser.isAdmin && !protectedSystemPages.includes(page.id);
+    const canBeDeleted = !isPinned || isDeletable;
 
     const displayPath = page.isDynamic 
         ? `${page.path.replace('/dashboard/', '')}/[...]` 
@@ -598,6 +605,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
             onUpdate={onUpdate}
             onDelete={() => onDelete(page)}
             canManage={canManage}
+            canDelete={canBeDeleted}
             isPinned={isPinned}
             isExpanded={isExpanded}
             onToggleExpand={onToggleExpand}
@@ -636,10 +644,12 @@ export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
     
     const handleDelete = (page: AppPage) => {
         const isOwner = page.owner?.id === viewAsUser.userId;
-        if (isOwner) {
+        const canDeleteSystemPage = viewAsUser.isAdmin && page.isSystemPage && !['page-admin-management', 'page-settings', 'page-notifications'].includes(page.id);
+
+        if (isOwner || canDeleteSystemPage) {
             deletePage(page.id);
             toast({ title: 'Page Deleted' });
-        } else {
+        } else if (!isOwner && !page.isSystemPage) { // Unlink non-system page
             const updatedLinkedIds = (viewAsUser.linkedPageIds || []).filter(id => id !== page.id);
             updateUser(viewAsUser.userId, { linkedPageIds: updatedLinkedIds });
             toast({ title: 'Page Unlinked' });
@@ -653,6 +663,9 @@ export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
     };
 
     const displayedPages = useMemo(() => {
+        if (viewAsUser.isAdmin) {
+            return appSettings.pages.sort((a, b) => (a.isSystemPage === b.isSystemPage) ? 0 : a.isSystemPage ? -1 : 1);
+        }
         return appSettings.pages.filter(p => (p.owner?.id === viewAsUser.userId || (viewAsUser.linkedPageIds || []).includes(p.id)) && !p.isSystemPage);
     }, [appSettings.pages, viewAsUser]);
 
@@ -662,7 +675,7 @@ export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
     }, [appSettings.pages, displayedPages, viewAsUser.userId]);
 
     const renderPageCard = useCallback((page: AppPage) => (
-        <SortableItem key={page.id} id={page.id} data={{ type: 'page-card', page, isSharedPreview: false }}>
+        <SortableItem key={page.id} id={page.id} data={{ type: 'page-card', page, isSharedPreview: false }} disabled={page.isSystemPage}>
             {(isDragging: boolean) => (
                 <SortablePageCard
                     page={page}
@@ -678,8 +691,7 @@ export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
     return (
         <ManagementPageLayout
             pageTitle="Pages"
-            onPageTitleSave={() => {}}
-            onPageTitleReset={() => {}}
+            onPageTitleSave={() => {}} // No page title to save on this tab
             canManagePage={false}
             entityType="page"
             allItems={displayedPages}
@@ -780,43 +792,47 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
     }, [appSettings.tabs, searchTerm, colorFilter]);
 
     const renderTabCard = useCallback((tab: AppTab) => (
-        <SortableTabCard
-            key={tab.id}
-            tab={tab}
-            onUpdate={handleUpdateTab}
-            isExpanded={expandedTabs.has(tab.id)}
-            onToggleExpand={() => onToggleExpand(tab.id)}
-        />
+        <SortableItem key={tab.id} id={tab.id}>
+         {(isDragging) => (
+            <SortableTabCard
+                key={tab.id}
+                tab={tab}
+                onUpdate={handleUpdateTab}
+                isExpanded={expandedTabs.has(tab.id)}
+                onToggleExpand={() => onToggleExpand(tab.id)}
+            />
+         )}
+        </SortableItem>
     ), [handleUpdateTab, expandedTabs, onToggleExpand]);
 
     return (
         <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <PageTitle title="Tabs" />
+                <div className="flex items-center">
+                    <CompactSearchInput
+                      searchTerm={searchTerm}
+                      setSearchTerm={setSearchTerm}
+                      placeholder="Search by name or desc..."
+                      autoFocus={isActive}
+                      showColorFilter={true}
+                      onColorSelect={setColorFilter}
+                      activeColorFilter={colorFilter}
+                    />
+                </div>
+            </div>
             <DraggableGrid
                 items={filteredTabs}
                 setItems={reorderTabs}
                 renderItem={(item) => renderTabCard(item as AppTab)}
                 renderDragOverlay={(item) => <GoogleSymbol name={item.icon} style={{ color: item.color, fontSize: '48px' }} />}
-            >
-                <div className="flex items-center justify-between">
-                    <PageTitle title="Tabs" />
-                    <div className="flex items-center">
-                        <CompactSearchInput
-                          searchTerm={searchTerm}
-                          setSearchTerm={setSearchTerm}
-                          placeholder="Search by name or desc..."
-                          autoFocus={isActive}
-                          showColorFilter={true}
-                          onColorSelect={setColorFilter}
-                          activeColorFilter={colorFilter}
-                        />
-                    </div>
-                </div>
-            </DraggableGrid>
+            />
         </div>
     );
 };
 // #endregion
 
     
+
 
 

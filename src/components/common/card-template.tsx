@@ -30,6 +30,7 @@ interface CardTemplateProps {
   isExpanded: boolean;
   onToggleExpand: () => void;
   canManage: boolean;
+  canDelete?: boolean; // Optional prop to control delete button
   isPinned?: boolean;
   isSharedPreview?: boolean;
   shareIcon?: string;
@@ -49,6 +50,7 @@ export function CardTemplate({
   isExpanded,
   onToggleExpand,
   canManage,
+  canDelete = canManage, // Default to canManage if not provided
   isPinned,
   isSharedPreview,
   shareIcon,
@@ -89,7 +91,7 @@ export function CardTemplate({
     return (
         <>
             <Card className="group relative bg-card flex flex-col h-full shadow-md" {...dragHandleProps}>
-                {!isPinned && canManage && !isSharedPreview && (
+                {!isPinned && canDelete && !isSharedPreview && (
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
