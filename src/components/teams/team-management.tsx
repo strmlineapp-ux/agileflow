@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -10,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { cn, getHueFromHsl, isHueInRange } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { GoogleSymbol } from '../icons/google-symbol';
 import {
   DndContext,
@@ -39,17 +38,7 @@ import { TeamCard } from './team-card';
 import { SortableItem } from '../common/sortable-item';
 import { InlineEditor } from '../common/inline-editor';
 import { ScrollArea } from '../ui/scroll-area';
-
-
-function TeamManagementDropZone({id, type, children, className}: {id: string, type: string, children: React.ReactNode, className?: string}) {
-    const { setNodeRef, isOver } = useDroppable({ id, data: { type } });
-    
-    return (
-        <div ref={setNodeRef} className={cn(className, isOver && "ring-1 ring-border ring-inset", "transition-all rounded-lg")}>
-            {children}
-        </div>
-    )
-}
+import { SharedItemsPanel } from '../common/shared-items-panel';
 
 function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
   const { setNodeRef, isOver } = useDroppable({ id });
@@ -371,43 +360,42 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     };
 
     return (
-        <div className="flex flex-1 gap-4 h-full">
-            <div className="flex-1 flex flex-col min-w-0">
-                <div className="flex items-center justify-between mb-6 shrink-0">
-                    <div className="flex items-center gap-2">
-                        <InlineEditor 
-                            value={title}
-                            onSave={handleTitleSave}
-                            onClick={handleTitleReset}
-                            className="h-auto p-0 font-headline text-2xl font-thin tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                            disabled={!viewAsUser.isAdmin}
-                        />
-                        <DuplicateZone id="duplicate-team-zone" onAdd={() => handleAddTeam()} />
+        <DndContext onDragEnd={onDragEnd}>
+            <div className="flex flex-1 h-full gap-4">
+                <div className="flex-1 flex flex-col min-h-0">
+                    <div className="flex items-center justify-between mb-6 shrink-0">
+                        <div className="flex items-center gap-2">
+                            <InlineEditor 
+                                value={title}
+                                onSave={handleTitleSave}
+                                onClick={handleTitleReset}
+                                className="h-auto p-0 font-headline text-2xl font-thin tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                disabled={!viewAsUser.isAdmin}
+                            />
+                            <DuplicateZone id="duplicate-team-zone" onAdd={() => handleAddTeam()} />
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <CompactSearchInput
+                              searchTerm={searchTerm}
+                              setSearchTerm={setSearchTerm}
+                              placeholder="Search teams..."
+                              showColorFilter={true}
+                              onColorSelect={setColorFilter}
+                              activeColorFilter={colorFilter}
+                            />
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
+                                            <GoogleSymbol name="dynamic_feed" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>Show Shared Teams</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                        <CompactSearchInput
-                          searchTerm={searchTerm}
-                          setSearchTerm={setSearchTerm}
-                          placeholder="Search teams..."
-                          showColorFilter={true}
-                          onColorSelect={setColorFilter}
-                          activeColorFilter={colorFilter}
-                        />
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
-                                        <GoogleSymbol name="dynamic_feed" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Show Shared Teams</p></TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    </div>
-                </div>
-
-                <div className="flex-1 min-h-0">
-                    <ScrollArea className="h-full">
+                    <ScrollArea className="flex-1 min-h-0">
                         <DraggableGrid
                             items={displayedTeams}
                             onDragEnd={onDragEnd}
@@ -417,56 +405,42 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
                         />
                     </ScrollArea>
                 </div>
+                
+                <SharedItemsPanel
+                    isOpen={isSharedPanelOpen}
+                    type="teams"
+                    title="Shared Teams"
+                    description="Drag a team you own here to share it. Drag a team to your board to link it."
+                    items={sharedTeams}
+                    searchTerm={sharedSearchTerm}
+                    setSearchTerm={setSharedSearchTerm}
+                    renderItem={renderSharedTeamCard}
+                    renderDragOverlay={renderDragOverlay}
+                    emptyMessage="No other teams are currently shared."
+                />
+                
+                <Dialog open={!!teamToDelete} onOpenChange={() => setTeamToDelete(null)}>
+                    <DialogContent className="max-w-md">
+                        <div className="absolute top-4 right-4">
+                                <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button variant="ghost" className="text-destructive p-0" onClick={confirmDelete}>
+                                            <GoogleSymbol name="delete" className="text-4xl" />
+                                            <span className="sr-only">Delete Team</span>
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>Delete Team</p></TooltipContent>
+                                </Tooltip>
+                                </TooltipProvider>
+                        </div>
+                        <DialogHeader>
+                            <UIDialogTitle className="font-headline font-thin">Delete "{teamToDelete?.name}"?</UIDialogTitle>
+                            <DialogDescription>This action cannot be undone. This will permanently delete the team and all of its associated data.</DialogDescription>
+                        </DialogHeader>
+                    </DialogContent>
+                </Dialog>
             </div>
-            
-            <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96" : "w-0")}>
-                 <div className={cn("h-full rounded-lg transition-all", isSharedPanelOpen ? "p-2" : "p-0")}>
-                    <TeamManagementDropZone id="shared-teams-panel" type="team-card" className="h-full">
-                        <Card className={cn("transition-opacity duration-300 h-full flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
-                            <CardHeader>
-                                <div className="flex items-center justify-between">
-                                    <CardTitle>Shared Teams</CardTitle>
-                                    <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." tooltipText="Search Shared Teams" />
-                                </div>
-                                <CardDescription>Drag a team you own here to share it. Drag a team to your board to link it.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="flex-1 p-2 overflow-hidden">
-                                <DraggableGrid
-                                    items={sharedTeams}
-                                    onDragEnd={onDragEnd}
-                                    renderItem={renderSharedTeamCard}
-                                    renderDragOverlay={renderDragOverlay}
-                                    setItems={() => {}}
-                                >
-                                    {sharedTeams.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No other teams are currently shared.</p>}
-                                </DraggableGrid>
-                            </CardContent>
-                        </Card>
-                    </TeamManagementDropZone>
-                </div>
-            </div>
-            
-            <Dialog open={!!teamToDelete} onOpenChange={() => setTeamToDelete(null)}>
-                <DialogContent className="max-w-md">
-                    <div className="absolute top-4 right-4">
-                            <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button variant="ghost" className="text-destructive p-0" onClick={confirmDelete}>
-                                        <GoogleSymbol name="delete" className="text-4xl" />
-                                        <span className="sr-only">Delete Team</span>
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Delete Team</p></TooltipContent>
-                            </Tooltip>
-                            </TooltipProvider>
-                    </div>
-                    <DialogHeader>
-                        <UIDialogTitle className="font-headline font-thin">Delete "{teamToDelete?.name}"?</UIDialogTitle>
-                        <DialogDescription>This action cannot be undone. This will permanently delete the team and all of its associated data.</DialogDescription>
-                    </DialogHeader>
-                </DialogContent>
-            </Dialog>
-        </div>
+        </DndContext>
     );
 }

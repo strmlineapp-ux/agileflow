@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -47,6 +46,8 @@ import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { DraggableGrid } from '../common/draggable-grid';
 import { InlineEditor } from '../common/inline-editor';
 import { SortableItem } from '../common/sortable-item';
+import { SharedItemsPanel } from '../common/shared-items-panel';
+
 
 function BadgeDisplayItem({ 
     badge, 
@@ -561,16 +562,6 @@ function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
   );
 }
 
-function CollectionDropZone({ id, type, children, className }: { id: string; type: string; children: React.ReactNode; className?: string; }) {
-  const { setNodeRef, isOver } = useDroppable({ id, data: { type } });
-  
-  return (
-    <div ref={setNodeRef} className={cn(className, isOver && "ring-1 ring-border ring-inset", "transition-all rounded-lg")}>
-      {children}
-    </div>
-  );
-}
-
 export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: AppPage; isActive: boolean }) {
     const { viewAsUser, users, appSettings, updateAppTab, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, updateUser, teams, setAllBadgeCollections, reorderBadgeCollections } = useUser();
     const { toast } = useToast();
@@ -871,41 +862,28 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
                         </div>
                     </div>
                     <ScrollArea className="flex-1 min-h-0">
-                    <CollectionDropZone id="collections-list" type="collection">
-                         <DraggableGrid
+                        <DraggableGrid
                             items={displayedCollections}
                             setItems={reorderBadgeCollections}
+                            onDragEnd={onDragEnd}
                             renderItem={(item, isDragging) => renderCollectionCard(item as BadgeCollection, isDragging)}
                             renderDragOverlay={(item) => renderDragOverlay({type: 'collection-card', data: {collection: item}})}
                         />
-                    </CollectionDropZone>
                     </ScrollArea>
                 </div>
-                <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96" : "w-0")}>
-                    <div className={cn("h-full rounded-lg transition-all", isSharedPanelOpen ? "p-2" : "p-0")}>
-                        <CollectionDropZone id="shared-collections-panel" type="collection-panel" className="h-full">
-                            <Card className={cn("transition-opacity duration-300 h-full bg-transparent flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
-                            <CardHeader>
-                                <div className="flex items-center justify-between">
-                                    <CardTitle className="font-headline font-thin text-xl">Shared Collections</CardTitle>
-                                    <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." tooltipText="Search Shared Collections" />
-                                </div>
-                                <CardDescription>Drag a collection you own here to share it. Drag a collection to your board to link it.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="flex-1 p-2 overflow-hidden min-h-[150px]">
-                                <DraggableGrid
-                                    items={sharedCollections}
-                                    setItems={() => {}}
-                                    renderItem={(item, isDragging) => renderSharedCollectionCard(item as BadgeCollection, isDragging)}
-                                    renderDragOverlay={(item) => renderDragOverlay({type: 'collection-card', data: {collection: item}})}
-                                >
-                                    {sharedCollections.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">No other collections are currently shared.</p>}
-                                </DraggableGrid>
-                            </CardContent>
-                            </Card>
-                        </CollectionDropZone>
-                    </div>
-                </div>
+
+                <SharedItemsPanel
+                    isOpen={isSharedPanelOpen}
+                    type="collections"
+                    title="Shared Collections"
+                    description="Drag a collection you own here to share it. Drag a collection to your board to link it."
+                    items={sharedCollections}
+                    searchTerm={sharedSearchTerm}
+                    setSearchTerm={setSharedSearchTerm}
+                    renderItem={renderSharedCollectionCard}
+                    renderDragOverlay={(item) => renderDragOverlay({type: 'collection-card', data: {collection: item}})}
+                    emptyMessage="No other collections are currently shared."
+                />
             </div>
              <DragOverlay>
                 {activeDragItem ? renderDragOverlay(activeDragItem) : null}

@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
@@ -43,6 +42,7 @@ import { HslStringColorPicker } from 'react-colorful';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { DraggableGrid } from '../common/draggable-grid';
 import { InlineEditor } from '../common/inline-editor';
+import { SharedItemsPanel } from '../common/shared-items-panel';
 
 function SortableCalendarCard({
     calendar,
@@ -307,17 +307,6 @@ function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
   );
 }
 
-function CalendarDropZone({ id, type, children, className }: { id: string; type: string; children: React.ReactNode; className?: string; }) {
-  const { setNodeRef, isOver } = useDroppable({ id, data: { type } });
-
-  return (
-    <div ref={setNodeRef} className={cn(className, "transition-all rounded-lg", isOver && "ring-1 ring-border ring-inset")}>
-      {children}
-    </div>
-  );
-}
-
-
 export function CalendarManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
   const { viewAsUser, calendars, addCalendar, updateCalendar, deleteCalendar, updatePage, appSettings, updateUser, reorderCalendars } = useUser();
   const { toast } = useToast();
@@ -491,75 +480,65 @@ export function CalendarManagement({ tab, page }: { tab: AppTab; page: AppPage }
   );
 
   return (
-    <div className="flex gap-4 h-full">
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex items-center justify-between mb-6 shrink-0">
-          <div className="flex items-center gap-2">
-            <InlineEditor 
-                value={title}
-                onSave={handleTitleSave}
-                className="h-auto p-0 font-headline text-2xl font-thin tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                onClick={handleTitleReset}
-            />
-            <DuplicateZone id="duplicate-calendar-zone" onAdd={() => handleAddCalendar()} />
-          </div>
-          <div className="flex items-center gap-2">
-            <CompactSearchInput
-              searchTerm={mainSearchTerm}
-              setSearchTerm={setMainSearchTerm}
-              placeholder="Search calendars..."
-              tooltipText="Search Calendars"
-              showColorFilter={true}
-              onColorSelect={setColorFilter}
-              activeColorFilter={colorFilter}
-            />
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="default" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
-                    <GoogleSymbol name="dynamic_feed" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent><p>Show Shared Calendars</p></TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-        </div>
-        <ScrollArea className="flex-1 min-h-0">
-            <DraggableGrid 
-                items={displayedCalendars} 
-                setItems={reorderCalendars}
-                onDragEnd={onDragEnd}
-                renderItem={(item) => renderCalendarCard(item as SharedCalendar)}
+    <DndContext onDragEnd={onDragEnd}>
+        <div className="flex gap-4 h-full">
+            <div className="flex-1 flex flex-col min-h-0">
+                <div className="flex items-center justify-between mb-6 shrink-0">
+                    <div className="flex items-center gap-2">
+                        <InlineEditor 
+                            value={title}
+                            onSave={handleTitleSave}
+                            className="h-auto p-0 font-headline text-2xl font-thin tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                            onClick={handleTitleReset}
+                        />
+                        <DuplicateZone id="duplicate-calendar-zone" onAdd={() => handleAddCalendar()} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <CompactSearchInput
+                          searchTerm={mainSearchTerm}
+                          setSearchTerm={setMainSearchTerm}
+                          placeholder="Search calendars..."
+                          tooltipText="Search Calendars"
+                          showColorFilter={true}
+                          onColorSelect={setColorFilter}
+                          activeColorFilter={colorFilter}
+                        />
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="default" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
+                                <GoogleSymbol name="dynamic_feed" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Show Shared Calendars</p></TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                    </div>
+                </div>
+                <ScrollArea className="flex-1 min-h-0">
+                    <DraggableGrid 
+                        items={displayedCalendars} 
+                        setItems={reorderCalendars}
+                        onDragEnd={onDragEnd}
+                        renderItem={(item) => renderCalendarCard(item as SharedCalendar)}
+                        renderDragOverlay={(item) => <GoogleSymbol name={item.icon} style={{color: item.color, fontSize: '48px'}} />}
+                    />
+                </ScrollArea>
+            </div>
+            
+            <SharedItemsPanel
+                isOpen={isSharedPanelOpen}
+                type="calendars"
+                title="Shared Calendars"
+                description="Drag a calendar you own here to share it. Drag a calendar to your board to link it."
+                items={sharedCalendars}
+                searchTerm={sharedSearchTerm}
+                setSearchTerm={setSharedSearchTerm}
+                renderItem={renderSharedCalendarCard}
                 renderDragOverlay={(item) => <GoogleSymbol name={item.icon} style={{color: item.color, fontSize: '48px'}} />}
+                emptyMessage="No other calendars are currently shared."
             />
-        </ScrollArea>
-      </div>
-
-      <div className={cn("transition-all duration-300", isSharedPanelOpen ? "w-96" : "w-0")}>
-        <div className={cn("h-full rounded-lg transition-all", isSharedPanelOpen ? "p-2" : "p-0")}>
-          <CalendarDropZone id="shared-calendars-panel" type="shared-calendar-panel" className="h-full">
-              <Card className={cn("transition-opacity duration-300 h-full flex flex-col", isSharedPanelOpen ? "opacity-100" : "opacity-0")}>
-              <CardHeader>
-                  <div className="flex items-center justify-between">
-                  <CardTitle className="font-headline font-thin text-xl">Shared Calendars</CardTitle>
-                  <CompactSearchInput searchTerm={sharedSearchTerm} setSearchTerm={setSharedSearchTerm} placeholder="Search shared..." tooltipText="Search Shared Calendars" />
-                  </div>
-                  <UICardDescription>Drag a calendar to your board to link it.</UICardDescription>
-              </CardHeader>
-              <CardContent className="flex-1 p-2 overflow-hidden">
-                   <DraggableGrid 
-                      items={sharedCalendars} 
-                      setItems={() => {}}
-                      onDragEnd={onDragEnd}
-                      renderItem={(item) => renderSharedCalendarCard(item as SharedCalendar)}
-                      renderDragOverlay={(item) => <GoogleSymbol name={item.icon} style={{color: item.color, fontSize: '48px'}} />}
-                  />
-              </CardContent>
-              </Card>
-          </CalendarDropZone>
         </div>
-      </div>
-    </div>
+    </DndContext>
   );
 }
