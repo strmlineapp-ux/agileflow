@@ -317,6 +317,8 @@ export function CalendarManagement({ tab, page }: { tab: AppTab; page: AppPage }
   const [colorFilter, setColorFilter] = useState<string | null>(null);
 
   const [expandedCalendars, setExpandedCalendars] = useState<Set<string>>(new Set());
+  
+  const canManage = viewAsUser.isAdmin;
 
   const onToggleExpand = useCallback((calendarId: string) => {
       setExpandedCalendars(prev => {
@@ -488,8 +490,9 @@ export function CalendarManagement({ tab, page }: { tab: AppTab; page: AppPage }
                         <InlineEditor 
                             value={title}
                             onSave={handleTitleSave}
-                            className="h-auto p-0 font-headline text-2xl font-thin tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                             onClick={handleTitleReset}
+                            className="h-auto p-0 font-headline text-2xl font-thin tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                            disabled={!canManage}
                         />
                         <DuplicateZone id="duplicate-calendar-zone" onAdd={() => handleAddCalendar()} />
                     </div>
