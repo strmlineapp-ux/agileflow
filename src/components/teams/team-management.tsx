@@ -371,8 +371,8 @@ export function TeamManagement({ tab, page, isSingleTabPage = false }: { tab: Ap
     };
 
     return (
-        <div className="flex gap-4 h-full">
-            <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex flex-1 gap-4 h-full">
+            <div className="flex-1 flex flex-col min-w-0">
                 <div className="flex items-center justify-between mb-6 shrink-0">
                     <div className="flex items-center gap-2">
                         <InlineEditor 
