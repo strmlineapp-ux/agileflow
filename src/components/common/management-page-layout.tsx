@@ -19,15 +19,15 @@ import { DuplicateZone } from './duplicate-zone';
 import { getHueFromHsl, isHueInRange } from '@/lib/utils';
 import { PageTitle } from './page-title';
 
-type TEntity = (Team | SharedCalendar | BadgeCollection) & { id: string, name: string, icon: string, color: string, owner: {id: string}, isShared?: boolean };
+type TEntity = (Team | SharedCalendar | BadgeCollection | AppPage) & { id: string, name: string, icon: string, color: string, owner?: {id: string}, isShared?: boolean };
 
 interface ManagementPageLayoutProps<T extends TEntity> {
   pageTitle: string;
   onPageTitleSave: (newTitle: string) => void;
-  onPageTitleReset: (e: React.MouseEvent) => void;
+  onPageTitleReset?: (e: React.MouseEvent) => void;
   canManagePage: boolean;
   
-  entityType: 'team' | 'calendar' | 'collection';
+  entityType: 'team' | 'calendar' | 'collection' | 'page';
   
   // All items for the grid (owned and linked)
   allItems: T[];
@@ -83,7 +83,7 @@ export function ManagementPageLayout<T extends TEntity>({
       const targetHue = getHueFromHsl(colorFilter);
       if (targetHue !== null) {
         filtered = filtered.filter(item => {
-          const itemHue = getHueFromHsl(item.color);
+          const itemHue = item.color ? getHueFromHsl(item.color) : null;
           return itemHue !== null && isHueInRange(targetHue, itemHue);
         });
       }
@@ -100,7 +100,7 @@ export function ManagementPageLayout<T extends TEntity>({
   const onDragStart = (event: DragStartEvent) => {
     const item = allItems.find(i => i.id === event.active.id) || allSharedItems.find(i => i.id === event.active.id);
     if(item) {
-        setActiveDragItem(item);
+        setActiveDragItem(item as T);
     }
   };
 
@@ -110,21 +110,21 @@ export function ManagementPageLayout<T extends TEntity>({
     if (!over) return;
     
     const activeItem = allItems.find(i => i.id === active.id) || allSharedItems.find(i => i.id === active.id);
-    if (!activeItem) return;
+    if (!activeItem || !viewAsUser) return;
 
     // Handle dropping on duplicate zone
     if (over.id === `duplicate-${entityType}-zone`) {
-      onAddItem(activeItem);
+      onAddItem(activeItem as T);
       return;
     }
     
     // Handle dropping on shared panel
     if (over.id === `shared-${entityType}-panel`) {
-      if (activeItem.owner.id === viewAsUser.userId) { // If owned, toggle share status
+      if (activeItem.owner?.id === viewAsUser.userId) { // If owned, toggle share status
         onUpdateItem(activeItem.id, { isShared: !activeItem.isShared } as Partial<T>);
         toast({ title: activeItem.isShared ? `${entityType.charAt(0).toUpperCase() + entityType.slice(1)} Unshared` : `${entityType.charAt(0).toUpperCase() + entityType.slice(1)} Shared` });
       } else { // If linked, unlink it
-        onDeleteItem(activeItem);
+        onDeleteItem(activeItem as T);
       }
       return;
     }
@@ -185,13 +185,13 @@ export function ManagementPageLayout<T extends TEntity>({
               </TooltipProvider>
             </div>
           </div>
-          <ScrollArea className="flex-1 min-h-0">
+          <ScrollArea className="flex-1 min-h-0 pr-4 -mr-4">
             <DraggableGrid
-              items={displayedItems}
-              setItems={onReorderItems}
-              onDragEnd={onDragEnd}
-              renderItem={renderItem}
-              renderDragOverlay={(item) => renderDragOverlay(item as T)}
+                items={displayedItems}
+                setItems={onReorderItems}
+                onDragEnd={onDragEnd}
+                renderItem={renderItem}
+                renderDragOverlay={(item) => renderDragOverlay(item as T)}
             >
               {displayedItems.length === 0 && <p className="text-center text-sm text-muted-foreground p-4">No {entityType}s to display.</p>}
             </DraggableGrid>
@@ -210,7 +210,7 @@ export function ManagementPageLayout<T extends TEntity>({
           emptyMessage={`No other ${entityType}s are currently shared.`}
         />
       </div>
-      <DragOverlay>
+      <DragOverlay modifiers={[snapCenterToCursor]}>
         {activeDragItem ? renderDragOverlay(activeDragItem) : null}
       </DragOverlay>
     </DndContext>

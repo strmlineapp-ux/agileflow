@@ -40,9 +40,15 @@ export function SharedItemsPanel<T extends { id: string, name: string, icon: str
   const { setNodeRef, isOver } = useDroppable({ id: `shared-${type}-panel`, data: { type: `${type}-panel` } });
 
   return (
-    <div className={cn("transition-all duration-300", isOpen ? "w-96" : "w-0")}>
-      <div ref={setNodeRef} className={cn("h-full rounded-lg transition-all", isOpen ? "p-2" : "p-0", isOver && "ring-1 ring-border ring-inset")}>
-        <Card className={cn("transition-opacity duration-300 h-full flex flex-col shadow-lg", isOpen ? "opacity-100" : "opacity-0")}>
+    <div ref={setNodeRef} className={cn(
+        "transition-all duration-300", 
+        isOpen ? "w-96 p-2" : "w-0 p-0"
+    )}>
+        <Card className={cn(
+            "transition-opacity duration-300 h-full flex flex-col shadow-lg ring-1 ring-border/20", 
+            isOpen ? "opacity-100" : "opacity-0",
+            isOver && "ring-1 ring-border ring-inset"
+        )}>
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>{title}</CardTitle>
@@ -63,7 +69,6 @@ export function SharedItemsPanel<T extends { id: string, name: string, icon: str
             </ScrollArea>
           </CardContent>
         </Card>
-      </div>
     </div>
   );
 }

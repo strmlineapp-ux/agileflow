@@ -550,8 +550,8 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
     const protectedSystemPages = ['page-admin-management', 'page-settings', 'page-notifications'];
     const isDeletable = viewAsUser.isAdmin && !protectedSystemPages.includes(page.id);
     const canBeDeleted = !isPinned || isDeletable;
+    
     const canChangeOwnership = viewAsUser.isAdmin && !protectedSystemPages.includes(page.id);
-
 
     const displayPath = page.isDynamic 
         ? `${page.path.replace('/dashboard/', '')}/[...]` 
@@ -568,13 +568,17 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
     if (isOwned && page.isShared) {
         shareIcon = 'change_circle';
         shareIconTitle = 'Owned & Shared by you';
-    } else if (!isOwned && !isSharedPreview) { 
+    } else if (!isOwned && !isSharedPreview && page.owner?.type === 'user') { 
         shareIcon = 'link';
-        shareIconTitle = `Owned by ${ownerUser?.displayName || 'System'}`;
-    } else if (isSharedPreview) { 
+        shareIconTitle = `Owned by ${ownerUser?.displayName}`;
+    } else if (isSharedPreview && page.owner?.type === 'user') { 
         shareIcon = 'change_circle';
-        shareIconTitle = `Owned by ${ownerUser?.displayName || 'System'}`;
+        shareIconTitle = `Owned by ${ownerUser?.displayName}`;
+    } else if(page.owner?.type === 'system') {
+        shareIcon = 'shield_person';
+        shareIconTitle = 'System Owned';
     }
+
 
     const bodyContent = (
       <>
@@ -669,17 +673,23 @@ export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
         if (!viewAsUser) return [];
 
         const isViewingAdmin = viewAsUser.isAdmin;
-        const ownedPages = appSettings.pages.filter(p => p.owner?.id === viewAsUser.userId);
-        const linkedPageIds = new Set(viewAsUser.linkedPageIds || []);
-        const linkedPages = appSettings.pages.filter(p => linkedPageIds.has(p.id));
+        
+        let pagesToShow: AppPage[];
+        
+        if (isViewingAdmin) {
+            pagesToShow = appSettings.pages;
+        } else {
+            const ownedPages = appSettings.pages.filter(p => p.owner?.id === viewAsUser.userId);
+            const linkedPageIds = new Set(viewAsUser.linkedPageIds || []);
+            const linkedPages = appSettings.pages.filter(p => linkedPageIds.has(p.id));
+            const publicSystemPages = appSettings.pages.filter(p => p.isSystemPage && p.id !== 'page-admin-management');
 
-        const systemAndAdminPages = isViewingAdmin ? appSettings.pages.filter(p => p.isSystemPage) : [];
-
-        const combined = [...systemAndAdminPages, ...ownedPages, ...linkedPages];
-        const uniquePages = Array.from(new Map(combined.map(p => [p.id, p])).values());
+            const combined = [...publicSystemPages, ...ownedPages, ...linkedPages];
+            pagesToShow = Array.from(new Map(combined.map(p => [p.id, p])).values());
+        }
 
         // Sort system pages to the top, then by some other metric if needed.
-        return uniquePages.sort((a, b) => {
+        return pagesToShow.sort((a, b) => {
             const aIsSystem = a.isSystemPage;
             const bIsSystem = b.isSystemPage;
             if (aIsSystem && !bIsSystem) return -1;
