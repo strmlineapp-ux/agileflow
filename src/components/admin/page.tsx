@@ -689,23 +689,6 @@ export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <PageTitle title="Pages" />
-                    <DuplicateZone onAdd={handleAddPage} id="duplicate-page-zone" />
-                </div>
-                <div className="flex items-center">
-                    <CompactSearchInput
-                        searchTerm={searchTerm}
-                        setSearchTerm={setSearchTerm}
-                        placeholder="Search pages..."
-                        autoFocus={isActive}
-                        showColorFilter={true}
-                        onColorSelect={setColorFilter}
-                        activeColorFilter={colorFilter}
-                    />
-                </div>
-            </div>
             <DraggableGrid
                 items={filteredPages}
                 setItems={reorderPages}
@@ -735,6 +718,23 @@ export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
                 renderDragOverlay={(item) => <GoogleSymbol name={item.icon} style={{ color: item.color, fontSize: '48px' }} />}
                 className="space-y-4"
             >
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <PageTitle title="Pages" />
+                        <DuplicateZone onAdd={handleAddPage} id="duplicate-page-zone" />
+                    </div>
+                    <div className="flex items-center">
+                        <CompactSearchInput
+                            searchTerm={searchTerm}
+                            setSearchTerm={setSearchTerm}
+                            placeholder="Search pages..."
+                            autoFocus={isActive}
+                            showColorFilter={true}
+                            onColorSelect={setColorFilter}
+                            activeColorFilter={colorFilter}
+                        />
+                    </div>
+                </div>
             </DraggableGrid>
         </div>
     );
@@ -835,7 +835,6 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
 
     return (
         <div className="space-y-6">
-            <PageTitle title="Tabs" />
             <DraggableGrid
                 items={filteredTabs}
                 setItems={reorderTabs}
@@ -843,8 +842,9 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
                 renderDragOverlay={(item) => <GoogleSymbol name={item.icon} style={{ color: item.color, fontSize: '48px' }} />}
                 className="space-y-4"
             >
-                <div className="flex items-center justify-end">
-                     <div className="flex items-center">
+                <div className="flex items-center justify-between">
+                    <PageTitle title="Tabs" />
+                    <div className="flex items-center">
                         <CompactSearchInput
                           searchTerm={searchTerm}
                           setSearchTerm={setSearchTerm}
@@ -863,3 +863,4 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
 // #endregion
 
     
+
