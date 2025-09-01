@@ -123,17 +123,15 @@ export default function DynamicPage() {
     
     return (
       <Tabs defaultValue={pageTabs[0].id} className="flex flex-col flex-1 gap-6">
-        <ScrollArea className="w-full whitespace-nowrap">
-          <div className="w-max">
-            <TabsList>
-                {pageTabs.map(tab => (
-                    <TabsTrigger key={tab.id} value={tab.id} className="gap-2">
-                        <GoogleSymbol name={tab.icon} className="text-lg" />
-                        {tab.name}
-                    </TabsTrigger>
-                ))}
-            </TabsList>
-          </div>
+        <ScrollArea>
+          <TabsList>
+              {pageTabs.map(tab => (
+                  <TabsTrigger key={tab.id} value={tab.id} className="gap-2">
+                      <GoogleSymbol name={tab.icon} className="text-lg" />
+                      {tab.name}
+                  </TabsTrigger>
+              ))}
+          </TabsList>
         </ScrollArea>
          <div className="flex-1 overflow-y-auto">
             {pageTabs.map(tab => {
