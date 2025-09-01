@@ -3,12 +3,13 @@
 'use client';
 
 import React, { useState, useCallback, useMemo } from 'react';
-import { type User, type Team, type SharedCalendar, type BadgeCollection } from '@/types';
+import { type User, type Team, type SharedCalendar, type BadgeCollection, type AppPage } from '@/types';
 import { useUser } from '@/context/user-context';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DndContext, type DragEndEvent, type DragStartEvent, useSensor, useSensors, PointerSensor, KeyboardSensor, sortableKeyboardCoordinates, DragOverlay } from '@dnd-kit/core';
+import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { arrayMove } from '@dnd-kit/sortable';
 import { DraggableGrid } from './draggable-grid';
 import { CompactSearchInput } from './compact-search-input';
@@ -152,7 +153,7 @@ export function ManagementPageLayout<T extends TEntity>({
   return (
     <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd} sensors={sensors}>
       <div className="flex h-full gap-4">
-        <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col overflow-hidden">
           <div className="flex items-center justify-between mb-6 shrink-0">
             <div className="flex items-center gap-2">
               <PageTitle
