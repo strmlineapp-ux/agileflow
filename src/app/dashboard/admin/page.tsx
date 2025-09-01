@@ -43,27 +43,27 @@ export default function AdminPage() {
 
   return (
     <div className="flex flex-col h-full gap-6">
-        <Tabs defaultValue="admins" onValueChange={setActiveTabKey} className="flex flex-col flex-1 gap-6">
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                     <GoogleSymbol name={adminPage.icon} style={{color: adminPage.color, fontSize: '32px'}} />
-                     <InlineEditor
-                        value={title}
-                        onSave={handleTitleSave}
-                        onClick={handleTitleReset}
-                        className="h-auto p-0 font-headline text-2xl tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                        disabled={!appSettings.isAdmin}
-                     />
-                </div>
-                 <TabsList>
-                    {adminTabs.map(tab => (
-                        <TabsTrigger key={tab.key} value={tab.key} className="gap-2">
-                           <GoogleSymbol name={tab.icon} className="text-lg" weight={100} />
-                           {appSettings.tabs.find(t => t.id === tab.id)?.name || tab.name}
-                        </TabsTrigger>
-                    ))}
-                 </TabsList>
+        <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+                 <GoogleSymbol name={adminPage.icon} style={{color: adminPage.color, fontSize: '32px'}} />
+                 <InlineEditor
+                    value={title}
+                    onSave={handleTitleSave}
+                    onClick={handleTitleReset}
+                    className="h-auto p-0 font-headline text-2xl tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                    disabled={!appSettings.isAdmin}
+                 />
             </div>
+        </div>
+        <Tabs defaultValue="admins" onValueChange={setActiveTabKey} className="flex flex-col flex-1 gap-6">
+            <TabsList>
+                {adminTabs.map(tab => (
+                    <TabsTrigger key={tab.key} value={tab.key} className="gap-2">
+                       <GoogleSymbol name={tab.icon} className="text-lg" weight={100} />
+                       {appSettings.tabs.find(t => t.id === tab.id)?.name || tab.name}
+                    </TabsTrigger>
+                ))}
+            </TabsList>
             <div className="flex-1 overflow-y-auto">
                 {adminTabs.map(tab => {
                   const Component = tab.component;
