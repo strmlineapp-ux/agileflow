@@ -16,13 +16,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { LocationCheckManagerManagement } from '../teams/location-check-manager-management';
 import { InlineEditor } from '../common/inline-editor';
 import { PageTitle } from '../common/page-title';
+import { TeamSelection } from '../common/team-selection';
 
-export function PinnedLocationManagement({ team, tab, page }: { team: Team, tab: AppTab, page: AppPage }) {
-  if (!team) {
-    return null;
-  }
-  
-  const { viewAsUser, locations, updateTeam, updatePage } = useUser();
+function PinnedLocationContent({ team }: { team: Team }) {
+  const { viewAsUser, locations, updateTeam } = useUser();
   const { toast } = useToast();
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -31,19 +28,6 @@ export function PinnedLocationManagement({ team, tab, page }: { team: Team, tab:
   const pinnedLocationNames = team.pinnedLocations || [];
   const checkLocationNames = new Set(team.checkLocations || []);
   const canManage = viewAsUser.isAdmin || team.teamAdmins?.includes(viewAsUser.userId);
-  const title = page.displayTitle ?? tab.name;
-
-  const handleTitleSave = (newTitle: string) => {
-    updatePage(page.id, { displayTitle: newTitle });
-  };
-
-  const handleTitleReset = (e: React.MouseEvent) => {
-    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
-        e.preventDefault();
-        updatePage(page.id, { displayTitle: null });
-        toast({title: "Title Reset", description: "The page title has been reset to its default."});
-    }
-  };
 
   const availableToPin = useMemo(() => {
     return locations
@@ -111,12 +95,6 @@ export function PinnedLocationManagement({ team, tab, page }: { team: Team, tab:
 
   return (
     <div className="space-y-6">
-       <PageTitle 
-            title={title}
-            onSave={handleTitleSave}
-            onReset={handleTitleReset}
-            disabled={!canManage}
-        />
       <LocationCheckManagerManagement team={team} />
       <Card>
         <CardHeader>
@@ -212,3 +190,50 @@ export function PinnedLocationManagement({ team, tab, page }: { team: Team, tab:
     </div>
   );
 }
+
+
+export function PinnedLocationManagement({ team: teamFromProps, tab, page }: { team?: Team | null; tab: AppTab, page: AppPage }) {
+    const { viewAsUser, teams, updatePage } = useUser();
+    const { toast } = useToast();
+    const [selectedTeam, setSelectedTeam] = useState<Team | null | undefined>(teamFromProps);
+
+    useEffect(() => {
+        setSelectedTeam(teamFromProps);
+    }, [teamFromProps]);
+    
+    const canManagePage = viewAsUser.isAdmin;
+    const title = page.displayTitle ?? tab.name;
+
+    const handleTitleSave = (newTitle: string) => {
+      updatePage(page.id, { displayTitle: newTitle });
+    };
+
+    const handleTitleReset = (e: React.MouseEvent) => {
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
+          e.preventDefault();
+          updatePage(page.id, { displayTitle: null });
+          toast({title: "Title Reset", description: "The page title has been reset to its default."});
+      }
+    };
+  
+    return (
+      <div className="flex flex-col gap-6">
+        <PageTitle 
+          title={title}
+          onSave={handleTitleSave}
+          onReset={handleTitleReset}
+          disabled={!canManagePage}
+        />
+        {selectedTeam ? (
+            <PinnedLocationContent team={selectedTeam} />
+        ) : (
+            <TeamSelection
+                teams={teams}
+                onSelectTeam={(team) => setSelectedTeam(team)}
+                message="Select a team to manage its pinned locations."
+            />
+        )}
+      </div>
+    );
+}
+

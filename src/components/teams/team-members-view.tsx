@@ -20,6 +20,7 @@ import { toast } from '@/hooks/use-toast';
 import { useDroppable } from '@dnd-kit/core';
 import { InlineEditor } from '../common/inline-editor';
 import { PageTitle } from '../common/page-title';
+import { TeamSelection } from '../common/team-selection';
 
 
 function DroppableUserList({ id, children, className }: { id: string, children: React.ReactNode, className?: string }) {
@@ -91,16 +92,9 @@ function SortableTeamMember({ member, team, onSetAdmin, onRemoveUser }: { member
   );
 }
 
-export function TeamMembersView({ team, tab, page }: { team: Team; tab: AppTab, page: AppPage }) {
-    const { viewAsUser, users, allBadges, updateAppTab, updateTeam, isDragModifierPressed, handleBadgeAssignment, handleBadgeUnassignment, updatePage } = useUser();
+function TeamMemberContent({ team }: { team: Team }) {
+    const { viewAsUser, users, allBadges, updateTeam, isDragModifierPressed, handleBadgeAssignment, handleBadgeUnassignment } = useUser();
     const [activeDragItem, setActiveDragItem] = useState<{type: string, id: string, data: any} | null>(null);
-
-    if (!team) return null;
-    
-    const canManagePage = viewAsUser.isAdmin;
-    const title = page.displayTitle ?? tab.name;
-    const adminsLabel = team.teamAdminsLabel || 'Team Admins';
-    const membersLabel = team.membersLabel || 'Members';
 
     const isViewer = useMemo(() => {
         if (viewAsUser.isAdmin) return false;
@@ -109,18 +103,6 @@ export function TeamMembersView({ team, tab, page }: { team: Team; tab: AppTab, 
     }, [viewAsUser, team]);
     
     const canManage = !isViewer;
-    
-    const handleTitleSave = (newTitle: string) => {
-      updatePage(page.id, { displayTitle: newTitle });
-    };
-
-    const handleTitleReset = (e: React.MouseEvent) => {
-      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
-          e.preventDefault();
-          updatePage(page.id, { displayTitle: null });
-          toast({title: "Title Reset", description: "The page title has been reset to its default."});
-      }
-    };
 
     const teamMembers = useMemo(() => {
         return team.members
@@ -243,61 +225,51 @@ export function TeamMembersView({ team, tab, page }: { team: Team; tab: AppTab, 
     }
 
     const activeBadge = (activeDragItem?.type === 'badge-assigned') ? activeDragItem.data.badge : null;
-    
-    return (
-      <div className="flex h-full gap-4">
-        <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
-            <div className="flex-1 flex flex-col overflow-hidden">
-                <div className="flex items-center justify-between mb-6 shrink-0">
-                     <PageTitle 
-                        title={title}
-                        onSave={handleTitleSave}
-                        onReset={handleTitleReset}
-                        disabled={!canManagePage}
-                    />
-                </div>
-                <div className="flex-1 overflow-y-auto pr-2 -mr-2">
-                    <div className={cn("flex flex-col gap-6", admins.length > 0 && "lg:flex-row")}>
-                        {admins.length > 0 && (
-                            <div className="lg:w-1/3 lg:max-w-sm space-y-4">
-                                <InlineEditor
-                                    value={adminsLabel}
-                                    onSave={(newValue) => updateTeam(team.id, { teamAdminsLabel: newValue })}
-                                    className="text-xl"
-                                    disabled={!canManage}
-                                />
-                                <DroppableUserList id="admins" className="space-y-4">
-                                    <SortableContext items={adminIds} strategy={verticalListSortingStrategy}>
-                                        {admins.map((member) => (
-                                            <SortableTeamMember key={member.userId} member={member} team={team} onSetAdmin={() => handleSetAdmin(team.id, member.userId)} onRemoveUser={() => handleRemoveUser(member.userId)} />
-                                        ))}
-                                    </SortableContext>
-                                </DroppableUserList>
-                            </div>
-                        )}
 
-                        <div className="flex-1 space-y-4">
-                             <InlineEditor
-                                value={membersLabel}
-                                onSave={(newValue) => updateTeam(team.id, { membersLabel: newValue })}
-                                className="text-xl"
-                                disabled={!canManage}
-                             />
-                            {members.length > 0 && (
-                                <DroppableUserList id="members">
-                                    <SortableContext items={memberIds} strategy={verticalListSortingStrategy}>
-                                        <div className="flex flex-wrap -m-3">
-                                        {members.map((member) => (
-                                            <div key={member.userId} className="p-3 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0">
-                                                <SortableTeamMember member={member} team={team} onSetAdmin={() => handleSetAdmin(team.id, member.userId)} onRemoveUser={() => handleRemoveUser(member.userId)} />
-                                            </div>
-                                        ))}
-                                        </div>
-                                    </SortableContext>
-                                </DroppableUserList>
-                            )}
-                        </div>
+    const adminsLabel = team.teamAdminsLabel || 'Team Admins';
+    const membersLabel = team.membersLabel || 'Members';
+
+    return (
+        <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
+            <div className={cn("flex flex-col gap-6", admins.length > 0 && "lg:flex-row")}>
+                {admins.length > 0 && (
+                    <div className="lg:w-1/3 lg:max-w-sm space-y-4">
+                        <InlineEditor
+                            value={adminsLabel}
+                            onSave={(newValue) => updateTeam(team.id, { teamAdminsLabel: newValue })}
+                            className="text-xl"
+                            disabled={!canManage}
+                        />
+                        <DroppableUserList id="admins" className="space-y-4">
+                            <SortableContext items={adminIds} strategy={verticalListSortingStrategy}>
+                                {admins.map((member) => (
+                                    <SortableTeamMember key={member.userId} member={member} team={team} onSetAdmin={() => handleSetAdmin(team.id, member.userId)} onRemoveUser={() => handleRemoveUser(member.userId)} />
+                                ))}
+                            </SortableContext>
+                        </DroppableUserList>
                     </div>
+                )}
+
+                <div className="flex-1 space-y-4">
+                     <InlineEditor
+                        value={membersLabel}
+                        onSave={(newValue) => updateTeam(team.id, { membersLabel: newValue })}
+                        className="text-xl"
+                        disabled={!canManage}
+                     />
+                    {members.length > 0 && (
+                        <DroppableUserList id="members">
+                            <SortableContext items={memberIds} strategy={verticalListSortingStrategy}>
+                                <div className="flex flex-wrap -m-3">
+                                {members.map((member) => (
+                                    <div key={member.userId} className="p-3 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0">
+                                        <SortableTeamMember member={member} team={team} onSetAdmin={() => handleSetAdmin(team.id, member.userId)} onRemoveUser={() => handleRemoveUser(member.userId)} />
+                                    </div>
+                                ))}
+                                </div>
+                            </SortableContext>
+                        </DroppableUserList>
+                    )}
                 </div>
             </div>
             <DragOverlay modifiers={[snapCenterToCursor]}>
@@ -313,6 +285,51 @@ export function TeamMembersView({ team, tab, page }: { team: Team; tab: AppTab, 
                 ) : null}
             </DragOverlay>
         </DndContext>
+    )
+}
+
+export function TeamMembersView({ team: teamFromProps, tab, page }: { team?: Team | null; tab: AppTab, page: AppPage }) {
+    const { viewAsUser, updatePage, teams } = useUser();
+    const { toast } = useToast();
+    const [selectedTeam, setSelectedTeam] = useState<Team | null | undefined>(teamFromProps);
+
+    useEffect(() => {
+        setSelectedTeam(teamFromProps);
+    }, [teamFromProps]);
+    
+    const canManagePage = viewAsUser.isAdmin;
+    const title = page.displayTitle ?? tab.name;
+
+    const handleTitleSave = (newTitle: string) => {
+      updatePage(page.id, { displayTitle: newTitle });
+    };
+
+    const handleTitleReset = (e: React.MouseEvent) => {
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
+          e.preventDefault();
+          updatePage(page.id, { displayTitle: null });
+          toast({title: "Title Reset", description: "The page title has been reset to its default."});
+      }
+    };
+  
+    return (
+      <div className="flex h-full flex-col gap-6">
+        <PageTitle 
+          title={title}
+          onSave={handleTitleSave}
+          onReset={handleTitleReset}
+          disabled={!canManagePage}
+        />
+        {selectedTeam ? (
+            <TeamMemberContent team={selectedTeam} />
+        ) : (
+            <TeamSelection
+                teams={teams}
+                onSelectTeam={(team) => setSelectedTeam(team)}
+                message="Select a team to view its members."
+            />
+        )}
       </div>
     );
 }
+
