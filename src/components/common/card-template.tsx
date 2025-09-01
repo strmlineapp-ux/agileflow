@@ -43,6 +43,7 @@ interface CardTemplateProps {
   footer?: React.ReactNode;
   headerControls?: React.ReactNode;
   dragHandleProps?: any;
+  canChangeOwnership?: boolean;
 }
 
 export function CardTemplate({
@@ -63,6 +64,7 @@ export function CardTemplate({
   footer,
   headerControls,
   dragHandleProps,
+  canChangeOwnership = false
 }: CardTemplateProps) {
     const { viewAsUser, users, isDragModifierPressed } = useUser();
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -96,15 +98,15 @@ export function CardTemplate({
         const newOwner = id === 'system' ? { type: 'system', id: 'system' } : { type: 'user', id };
         onUpdate(entity.id, { owner: newOwner });
     };
-
+    
+    const systemItem = { id: 'system', name: 'System Owned', icon: 'shield_person', iconType: 'symbol' as const, color: 'hsl(var(--muted-foreground))' };
+    
     const userItemData = users.map(u => ({
         id: u.userId,
         name: u.displayName,
         icon: u.avatarUrl || '',
         iconType: 'avatar' as const,
     }));
-    
-    const systemItem = { id: 'system', name: 'System Owned', icon: 'shield_person', iconType: 'symbol' as const, color: 'hsl(var(--muted-foreground))' };
     
     const ownershipTabs: ItemSelectionTab[] = [
         {
@@ -153,7 +155,7 @@ export function CardTemplate({
                             <div className="relative">
                                 {renderIconOrAvatar()}
                                 {shareIcon && shareIconTitle && (
-                                   viewAsUser.isAdmin && !isSharedPreview ? (
+                                   canChangeOwnership ? (
                                         <ItemSelectionPopover
                                             tabs={ownershipTabs}
                                             onSelectionChange={handleOwnershipChange}
