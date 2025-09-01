@@ -43,12 +43,12 @@ export function Sidebar() {
   
   if (loading || !viewAsUser || !realUser) {
     return (
-        <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col border-r bg-card sm:flex" />
+        <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col bg-card sm:flex" />
     );
   }
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col border-r bg-card sm:flex">
+    <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col bg-card sm:flex">
         <nav className="flex flex-col items-center gap-4 px-2 pt-4 pb-2">
             <Link
               href="/dashboard/overview"
