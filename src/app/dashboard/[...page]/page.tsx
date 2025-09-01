@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo } from 'react';
@@ -128,7 +129,7 @@ export default function DynamicPage() {
               </TabsTrigger>
             ))}
           </TabsList>
-         <div className="flex-1 overflow-y-auto">
+         <div className="flex-1">
             {pageTabs.map(tab => {
                 const Component = componentMap[tab.componentKey as keyof typeof componentMap];
                 return Component ? (
