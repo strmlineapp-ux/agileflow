@@ -2,27 +2,29 @@
 
 'use client';
 
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { cn, getReadableColor } from '@/lib/utils';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { InlineEditor } from './inline-editor';
-import { Separator } from '../ui/separator';
 import { IconColorPicker } from './icon-color-picker';
 import { useTheme } from 'next-themes';
+import { type User } from '@/types';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
 interface CardTemplateProps {
   entity: {
     id: string;
     name: string;
-    icon: string;
-    color: string;
+    icon?: string;
+    color?: string;
     isShared?: boolean;
     owner?: { type: string, id: string };
   };
+  user?: User; // Add user prop
   onUpdate: (id: string, data: Partial<any>) => void;
   onDelete: (entity: any) => void;
   isExpanded: boolean;
@@ -41,6 +43,7 @@ interface CardTemplateProps {
 
 export function CardTemplate({
   entity,
+  user,
   onUpdate,
   onDelete,
   isExpanded,
@@ -58,11 +61,34 @@ export function CardTemplate({
 }: CardTemplateProps) {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const { theme } = useTheme();
-    const readableColor = getReadableColor(entity.color, theme);
+    const readableColor = getReadableColor(entity.color || '', theme);
     
+    const renderIconOrAvatar = () => {
+        if (user) {
+            return (
+                <Avatar className="h-10 w-10">
+                    <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                    <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                </Avatar>
+            )
+        }
+        if (entity.icon && entity.color) {
+            return (
+                <IconColorPicker
+                    icon={entity.icon}
+                    color={entity.color}
+                    onUpdateIcon={(newIcon) => onUpdate(entity.id, { icon: newIcon })}
+                    onUpdateColor={(newColor) => onUpdate(entity.id, { color: newColor })}
+                    disabled={!canManage}
+                />
+            )
+        }
+        return null;
+    }
+
     return (
         <>
-            <Card className="group relative bg-card flex flex-col h-full shadow-md" {...dragHandleProps}>
+            <Card className="group relative bg-card flex flex-col h-full" {...dragHandleProps}>
                 {!isPinned && canManage && !isSharedPreview && (
                 <TooltipProvider>
                     <Tooltip>
@@ -87,13 +113,7 @@ export function CardTemplate({
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                             <div className="relative">
-                                <IconColorPicker
-                                    icon={entity.icon}
-                                    color={entity.color}
-                                    onUpdateIcon={(newIcon) => onUpdate(entity.id, { icon: newIcon })}
-                                    onUpdateColor={(newColor) => onUpdate(entity.id, { color: newColor })}
-                                    disabled={!canManage}
-                                />
+                                {renderIconOrAvatar()}
                                 {shareIcon && shareIconTitle && (
                                   <TooltipProvider>
                                       <Tooltip>
