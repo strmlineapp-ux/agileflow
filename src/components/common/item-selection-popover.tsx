@@ -47,7 +47,7 @@ const ItemDisplay = ({ item, isSelected }: { item: Item, isSelected: boolean }) 
         >
             {item.iconType === 'avatar' ? (
                 <Avatar className="h-7 w-7">
-                    <AvatarImage src={item.icon} alt={item.name} data-ai-hint="user avatar" />
+                    <AvatarImage src={item.icon} alt={item.name} />
                     <AvatarFallback>{item.name.slice(0, 2)}</AvatarFallback>
                 </Avatar>
             ) : (
@@ -114,9 +114,11 @@ export function ItemSelectionPopover({
       <PopoverContent className="w-80 p-0 flex flex-col max-h-96" onPointerDownCapture={(e) => e.stopPropagation()}>
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full flex flex-col flex-1 min-h-0">
           {tabs.length > 1 && (
-            <TabsList className="grid w-full grid-cols-2">
-              {tabs.map(tab => <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>)}
-            </TabsList>
+            <div className="flex justify-center">
+                <TabsList className="grid w-full grid-cols-2">
+                  {tabs.map(tab => <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>)}
+                </TabsList>
+            </div>
           )}
 
           <div className="p-2">
