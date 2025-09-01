@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { NotificationList } from '@/components/notifications/notification-list';

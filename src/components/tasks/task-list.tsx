@@ -68,7 +68,7 @@ export function TaskList({ tasks, limit, onEdit, onDelete }: { tasks: Task[], li
       <TableHeader>
         <TableRow>
           <TableHead>
-            <Button variant="default" className="-ml-4 text-foreground">
+            <Button variant="default" className="-ml-4">
               Task
               <GoogleSymbol name="swap_vert" className="ml-2" />
             </Button>
@@ -85,9 +85,9 @@ export function TaskList({ tasks, limit, onEdit, onDelete }: { tasks: Task[], li
       <TableBody>
         {tasksToRender.map((task) => (
           <TableRow key={task.taskId}>
-            <TableCell className="text-foreground">{task.title}</TableCell>
+            <TableCell>{task.title}</TableCell>
             <TableCell>
-              <div className="text-foreground">
+              <div>
                 {task.assignedTo.map((user) => {
                   const nameParts = user.displayName.split(' ');
                   const formattedName = nameParts.length > 1 ? `${nameParts[0]} ${nameParts[1].charAt(0)}.` : nameParts[0];
@@ -101,7 +101,7 @@ export function TaskList({ tasks, limit, onEdit, onDelete }: { tasks: Task[], li
             <TableCell>
               <PriorityBadge priorityId={task.priority} />
             </TableCell>
-            <TableCell className="text-foreground">{isToday(task.dueDate) ? 'Today' : formatDate(new Date(task.dueDate))}</TableCell>
+            <TableCell>{isToday(task.dueDate) ? 'Today' : formatDate(new Date(task.dueDate))}</TableCell>
             <TableCell>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -154,7 +154,7 @@ export function TaskList({ tasks, limit, onEdit, onDelete }: { tasks: Task[], li
 
                 return (
                     <div key={status}>
-                        <h3 className="text-xl mb-4 flex items-center gap-2 text-foreground">
+                        <h3 className="text-xl mb-4 flex items-center gap-2">
                            <span>{statusLabels[status]}</span>
                            <UiBadge variant="outline">{tasksInGroup.length}</UiBadge>
                         </h3>

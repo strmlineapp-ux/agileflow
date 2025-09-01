@@ -47,7 +47,7 @@ export default function AdminPage() {
                             value={activeTabData.name} 
                             onSave={handleTitleSave}
                             onClick={handleTitleReset}
-                            className="h-auto p-0 font-headline text-2xl font-thin tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                            className="h-auto p-0 font-headline text-2xl tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                         />
                     )}
                 </div>

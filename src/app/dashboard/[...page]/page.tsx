@@ -126,8 +126,7 @@ export default function DynamicPage() {
           <TabsList>
             {pageTabs.map(tab => (
               <TabsTrigger key={tab.id} value={tab.id} className="gap-2">
-                <GoogleSymbol name={tab.icon} className="text-4xl" weight={100} />
-                 <InlineEditor 
+                <InlineEditor 
                     value={tab.name}
                     onSave={(newName) => updateAppTab(tab.id, { name: newName })}
                     disabled={!viewAsUser.isAdmin}
@@ -159,7 +158,7 @@ export default function DynamicPage() {
                     value={page.displayTitle || page.name}
                     onSave={(newTitle) => updatePage(page.id, { displayTitle: newTitle })}
                     disabled={!viewAsUser.isAdmin}
-                    className="font-headline font-thin"
+                    className="font-headline"
                 />
             </h1>
        )}

@@ -4,7 +4,6 @@ import * as React from "react"
 import * as TabsPrimitive from "@radix-ui/react-tabs"
 
 import { cn } from "@/lib/utils"
-import { Separator } from "./separator"
 
 const Tabs = TabsPrimitive.Root
 

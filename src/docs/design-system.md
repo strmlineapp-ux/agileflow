@@ -25,7 +25,7 @@ This pattern allows for seamless, direct text editing within the main applicatio
 - **Trigger:** Clicking directly on a text element (e.g., a section title, a badge name).
 - **Interaction:**
     - The text element transforms into an input field.
-    - The input field must be styled to perfectly match the font, size, weight, and color of the original text element it replaces (e.g., using the `font-headline font-thin` classes).
+    - The input field must be styled to perfectly match the font, size, weight, and color of the original text element it replaces (e.g., using the `font-headline` class).
     - **Crucially, the input must have a transparent background and no borders or box-shadow**, ensuring it blends seamlessly into the UI.
 - **Behavior:**
     - Typing modifies the text value. Pressing the spacebar correctly adds spaces for multi-word names.
@@ -281,9 +281,8 @@ This pattern provides a dense, icon-driven interface for managing a series of us
 ## Visual & Theming Elements
 
 ### Typography
-- **Font**: The application exclusively uses the **Roboto** font family for a clean and consistent look for both headlines and body text.
-- **Headline Font**: All major titles (pages, tabs, prominent cards) use the `font-headline` utility class, which is configured to use a `font-thin` weight (`font-weight: 100`) from the Roboto family.
-- **Body Font**: The user can now select their preferred global font weight.
+- **Font**: The application exclusively uses the **Roboto** font family for a clean and consistent look.
+- **Body Font**: The user can select their preferred global font weight.
 - **Emphasis**: See the "Emphasis Logic" section for details on how interaction states are handled.
 
 ### Icons & Hover Effects
@@ -297,17 +296,16 @@ This pattern provides a dense, icon-driven interface for managing a series of us
 The application supports two distinct color themes, `light` and `dark`, which can be selected by the user in their preferences.
 
 - **Custom Primary Color**: Users can select a custom primary color using a color picker popover, as defined in the **Icon & Color Editing Flow** pattern. This custom color overrides the theme's default primary color.
-- **Primary Button Gradient**: Primary buttons have a special gradient effect on hover, which is unique to each theme. This provides a subtle but polished visual feedback for key actions.
 - **Button Hover**: See the "Emphasis Logic" section.
 
 ### Emphasis Logic
 The application uses a sophisticated, user-configurable emphasis system for interactive elements. This system creates two distinct interaction styles based on the user's selected global font weight.
 
-- **Mechanism**: The system checks the user's globally selected `fontWeight` (e.g., from `useUser().viewAsUser.fontWeight`).
+- **Mechanism**: A `bold-emphasis` class is dynamically added to the `<body>` tag based on the user's selected `fontWeight`. The application's global CSS contains rules that react to the presence or absence of this class.
 - **Logic**:
-    - **If Global Weight is `Thin`, `Light`, `Normal`, or `Medium`**: When a user hovers over or focuses on an interactive element (like a button or menu item), its **font weight increases** to the next available level (e.g., `Normal` becomes `Medium`). Color does not change. This is handled by applying a `font-emphasis` class.
-    - **If Global Weight is `Bold`**: When a user hovers over or focuses on an interactive element, its font weight does not change. Instead, its **color changes** to the theme's primary color (`--primary`).
-- **Implementation**: This is achieved by adding a simple check inside each interactive component. The component reads the user's `fontWeight` and conditionally applies either the `font-emphasis` class or the `text-primary` class to its `focus`, `hover`, or `data-[state=active]` styles.
+    - **If Global Weight is `Thin`, `Light`, `Normal`, or `Medium`**: The `bold-emphasis` class is absent. When a user hovers over an interactive element with the `.font-emphasis` class, its **font weight increases** to the next available level. Color does not change.
+    - **If Global Weight is `Bold`**: The `bold-emphasis` class is present. When a user hovers over an interactive element with the `.font-emphasis` class, its font weight does not change. Instead, its **color changes** to the theme's primary color.
+- **Implementation**: This is achieved by adding the `font-emphasis` class to interactive components. The logic is handled entirely by the CSS rules in `globals.css`.
 
 ### User Notifications
 
