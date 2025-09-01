@@ -247,12 +247,14 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
                 )}
               </TooltipProvider>
               <Tabs value={view} onValueChange={(v) => setView(v as any)} className="w-auto">
+                <div className="flex justify-center">
                   <TabsList>
                       <TabsTrigger value="month">Month</TabsTrigger>
                       <TabsTrigger value="week">Week</TabsTrigger>
                       <TabsTrigger value="day">Day</TabsTrigger>
                       <TabsTrigger value="production-schedule">Production Schedule</TabsTrigger>
                   </TabsList>
+                </div>
               </Tabs>
           </div>
         </div>
