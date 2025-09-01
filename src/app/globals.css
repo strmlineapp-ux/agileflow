@@ -109,8 +109,7 @@
   }
 
   .center-and-scroll {
-    display: grid;
-    place-items: center;
+    text-align: center;
     overflow-x: auto;
   }
 }
