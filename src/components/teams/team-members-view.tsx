@@ -3,7 +3,7 @@
 'use client';
 
 import { useUser } from '@/context/user-context';
-import { type Team, type AppTab, type User, type Badge, type BadgeCollection } from '@/types';
+import { type Team, type AppTab, type User, type Badge, type BadgeCollection, type AppPage } from '@/types';
 import { TeamMemberCard } from './team-member-card';
 import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
@@ -90,12 +90,14 @@ function SortableTeamMember({ member, team, onSetAdmin, onRemoveUser }: { member
   );
 }
 
-export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
-    const { viewAsUser, users, allBadges, updateAppTab, updateTeam, isDragModifierPressed, handleBadgeAssignment, handleBadgeUnassignment } = useUser();
+export function TeamMembersView({ team, tab, page }: { team: Team; tab: AppTab, page: AppPage }) {
+    const { viewAsUser, users, allBadges, updateAppTab, updateTeam, isDragModifierPressed, handleBadgeAssignment, handleBadgeUnassignment, updatePage } = useUser();
     const [activeDragItem, setActiveDragItem] = useState<{type: string, id: string, data: any} | null>(null);
 
     if (!team) return null;
-
+    
+    const canManagePage = viewAsUser.isAdmin;
+    const title = page.displayTitle ?? tab.name;
     const adminsLabel = team.teamAdminsLabel || 'Team Admins';
     const membersLabel = team.membersLabel || 'Members';
 
@@ -106,6 +108,18 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
     }, [viewAsUser, team]);
     
     const canManage = !isViewer;
+    
+    const handleTitleSave = (newTitle: string) => {
+      updatePage(page.id, { displayTitle: newTitle });
+    };
+
+    const handleTitleReset = (e: React.MouseEvent<HTMLHeadingElement>) => {
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
+          e.preventDefault();
+          updatePage(page.id, { displayTitle: null });
+          toast({title: "Title Reset", description: "The page title has been reset to its default."});
+      }
+    };
 
     const teamMembers = useMemo(() => {
         return team.members
@@ -237,10 +251,11 @@ export function TeamMembersView({ team, tab }: { team: Team; tab: AppTab }) {
                 <div className="flex items-center justify-between mb-6 shrink-0">
                     <div className="flex items-center gap-2">
                         <InlineEditor
-                            value={tab.name}
-                            onSave={(newValue) => updateAppTab(tab.id, { name: newValue })}
+                            value={title}
+                            onSave={handleTitleSave}
+                            onClick={handleTitleReset}
                             className="h-auto p-0 font-headline text-2xl font-thin tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                            disabled={!canManage}
+                            disabled={!canManagePage}
                         />
                     </div>
                 </div>
