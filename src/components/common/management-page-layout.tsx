@@ -10,13 +10,13 @@ import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/comp
 import { DndContext, type DragEndEvent, type DragStartEvent, useSensor, useSensors, PointerSensor, KeyboardSensor, sortableKeyboardCoordinates } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { DraggableGrid } from './draggable-grid';
-import { InlineEditor } from './inline-editor';
 import { CompactSearchInput } from './compact-search-input';
 import { SharedItemsPanel } from './shared-items-panel';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { useToast } from '@/hooks/use-toast';
 import { DuplicateZone } from './duplicate-zone';
 import { getHueFromHsl, isHueInRange } from '@/lib/utils';
+import { PageTitle } from './page-title';
 
 type TEntity = (Team | SharedCalendar | BadgeCollection) & { id: string, name: string, icon: string, color: string, owner: {id: string}, isShared?: boolean };
 
@@ -154,11 +154,10 @@ export function ManagementPageLayout<T extends TEntity>({
         <div className="flex-1 flex flex-col min-h-0">
           <div className="flex items-center justify-between mb-6 shrink-0">
             <div className="flex items-center gap-2">
-              <InlineEditor 
-                value={pageTitle}
+              <PageTitle
+                title={pageTitle}
                 onSave={onPageTitleSave}
-                onClick={onPageTitleReset}
-                className="h-auto p-0 font-headline text-2xl font-thin tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                onReset={onPageTitleReset}
                 disabled={!canManagePage}
               />
               <DuplicateZone id={`duplicate-${entityType}-zone`} onAdd={() => onAddItem()} />
@@ -205,7 +204,7 @@ export function ManagementPageLayout<T extends TEntity>({
           description={`Drag a ${entityType} you own here to share it. Drag a ${entityType} to your board to link it.`}
           items={sharedItems}
           searchTerm={sharedSearchTerm}
-          setSearchTerm={setSharedSearchTerm}
+          setSearchTerm={setSearchTerm}
           renderItem={(item, isDragging) => renderItem(item as T, isDragging)}
           renderDragOverlay={(item) => renderDragOverlay(item as T)}
           emptyMessage={`No other ${entityType}s are currently shared.`}
