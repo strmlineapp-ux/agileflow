@@ -11,6 +11,7 @@ import { type AppTab, type Project } from '@/types';
 import { EventsContent } from '@/components/dashboard/tabs/events-tab';
 import { TasksContent } from '@/components/dashboard/tabs/tasks-tab';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { CenteredTabList } from '@/components/common/centered-tab-list';
 
 
 const componentMap = {
@@ -82,7 +83,7 @@ export default function ProjectDetailsPage() {
     
     return (
       <Tabs defaultValue={pageTabs[0].id} className="flex flex-col flex-1 gap-6">
-        <div className="center-and-scroll no-scrollbar">
+        <CenteredTabList>
             <TabsList>
                 {pageTabs.map(tab => (
                     <TabsTrigger key={tab.id} value={tab.id} className="gap-2">
@@ -91,7 +92,7 @@ export default function ProjectDetailsPage() {
                     </TabsTrigger>
                 ))}
             </TabsList>
-        </div>
+        </CenteredTabList>
          <div className="flex-1 overflow-y-auto">
             {pageTabs.map(tab => {
                 const Component = componentMap[tab.componentKey as keyof typeof componentMap];

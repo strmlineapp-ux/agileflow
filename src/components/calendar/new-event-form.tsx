@@ -32,6 +32,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { UserStatusBadge } from '../user-status-badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CenteredTabList } from '@/components/common/centered-tab-list';
 
 
 const GoogleDriveIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -858,12 +859,12 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
                           </PopoverTrigger>
                           <PopoverContent className="w-[480px] p-0" align="start">
                             <Tabs defaultValue="by-name">
-                              <div className="center-and-scroll no-scrollbar">
+                              <CenteredTabList>
                                 <TabsList>
                                     <TabsTrigger value="by-name">By Name or Email</TabsTrigger>
                                     <TabsTrigger value="by-badge">By Badge</TabsTrigger>
                                 </TabsList>
-                              </div>
+                              </CenteredTabList>
                                 <TabsContent value="by-name" className="p-0">
                                     <div className="p-2">
                                         <Input placeholder="Search by name or email..." value={guestSearch} onChange={e => setGuestSearch(e.target.value)} className="w-full" />
