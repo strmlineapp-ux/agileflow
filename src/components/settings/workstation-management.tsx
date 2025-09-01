@@ -13,13 +13,11 @@ import { type Team, type AppTab, type AppPage } from '@/types';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { InlineEditor } from '../common/inline-editor';
+import { PageTitle } from '../common/page-title';
+import { TeamSelection } from '../common/team-selection';
 
-export function WorkstationManagement({ team, tab, page }: { team: Team, tab: AppTab, page: AppPage }) {
-  if (!team) {
-    return null;
-  }
-  
-  const { updateTeam, updatePage, viewAsUser } = useUser();
+function WorkstationContent({ team }: { team: Team }) {
+  const { updateTeam, viewAsUser } = useUser();
   const { toast } = useToast();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -28,19 +26,6 @@ export function WorkstationManagement({ team, tab, page }: { team: Team, tab: Ap
   
   const canManage = viewAsUser.isAdmin || team.teamAdmins?.includes(viewAsUser.userId);
   const teamWorkstations = team.workstations || [];
-  const title = page.displayTitle ?? tab.name;
-
-  const handleTitleSave = (newTitle: string) => {
-    updatePage(page.id, { displayTitle: newTitle });
-  };
-
-  const handleTitleReset = (e: React.MouseEvent<HTMLHeadingElement>) => {
-    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
-        e.preventDefault();
-        updatePage(page.id, { displayTitle: null });
-        toast({title: "Title Reset", description: "The page title has been reset to its default."});
-    }
-  };
 
   const handleUpdateTeamWorkstations = (newWorkstations: string[]) => {
     updateTeam(team.id, { workstations: newWorkstations.sort() });
@@ -86,15 +71,6 @@ export function WorkstationManagement({ team, tab, page }: { team: Team, tab: Ap
 
   return (
     <>
-      <div className="flex items-center gap-2 mb-6">
-        <InlineEditor
-            value={title}
-            onSave={handleTitleSave}
-            onClick={handleTitleReset}
-            className="h-auto p-0 font-headline text-2xl font-thin tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-            disabled={!canManage}
-        />
-      </div>
       <Card>
         <CardHeader>
           <div className="flex items-start justify-between">
@@ -141,7 +117,7 @@ export function WorkstationManagement({ team, tab, page }: { team: Team, tab: Ap
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="max-w-md">
            <div className="absolute top-4 right-4">
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSaveNew}>
+              <Button variant="default" size="icon" className="h-8 w-8" onClick={handleSaveNew}>
                 <GoogleSymbol name="check" />
                 <span className="sr-only">Save New Workstation</span>
               </Button>
@@ -166,7 +142,7 @@ export function WorkstationManagement({ team, tab, page }: { team: Team, tab: Ap
       <Dialog open={!!workstationToDelete} onOpenChange={(isOpen) => !isOpen && setWorkstationToDelete(null)}>
         <DialogContent className="max-w-md" onPointerDownCapture={(e) => e.stopPropagation()}>
             <div className="absolute top-4 right-4">
-                <Button variant="ghost" size="icon" className="hover:text-destructive p-0 hover:bg-transparent" onClick={handleDelete}>
+                <Button variant="default" size="icon" className="hover:text-destructive p-0 hover:bg-transparent" onClick={handleDelete}>
                     <GoogleSymbol name="delete" />
                     <span className="sr-only">Delete Workstation</span>
                 </Button>
@@ -182,3 +158,50 @@ export function WorkstationManagement({ team, tab, page }: { team: Team, tab: Ap
     </>
   );
 }
+
+
+export function WorkstationManagement({ team: teamFromProps, tab, page }: { team?: Team | null; tab: AppTab; page: AppPage }) {
+    const { viewAsUser, teams, updatePage } = useUser();
+    const { toast } = useToast();
+    const [selectedTeam, setSelectedTeam] = useState<Team | null | undefined>(teamFromProps);
+
+    useEffect(() => {
+        setSelectedTeam(teamFromProps);
+    }, [teamFromProps]);
+    
+    const canManagePage = viewAsUser.isAdmin;
+    const title = page.displayTitle ?? tab.name;
+
+    const handleTitleSave = (newTitle: string) => {
+      updatePage(page.id, { displayTitle: newTitle });
+    };
+
+    const handleTitleReset = (e: React.MouseEvent) => {
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
+          e.preventDefault();
+          updatePage(page.id, { displayTitle: null });
+          toast({title: "Title Reset", description: "The page title has been reset to its default."});
+      }
+    };
+  
+    return (
+      <div className="flex flex-col gap-6">
+        <PageTitle 
+          title={title}
+          onSave={handleTitleSave}
+          onReset={handleTitleReset}
+          disabled={!canManagePage}
+        />
+        {selectedTeam ? (
+            <WorkstationContent team={selectedTeam} />
+        ) : (
+            <TeamSelection
+                teams={teams}
+                onSelectTeam={(team) => setSelectedTeam(team)}
+                message="Select a team to manage its workstations."
+            />
+        )}
+      </div>
+    );
+}
+
