@@ -60,9 +60,8 @@ import { TransparentCard, TransparentCardContent } from '../ui/transparent-card'
 // #region Admin Groups Management Tab
 
 function SortableUserCard({ user, listId, onDeleteRequest }: { user: User, listId: string, onDeleteRequest?: (user: User) => void }) {
-    const draggableId = `user-dnd-${user.userId}-${listId}`;
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-        id: draggableId,
+        id: `user-dnd-${user.userId}-${listId}`,
         data: { type: 'user', user, fromListId: listId },
     });
 
@@ -71,13 +70,20 @@ function SortableUserCard({ user, listId, onDeleteRequest }: { user: User, listI
         transition,
         opacity: isDragging ? 0.5 : 1
     };
+    
+    const canDelete = listId === 'user-list';
 
     return (
         <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="break-inside-avoid p-2">
-            <UserCard 
-              user={user} 
-              isDeletable={listId === 'user-list'} 
-              onDelete={onDeleteRequest} 
+             <CardTemplate
+                user={user}
+                entity={{ id: user.userId, name: user.displayName }}
+                onUpdate={() => {}}
+                onDelete={canDelete && onDeleteRequest ? () => onDeleteRequest(user) : () => {}}
+                isExpanded={true}
+                onToggleExpand={() => {}}
+                canManage={canDelete}
+                body={<p className="text-sm text-foreground">{user.title || <span className="italic">No title provided</span>}</p>}
             />
         </div>
     );
