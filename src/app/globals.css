@@ -116,16 +116,32 @@
   .hue-gradient-track {
     background: linear-gradient(to right, hsl(0, 100%, 50%), hsl(60, 100%, 50%), hsl(120, 100%, 50%), hsl(180, 100%, 50%), hsl(240, 100%, 50%), hsl(300, 100%, 50%), hsl(360, 100%, 50%));
   }
-
+  
   .hue-gradient-track::-webkit-slider-runnable-track {
-    background: linear-gradient(to right, hsl(0, 100%, 50%), hsl(60, 100%, 50%), hsl(120, 100%, 50%), hsl(180, 100%, 50%), hsl(240, 100%, 50%), hsl(300, 100%, 50%), hsl(360, 100%, 50%));
-    border-radius: 0.25rem;
     height: 0.5rem;
+    border-radius: 0.25rem;
+  }
+  
+  .hue-gradient-track::-moz-range-track {
+    height: 0.5rem;
+    border-radius: 0.25rem;
   }
 
-  .hue-gradient-track::-moz-range-track {
-     background: linear-gradient(to right, hsl(0, 100%, 50%), hsl(60, 100%, 50%), hsl(120, 100%, 50%), hsl(180, 100%, 50%), hsl(240, 100%, 50%), hsl(300, 100%, 50%), hsl(360, 100%, 50%));
-    border-radius: 0.25rem;
-    height: 0.5rem;
+  .hue-gradient-track::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 1rem;
+    width: 1rem;
+    border-radius: 9999px;
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--foreground));
+    margin-top: -0.25rem; /* Center thumb on track */
+  }
+
+  .hue-gradient-track::-moz-range-thumb {
+    height: 1rem;
+    width: 1rem;
+    border-radius: 9999px;
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--foreground));
   }
 }
