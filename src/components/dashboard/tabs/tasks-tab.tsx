@@ -1,29 +1,34 @@
 
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { TaskList } from '@/components/tasks/task-list';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
-import { type Task } from '@/types';
+import { type Task, type AppPage, type AppTab } from '@/types';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useUser } from '@/context/user-context';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { CenteredTabList } from '@/components/common/centered-tab-list';
+import { PageTitle } from '@/components/common/page-title';
+import { useToast } from '@/hooks/use-toast';
 // A new form component will be needed for adding/editing tasks. Let's assume its creation.
 // For now, we'll imagine a placeholder. A real implementation would require a TaskForm component.
 
-export function TasksContent() {
+export function TasksContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
   const [activeTab, setActiveTab] = useState<'my-tasks' | 'all'>('my-tasks');
-  const { viewAsUser, fetchTasks, addTask, updateTask, deleteTask } = useUser();
+  const { viewAsUser, fetchTasks, addTask, updateTask, deleteTask, updatePage } = useUser();
+  const { toast } = useToast();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
+  const title = page?.displayTitle ?? tab?.name ?? 'Tasks';
+  const canManagePage = viewAsUser.isAdmin;
+  
   const loadTasks = useCallback(async () => {
     setLoading(true);
     const allTasks = await fetchTasks();
@@ -34,6 +39,20 @@ export function TasksContent() {
   useEffect(() => {
     loadTasks();
   }, [loadTasks]);
+
+  const handleTitleSave = (newTitle: string) => {
+    if (page) {
+      updatePage(page.id, { displayTitle: newTitle });
+    }
+  };
+
+  const handleTitleReset = (e: React.MouseEvent) => {
+    if (page && (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey)) {
+        e.preventDefault();
+        updatePage(page.id, { displayTitle: null });
+        toast({title: "Title Reset", description: "The page title has been reset to its default."});
+    }
+  };
 
   const handleTaskAdded = async (newTaskData: Omit<Task, 'taskId' | 'createdAt' | 'lastUpdated'>) => {
     const updatedTasks = await addTask(tasks, newTaskData);
@@ -70,6 +89,12 @@ export function TasksContent() {
 
   return (
     <div className="flex flex-col gap-6">
+      <PageTitle 
+        title={title}
+        onSave={handleTitleSave}
+        onReset={handleTitleReset}
+        disabled={!canManagePage || !page}
+      />
        <div className="flex items-center justify-between">
          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="w-full">
             <CenteredTabList>
