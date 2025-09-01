@@ -45,8 +45,19 @@ export function TeamManagement({ tab, page, isSingleTabPage = false, isActive = 
     const { viewAsUser, users, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updatePage, updateUser } = useUser();
     const router = useRouter();
     const { toast } = useToast();
+    const [expandedTeams, setExpandedTeams] = useState<Set<string>>(new Set());
 
-    const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
+    const onToggleExpand = useCallback((teamId: string) => {
+        setExpandedTeams(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(teamId)) {
+                newSet.delete(teamId);
+            } else {
+                newSet.add(teamId);
+            }
+            return newSet;
+        });
+    }, []);
 
     const canManageTeam = useCallback((team: Team) => {
         if (!viewAsUser) return false;
@@ -56,8 +67,9 @@ export function TeamManagement({ tab, page, isSingleTabPage = false, isActive = 
     const handleUpdate = (teamId: string, data: Partial<Team>) => updateTeam(teamId, data);
     
     const handleDelete = (team: Team) => {
-        if (canManageTeam(team)) {
-            setTeamToDelete(team);
+        const isOwner = team.owner.id === viewAsUser.userId;
+        if (isOwner) {
+            deleteTeam(team.id, router, usePathname());
         } else {
             const updatedLinkedTeamIds = (viewAsUser.linkedTeamIds || []).filter(id => id !== team.id);
             updateUser(viewAsUser.userId, { linkedTeamIds: updatedLinkedTeamIds });
@@ -139,8 +151,8 @@ export function TeamManagement({ tab, page, isSingleTabPage = false, isActive = 
             onAddUser={handleAddUserToTeam}
             onSetAdmin={handleSetAdmin}
             isDragging={isDragging}
-            isExpanded={true} // For simplicity in this layout, always expanded
-            onToggleExpand={() => {}}
+            isExpanded={expandedTeams.has(team.id)}
+            onToggleExpand={() => onToggleExpand(team.id)}
           />
         )}
       </SortableItem>
@@ -159,8 +171,8 @@ export function TeamManagement({ tab, page, isSingleTabPage = false, isActive = 
             onSetAdmin={handleSetAdmin}
             isSharedPreview={true}
             isDragging={isDragging}
-            isExpanded={true}
-            onToggleExpand={() => {}}
+            isExpanded={expandedTeams.has(team.id)}
+            onToggleExpand={() => onToggleExpand(team.id)}
           />
         )}
       </SortableItem>
