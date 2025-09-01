@@ -14,7 +14,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "text-foreground font-emphasis",
+        default: "font-emphasis",
         destructive: "bg-destructive text-destructive-foreground",
         outline: "bg-transparent font-emphasis",
         ghost: "hover:bg-transparent font-emphasis",

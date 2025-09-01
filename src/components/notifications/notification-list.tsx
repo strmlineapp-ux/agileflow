@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -57,7 +58,7 @@ export function NotificationList() {
                   {' '}
                   {notification.content}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs">
                   {formatDistanceToNow(notification.time)}
                 </p>
                 {notification.type === 'access_request' && notification.status === 'pending' && isAdmin && (

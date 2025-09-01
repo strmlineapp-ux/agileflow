@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -43,7 +44,7 @@ export function OverviewContent() {
             </CardHeader>
             <CardContent className="p-4 pt-0">
               <div className="text-2xl">{stat.value}</div>
-              <p className="text-xs text-foreground">this month</p>
+              <p className="text-xs">this month</p>
             </CardContent>
           </Card>
         ))}

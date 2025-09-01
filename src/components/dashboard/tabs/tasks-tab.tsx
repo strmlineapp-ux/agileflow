@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -82,8 +83,8 @@ export function TasksContent() {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="circle" size="icon" onClick={openNewTaskForm}>
-                        <GoogleSymbol name="add_circle" className="text-4xl" />
+                      <Button variant="default" size="icon" onClick={openNewTaskForm}>
+                        <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                         <span className="sr-only">New Task</span>
                       </Button>
                     </TooltipTrigger>

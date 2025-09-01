@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
@@ -195,7 +196,7 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button variant="circle" size="icon">
+                        <Button variant="default" size="icon" >
                           <GoogleSymbol name="add_circle" className="text-4xl" />
                           <span className="sr-only">New Event</span>
                         </Button>

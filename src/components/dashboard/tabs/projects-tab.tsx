@@ -83,7 +83,7 @@ export function ProjectsContent() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="font-headline text-2xl font-thin">Projects</h2>
+        <h2 className="font-headline text-2xl">Projects</h2>
         <Button onClick={handleAddNew}>
             <GoogleSymbol name="add" className="mr-2" />
             New Project
@@ -120,7 +120,7 @@ export function ProjectsContent() {
                 </div>
               </div>
             ))}
-             {ownedProjects.length === 0 && <p className="text-sm text-foreground text-center p-4">No projects yet.</p>}
+             {ownedProjects.length === 0 && <p className="text-sm text-center p-4">No projects yet.</p>}
           </div>
         </CardContent>
       </Card>
