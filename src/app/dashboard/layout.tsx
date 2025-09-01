@@ -49,7 +49,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen w-full bg-background">
+    <div className="min-h-screen w-full bg-background overflow-hidden">
       <Sidebar />
       <div className="flex flex-col sm:pl-14">
         <Header />
