@@ -82,7 +82,7 @@ export default function ProjectDetailsPage() {
     
     return (
       <Tabs defaultValue={pageTabs[0].id} className="flex flex-col flex-1 gap-6">
-        <TabsList>
+        <TabsList className="justify-center">
             {pageTabs.map(tab => (
                 <TabsTrigger key={tab.id} value={tab.id} className="gap-2">
                     <GoogleSymbol name={tab.icon} />

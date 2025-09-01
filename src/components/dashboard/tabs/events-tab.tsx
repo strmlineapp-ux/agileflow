@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
@@ -220,7 +221,7 @@ export function EventsContent({ project }: { project: Project }) {
             </div>
             <p className="text-muted-foreground text-sm font-normal">{dateRange}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center gap-2 flex-1">
               <TooltipProvider>
                 {(view === 'production-schedule' || view === 'day' || view === 'week') && (
                   <Tooltip>
@@ -245,7 +246,7 @@ export function EventsContent({ project }: { project: Project }) {
                   </Tooltip>
                 )}
               </TooltipProvider>
-              <Tabs value={view} onValueChange={(v) => setView(v as any)} className="w-full">
+              <Tabs value={view} onValueChange={(v) => setView(v as any)} className="w-auto">
                   <TabsList>
                       <TabsTrigger value="month">Month</TabsTrigger>
                       <TabsTrigger value="week">Week</TabsTrigger>
