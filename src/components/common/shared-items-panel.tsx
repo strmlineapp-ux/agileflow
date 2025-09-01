@@ -40,7 +40,7 @@ export function SharedItemsPanel<T extends { id: string, name: string, icon: str
   return (
     <div className={cn("transition-all duration-300", isOpen ? "w-96" : "w-0")}>
       <div ref={setNodeRef} className={cn("h-full rounded-lg transition-all", isOpen ? "p-2" : "p-0", isOver && "ring-1 ring-border ring-inset")}>
-        <Card className={cn("transition-opacity duration-300 h-full flex flex-col", isOpen ? "opacity-100" : "opacity-0")}>
+        <Card className={cn("transition-opacity duration-300 h-full flex flex-col shadow-lg", isOpen ? "opacity-100" : "opacity-0")}>
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>{title}</CardTitle>
