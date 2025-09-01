@@ -858,7 +858,7 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
                           </PopoverTrigger>
                           <PopoverContent className="w-[480px] p-0" align="start">
                             <Tabs defaultValue="by-name">
-                              <div className="flex justify-center">
+                              <div className="center-and-scroll no-scrollbar">
                                 <TabsList className="grid w-full grid-cols-2">
                                     <TabsTrigger value="by-name">By Name or Email</TabsTrigger>
                                     <TabsTrigger value="by-badge">By Badge</TabsTrigger>
@@ -966,5 +966,3 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
     </>
   );
 }
-
-    
