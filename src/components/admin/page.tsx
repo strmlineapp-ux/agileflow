@@ -16,7 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { systemPages, coreTabs } from '@/lib/core-data';
-import { cn, getContrastColor, isHueInRange, getHueFromHsl } from '@/lib/utils';
+import { cn, getContrastColor, isHueInRange, getHueFromHsl, getReadableColor } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
@@ -56,6 +56,8 @@ import { ItemSelectionPopover, type ItemSelectionTab } from '../common/item-sele
 import { hasAccess } from '@/lib/permissions';
 import { TransparentCard, TransparentCardContent } from '../ui/transparent-card';
 import { PageTitle } from '../common/page-title';
+import { ManagementPageLayout } from '../common/management-page-layout';
+import { useTheme } from 'next-themes';
 
 // #region Admin Groups Management Tab
 
@@ -429,38 +431,8 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
 // #endregion
 
 // #region Pages Management Tab
-
-function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
-  const { setNodeRef, isOver } = useDroppable({ id });
-  
-  return (
-    <div
-      ref={setNodeRef}
-      className={cn(
-        "rounded-full transition-all p-0.5",
-        isOver && "ring-1 ring-border ring-inset"
-      )}
-    >
-      <TooltipProvider>
-          <Tooltip>
-              <TooltipTrigger asChild>
-                  <Button variant="default" size="icon" className="rounded-full p-0" onClick={onAdd} onPointerDown={(e) => e.stopPropagation()}>
-                    <GoogleSymbol name="add_circle" className="text-4xl text-foreground" weight={100} />
-                    <span className="sr-only">New Page or Drop to Duplicate</span>
-                  </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                  <p>{isOver ? 'Drop to Duplicate' : 'Add New Page'}</p>
-              </TooltipContent>
-          </Tooltip>
-      </TooltipProvider>
-    </div>
-  );
-}
-
 function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: Partial<AppPage>) => void }) {
     const { users, teams } = useUser();
-    const [isOpen, setIsOpen] = useState(false);
     
     const handleToggle = (type: 'users' | 'teams', id: string) => {
         const access = page.access || { users: [], teams: [] };
@@ -560,21 +532,41 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
   );
 }
 
-function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand }: { 
+function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand, isSharedPreview }: { 
     page: AppPage; 
     onUpdate: (id: string, data: Partial<AppPage>) => void; 
-    onDelete: (id: string) => void; 
+    onDelete: (page: AppPage) => void; 
     isExpanded: boolean;
     onToggleExpand: () => void;
+    isSharedPreview?: boolean;
 }) {
-    const { viewAsUser } = useUser();
+    const { viewAsUser, users } = useUser();
     const canManage = hasAccess(viewAsUser, page);
     const isPinned = page.isSystemPage;
 
     const displayPath = page.isDynamic 
         ? `${page.path.replace('/dashboard/', '')}/[...]` 
         : page.path.replace('/dashboard/', '');
-    
+        
+    const ownerUser = users.find(u => u.userId === page.owner?.id);
+
+    let shareIcon: string | null = null;
+    let shareIconTitle: string = '';
+    const shareIconColor = 'hsl(220, 13%, 47%)';
+
+    const isOwned = ownerUser?.userId === viewAsUser.userId;
+
+    if (isOwned && page.isShared) {
+        shareIcon = 'change_circle';
+        shareIconTitle = 'Owned & Shared by you';
+    } else if (!isOwned && !isSharedPreview) { 
+        shareIcon = 'link';
+        shareIconTitle = `Owned by ${ownerUser?.displayName || 'another user'}`;
+    } else if (isSharedPreview) { 
+        shareIcon = 'change_circle';
+        shareIconTitle = `Owned by ${ownerUser?.displayName || 'another user'}`;
+    }
+
     const bodyContent = (
       <>
         <div onPointerDown={(e) => e.stopPropagation()}>
@@ -604,11 +596,15 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
         <CardTemplate
             entity={page}
             onUpdate={onUpdate}
-            onDelete={() => onDelete(page.id)}
+            onDelete={() => onDelete(page)}
             canManage={canManage}
             isPinned={isPinned}
             isExpanded={isExpanded}
             onToggleExpand={onToggleExpand}
+            isSharedPreview={isSharedPreview}
+            shareIcon={shareIcon || undefined}
+            shareIconTitle={shareIconTitle}
+            shareIconColor={shareIconColor}
             body={bodyContent}
             headerControls={
                 <div className="flex items-center">
@@ -621,122 +617,82 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
 }
 
 export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
-    const { appSettings, addPage, updatePage, deletePage, reorderPages } = useUser();
+    const { viewAsUser, appSettings, addPage, updatePage, deletePage, reorderPages, updateUser } = useUser();
     const { toast } = useToast();
-    const [searchTerm, setSearchTerm] = useState('');
-    const [colorFilter, setColorFilter] = useState<string | null>(null);
     const [expandedPages, setExpandedPages] = useState<Set<string>>(new Set());
 
     const onToggleExpand = useCallback((pageId: string) => {
         setExpandedPages(prev => {
             const newSet = new Set(prev);
-            if (newSet.has(pageId)) {
-                newSet.delete(pageId);
-            } else {
-                newSet.add(pageId);
-            }
+            if (newSet.has(pageId)) newSet.delete(pageId);
+            else newSet.add(pageId);
             return newSet;
         });
     }, []);
     
-    const pinnedIds = useMemo(() => new Set(systemPages.map(p => p.id)), []);
-    
-    const handleUpdatePage = useCallback((pageId: string, data: Partial<AppPage>) => {
+    const handleUpdate = useCallback((pageId: string, data: Partial<AppPage>) => {
         updatePage(pageId, data);
     }, [updatePage]);
     
-    const handleDuplicatePage = useCallback((sourcePage: AppPage) => {
-        addPage(sourcePage);
-        toast({ title: "Page Duplicated", description: `A copy of "${sourcePage.name}" was created.`});
-    }, [addPage, toast]);
-
-    const handleAddPage = () => {
-        addPage({});
+    const handleDelete = (page: AppPage) => {
+        const isOwner = page.owner?.id === viewAsUser.userId;
+        if (isOwner) {
+            deletePage(page.id);
+            toast({ title: 'Page Deleted' });
+        } else {
+            const updatedLinkedIds = (viewAsUser.linkedPageIds || []).filter(id => id !== page.id);
+            updateUser(viewAsUser.userId, { linkedPageIds: updatedLinkedIds });
+            toast({ title: 'Page Unlinked' });
+        }
     };
 
-    const handleDeletePage = (pageId: string) => {
-        deletePage(pageId);
-        toast({ title: 'Page Deleted' });
+    const handleLinkPage = (pageId: string) => {
+        const updatedLinkedIds = [...(viewAsUser.linkedPageIds || []), pageId];
+        updateUser(viewAsUser.userId, { linkedPageIds: Array.from(new Set(updatedLinkedIds)) });
+        toast({ title: 'Page Linked' });
     };
 
-    const filteredPages = useMemo(() => {
-        let pages = appSettings.pages;
-        if (searchTerm) {
-          pages = pages.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
-        }
-        if (colorFilter) {
-          const targetHue = getHueFromHsl(colorFilter);
-          if (targetHue !== null) {
-            pages = pages.filter(p => {
-              const itemHue = getHueFromHsl(p.color);
-              return itemHue !== null && isHueInRange(targetHue, itemHue);
-            });
-          }
-        }
-        return pages;
-    }, [appSettings.pages, searchTerm, colorFilter]);
-    
+    const displayedPages = useMemo(() => {
+        return appSettings.pages.filter(p => (p.owner?.id === viewAsUser.userId || (viewAsUser.linkedPageIds || []).includes(p.id)) && !p.isSystemPage);
+    }, [appSettings.pages, viewAsUser]);
+
+    const sharedPages = useMemo(() => {
+        const displayedIds = new Set(displayedPages.map(p => p.id));
+        return appSettings.pages.filter(p => p.isShared && p.owner?.id !== viewAsUser.userId && !displayedIds.has(p.id));
+    }, [appSettings.pages, displayedPages, viewAsUser.userId]);
+
     const renderPageCard = useCallback((page: AppPage) => (
-        <SortablePageCard
-            key={page.id}
-            page={page}
-            onUpdate={handleUpdatePage}
-            onDelete={handleDeletePage}
-            isExpanded={expandedPages.has(page.id)}
-            onToggleExpand={() => onToggleExpand(page.id)}
-        />
-    ), [handleUpdatePage, handleDeletePage, expandedPages, onToggleExpand]);
+        <SortableItem key={page.id} id={page.id} data={{ type: 'page-card', page, isSharedPreview: false }}>
+            {(isDragging: boolean) => (
+                <SortablePageCard
+                    page={page}
+                    onUpdate={handleUpdate}
+                    onDelete={handleDelete}
+                    isExpanded={expandedPages.has(page.id)}
+                    onToggleExpand={() => onToggleExpand(page.id)}
+                />
+            )}
+        </SortableItem>
+    ), [handleUpdate, handleDelete, expandedPages, onToggleExpand]);
 
     return (
-        <div className="space-y-6">
-            <DraggableGrid
-                items={filteredPages}
-                setItems={reorderPages}
-                onDragEnd={(event) => {
-                    const { active, over } = event;
-                    if (over?.id === 'duplicate-page-zone') {
-                        const pageToDuplicate = appSettings.pages.find(p => p.id === active.id);
-                        if (pageToDuplicate) {
-                            handleDuplicatePage(pageToDuplicate);
-                        }
-                        return;
-                    }
-                    
-                    if (over && active.id !== over.id) {
-                        const oldIndex = appSettings.pages.findIndex(p => p.id === active.id);
-                        const newIndex = appSettings.pages.findIndex(p => p.id === over.id);
-
-                        const activeIsPinned = pinnedIds.has(active.id.toString());
-                        const overIsPinned = pinnedIds.has(over.id.toString());
-                        
-                        if (activeIsPinned !== overIsPinned) return;
-                        
-                        reorderPages(arrayMove(appSettings.pages, oldIndex, newIndex));
-                    }
-                }}
-                renderItem={(item, isDragging) => renderPageCard(item as AppPage)}
-                renderDragOverlay={(item) => <GoogleSymbol name={item.icon} style={{ color: item.color, fontSize: '48px' }} />}
-                className="space-y-4"
-            >
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <PageTitle title="Pages" />
-                        <DuplicateZone onAdd={handleAddPage} id="duplicate-page-zone" />
-                    </div>
-                    <div className="flex items-center">
-                        <CompactSearchInput
-                            searchTerm={searchTerm}
-                            setSearchTerm={setSearchTerm}
-                            placeholder="Search pages..."
-                            autoFocus={isActive}
-                            showColorFilter={true}
-                            onColorSelect={setColorFilter}
-                            activeColorFilter={colorFilter}
-                        />
-                    </div>
-                </div>
-            </DraggableGrid>
-        </div>
+        <ManagementPageLayout
+            pageTitle="Pages"
+            onPageTitleSave={() => {}}
+            onPageTitleReset={() => {}}
+            canManagePage={false}
+            entityType="page"
+            allItems={displayedPages}
+            allSharedItems={sharedPages}
+            onAddItem={(sourcePage) => addPage(sourcePage || {})}
+            onUpdateItem={handleUpdate}
+            onDeleteItem={handleDelete}
+            onReorderItems={reorderPages}
+            onLinkItem={handleLinkPage}
+            renderItem={renderPageCard}
+            renderDragOverlay={(item) => <GoogleSymbol name={item.icon} style={{ color: item.color, fontSize: '48px' }} />}
+            isActive={isActive}
+        />
     );
 };
 // #endregion
@@ -840,7 +796,6 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
                 setItems={reorderTabs}
                 renderItem={(item) => renderTabCard(item as AppTab)}
                 renderDragOverlay={(item) => <GoogleSymbol name={item.icon} style={{ color: item.color, fontSize: '48px' }} />}
-                className="space-y-4"
             >
                 <div className="flex items-center justify-between">
                     <PageTitle title="Tabs" />
@@ -863,4 +818,5 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
 // #endregion
 
     
+
 
