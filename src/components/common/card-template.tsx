@@ -14,6 +14,9 @@ import { IconColorPicker } from './icon-color-picker';
 import { useTheme } from 'next-themes';
 import { type User } from '@/types';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { useUser } from '@/context/user-context';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { ItemSelectionPopover, type ItemSelectionTab } from './item-selection-popover';
 
 interface CardTemplateProps {
   entity: {
@@ -61,7 +64,9 @@ export function CardTemplate({
   headerControls,
   dragHandleProps,
 }: CardTemplateProps) {
+    const { viewAsUser, users, isDragModifierPressed } = useUser();
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [isOwnershipPopoverOpen, setIsOwnershipPopoverOpen] = useState(false);
     const { theme } = useTheme();
     const readableColor = getReadableColor(entity.color || '', theme);
     
@@ -87,7 +92,36 @@ export function CardTemplate({
         }
         return null;
     }
+    
+    const handleOwnershipChange = (type: string, id: string) => {
+        const newOwner = id === 'system' ? { type: 'system', id: 'system' } : { type: 'user', id };
+        onUpdate(entity.id, { owner: newOwner });
+        setIsOwnershipPopoverOpen(false);
+    };
 
+    const userItemData = users.map(u => ({
+        id: u.userId,
+        name: u.displayName,
+        icon: u.avatarUrl || '',
+        iconType: 'avatar' as const,
+    }));
+    
+    const systemItemData = [{ id: 'system', name: 'System Owned', icon: 'shield_person', iconType: 'symbol' as const }];
+    
+    const ownershipTabs: ItemSelectionTab[] = [
+        { value: 'users', label: 'Users', items: userItemData, selectedIds: [entity.owner?.id || ''] },
+        { value: 'system', label: 'System', items: systemItemData, selectedIds: [entity.owner?.id || ''] },
+    ];
+    
+    const ownershipTrigger = (
+      <div 
+        className="absolute -top-0 -left-1 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" 
+        style={{ backgroundColor: shareIconColor }}
+      >
+        <GoogleSymbol name={shareIcon!} style={{fontSize: '16px'}} />
+      </div>
+    );
+    
     return (
         <>
             <Card className="group relative bg-card flex flex-col h-full shadow-md" {...dragHandleProps}>
@@ -117,14 +151,25 @@ export function CardTemplate({
                             <div className="relative">
                                 {renderIconOrAvatar()}
                                 {shareIcon && shareIconTitle && (
-                                  <TooltipProvider>
-                                      <Tooltip>
-                                          <TooltipTrigger asChild>
-                                              <div className="absolute -top-0 -left-1 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: shareIconColor }}><GoogleSymbol name={shareIcon} style={{fontSize: '16px'}} /></div>
-                                          </TooltipTrigger>
-                                          <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
-                                      </Tooltip>
-                                  </TooltipProvider>
+                                   viewAsUser.isAdmin && !isSharedPreview ? (
+                                        <ItemSelectionPopover
+                                            tabs={ownershipTabs}
+                                            onSelectionChange={handleOwnershipChange}
+                                            trigger={ownershipTrigger}
+                                            tooltip={shareIconTitle + (isDragModifierPressed ? '. Click to reassign.' : '')}
+                                            showColorFilter={false}
+                                            disableTrigger={!isDragModifierPressed}
+                                        />
+                                   ) : (
+                                       <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              {ownershipTrigger}
+                                            </TooltipTrigger>
+                                            <TooltipContent><p>{shareIconTitle}</p></TooltipContent>
+                                          </Tooltip>
+                                       </TooltipProvider>
+                                   )
                                 )}
                             </div>
                             <div onPointerDown={(e) => { e.stopPropagation(); }} className="flex-1 min-w-0">
@@ -182,3 +227,4 @@ export function CardTemplate({
         </>
     );
 }
+
