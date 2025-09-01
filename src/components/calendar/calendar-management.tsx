@@ -1,74 +1,20 @@
 
 'use client';
 
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useUser } from '@/context/user-context';
-import { type SharedCalendar, type AppTab, type User, type AppPage } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription as UICardDescription } from '@/components/ui/card';
+import { type SharedCalendar, type AppTab, type AppPage } from '@/types';
+import { useToast } from '@/hooks/use-toast';
+import { GoogleSymbol } from '../icons/google-symbol';
+import { CardTemplate } from '@/components/common/card-template';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/hooks/use-toast';
-import { GoogleSymbol } from '../icons/google-symbol';
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
-import { cn, getHueFromHsl, isHueInRange } from '@/lib/utils';
-import { ScrollArea } from '../ui/scroll-area';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { syncCalendar } from '@/ai/flows/sync-calendar-flow';
-import { CompactSearchInput } from '@/components/common/compact-search-input';
-import { CardTemplate } from '@/components/common/card-template';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-  type DragStartEvent,
-  useDroppable,
-  DragOverlay,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  rectSortingStrategy,
-  verticalListSortingStrategy,
-  useSortable,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { HslStringColorPicker } from 'react-colorful';
-import { snapCenterToCursor } from '@dnd-kit/modifiers';
-import { DraggableGrid } from '../common/draggable-grid';
+import { ManagementPageLayout } from '../common/management-page-layout';
+import { SortableItem } from '../common/sortable-item';
 import { InlineEditor } from '../common/inline-editor';
-import { SharedItemsPanel } from '../common/shared-items-panel';
-
-function SortableCalendarCard({
-    calendar,
-    ...props
-}: {
-    calendar: SharedCalendar;
-    [key: string]: any;
-}) {
-    const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
-        id: calendar.id,
-        data: { type: 'calendar-card', calendar, isSharedPreview: props.isSharedPreview },
-    });
-
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-    };
-
-    return (
-        <div ref={setNodeRef} style={style} className={cn("break-inside-avoid p-2", isDragging && "opacity-75 z-50")}>
-            <div {...listeners} {...attributes}>
-                <CalendarCard calendar={calendar} {...props} />
-            </div>
-        </div>
-    );
-}
 
 function CalendarCard({
     calendar,
@@ -88,45 +34,14 @@ function CalendarCard({
   const { viewAsUser, users } = useUser();
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
   const [googleCalendarIdInput, setGoogleCalendarIdInput] = useState('');
-  const linkDialogInputRef = useRef<HTMLInputElement>(null);
+  const linkDialogInputRef = React.useRef<HTMLInputElement>(null);
   
-  const [isEditingDefaultTitle, setIsEditingDefaultTitle] = useState(false);
-  const defaultTitleInputRef = useRef<HTMLInputElement>(null);
-
   const {toast} = useToast();
   
   const ownerUser = useMemo(() => users.find(u => u.userId === calendar.owner.id), [users, calendar.owner.id]);
   const canManage = useMemo(() => !isSharedPreview && viewAsUser.userId === calendar.owner.id, [isSharedPreview, viewAsUser, calendar]);
 
-  const handleSaveDefaultTitle = useCallback(() => {
-    const newTitle = defaultTitleInputRef.current?.value.trim();
-    if (newTitle !== calendar.defaultEventTitle) {
-      onUpdate(calendar.id, { defaultEventTitle: newTitle });
-    }
-    setIsEditingDefaultTitle(false);
-  }, [calendar.id, calendar.defaultEventTitle, onUpdate, setIsEditingDefaultTitle]);
-  
-  useEffect(() => {
-    if (!isEditingDefaultTitle) return;
-    const handleOutsideClick = (event: MouseEvent) => {
-        if (defaultTitleInputRef.current && !defaultTitleInputRef.current.contains(event.target as Node)) {
-            handleSaveDefaultTitle();
-        }
-    };
-    document.addEventListener("mousedown", handleOutsideClick);
-    defaultTitleInputRef.current?.focus();
-    defaultTitleInputRef.current?.select();
-    return () => {
-        document.removeEventListener("mousedown", handleOutsideClick);
-    };
-  }, [isEditingDefaultTitle, handleSaveDefaultTitle]);
-  
-  const handleDefaultTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') { e.preventDefault(); handleSaveDefaultTitle(); }
-    else if (e.key === 'Escape') setIsEditingDefaultTitle(false);
-  };
-
-  useEffect(() => {
+  React.useEffect(() => {
     if (isLinkDialogOpen) {
       setTimeout(() => linkDialogInputRef.current?.focus(), 100);
     }
@@ -155,19 +70,19 @@ function CalendarCard({
     setGoogleCalendarIdInput('');
   };
 
+  const shareIconColor = 'hsl(220, 13%, 47%)';
   let shareIcon: string | null = null;
   let shareIconTitle: string = '';
-  const shareIconColor = 'hsl(220, 13%, 47%)';
 
   const isOwned = ownerUser?.userId === viewAsUser.userId;
 
   if (isOwned && calendar.isShared) {
       shareIcon = 'change_circle';
       shareIconTitle = 'Owned & Shared by you';
-  } else if (!isOwned && !isSharedPreview) { // It's a linked calendar on the main board
+  } else if (!isOwned && !isSharedPreview) { 
       shareIcon = 'link';
       shareIconTitle = `Owned by ${ownerUser?.displayName || 'another user'}`;
-  } else if (isSharedPreview) { // In the shared panel
+  } else if (isSharedPreview) { 
       shareIcon = 'change_circle';
       shareIconTitle = `Owned by ${ownerUser?.displayName || 'another user'}`;
   }
@@ -178,7 +93,7 @@ function CalendarCard({
       <CardTemplate
         entity={calendar}
         onUpdate={onUpdate}
-        onDelete={onDelete}
+        onDelete={() => onDelete(calendar)}
         canManage={canManage}
         isExpanded={isExpanded}
         onToggleExpand={onToggleExpand}
@@ -224,27 +139,14 @@ function CalendarCard({
             </>
         }
         body={
-            <div className="space-y-1">
-               {isEditingDefaultTitle ? (
-                  <Input
-                    ref={defaultTitleInputRef}
-                    defaultValue={calendar.defaultEventTitle || ''}
-                    onKeyDown={handleDefaultTitleKeyDown}
-                    onBlur={handleSaveDefaultTitle}
-                    className="h-auto p-0 text-xs italic border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                    placeholder="No default title"
-                  />
-                ) : (
-                  <span 
-                      className={cn("italic text-xs text-muted-foreground", canManage && "cursor-pointer")} 
-                      onClick={(e) => {
-                          e.stopPropagation();
-                          if(canManage) setIsEditingDefaultTitle(true)
-                      }}
-                  >
-                      {calendar.defaultEventTitle || 'No default title'}
-                  </span>
-                )}
+            <div className="space-y-1" onPointerDown={(e) => e.stopPropagation()}>
+               <InlineEditor
+                  value={calendar.defaultEventTitle || ''}
+                  onSave={(newTitle) => onUpdate(calendar.id, { defaultEventTitle: newTitle })}
+                  disabled={!canManage}
+                  placeholder="No default title"
+                  className="italic text-xs text-muted-foreground"
+                />
             </div>
         }
       />
@@ -279,47 +181,13 @@ function CalendarCard({
   );
 }
 
-function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
-  const { setNodeRef, isOver } = useDroppable({ id });
-  
-  return (
-    <div
-      ref={setNodeRef}
-      className={cn(
-        "rounded-full transition-all p-0.5",
-        isOver && "ring-1 ring-border ring-inset"
-      )}
-    >
-      <TooltipProvider>
-          <Tooltip>
-              <TooltipTrigger asChild>
-                  <Button variant="default" size="icon" className="rounded-full p-0" onClick={onAdd} onPointerDown={(e) => e.stopPropagation()}>
-                    <GoogleSymbol name="add_circle" className="text-4xl" />
-                    <span className="sr-only">New Calendar or Drop to Duplicate</span>
-                  </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                  <p>{isOver ? 'Drop to Duplicate' : 'Add New Calendar'}</p>
-              </TooltipContent>
-          </Tooltip>
-      </TooltipProvider>
-    </div>
-  );
-}
 
-export function CalendarManagement({ tab, page }: { tab: AppTab; page: AppPage }) {
-  const { viewAsUser, calendars, addCalendar, updateCalendar, deleteCalendar, updatePage, appSettings, updateUser, reorderCalendars } = useUser();
+export function CalendarManagement({ tab, page, isActive }: { tab: AppTab; page: AppPage, isActive?: boolean }) {
+  const { viewAsUser, calendars, addCalendar, updateCalendar, deleteCalendar, updatePage, updateUser, reorderCalendars } = useUser();
   const { toast } = useToast();
   
-  const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
-  const [sharedSearchTerm, setSharedSearchTerm] = useState('');
-  const [mainSearchTerm, setMainSearchTerm] = useState('');
-  const [colorFilter, setColorFilter] = useState<string | null>(null);
-
   const [expandedCalendars, setExpandedCalendars] = useState<Set<string>>(new Set());
   
-  const canManage = viewAsUser.isAdmin;
-
   const onToggleExpand = useCallback((calendarId: string) => {
       setExpandedCalendars(prev => {
           const newSet = new Set(prev);
@@ -333,6 +201,7 @@ export function CalendarManagement({ tab, page }: { tab: AppTab; page: AppPage }
   }, []);
 
   const title = page.displayTitle ?? tab.name;
+  const canManagePage = viewAsUser.isAdmin;
   
   const handleTitleSave = (newTitle: string) => {
     updatePage(page.id, { displayTitle: newTitle });
@@ -347,33 +216,12 @@ export function CalendarManagement({ tab, page }: { tab: AppTab; page: AppPage }
   };
 
   const handleAddCalendar = (sourceCalendar?: SharedCalendar) => {
-    const calendarCount = calendars.length;
-    let newCalendarData: Omit<SharedCalendar, 'id'>;
-
-    if (sourceCalendar) {
-        newCalendarData = {
-            ...JSON.parse(JSON.stringify(sourceCalendar)),
-            name: `${sourceCalendar.name} (Copy)`,
-            isShared: false,
-            owner: { type: 'user', id: viewAsUser.userId },
-            defaultEventTitle: sourceCalendar.defaultEventTitle ? `${sourceCalendar.defaultEventTitle} (Copy)` : `New Event in ${sourceCalendar.name} (Copy)`,
-        };
-    } else {
-        const newName = `New Calendar ${calendarCount + 1}`;
-        newCalendarData = {
-            name: newName,
-            icon: 'calendar_month',
-            color: 'hsl(220, 13%, 47%)',
-            owner: { type: 'user', id: viewAsUser.userId },
-            defaultEventTitle: `New ${newName} Event`,
-        };
-    }
-    addCalendar(newCalendarData);
-    toast({ title: 'New Calendar Added' });
+    addCalendar(sourceCalendar || {});
+    toast({ title: sourceCalendar ? 'Calendar Duplicated' : 'New Calendar Added' });
   };
   
-  const handleUpdate = async (calendarId: string, data: Partial<SharedCalendar>) => {
-    await updateCalendar(calendarId, data);
+  const handleUpdate = (calendarId: string, data: Partial<SharedCalendar>) => {
+    updateCalendar(calendarId, data);
   };
   
   const handleDelete = (calendar: SharedCalendar) => {
@@ -387,161 +235,73 @@ export function CalendarManagement({ tab, page }: { tab: AppTab; page: AppPage }
         toast({ title: 'Calendar Unlinked', description: `"${calendar.name}" has been removed from your board.`});
     }
   };
+
+  const handleLinkCalendar = (calendarId: string) => {
+    const updatedLinkedIds = [...(viewAsUser.linkedCalendarIds || []), calendarId];
+    updateUser(viewAsUser.userId, { linkedCalendarIds: Array.from(new Set(updatedLinkedIds)) });
+    toast({ title: 'Calendar Linked' });
+  }
   
   const displayedCalendars = useMemo(() => {
-    let filtered = calendars
-      .filter(c => c.owner.id === viewAsUser.userId || (viewAsUser.linkedCalendarIds || []).includes(c.id))
-      .filter(c => c.name.toLowerCase().includes(mainSearchTerm.toLowerCase()));
-      
-    if (colorFilter) {
-        const targetHue = getHueFromHsl(colorFilter);
-        if (targetHue !== null) {
-            filtered = filtered.filter(c => {
-                const itemHue = getHueFromHsl(c.color);
-                return itemHue !== null && isHueInRange(targetHue, itemHue);
-            });
-        }
-    }
-    return filtered;
-  }, [calendars, mainSearchTerm, colorFilter, viewAsUser]);
+    return calendars
+      .filter(c => c.owner.id === viewAsUser.userId || (viewAsUser.linkedCalendarIds || []).includes(c.id));
+  }, [calendars, viewAsUser]);
 
   const sharedCalendars = useMemo(() => {
     const displayedIds = new Set(displayedCalendars.map(c => c.id));
-    return calendars.filter(c => c.isShared && c.owner.id !== viewAsUser.userId && !displayedIds.has(c.id) && c.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
-  }, [calendars, displayedCalendars, sharedSearchTerm, viewAsUser.userId]);
+    return calendars.filter(c => c.isShared && c.owner.id !== viewAsUser.userId && !displayedIds.has(c.id));
+  }, [calendars, displayedCalendars, viewAsUser.userId]);
 
-  const onDragEnd = (event: DragEndEvent) => {
-      const { active, over } = event;
-      if (!over) return;
+  const renderCalendarCard = useCallback((calendar: SharedCalendar) => (
+      <SortableItem key={calendar.id} id={calendar.id} data={{ type: 'calendar-card', calendar, isSharedPreview: false }}>
+        {(isDragging: boolean) => (
+          <CalendarCard
+            calendar={calendar}
+            onUpdate={handleUpdate}
+            onDelete={handleDelete}
+            isExpanded={expandedCalendars.has(calendar.id)}
+            onToggleExpand={() => onToggleExpand(calendar.id)}
+          />
+        )}
+      </SortableItem>
+  ), [handleUpdate, handleDelete, expandedCalendars, onToggleExpand]);
   
-      const activeCalendar = active.data.current?.calendar as SharedCalendar;
-      if (!activeCalendar) return;
+  const renderSharedCalendarCard = useCallback((calendar: SharedCalendar) => (
+      <SortableItem key={calendar.id} id={calendar.id} data={{ type: 'calendar-card', calendar, isSharedPreview: true }}>
+        {(isDragging: boolean) => (
+            <CalendarCard
+              calendar={calendar}
+              onUpdate={handleUpdate}
+              onDelete={handleDelete}
+              isSharedPreview={true}
+              isExpanded={expandedCalendars.has(calendar.id)}
+              onToggleExpand={() => onToggleExpand(calendar.id)}
+            />
+        )}
+      </SortableItem>
+  ), [handleUpdate, handleDelete, expandedCalendars, onToggleExpand]);
 
-      if (over.id === 'duplicate-calendar-zone') {
-        handleAddCalendar(activeCalendar);
-        const isLinked = activeCalendar.owner.id !== viewAsUser.userId;
-        if (isLinked) {
-            const updatedLinkedIds = (viewAsUser.linkedCalendarIds || []).filter(id => id !== activeCalendar.id);
-            updateUser(viewAsUser.userId, { linkedCalendarIds: updatedLinkedIds });
-            toast({ title: 'Calendar Copied', description: `Original shared calendar "${activeCalendar.name}" has been unlinked.`});
-        }
-        return;
-      }
-
-      if (over.id === 'shared-calendars-panel') {
-        const isOwner = activeCalendar.owner.id === viewAsUser.userId;
-        if (isOwner) { // Owned calendar dragged to share/unshare
-            updateCalendar(activeCalendar.id, { isShared: !activeCalendar.isShared });
-            toast({ title: activeCalendar.isShared ? 'Calendar Unshared' : 'Calendar Shared' });
-        } else { // Linked calendar dragged back to unlink
-            const updatedLinkedIds = (viewAsUser.linkedCalendarIds || []).filter(id => id !== activeCalendar.id);
-            updateUser(viewAsUser.userId, { linkedCalendarIds: updatedLinkedIds });
-            toast({ title: 'Calendar Unlinked' });
-        }
-        return;
-      }
-      
-      if (active.data.current?.isSharedPreview && over.id === 'main-calendars-grid') {
-         const updatedLinkedIds = [...(viewAsUser.linkedCalendarIds || []), activeCalendar.id];
-         updateUser(viewAsUser.userId, { linkedCalendarIds: Array.from(new Set(updatedLinkedIds)) });
-         toast({ title: 'Calendar Linked' });
-        return;
-      }
-      
-      const overIsCard = over.data.current?.type === 'calendar';
-      if(overIsCard && active.id !== over.id) {
-          const oldIndex = displayedCalendars.findIndex(t => t.id === active.id);
-          const newIndex = displayedCalendars.findIndex(t => t.id === over.id);
-          if(oldIndex !== -1 && newIndex !== -1) {
-              reorderCalendars(arrayMove(displayedCalendars, oldIndex, newIndex));
-          }
-      }
-  };
-  
-  const renderCalendarCard = (calendar: SharedCalendar) => (
-      <SortableCalendarCard
-        key={calendar.id}
-        calendar={calendar}
-        onUpdate={handleUpdate}
-        onDelete={handleDelete}
-        isExpanded={expandedCalendars.has(calendar.id)}
-        onToggleExpand={() => onToggleExpand(calendar.id)}
-      />
-  );
-  
-  const renderSharedCalendarCard = (calendar: SharedCalendar) => (
-      <SortableCalendarCard
-        key={calendar.id}
-        calendar={calendar}
-        onUpdate={handleUpdate}
-        onDelete={handleDelete}
-        isSharedPreview={true}
-        isExpanded={expandedCalendars.has(calendar.id)}
-        onToggleExpand={() => onToggleExpand(calendar.id)}
-      />
-  );
+  const renderDragOverlay = useCallback((item: SharedCalendar) => (
+      <GoogleSymbol name={item.icon} style={{color: item.color, fontSize: '48px'}} />
+  ), []);
 
   return (
-    <DndContext onDragEnd={onDragEnd}>
-        <div className="flex gap-4 h-full">
-            <div className="flex-1 flex flex-col min-h-0">
-                <div className="flex items-center justify-between mb-6 shrink-0">
-                    <div className="flex items-center gap-2">
-                        <InlineEditor 
-                            value={title}
-                            onSave={handleTitleSave}
-                            onClick={handleTitleReset}
-                            className="h-auto p-0 font-headline text-2xl font-thin tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                            disabled={!canManage}
-                        />
-                        <DuplicateZone id="duplicate-calendar-zone" onAdd={() => handleAddCalendar()} />
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <CompactSearchInput
-                          searchTerm={mainSearchTerm}
-                          setSearchTerm={setMainSearchTerm}
-                          placeholder="Search calendars..."
-                          tooltipText="Search Calendars"
-                          showColorFilter={true}
-                          onColorSelect={setColorFilter}
-                          activeColorFilter={colorFilter}
-                        />
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button variant="default" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
-                                <GoogleSymbol name="dynamic_feed" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent><p>Show Shared Calendars</p></TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                    </div>
-                </div>
-                <ScrollArea className="flex-1 min-h-0">
-                    <DraggableGrid 
-                        items={displayedCalendars} 
-                        setItems={reorderCalendars}
-                        onDragEnd={onDragEnd}
-                        renderItem={(item) => renderCalendarCard(item as SharedCalendar)}
-                        renderDragOverlay={(item) => <GoogleSymbol name={item.icon} style={{color: item.color, fontSize: '48px'}} />}
-                    />
-                </ScrollArea>
-            </div>
-            
-            <SharedItemsPanel
-                isOpen={isSharedPanelOpen}
-                type="calendars"
-                title="Shared Calendars"
-                description="Drag a calendar you own here to share it. Drag a calendar to your board to link it."
-                items={sharedCalendars}
-                searchTerm={sharedSearchTerm}
-                setSearchTerm={setSharedSearchTerm}
-                renderItem={renderSharedCalendarCard}
-                renderDragOverlay={(item) => <GoogleSymbol name={item.icon} style={{color: item.color, fontSize: '48px'}} />}
-                emptyMessage="No other calendars are currently shared."
-            />
-        </div>
-    </DndContext>
+    <ManagementPageLayout
+        pageTitle={title}
+        onPageTitleSave={handleTitleSave}
+        onPageTitleReset={handleTitleReset}
+        canManagePage={canManagePage}
+        entityType="calendar"
+        allItems={displayedCalendars}
+        allSharedItems={sharedCalendars}
+        onAddItem={handleAddCalendar}
+        onUpdateItem={handleUpdate}
+        onDeleteItem={handleDelete}
+        onReorderItems={reorderCalendars}
+        onLinkItem={handleLinkCalendar}
+        renderItem={renderCalendarCard}
+        renderDragOverlay={renderDragOverlay}
+        isActive={isActive ?? false}
+    />
   );
 }
