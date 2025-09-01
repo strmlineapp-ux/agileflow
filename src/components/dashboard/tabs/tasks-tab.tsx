@@ -91,32 +91,34 @@ export function TasksContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <PageTitle 
-          title={title}
-          onSave={handleTitleSave}
-          onReset={handleTitleReset}
-          disabled={!canManagePage || !page}
-        />
-        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-            <DialogTrigger asChild>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="default" size="icon" onClick={openNewTaskForm}>
-                        <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
-                        <span className="sr-only">New Task</span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent><p>New Task</p></TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-            </DialogTrigger>
-            <DialogContent>
-                {/* A proper TaskForm component would go here, this is a conceptual placeholder */}
-                <p>Task Form Placeholder</p>
-                <p>{editingTask ? `Editing: ${editingTask.title}` : 'Creating new task'}</p>
-            </DialogContent>
-        </Dialog>
+        <div className="flex items-center gap-2">
+            <PageTitle 
+              title={title}
+              onSave={handleTitleSave}
+              onReset={handleTitleReset}
+              disabled={!canManagePage || !page}
+            />
+            <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+                <DialogTrigger asChild>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="default" size="icon" onClick={openNewTaskForm}>
+                            <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
+                            <span className="sr-only">New Task</span>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>New Task</p></TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                </DialogTrigger>
+                <DialogContent>
+                    {/* A proper TaskForm component would go here, this is a conceptual placeholder */}
+                    <p>Task Form Placeholder</p>
+                    <p>{editingTask ? `Editing: ${editingTask.title}` : 'Creating new task'}</p>
+                </DialogContent>
+            </Dialog>
+        </div>
       </div>
       <div className="flex items-center justify-between">
          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="w-full">
