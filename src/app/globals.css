@@ -3,6 +3,11 @@
 @tailwind utilities;
 
 @layer base {
+  * {
+    margin: 0;
+    padding: 0;
+  }
+  
   :root {
     --background: 210 20% 95%;
     --card: 210 20% 98%;
@@ -46,7 +51,6 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-roboto), sans-serif;
-    margin: 0;
   }
   
   h1, h2, h3, h4, h5, h6 {
