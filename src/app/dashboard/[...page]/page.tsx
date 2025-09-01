@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useMemo } from 'react';
@@ -25,6 +26,7 @@ import { CalendarPageContent } from '@/components/dashboard/tabs/calendar-tab';
 import { ProjectsContent } from '@/components/dashboard/tabs/projects-tab';
 import { EventsContent } from '@/components/dashboard/tabs/events-tab';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { InlineEditor } from '@/components/common/inline-editor';
 
 
 const componentMap = {
@@ -51,7 +53,7 @@ const componentMap = {
 
 export default function DynamicPage() {
   const params = useParams();
-  const { appSettings, viewAsUser, loading, teams } = useUser();
+  const { appSettings, viewAsUser, loading, teams, updatePage, updateAppTab } = useUser();
   const { page: pagePath } = params;
 
   const path = Array.isArray(pagePath) ? `/dashboard/${pagePath.join('/')}` : `/dashboard/${pagePath}`;
@@ -124,8 +126,13 @@ export default function DynamicPage() {
           <TabsList>
             {pageTabs.map(tab => (
               <TabsTrigger key={tab.id} value={tab.id} className="gap-2">
-                <GoogleSymbol name={tab.icon} className="text-lg" />
-                {tab.name}
+                <GoogleSymbol name={tab.icon} className="text-4xl" weight={100} />
+                 <InlineEditor 
+                    value={tab.name}
+                    onSave={(newName) => updateAppTab(tab.id, { name: newName })}
+                    disabled={!viewAsUser.isAdmin}
+                    className="font-normal"
+                />
               </TabsTrigger>
             ))}
           </TabsList>
@@ -148,7 +155,12 @@ export default function DynamicPage() {
        {!seamlessPageIds.includes(page.id) && (
             <h1 className="text-2xl flex items-center gap-2">
                 <GoogleSymbol name={page.icon} style={{color: page.color}} />
-                {teamContext ? `${teamContext.name}: ${page.name}` : page.name}
+                 <InlineEditor
+                    value={page.displayTitle || page.name}
+                    onSave={(newTitle) => updatePage(page.id, { displayTitle: newTitle })}
+                    disabled={!viewAsUser.isAdmin}
+                    className="font-headline font-thin"
+                />
             </h1>
        )}
        {renderContent()}
