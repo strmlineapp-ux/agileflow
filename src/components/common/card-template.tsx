@@ -132,6 +132,7 @@ export function CardTemplate({
                                     disabled={!canManage}
                                     className="break-words text-muted-foreground"
                                 />
+                                {user?.title && <p className="text-sm text-foreground">{user.title}</p>}
                             </div>
                             <div className="flex items-center" onPointerDown={(e) => e.stopPropagation()}>
                                 {headerControls}
@@ -145,7 +146,7 @@ export function CardTemplate({
                     </CardContent>
                 )}
                 {footer && <CardFooter className="p-2 pt-0">{footer}</CardFooter>}
-                {(body) && (
+                {body && (
                     <div className="absolute -bottom-1 right-0">
                         <Button variant="default" size="icon" onClick={onToggleExpand} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
                             <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
