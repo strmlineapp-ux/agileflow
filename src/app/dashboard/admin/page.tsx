@@ -44,17 +44,7 @@ export default function AdminPage() {
   return (
     <div className="flex flex-col h-full gap-6">
         <Tabs defaultValue="admins" onValueChange={setActiveTabKey} className="flex flex-col flex-1 gap-6">
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                     <GoogleSymbol name={adminPage.icon} style={{color: adminPage.color, fontSize: '32px'}} />
-                     <InlineEditor
-                        value={title}
-                        onSave={handleTitleSave}
-                        onClick={handleTitleReset}
-                        className="h-auto p-0 font-headline text-2xl tracking-tight border-0 rounded-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                        disabled={!appSettings.isAdmin}
-                     />
-                </div>
+            <div className="flex items-center justify-end">
                 <TabsList>
                     {adminTabs.map(tab => (
                         <TabsTrigger key={tab.key} value={tab.key} className="gap-2">
