@@ -64,69 +64,65 @@ export function TaskList({ tasks, limit, onEdit, onDelete }: { tasks: Task[], li
   }, [allBadgeCollections, allBadges]);
 
   const renderTable = (tasksToRender: Task[]) => (
-    <Card>
-      <CardContent className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>
-                <Button variant="default" className="-ml-4 text-foreground">
-                  Task
-                  <GoogleSymbol name="swap_vert" className="ml-2" />
-                </Button>
-              </TableHead>
-              <TableHead>Assigned To</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Priority</TableHead>
-              <TableHead>Due Date</TableHead>
-              <TableHead>
-                <span className="sr-only">Actions</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {tasksToRender.map((task) => (
-              <TableRow key={task.taskId}>
-                <TableCell className="text-foreground">{task.title}</TableCell>
-                <TableCell>
-                  <div className="text-foreground">
-                    {task.assignedTo.map((user) => {
-                      const nameParts = user.displayName.split(' ');
-                      const formattedName = nameParts.length > 1 ? `${nameParts[0]} ${nameParts[1].charAt(0)}.` : nameParts[0];
-                      return <div key={user.userId}>{formattedName}</div>;
-                    })}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <TaskStatusBadge status={task.status} />
-                </TableCell>
-                <TableCell>
-                  <PriorityBadge priorityId={task.priority} />
-                </TableCell>
-                <TableCell className="text-foreground">{isToday(task.dueDate) ? 'Today' : formatDate(new Date(task.dueDate))}</TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button aria-haspopup="true" size="icon" variant="default">
-                        <GoogleSymbol name="more_horiz" />
-                        <span className="sr-only">Toggle menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem onSelect={() => onEdit?.(task)}>Edit</DropdownMenuItem>
-                      <DropdownMenuItem>View Details</DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-destructive" onSelect={() => onDelete?.(task.taskId)}>Delete</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>
+            <Button variant="default" className="-ml-4 text-foreground">
+              Task
+              <GoogleSymbol name="swap_vert" className="ml-2" />
+            </Button>
+          </TableHead>
+          <TableHead>Assigned To</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>Priority</TableHead>
+          <TableHead>Due Date</TableHead>
+          <TableHead>
+            <span className="sr-only">Actions</span>
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {tasksToRender.map((task) => (
+          <TableRow key={task.taskId}>
+            <TableCell className="text-foreground">{task.title}</TableCell>
+            <TableCell>
+              <div className="text-foreground">
+                {task.assignedTo.map((user) => {
+                  const nameParts = user.displayName.split(' ');
+                  const formattedName = nameParts.length > 1 ? `${nameParts[0]} ${nameParts[1].charAt(0)}.` : nameParts[0];
+                  return <div key={user.userId}>{formattedName}</div>;
+                })}
+              </div>
+            </TableCell>
+            <TableCell>
+              <TaskStatusBadge status={task.status} />
+            </TableCell>
+            <TableCell>
+              <PriorityBadge priorityId={task.priority} />
+            </TableCell>
+            <TableCell className="text-foreground">{isToday(task.dueDate) ? 'Today' : formatDate(new Date(task.dueDate))}</TableCell>
+            <TableCell>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button aria-haspopup="true" size="icon" variant="default">
+                    <GoogleSymbol name="more_horiz" />
+                    <span className="sr-only">Toggle menu</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                  <DropdownMenuItem onSelect={() => onEdit?.(task)}>Edit</DropdownMenuItem>
+                  <DropdownMenuItem>View Details</DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="text-destructive" onSelect={() => onDelete?.(task.taskId)}>Delete</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 
   const renderGroupedTasks = (tasksToGroup: Task[]) => {
@@ -162,7 +158,11 @@ export function TaskList({ tasks, limit, onEdit, onDelete }: { tasks: Task[], li
                            <span>{statusLabels[status]}</span>
                            <UiBadge variant="outline">{tasksInGroup.length}</UiBadge>
                         </h3>
-                        {renderTable(tasksInGroup)}
+                        <Card>
+                          <CardContent className="p-0">
+                            {renderTable(tasksInGroup)}
+                          </CardContent>
+                        </Card>
                     </div>
                 );
             })}
