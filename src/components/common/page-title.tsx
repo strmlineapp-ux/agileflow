@@ -33,7 +33,6 @@ export function PageTitle({
         onSave={onSave}
         onClick={onReset}
         disabled={disabled}
-        className="font-headline"
       />
     </h1>
   );
