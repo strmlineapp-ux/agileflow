@@ -84,6 +84,7 @@ export function IconColorPicker({ icon, color, onUpdateIcon, onUpdateColor, disa
                         setSearchTerm={setIconSearch}
                         placeholder="Search icons..."
                         autoFocus={true}
+                        isActive={true}
                     />
                     <TooltipProvider>
                         <Tooltip>
@@ -117,7 +118,7 @@ export function IconColorPicker({ icon, color, onUpdateIcon, onUpdateColor, disa
                                                     onUpdateIcon(iconName);
                                                     setIsIconPopoverOpen(false);
                                                 }}
-                                                className={cn("h-8 w-8 p-0")}
+                                                className={cn("h-8 w-8 p-0 font-emphasis", isSelected && "!text-foreground")}
                                                 style={isSelected ? { backgroundColor: color } : {}}
                                             >
                                                 <GoogleSymbol
