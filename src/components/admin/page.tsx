@@ -83,7 +83,7 @@ function SortableUserCard({ user, listId, onDeleteRequest }: { user: User, listI
                 isExpanded={true}
                 onToggleExpand={() => {}}
                 canManage={canDelete}
-                body={<p className="text-sm text-foreground">{user.title || <span className="italic">No title provided</span>}</p>}
+                body={<p className="text-sm text-foreground">{user.email || <span className="italic">No email provided</span>}</p>}
             />
         </div>
     );
@@ -828,3 +828,4 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
 // #endregion
 
     
+
