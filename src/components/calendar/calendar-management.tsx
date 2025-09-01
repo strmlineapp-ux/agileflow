@@ -15,6 +15,7 @@ import { syncCalendar } from '@/ai/flows/sync-calendar-flow';
 import { ManagementPageLayout } from '../common/management-page-layout';
 import { SortableItem } from '../common/sortable-item';
 import { InlineEditor } from '../common/inline-editor';
+import { PageTitle } from '../common/page-title';
 
 function CalendarCard({
     calendar,
@@ -207,7 +208,7 @@ export function CalendarManagement({ tab, page, isActive }: { tab: AppTab; page:
     updatePage(page.id, { displayTitle: newTitle });
   };
 
-  const handleTitleReset = (e: React.MouseEvent<HTMLHeadingElement>) => {
+  const handleTitleReset = (e: React.MouseEvent) => {
     if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
         e.preventDefault();
         updatePage(page.id, { displayTitle: null });
