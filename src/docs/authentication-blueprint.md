@@ -1,4 +1,5 @@
 
+
 # AgileFlow: Authentication Blueprint
 
 This document provides a clear, non-technical overview of how user authentication is handled within the AgileFlow application, incorporating a robust, administrator-controlled access model.
@@ -23,7 +24,7 @@ This method ensures the very first person to sign into a new, empty AgileFlow in
 A new user navigates to the application URL and is the first person ever to click "Sign in with Google."
 
 **Step 2: System Detects No Existing Users**
-Firebase authenticates the user. The application then checks the `/users` collection in Firestore and finds that it is empty.
+Firebase authenticates the user. The application then checks the `/users` collection in Firestore and finds that it is empty for the current workspace.
 
 **Step 3: Admin Profile Creation & Full Access Granted**
 Because this is the first user, the system creates their profile with two special properties:
@@ -37,17 +38,20 @@ The user is immediately granted full administrative access to the entire applica
 
 This is the most secure and user-friendly method for adding new team members once an administrator exists.
 
-**Step 1: Admin Adds Email to Pre-Approved List**
-An existing administrator uses a dedicated "Add User" form within the application to enter the email address of the new user. This action securely adds the email to a "pre-approved" list in the database.
+**Step 1: Admin Sends an Invitation**
+An existing administrator uses a dedicated "Pre-approve User" form within the application to enter the email address of the new user. This action securely adds the email to a `pre-approved-emails` collection in the database.
 
-**Step 2: User Clicks "Sign in with Google"**
-The new user navigates to the login page and uses the "Sign in with Google" button. They complete the secure sign-in process directly with Google.
+**Step 2: User Receives an Email**
+A Cloud Function is automatically triggered by the new entry in the `pre-approved-emails` collection. This function sends a welcome email to the new user with a link to the AgileFlow login page.
 
-**Step 3: System Verifies Pre-Approval**
-Firebase Authentication confirms the user's identity and returns their verified email address to the application. The system checks this email against the "pre-approved" list.
+**Step 3: User Clicks "Sign in with Google"**
+The new user clicks the link and uses the "Sign in with Google" button. They complete the secure sign-in process directly with Google.
 
-**Step 4: Profile Creation & Access Granted**
-Upon finding a match, the system creates a new user profile in the Firestore `/users` collection, populating it with their Google account details (Name, Email, Profile Picture), setting their `accountType` to `'Full'`, and granting them full access immediately.
+**Step 4: System Verifies Invitation**
+Firebase Authentication confirms the user's identity and returns their verified email address to the application. The system checks this email against the `pre-approved-emails` list.
+
+**Step 5: Profile Creation & Access Granted**
+Upon finding a match, the system creates a new user profile in the Firestore `/users` collection, populating it with their Google account details (Name, Email, Profile Picture), setting their `accountType` to 'Full', and granting them full access immediately.
 
 ---
 
@@ -59,11 +63,11 @@ This flow handles "walk-up" attempts, where a user who has not been invited trie
 A new, uninvited user navigates to the application URL and clicks "Sign in with Google."
 
 **Step 2: System Creates a "Pending" Profile**
-Firebase authenticates the user. The application checks Firestore, finds no existing user and that the user is not on the pre-approved list, and creates a new user document. **Crucially, it sets the `accountType` to `'Viewer'`, which restricts all access.**
+Firebase authenticates the user. The application checks Firestore, finds no existing user and that the user is not pre-approved, and creates a new user document. **Crucially, it sets the `accountType` to `'Viewer'`, which restricts all access.**
 
 **Step 3: Administrator Notification**
 *   **In-App:** A notification appears in the administrator's notification list, stating that a new user has requested access.
-*   **Via Email (Recommended Backend):** A **Cloud Function** (a backend process) is automatically triggered. This function sends an email to all system administrators, alerting them of the new request and providing a direct link to the approval page.
+*   **Via Email (Recommended Backend):** A **Cloud Function** is automatically triggered. This function sends an email to all system administrators, alerting them of the new request and providing a direct link to the approval page.
 
 **Step 4: Administrator Action**
 The administrator reviews the request in the in-app notification list. They have two options:
@@ -97,7 +101,7 @@ All information related to a user's application experience is stored in a dedica
 | `easyBooking` | A `true` or `false` flag for enabling the "click-to-create-event" feature on the calendar. |
 | `timeFormat` | A UI preference for displaying time in 12-hour or 24-hour format. |
 | `linked...Ids` | Lists of IDs for shared Teams, Badge Collections, or Calendars that the user has chosen to link to their personal management boards. |
-| `dragActivationKey`| The keyboard key (`Shift`, `Alt`, etc.) the user must hold down to perform drag-and-drop actions. |
+| `modifierKey`| The keyboard key (`Shift`, `Alt`, etc.) the user must hold down to perform secondary actions like resetting preferences. |
 | `createdAt` | The timestamp of when the user's account was first created in the system. |
 | `approvedBy` | The `userId` of the administrator who approved the user's account request, or 'system' for the first user. |
 
@@ -126,7 +130,7 @@ When a new user signs in for the first time, their profile is created from a mix
 | `easyBooking` | **Application:** Is not set by default. |
 | `timeFormat` | **Application:** Is not set by default. |
 | `linked...Ids` | **Application:** All are empty by default. |
-| `dragActivationKey`| **Application:** Defaults to `shift`. |
+| `modifierKey`| **Application:** Defaults to `shift`. |
 | `createdAt` | **Application:** Set to the current timestamp on creation. |
 | `approvedBy` | **Application:** Set to 'system' for the first user, or the admin's `userId` upon approval. |
 

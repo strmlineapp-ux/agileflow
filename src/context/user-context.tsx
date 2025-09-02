@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
@@ -21,7 +22,6 @@ interface UserContextType {
   logout: (router: AppRouterInstance) => Promise<void>;
   loading: boolean;
   isFirebaseReady: boolean;
-  isDragModifierPressed: boolean;
 
   // Data & Actions
   holidays: Holiday[];
@@ -113,7 +113,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const dataHook = useData(realUser, authLoading);
   
   const [viewAsUserId, setViewAsUserId] = useState<string | null>(null);
-  const [isDragModifierPressed, setIsDragModifierPressed] = useState(false);
   const { setTheme, theme: currentTheme } = useTheme();
 
   const loading = authLoading || dataHook.loading;
@@ -129,41 +128,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     return dataHook.users.find(u => u.userId === viewAsUserId) || realUser;
   }, [dataHook.users, viewAsUserId, realUser]);
   
-  useEffect(() => {
-    if (!viewAsUser) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-        const modifierKey = viewAsUser.modifierKey || 'shift';
-        if (
-            (modifierKey === 'shift' && e.shiftKey) ||
-            (modifierKey === 'alt' && e.altKey) ||
-            (modifierKey === 'ctrl' && e.ctrlKey) ||
-            (modifierKey === 'meta' && e.metaKey)
-        ) {
-            setIsDragModifierPressed(true);
-        }
-    };
-    const handleKeyUp = (e: KeyboardEvent) => {
-        const modifierKey = viewAsUser.modifierKey || 'shift';
-        if (
-            (modifierKey === 'shift' && !e.shiftKey) ||
-            (modifierKey === 'alt' && !e.altKey) ||
-            (modifierKey === 'ctrl' && !e.ctrlKey) ||
-            (modifierKey === 'meta' && !e.metaKey)
-        ) {
-            setIsDragModifierPressed(false);
-        }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-
-    return () => {
-        window.removeEventListener('keydown', handleKeyDown);
-        window.removeEventListener('keyup', handleKeyUp);
-    };
-  }, [viewAsUser]);
-
-
   const contextValue = useMemo(() => {
     const setViewAsUserWithReset = (userId: string) => {
       if (userId === realUser?.userId) {
@@ -192,7 +156,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       logout,
       loading,
       isFirebaseReady,
-      isDragModifierPressed,
       ...dataHook,
       addTeam: addTeamWithUser,
       deleteUser: deleteUserWithUser,
@@ -206,7 +169,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       addPreApprovedEmail: addPreApprovedEmailWithUser,
     };
   }, [
-    realUser, viewAsUser, googleLogin, logout, loading, isFirebaseReady, isDragModifierPressed, dataHook
+    realUser, viewAsUser, googleLogin, logout, loading, isFirebaseReady, dataHook
   ]);
 
   return (
