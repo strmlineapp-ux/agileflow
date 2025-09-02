@@ -69,13 +69,31 @@ function CalendarCard({
     }
   };
   
-  const handleSaveGoogleCalendarId = () => {
-    if (canManage) {
-        onUpdate(calendar.id, { googleCalendarId: googleCalendarIdInput });
-        toast({ title: 'Success', description: 'Google Calendar ID linked.' });
-    }
+  const handleSaveGoogleCalendarId = async () => {
+    if (!canManage) return;
+
+    const calendarIdToLink = googleCalendarIdInput.trim();
+    if (!calendarIdToLink) return;
+
+    onUpdate(calendar.id, { googleCalendarId: calendarIdToLink });
+    toast({ title: 'Success', description: 'Google Calendar ID linked.' });
     setIsLinkDialogOpen(false);
-    setGoogleCalendarIdInput('');
+
+    // Now, trigger the watch flow
+    toast({ title: 'Setting Up Watch...', description: `Registering ${calendar.name} for real-time updates.` });
+    try {
+        const webhookUrl = `https://us-central1-agileflow-mlf18.cloudfunctions.net/calendarWebhook`;
+        const result = await watchGoogleCalendar({
+            googleCalendarId: calendarIdToLink,
+            webhookUrl: webhookUrl,
+        });
+        toast({ title: 'Watch Setup Complete', description: `Now listening for changes to ${calendar.name}. Channel expires: ${new Date(result.expiration).toLocaleDateString()}` });
+    } catch (error) {
+        console.error('Failed to set up watch:', error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not set up real-time sync.' });
+    } finally {
+        setGoogleCalendarIdInput('');
+    }
   };
 
   const shareIconColor = 'hsl(220, 13%, 47%)';
