@@ -5,6 +5,8 @@ import * as functions from "firebase-functions";
 import * as nodemailer from "nodemailer";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { onDocumentUpdated } from "firebase-functions/v2/firestore";
+import { sendInvitation } from "./send-invitation";
+import { calendarWebhook } from "./calendar-webhook";
 
 
 admin.initializeApp();
@@ -114,5 +116,5 @@ export const onNewUserCreated = onDocumentCreated("users/{userId}", async (event
   return null;
 });
 
-export { sendInvitation } from "./send-invitation";
-export { calendarWebhook } from "./calendar-webhook";
+
+export { sendInvitation, calendarWebhook };
