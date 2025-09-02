@@ -11,7 +11,6 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { syncCalendar } from '@/ai/flows/sync-calendar-flow';
 import { ManagementPageLayout } from '../common/management-page-layout';
 import { SortableItem } from '../common/sortable-item';
 import { InlineEditor } from '../common/inline-editor';
@@ -51,15 +50,14 @@ function CalendarCard({
   const handleSync = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!calendar.googleCalendarId) return;
-    toast({ title: 'Sync Started', description: `Syncing with ${calendar.name}...` });
-    try {
-        const result = await syncCalendar({ googleCalendarId: calendar.googleCalendarId });
-        console.log('Sync Result:', result);
-        toast({ title: 'Sync Complete', description: `Found ${result.syncedEventCount} events in ${calendar.name}.` });
-    } catch (error) {
-        console.error('Sync failed:', error);
-        toast({ variant: 'destructive', title: 'Sync Failed', description: 'Could not sync calendar.' });
-    }
+    toast({ title: 'Sync Started', description: `Simulating sync with ${calendar.name}...` });
+    console.log(`Simulating event sync for Google Calendar ID: ${calendar.googleCalendarId}`);
+    // In a real-world scenario, you would call the backend flow here.
+    // For now, we just show a success toast after a delay.
+    setTimeout(() => {
+      const mockEventCount = Math.floor(Math.random() * 20) + 1;
+      toast({ title: 'Sync Complete', description: `Simulated finding ${mockEventCount} events in ${calendar.name}.` });
+    }, 2000);
   };
   
   const handleSaveGoogleCalendarId = () => {
