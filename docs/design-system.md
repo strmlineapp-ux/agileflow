@@ -132,20 +132,19 @@ This pattern describes how a single entity (like a **Team**, **Calendar**, or **
 ---
 
 ### 8. Draggable Card Management blueprint
-This is the application's perfected, gold-standard pattern for managing a collection of entities displayed as cards. It provides a fluid, intuitive, and grid-responsive way for users to reorder, duplicate, and assign items. It is the required pattern for managing Pages, Calendars, Teams, and Badge Collections. The core of this pattern is a successful migration to the **`@dnd-kit`** library, which proved more robust for responsive layouts.
+This is the application's gold-standard pattern for managing a collection of entities displayed as cards. It provides an intuitive, responsive, masonry-style grid that works reliably with drag-and-drop. It is the required pattern for managing Pages, Calendars, Teams, and Badge Collections.
 
--   **Layout**: Entities are presented in a responsive grid of cards. To ensure stability during drag operations, especially across multiple rows, the container must use a `flex flex-wrap` layout instead of CSS Grid. Each draggable card item is then given a responsive `basis` property (e.g., `basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)]`) to create the columns. A negative margin (e.g., `-m-2`) on the container and a matching positive padding (e.g., `p-2`) on the items creates the gutter. This pattern also applies *within* cards, such as for the `grid` view of a `BadgeCollectionCard`, to organize their contents into a responsive grid.
+-   **Layout**: The grid uses CSS Columns (`columns-1 sm:columns-2...`) to create a true masonry-style layout. This allows columns to have flexible heights and for content to flow naturally between them.
 -   **Critical Stability Properties**:
-    -   **`@dnd-kit` is the required library.** The older `react-beautiful-dnd` library was found to be incompatible with this type of responsive layout.
-    -   `flex-grow-0` and `flex-shrink-0` **must** be used on draggable items. This prevents the remaining items in a row from expanding or shrinking, which causes the grid to reflow unstably when an item is being dragged.
+    -   **`break-inside: avoid`**: Each individual draggable card **must** have a class that applies `break-inside: avoid`. This is critical for preventing a card from being visually split across two columns, which is a major source of layout bugs in masonry grids. This is applied in the `<SortableItem>` component.
+-   **Collision Detection**: The `<DndContext>` provider **must** use the `pointerWithin` collision detection algorithm. This strategy detects a collision only with the single droppable item that is directly under the user's mouse pointer. This prevents the issue where multiple cards react at once during a drag, providing a more precise and controlled user experience.
 -   **Initiating a Drag**: The **sole method** for initiating a drag action is by clicking and dragging any non-interactive part of a card.
 -   **Drag-Ready State**: When a drag action is initiated, the application enters a "drag-ready" state to provide clear visual feedback and prevent accidental actions.
     - **Hide Interactive Elements**: All secondary interactive elements within draggable cards—such as delete buttons, color swatch badges, and expand/collapse icons—**must be hidden**. This is typically achieved by adding a `.hidden` class based on a global state.
     - **Disable Triggers**: The main entity icon's Popover trigger for changing the icon must be **disabled** (but the icon itself remains visible).
     - **Disable Editing**: Inline editing functionality must be disabled to prevent text from being selected or edited during a drag attempt.
--   **Expand/Collapse**: Cards can be expanded and collapsed to show more detail. This action is triggered by a dedicated `expand_more` icon button, positioned at `absolute -bottom-1 right-0`. This button is hidden when the drag modifier key is pressed. The expanded state of each card is managed independently by its parent component.
+-   **Expand/Collapse**: Cards can be expanded and collapsed to show more detail. This action is triggered by a dedicated `expand_more` icon button, positioned at `absolute -bottom-1 right-0`. The expanded state of each card is managed independently by its parent component.
 -   **Preventing Interaction Conflicts**: To allow button clicks inside a draggable card without starting a drag, all interactive elements (buttons, inputs, etc.) must have an `onPointerDown={(e) => e.stopPropagation()}` handler. This prevents the pointer event from bubbling up to the drag listener.
--   **Visual Feedback**: To provide feedback without disrupting layout, visual changes (like a `shadow` or `opacity`) should be applied directly to the inner component based on the `isDragging` prop provided by `dnd-kit`'s `useSortable` hook. The draggable wrapper itself should remain untouched.
 -   **Drag Overlay Visuals & Positioning**: The drag overlay provides a clean, focused representation of the item being dragged.
     -   **Positioning**: To ensure the overlay appears directly under the cursor and tracks it smoothly without an offset, the `<DragOverlay>` component **must** use the `snapCenterToCursor` modifier from the `@dnd-kit/modifiers` library. Example: `modifiers={[snapCenterToCursor]}`.
     -   **Card Overlays (Pages, Calendars, Teams, Badge Collections)**: The overlay consists **only** of the entity's icon. It is rendered using the `<GoogleSymbol>` component, styled with the entity's specific color and an appropriate size (e.g., `fontSize: '48px'`) to make it a clear visual target.
@@ -160,7 +159,7 @@ This is the application's perfected, gold-standard pattern for managing a collec
     -   **Draggable Cards**: Most cards can be freely reordered within the grid. The `useSortable` hook allows this.
     -   **Pinned Cards**: Certain core system cards (e.g., "Admin", "Settings") are designated as "pinned" and cannot be dragged. This is achieved by disabling the `useSortable` hook for those specific items (`disabled: true`). They act as fixed anchors in the layout.
 -   **Reordering with Guardrails**:
-    -   **Interaction**: Users can drag any non-pinned card and drop it between other non-pinned cards to change its order. The grid reflows smoothly to show the drop position.
+    -   **Interaction**: Users can drag any non-pinned card and drop it between other non-pinned cards to change its order.
     -   **Guardrail Logic**: The `onDragEnd` handler must contain logic to prevent reordering pinned items. A non-pinned item cannot be dropped into a position occupied by or between pinned items. This ensures the core page order is always maintained.
 -   **Drop Zone Highlighting**: Drop zones provide visual feedback when an item is dragged over them. To maintain a clean UI, highlights must **only** use rings without background fills.
     -   **Standard & Duplication Zones (Reordering, Moving, Duplicating):** The drop area must be highlighted with a `1px` inset, colorless ring using the standard border color. The required class is `ring-1 ring-border ring-inset`. This is the universal style for all non-destructive drop actions, and colored backgrounds or borders **must not** be used.
@@ -180,7 +179,6 @@ This is the application's perfected, gold-standard pattern for managing a collec
         - **Move**: If a badge is dragged from one owned collection to another owned collection, the badge is *moved*.
         - **Link**: If a badge is dragged from a *shared* (unowned) collection into an *owned* collection, a *link* to the original badge is created. The original badge remains in the shared collection.
     - **UI Feedback**: Drop zones on unowned collections will not be highlighted, providing clear visual feedback that the action is not permitted.
--   **Layout Stability**: To prevent "janky" or shifting layouts during a drag operation (especially when dragging an item out of one card and over another), ensure that the container cards (e.g., `TeamCard`) maintain a consistent height. This is achieved by making the card a `flex flex-col` container and giving its main content area `flex-grow` to make it fill the available space, even when a draggable item is temporarily removed. A `ScrollArea` can be used within the content to manage overflow if the list is long.
 -   **Application**: This is the required pattern for managing Pages, Calendars, Teams, and Badge Collections.
 
 ---
@@ -214,7 +212,7 @@ This pattern is **deprecated**. All deletion confirmations now use the **Compact
   - The icon is `text-4xl` with a `weight={100}` for a large but light appearance.
   - The active tab is indicated by a bolder font weight (`font-normal`) and the standard foreground text color.
   - The entire tab list has a subtle divider underneath it, separating it from the content below.
-- **Reordering**: On pages where it is enabled (like the Admin page), users can reorder tabs by holding their drag modifier key and dragging them to a new position.
+- **Reordering**: Users can reorder tabs by dragging them to a new position.
 - **Application**: Used for all main page-level tab navigation, such as on the Admin, Service Delivery, and Team Management pages.
 
 ---
@@ -244,7 +242,17 @@ This pattern describes how to create a two-column layout where one column (a sid
 
 ---
 
-### 14. Compact Badge Pills
+### 14. Drag-and-Drop Scrolling Clipping
+This is a specific fix for a common layout issue that occurs when using a collapsible side panel (Pattern #13) within a tabbed interface.
+
+-   **Problem**: When dragging an item on a page that has a collapsed side panel, the drag area might still occupy space, causing the entire page content to scroll horizontally and appear "clipped."
+-   **Solution**: The container element for the content of *each individual tab* must have the `overflow-hidden` class applied.
+    -   **For `<TabsContent>`**: ` <div className="flex-1 overflow-hidden">`
+-   **Application**: This is applied in `/src/app/dashboard/[...page]/page.tsx` and `/src/app/dashboard/admin/page.tsx` to the containers that wrap the `TabsContent`, ensuring that the content of each tab is properly clipped and does not cause page-level scrolling.
+
+---
+
+### 15. Compact Badge Pills
 This pattern is a specialized, ultra-compact version of the standard `<Badge>` component, used for displaying multiple badges in a dense layout, such as the "Compact" view mode in Badge Collections.
 
 - **Appearance**: A very thin, pill-shaped badge with minimal padding. It contains a small icon and a short text label.
@@ -256,7 +264,7 @@ This pattern is a specialized, ultra-compact version of the standard `<Badge>` c
 - **Application**: Used in the "Compact" view of **Badge Collections** to display many badges in a compact, scannable format.
 
 ---
-### 15. Team Member Badge Assignment
+### 16. Team Member Badge Assignment
 This pattern describes the user interface for assigning and unassigning badges to team members. The interaction is exclusively handled via drag-and-drop to ensure a clear and unambiguous workflow.
 
 - **Layout**: Within each `TeamMemberCard`, badges that are **currently assigned** to that member are displayed as icon-only buttons. The card does not show unassigned or "available" badges.
@@ -267,7 +275,7 @@ This pattern describes the user interface for assigning and unassigning badges t
 - **Application**: Used on the **Team Members** tab within each team's management page.
 
 ---
-### 16. Compact Preferences Row
+### 17. Compact Preferences Row
 This pattern provides a dense, icon-driven interface for managing a series of user-specific settings. It is designed to be placed within a user's card or profile view, offering quick access without taking up significant vertical space.
 
 - **Appearance**: A horizontal row of icon-only buttons.
@@ -326,3 +334,4 @@ The application uses a sophisticated, user-configurable emphasis system for inte
       - **Ownership Status**: `absolute -top-0 -right-3`.
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Compact View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
+
