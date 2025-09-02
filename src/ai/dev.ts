@@ -4,3 +4,4 @@
 import './flows/create-meet-link-flow';
 import './flows/sync-calendar-flow';
 import './flows/auto-sync-all-calendars-flow';
+import './flows/watch-google-calendar-flow';
