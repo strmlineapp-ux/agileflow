@@ -2,7 +2,7 @@
   "compilerOptions": {
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "target": "es2021",
+    "target": "es2022",
     "sourceMap": true,
     "outDir": "lib",
     "strict": true,
