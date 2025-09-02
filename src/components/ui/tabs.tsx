@@ -19,7 +19,7 @@ import {
   horizontalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-
+import { useUser } from "@/context/user-context"
 import { cn } from "@/lib/utils"
 
 const Tabs = TabsPrimitive.Root
@@ -89,6 +89,9 @@ interface SortableTabsListProps<T extends { id: string }> {
 }
 
 function SortableTabsList<T extends { id: string }>({ items, onReorder, children, className, disabled }: SortableTabsListProps<T>) {
+    const { viewAsUser } = useUser();
+    const { isDragModifierPressed } = viewAsUser || {};
+    
     const sensors = useSensors(
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
@@ -113,7 +116,7 @@ function SortableTabsList<T extends { id: string }>({ items, onReorder, children
                 <TabsList className={className}>
                     {React.Children.map(children, (child, index) => {
                         if (React.isValidElement(child)) {
-                            return <SortableTabsTrigger id={items[index].id} disabled={disabled}>{child}</SortableTabsTrigger>;
+                            return <SortableTabsTrigger id={items[index].id} disabled={disabled || !isDragModifierPressed}>{child}</SortableTabsTrigger>;
                         }
                         return child;
                     })}
