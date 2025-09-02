@@ -1,5 +1,4 @@
 
-
 import * as admin from "firebase-admin";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { sendEmail } from "./index.js";
