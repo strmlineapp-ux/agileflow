@@ -8,11 +8,11 @@
  * - SyncCalendarOutput - The return type for the syncCalendar function.
  */
 
-import { genkit, Ai } from 'genkit';
+import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
 import { z } from 'genkit';
 
-export const ai = new Ai({
+export const ai = genkit({
   plugins: [googleAI()],
 });
 
