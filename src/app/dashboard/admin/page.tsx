@@ -23,6 +23,21 @@ export default function AdminPage() {
       return tabIds.map(id => appSettings.tabs.find(t => t.id === id)).filter((t): t is AppTab => !!t);
   }, [appSettings.tabs]);
   
+  const handleReorderAdminTabs = (reorderedAdminTabs: AppTab[]) => {
+      const newOrderMap = new Map(reorderedAdminTabs.map((tab, index) => [tab.id, index]));
+      
+      const fullReorderedTabs = [...appSettings.tabs];
+      fullReorderedTabs.sort((a, b) => {
+          const aIndex = newOrderMap.get(a.id);
+          const bIndex = newOrderMap.get(b.id);
+          if (aIndex !== undefined && bIndex !== undefined) {
+              return aIndex - bIndex;
+          }
+          return 0;
+      });
+      reorderTabs(fullReorderedTabs);
+  };
+  
   if (!adminPage) return null;
 
   return (
@@ -31,7 +46,7 @@ export default function AdminPage() {
             <CenteredTabList>
                 <SortableTabsList
                     items={adminTabs}
-                    onReorder={reorderTabs}
+                    onReorder={handleReorderAdminTabs}
                 >
                     {adminTabs.map(tab => (
                         <TabsTrigger key={tab.id} value={tab.id} className="gap-2">
