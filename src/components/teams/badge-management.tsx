@@ -49,6 +49,7 @@ import { InlineEditor } from '../common/inline-editor';
 import { SortableItem } from '../common/sortable-item';
 import { SharedItemsPanel } from '../common/shared-items-panel';
 import { PageTitle } from '../common/page-title';
+import { predefinedColors } from '@/lib/colors';
 
 
 function BadgeDisplayItem({ 
@@ -57,7 +58,6 @@ function BadgeDisplayItem({
     onUpdateBadge, 
     onDelete,
     isViewer = false, 
-    predefinedColors,
     isOwner,
     isLinked,
     isSharedPreview,
@@ -71,7 +71,6 @@ function BadgeDisplayItem({
     onUpdateBadge: (badgeId: string, badgeData: Partial<Badge>) => void;
     onDelete: (badgeId: string) => void;
     isViewer?: boolean;
-    predefinedColors: string[];
     isOwner: boolean;
     isLinked: boolean;
     isSharedPreview?: boolean;
@@ -388,7 +387,6 @@ function DuplicateBadgeZone({ collectionId, onAdd, isOwner }: { collectionId: st
 type BadgeCollectionCardProps = {
     collection: BadgeCollection;
     allBadges: Badge[];
-    predefinedColors: string[];
     onUpdateCollection: (collectionId: string, newValues: Partial<BadgeCollection>) => void;
     onDeleteCollection: (collection: BadgeCollection) => void;
     onAddBadge: (collectionId: string, sourceBadge?: Badge) => void;
@@ -406,7 +404,6 @@ type BadgeCollectionCardProps = {
 function BadgeCollectionCard({ 
     collection, 
     allBadges, 
-    predefinedColors, 
     onUpdateCollection, 
     onDeleteCollection, 
     onAddBadge, 
@@ -565,7 +562,7 @@ function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
 }
 
 export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: AppPage; isActive: boolean }) {
-    const { viewAsUser, users, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, predefinedColors, updateUser, teams, setAllBadgeCollections, reorderBadgeCollections, updatePage } = useUser();
+    const { viewAsUser, users, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, setAllBadgeCollections, reorderBadgeCollections, updatePage } = useUser();
     const { toast } = useToast();
 
     const [activeDragItem, setActiveDragItem] = useState<{type: string, id: string, data: any} | null>(null);
@@ -797,7 +794,7 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
             isExpanded={expandedCollections.has(collection.id)}
             onToggleExpand={() => onToggleExpand(collection.id)}
         />
-    ), [allBadges, allBadgeCollections, predefinedColors, updateBadgeCollection, handleDeleteCollection, addBadge, updateBadge, handleDeleteBadge, expandedCollections, onToggleExpand]);
+    ), [allBadges, allBadgeCollections, updateBadgeCollection, handleDeleteCollection, addBadge, updateBadge, handleDeleteBadge, expandedCollections, onToggleExpand]);
 
     const renderSharedCollectionCard = useCallback((collection: BadgeCollection, isDragging: boolean) => (
         <BadgeCollectionCard
@@ -816,7 +813,7 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
             isExpanded={expandedCollections.has(collection.id)}
             onToggleExpand={() => onToggleExpand(collection.id)}
         />
-    ), [allBadges, allBadgeCollections, predefinedColors, updateBadgeCollection, handleDeleteCollection, addBadge, updateBadge, handleDeleteBadge, currentUserBadgeIds, expandedCollections, onToggleExpand]);
+    ), [allBadges, allBadgeCollections, updateBadgeCollection, handleDeleteCollection, addBadge, updateBadge, handleDeleteBadge, currentUserBadgeIds, expandedCollections, onToggleExpand]);
     
     const renderDragOverlay = (item: any) => {
         if (!item) return null;
