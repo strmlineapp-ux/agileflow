@@ -73,7 +73,7 @@ This table details the information stored directly within each `User` object.
 | `displayName: string` | **Google Service.** The user's full name. This is part of the basic profile information obtained during a standard "Sign in with Google" action and **does not require separate permissions**. |
 | `email: string` | **Internal / Google Service.** The user's email address. This is the primary field used for login. The "Sign in with Google" button uses **Firebase Authentication** with the **Google Auth Provider** to verify this email. |
 | `isAdmin: boolean` | **Internal.** A dedicated flag to indicate if a user has administrative privileges, granting them access to all settings and management pages. |
-| `accountType: 'Full' \| 'Viewer'` | **Internal.** Defines the user's access level. `Viewer` accounts have limited, read-only access. A user who has not linked their Google Calendar is automatically considered a `Viewer`. `Full` accounts have broader permissions and are typically linked to external services. |
+| `accountType: 'Full' \| 'Viewer'` | **Internal.** Defines the user's access level. `Viewer` accounts have limited, read-only access until they link their Google Calendar. `Full` accounts have broader permissions. |
 | `title?: string` | **Google Service.** The user's professional title. This is designed to be populated from the user's **Google Account profile** (from their organization details) **after the user grants the necessary permissions**. |
 | `avatarUrl?: string` | **Google Service.** A URL to the user's profile picture. This is part of the basic profile information obtained during a standard "Sign in with Google" action and **does not require separate permissions**. |
 | `location?: string` | **Google Service.** The user's primary work location. This is designed to be populated from the user's **Google Account profile** (from their address information) **after the user grants the necessary permissions**. |
@@ -178,7 +178,8 @@ For near real-time updates, the application is designed to use **Google Calendar
 
 1.  **Watch Request**: When a calendar is linked, the application backend sends a request to the Google Calendar API to "watch" that specific calendar for changes.
 2.  **Webhook Notification**: When an event is created, updated, or deleted in the user's Google Calendar, Google instantly sends a small notification to a secure webhook (an HTTPS Cloud Function) in our backend.
-3.  **Targeted Sync**: The webhook receives the notification, identifies which calendar has changed, and triggers the `syncCalendar` flow *only for that specific calendar*.
+3.  **Workspace-Aware Sync**: The webhook receives the notification, which contains the `googleCalendarId`. **Crucially, the webhook must then query the `/calendars` collection to find the internal calendar document (and thus the `workspaceId`) that corresponds to this `googleCalendarId`.** This lookup is essential for security and data isolation.
+4.  **Targeted Sync**: Once the workspace is identified, the webhook triggers the `syncCalendar` flow *only for that specific calendar and workspace*.
 
 This event-driven architecture is superior to a scheduled (cron job) approach as it avoids unnecessary polling, reduces costs, and provides a much better user experience with immediate updates.
 
