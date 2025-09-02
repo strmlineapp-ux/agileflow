@@ -1,9 +1,16 @@
 
+'use server';
+/**
+ * @fileOverview This file contains the Cloud Function that will serve as the
+ * webhook for Google Calendar push notifications.
+ */
+
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import { getFirestore } from 'firebase-admin/firestore';
 import { syncCalendar } from './ai/flows/sync-calendar-flow.js';
 
-const db = admin.firestore();
+const db = getFirestore();
 
 /**
  * Finds the internal calendar document and its workspaceId based on the googleCalendarId.
