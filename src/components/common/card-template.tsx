@@ -66,7 +66,7 @@ export function CardTemplate({
   dragHandleProps,
   canChangeOwnership = false
 }: CardTemplateProps) {
-    const { viewAsUser, users, isDragModifierPressed } = useUser();
+    const { viewAsUser, users } = useUser();
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const { theme } = useTheme();
     const readableColor = getReadableColor(entity.color || '', theme);
@@ -160,9 +160,7 @@ export function CardTemplate({
                                             tabs={ownershipTabs}
                                             onSelectionChange={handleOwnershipChange}
                                             trigger={ownershipTrigger}
-                                            tooltip={shareIconTitle + (isDragModifierPressed ? '. Click to reassign.' : '')}
-                                            showColorFilter={false}
-                                            disableTrigger={!isDragModifierPressed}
+                                            tooltip={shareIconTitle + '. Click to reassign.'}
                                         />
                                    ) : (
                                        <TooltipProvider>

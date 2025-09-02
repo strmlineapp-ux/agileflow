@@ -143,7 +143,7 @@ This is the application's gold-standard pattern for managing a collection of ent
     - **Hide Interactive Elements**: All secondary interactive elements within draggable cards—such as delete buttons, color swatch badges, and expand/collapse icons—**must be hidden**. This is typically achieved by adding a `.hidden` class based on a global state.
     - **Disable Triggers**: The main entity icon's Popover trigger for changing the icon must be **disabled** (but the icon itself remains visible).
     - **Disable Editing**: Inline editing functionality must be disabled to prevent text from being selected or edited during a drag attempt.
--   **Expand/Collapse**: Cards can be expanded and collapsed to show more detail. This action is triggered by a dedicated `expand_more` icon button, positioned at `absolute -bottom-1 right-0`. This button is hidden when the drag modifier key is pressed. The expanded state of each card is managed independently by its parent component.
+-   **Expand/Collapse**: Cards can be expanded and collapsed to show more detail. This action is triggered by a dedicated `expand_more` icon button, positioned at `absolute -bottom-1 right-0`. The expanded state of each card is managed independently by its parent component.
 -   **Preventing Interaction Conflicts**: To allow button clicks inside a draggable card without starting a drag, all interactive elements (buttons, inputs, etc.) must have an `onPointerDown={(e) => e.stopPropagation()}` handler. This prevents the pointer event from bubbling up to the drag listener.
 -   **Drag Overlay Visuals & Positioning**: The drag overlay provides a clean, focused representation of the item being dragged.
     -   **Positioning**: To ensure the overlay appears directly under the cursor and tracks it smoothly without an offset, the `<DragOverlay>` component **must** use the `snapCenterToCursor` modifier from the `@dnd-kit/modifiers` library. Example: `modifiers={[snapCenterToCursor]}`.
@@ -212,7 +212,7 @@ This pattern is **deprecated**. All deletion confirmations now use the **Compact
   - The icon is `text-4xl` with a `weight={100}` for a large but light appearance.
   - The active tab is indicated by a bolder font weight (`font-normal`) and the standard foreground text color.
   - The entire tab list has a subtle divider underneath it, separating it from the content below.
-- **Reordering**: On pages where it is enabled (like the Admin page), users can reorder tabs by holding their drag modifier key and dragging them to a new position.
+- **Reordering**: Users can reorder tabs by dragging them to a new position.
 - **Application**: Used for all main page-level tab navigation, such as on the Admin, Service Delivery, and Team Management pages.
 
 ---

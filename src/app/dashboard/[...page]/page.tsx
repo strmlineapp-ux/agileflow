@@ -54,7 +54,7 @@ const componentMap = {
 
 export default function DynamicPage() {
   const params = useParams();
-  const { appSettings, viewAsUser, loading, teams, updatePage, reorderTabs, isDragModifierPressed } = useUser();
+  const { appSettings, viewAsUser, loading, teams, updatePage, reorderTabs } = useUser();
   const { page: pagePath } = params;
 
   const path = Array.isArray(pagePath) ? `/dashboard/${pagePath.join('/')}` : `/dashboard/${pagePath}`;
@@ -128,7 +128,6 @@ export default function DynamicPage() {
             <SortableTabsList
                 items={pageTabs}
                 onReorder={reorderTabs}
-                disabled={!isDragModifierPressed}
             >
                 {pageTabs.map(tab => (
                   <TabsTrigger key={tab.id} value={tab.id} className="gap-2">

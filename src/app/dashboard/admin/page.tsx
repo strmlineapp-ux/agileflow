@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { AdminsManagement, PagesManagement, TabsManagement } from '@/components/admin/page';
 import { Tabs, TabsContent, TabsList, TabsTrigger, SortableTabsList } from '@/components/ui/tabs';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
@@ -13,7 +13,7 @@ import { CenteredTabList } from '@/components/common/centered-tab-list';
 import { type AppTab } from '@/types';
 
 export default function AdminPage() {
-  const { appSettings, updateAppTab, reorderTabs, isDragModifierPressed } = useUser();
+  const { appSettings, updateAppTab, reorderTabs } = useUser();
   const [activeTabKey, setActiveTabKey] = useState('admins');
 
   const adminPage = appSettings.pages.find(p => p.id === 'page-admin-management');
@@ -32,7 +32,6 @@ export default function AdminPage() {
                 <SortableTabsList
                     items={adminTabs}
                     onReorder={reorderTabs}
-                    disabled={!isDragModifierPressed}
                 >
                     {adminTabs.map(tab => (
                         <TabsTrigger key={tab.id} value={tab.id} className="gap-2">

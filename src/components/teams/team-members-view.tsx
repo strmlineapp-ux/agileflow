@@ -16,12 +16,11 @@ import { GoogleSymbol } from '../icons/google-symbol';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
 import { Button } from '@/components/ui/button';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { useDroppable } from '@dnd-kit/core';
 import { InlineEditor } from '../common/inline-editor';
 import { PageTitle } from '../common/page-title';
 import { TeamSelection } from '../common/team-selection';
-import { useToast } from '@/hooks/use-toast';
 
 
 function DroppableUserList({ id, children, className }: { id: string, children: React.ReactNode, className?: string }) {
@@ -34,7 +33,7 @@ function DroppableUserList({ id, children, className }: { id: string, children: 
 }
 
 function SortableTeamMember({ member, team, onSetAdmin, onRemoveUser }: { member: User, team: Team, onSetAdmin: () => void, onRemoveUser: () => void }) {
-  const { isDragModifierPressed, viewAsUser } = useUser();
+  const { viewAsUser } = useUser();
 
   const isViewer = useMemo(() => {
     if (viewAsUser.isAdmin) return false;
@@ -45,7 +44,7 @@ function SortableTeamMember({ member, team, onSetAdmin, onRemoveUser }: { member
   const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
     id: `member:${member.userId}`,
     data: { type: 'member-card', member: member },
-    disabled: isViewer || !isDragModifierPressed
+    disabled: isViewer
   });
   
   const { isOver, setNodeRef: droppableSetNodeRef } = useDroppable({
@@ -77,7 +76,7 @@ function SortableTeamMember({ member, team, onSetAdmin, onRemoveUser }: { member
                         <Button
                             variant="default"
                             size="icon"
-                            className={cn("absolute top-0 right-0 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity", isDragModifierPressed && "hidden")}
+                            className={cn("absolute top-0 right-0 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity")}
                             onClick={(e) => { e.stopPropagation(); onRemoveUser();}}
                             onPointerDown={(e) => e.stopPropagation()}
                         >
@@ -94,7 +93,7 @@ function SortableTeamMember({ member, team, onSetAdmin, onRemoveUser }: { member
 }
 
 function TeamMemberContent({ team }: { team: Team }) {
-    const { viewAsUser, users, allBadges, updateTeam, isDragModifierPressed, handleBadgeAssignment, handleBadgeUnassignment } = useUser();
+    const { viewAsUser, users, allBadges, updateTeam, handleBadgeAssignment, handleBadgeUnassignment } = useUser();
     const [activeDragItem, setActiveDragItem] = useState<{type: string, id: string, data: any} | null>(null);
 
     const isViewer = useMemo(() => {
@@ -118,22 +117,9 @@ function TeamMemberContent({ team }: { team: Team }) {
     const memberIds = useMemo(() => members.map(m => `member:${m.userId}`), [members]);
     
     const sensors = useSensors(
-        useSensor(PointerSensor, {
-            onActivation: ({ event }) => {
-                if (!isDragModifierPressed) {
-                    return false;
-                }
-                return true;
-            },
-        }),
+        useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
           coordinateGetter: sortableKeyboardCoordinates,
-          onActivation: ({ event }) => {
-            if (!isDragModifierPressed) {
-                return false;
-            }
-            return true;
-          }
         })
     );
 
