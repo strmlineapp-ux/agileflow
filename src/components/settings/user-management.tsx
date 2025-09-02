@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
@@ -448,7 +447,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                             <p>Time Format: <span className="font-semibold">{currentTimeFormatLabel}</span>. Modifier+Click to reset.</p>
                                         </TooltipContent>
                                     </Tooltip>
-                                </PopoverContent>
+                                </TooltipProvider>
                                 <PopoverContent className="w-auto p-1" align="start">
                                     {timeFormatOptions.map(option => (
                                     <Button
@@ -529,3 +528,5 @@ export function UserManagement({ showSearch = false, isActive = false }: { showS
         </div>
     )
 }
+
+    
