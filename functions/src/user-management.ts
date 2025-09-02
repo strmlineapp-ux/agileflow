@@ -5,8 +5,6 @@ import { getFirestore } from 'firebase-admin/firestore';
 import * as nodemailer from 'nodemailer';
 import * as functions from 'firebase-functions';
 
-const db = getFirestore();
-
 // Configure the email transport
 const mailTransport = nodemailer.createTransport({
   service: 'gmail',
@@ -22,6 +20,7 @@ const mailTransport = nodemailer.createTransport({
  * @return {Promise<string[]>} A promise that resolves to an array of admin emails.
  */
 async function getAdminEmails(workspaceId: string): Promise<string[]> {
+  const db = getFirestore();
   const adminsRef = db.collection('users').where('isAdmin', '==', true).where('workspaceId', '==', workspaceId);
   const snapshot = await adminsRef.get();
   const adminEmails: string[] = [];

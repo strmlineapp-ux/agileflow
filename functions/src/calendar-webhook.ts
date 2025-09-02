@@ -10,7 +10,6 @@ import * as functions from 'firebase-functions';
 import { getFirestore } from 'firebase-admin/firestore';
 import { syncCalendar } from './ai/flows/sync-calendar-flow.js';
 
-const db = getFirestore();
 
 /**
  * Finds the internal calendar document and its workspaceId based on the googleCalendarId.
@@ -18,6 +17,7 @@ const db = getFirestore();
  * @return {Promise<{workspaceId: string} | null>} A promise that resolves to the workspace ID or null if not found.
  */
 async function getWorkspaceForCalendar(googleCalendarId: string): Promise<{ workspaceId: string } | null> {
+    const db = getFirestore();
     const calendarsRef = db.collection('calendars');
     const q = calendarsRef.where('googleCalendarId', '==', googleCalendarId).limit(1);
     const snapshot = await q.get();
