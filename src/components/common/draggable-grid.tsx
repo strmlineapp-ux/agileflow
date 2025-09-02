@@ -86,14 +86,14 @@ export function DraggableGrid<T extends { id: string }>({
   return (
     <DndContext 
         sensors={sensors} 
-        collisionDetection={pointerWithin} 
+        collisionDetection={closestCenter} 
         onDragStart={handleDragStart} 
         onDragEnd={handleDragEnd}
     >
       <div className={className}>
         {children}
         <SortableContext items={itemIds} strategy={rectSortingStrategy}>
-          <div className="gap-4 [column-fill:_balance] columns-1 sm:columns-2 md:columns-2 lg:columns-3 xl:columns-4 2xl:columns-5">
+          <div className="flex flex-wrap -m-2">
             {items.map(item => (
               <SortableItem key={item.id} id={item.id} data={{ type: 'item', item: item }}>
                  {(isDragging) => renderItem(item, isDragging)}
