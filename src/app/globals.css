@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -21,6 +22,7 @@
     --popover-foreground: 210 7% 40%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
+    --border: 210 7% 85%;
     --input: 210 7% 40%;
     --radius: 0.5rem;
 
@@ -43,6 +45,7 @@
     --popover-foreground: 210 7% 60%;
     --destructive: 0 62% 40%;
     --destructive-foreground: 0 0% 100%;
+    --border: 210 40% 20%;
     --input: 210 7% 60%;
     --emphasis-color: hsl(var(--foreground));
   }
@@ -69,7 +72,7 @@
     .font-emphasis:focus .material-symbols-outlined,
     .font-emphasis[data-state=open] .material-symbols-outlined,
     .font-emphasis[data-state=active] .material-symbols-outlined {
-        font-variation-settings: 'FILL' var(--global-icon-fill, 0), 'wght' var(--font-weight-emphasis, 500), 'GRAD' 200, 'opsz' 24 !important;
+        font-variation-settings: 'FILL' var(--global-icon-fill, 0), 'wght' var(--font-weight-emphasis, 500), 'GRAD' var(--global-icon-grade, 0), 'opsz' var(--global-icon-optical-size, 24) !important;
     }
 
     body.bold-emphasis .font-emphasis:hover,
