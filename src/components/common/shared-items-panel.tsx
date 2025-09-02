@@ -5,7 +5,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { CompactSearchInput } from '@/components/common/compact-search-input';
-import { DraggableGrid } from './draggable-grid';
+import { ManagementGrid } from './management-grid';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { cn } from '@/lib/utils';
 import { useDroppable } from '@dnd-kit/core';
@@ -19,6 +19,8 @@ interface SharedItemsPanelProps<T extends { id: string, name: string, icon: stri
   items: T[];
   searchTerm: string;
   setSearchTerm: (term: string) => void;
+  colorFilter: string | null;
+  onColorFilterChange: (color: string | null) => void;
   renderItem: (item: T, isDragging: boolean) => React.ReactNode;
   renderDragOverlay: (item: T) => React.ReactNode;
   emptyMessage: string;
@@ -32,6 +34,8 @@ export function SharedItemsPanel<T extends { id: string, name: string, icon: str
   items,
   searchTerm,
   setSearchTerm,
+  colorFilter,
+  onColorFilterChange,
   renderItem,
   renderDragOverlay,
   emptyMessage,
@@ -52,20 +56,27 @@ export function SharedItemsPanel<T extends { id: string, name: string, icon: str
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>{title}</CardTitle>
-              <CompactSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search shared..." tooltipText={`Search Shared ${title}`} />
+              <CompactSearchInput 
+                searchTerm={searchTerm} 
+                setSearchTerm={setSearchTerm} 
+                placeholder="Search shared..." 
+                tooltipText={`Search Shared ${title}`} 
+                showColorFilter={true}
+                onColorSelect={onColorFilterChange}
+                activeColorFilter={colorFilter}
+              />
             </div>
             <CardDescription>{description}</CardDescription>
           </CardHeader>
           <CardContent className="flex-1 p-2 overflow-hidden">
             <ScrollArea className="h-full">
-              <DraggableGrid
+              <ManagementGrid
                 items={items}
                 setItems={() => {}}
                 renderItem={renderItem}
-                renderDragOverlay={renderDragOverlay}
               >
                 {items.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">{emptyMessage}</p>}
-              </DraggableGrid>
+              </ManagementGrid>
             </ScrollArea>
           </CardContent>
         </Card>

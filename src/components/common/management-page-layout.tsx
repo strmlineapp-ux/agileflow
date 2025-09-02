@@ -11,7 +11,6 @@ import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/comp
 import { DndContext, type DragEndEvent, type DragStartEvent, useSensor, useSensors, PointerSensor, KeyboardSensor, sortableKeyboardCoordinates, DragOverlay } from '@dnd-kit/core';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { arrayMove } from '@dnd-kit/sortable';
-import { DraggableGrid } from './draggable-grid';
 import { CompactSearchInput } from './compact-search-input';
 import { SharedItemsPanel } from './shared-items-panel';
 import { GoogleSymbol } from '../icons/google-symbol';
@@ -19,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { DuplicateZone } from './duplicate-zone';
 import { getHueFromHsl, isHueInRange } from '@/lib/utils';
 import { PageTitle } from './page-title';
+import { ManagementGrid } from './management-grid';
 
 type TEntity = (Team | SharedCalendar | BadgeCollection | AppPage) & { id: string, name: string, icon: string, color: string, owner?: {id: string}, isShared?: boolean };
 
@@ -72,6 +72,7 @@ export function ManagementPageLayout<T extends TEntity>({
   const [searchTerm, setSearchTerm] = useState('');
   const [colorFilter, setColorFilter] = useState<string | null>(null);
   const [sharedSearchTerm, setSharedSearchTerm] = useState('');
+  const [sharedColorFilter, setSharedColorFilter] = useState<string | null>(null);
   const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
   const [activeDragItem, setActiveDragItem] = useState<T | null>(null);
   
@@ -93,10 +94,23 @@ export function ManagementPageLayout<T extends TEntity>({
   }, [allItems, searchTerm, colorFilter]);
 
   const sharedItems = useMemo(() => {
-    return allSharedItems.filter(item =>
-      item.name.toLowerCase().includes(sharedSearchTerm.toLowerCase())
-    );
-  }, [allSharedItems, sharedSearchTerm]);
+    let filtered = allSharedItems;
+    if (sharedSearchTerm) {
+      filtered = filtered.filter(item =>
+        item.name.toLowerCase().includes(sharedSearchTerm.toLowerCase())
+      );
+    }
+    if (sharedColorFilter) {
+      const targetHue = getHueFromHsl(sharedColorFilter);
+      if (targetHue !== null) {
+        filtered = filtered.filter(item => {
+          const itemHue = item.color ? getHueFromHsl(item.color) : null;
+          return itemHue !== null && isHueInRange(targetHue, itemHue);
+        });
+      }
+    }
+    return filtered;
+  }, [allSharedItems, sharedSearchTerm, sharedColorFilter]);
 
   const onDragStart = (event: DragStartEvent) => {
     const item = allItems.find(i => i.id === event.active.id) || allSharedItems.find(i => i.id === event.active.id);
@@ -186,16 +200,15 @@ export function ManagementPageLayout<T extends TEntity>({
               </TooltipProvider>
             </div>
           </div>
-          <ScrollArea className="flex-1 min-h-0 pr-4 -mr-4">
-            <DraggableGrid
+          <ScrollArea className="flex-1 min-h-0 -mr-4 pr-4">
+            <ManagementGrid
                 items={displayedItems}
                 setItems={onReorderItems}
                 onDragEnd={onDragEnd}
                 renderItem={renderItem}
-                renderDragOverlay={(item) => renderDragOverlay(item as T)}
             >
               {displayedItems.length === 0 && <p className="text-center text-sm text-muted-foreground p-4">No {entityType}s to display.</p>}
-            </DraggableGrid>
+            </ManagementGrid>
           </ScrollArea>
         </div>
         <SharedItemsPanel
@@ -206,6 +219,8 @@ export function ManagementPageLayout<T extends TEntity>({
           items={sharedItems}
           searchTerm={sharedSearchTerm}
           setSearchTerm={setSharedSearchTerm}
+          colorFilter={sharedColorFilter}
+          onColorFilterChange={setSharedColorFilter}
           renderItem={(item, isDragging) => renderItem(item as T, isDragging)}
           renderDragOverlay={(item) => renderDragOverlay(item as T)}
           emptyMessage={`No other ${entityType}s are currently shared.`}
