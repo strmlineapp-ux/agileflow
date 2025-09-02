@@ -1,6 +1,5 @@
 
 'use server';
-import * as admin from 'firebase-admin';
 import { getFirestore } from 'firebase-admin/firestore';
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import { sendEmail } from './user-management.js';

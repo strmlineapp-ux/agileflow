@@ -1,9 +1,9 @@
 
 'use server';
-import * as functions from 'firebase-functions';
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import { getFirestore } from 'firebase-admin/firestore';
 import * as nodemailer from 'nodemailer';
+import * as functions from 'firebase-functions';
 
 const db = getFirestore();
 
