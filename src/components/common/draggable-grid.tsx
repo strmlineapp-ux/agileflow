@@ -18,11 +18,9 @@ import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
-  rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { cn } from '@/lib/utils';
-import { SortableItem } from './sortable-item';
 
 interface DraggableGridProps<T extends { id: string }> {
   items: T[];
@@ -90,16 +88,10 @@ export function DraggableGrid<T extends { id: string }>({
         onDragStart={handleDragStart} 
         onDragEnd={handleDragEnd}
     >
-      <div className={className}>
+      <div className={cn("gap-4 [column-fill:_balance]", className, "columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6")}>
         {children}
-        <SortableContext items={itemIds} strategy={rectSortingStrategy}>
-          <div className="flex flex-wrap -m-2">
-            {items.map(item => (
-              <SortableItem key={item.id} id={item.id} data={{ type: 'item', item: item }}>
-                 {(isDragging) => renderItem(item, isDragging)}
-              </SortableItem>
-            ))}
-          </div>
+        <SortableContext items={itemIds}>
+            {items.map(item => renderItem(item, activeItem?.id === item.id))}
         </SortableContext>
       </div>
       <DragOverlay modifiers={[snapCenterToCursor]}>

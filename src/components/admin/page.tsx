@@ -42,7 +42,6 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
-  rectSortingStrategy,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -76,7 +75,8 @@ function SortableUserCard({ user, listId, onDeleteRequest, isExpanded, onToggleE
     const canDelete = listId === 'user-list';
 
     return (
-        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="p-2 basis-full md:basis-1/2 lg:basis-1/3 xl:basis-1/4 flex-grow-0 flex-shrink-0">
+         <SortableItem id={`user-dnd-${user.userId}-${listId}`} data={{ type: 'user', user, fromListId: listId }}>
+          {(isDragging) => (
              <CardTemplate
                 user={user}
                 entity={{ id: user.userId, name: user.displayName }}
@@ -87,14 +87,15 @@ function SortableUserCard({ user, listId, onDeleteRequest, isExpanded, onToggleE
                 canManage={canDelete}
                 body={<p className="text-sm text-foreground">{user.email || <span className="italic">No email provided</span>}</p>}
             />
-        </div>
+          )}
+        </SortableItem>
     );
 }
 
 function UserDropZone({ id, users, children, onDeleteRequest, expandedUsers, onToggleUserExpand }: { 
   id: string, 
   users: User[], 
-  children: React.ReactNode, 
+  children?: React.ReactNode, 
   onDeleteRequest?: (user: User) => void,
   expandedUsers: Set<string>,
   onToggleUserExpand: (userId: string) => void
@@ -109,7 +110,7 @@ function UserDropZone({ id, users, children, onDeleteRequest, expandedUsers, onT
         isOver && "ring-1 ring-border ring-inset"
     )}>
         <SortableContext items={sortableUserIds} strategy={verticalListSortingStrategy}>
-            <div className="flex flex-wrap -m-2">
+            <div className="gap-4 [column-fill:_balance] columns-1 sm:columns-2 md:columns-3">
                 {users.map((user) => (
                     <SortableUserCard 
                         key={user.userId} 
@@ -877,6 +878,4 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
     );
 };
 // #endregion
-
-
 
