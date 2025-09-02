@@ -1,7 +1,8 @@
+
 {
   "compilerOptions": {
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "noImplicitReturns": true,
     "noUnusedLocals": true,
@@ -9,7 +10,8 @@
     "sourceMap": true,
     "strict": true,
     "target": "es2021",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true
   },
   "compileOnSave": true,
   "include": [
