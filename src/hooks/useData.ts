@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -317,16 +318,19 @@ export function useData(realUser: User | null, authLoading: boolean) {
     const db = getDb();
     const eventsQuery = query(collection(db, "events"), 
       where("workspaceId", "==", realUser!.workspaceId),
-      where("startTime", ">=", start),
-      where("startTime", "<", end)
     );
     const snapshot = await getDocs(eventsQuery);
-    return snapshot.docs.map(doc => ({
+    const allEvents = snapshot.docs.map(doc => ({
         ...doc.data(),
         eventId: doc.id,
         startTime: doc.data().startTime.toDate(),
         endTime: doc.data().endTime.toDate(),
     } as Event));
+
+    return allEvents.filter(event => {
+        const eventStart = event.startTime;
+        return eventStart >= start && eventStart < end;
+    });
   }, [realUser]);
 
   const addEvent = useCallback(async (currentEvents: Event[], newEventData: Omit<Event, 'eventId'>) => {
