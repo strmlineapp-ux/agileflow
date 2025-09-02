@@ -16,7 +16,7 @@ import Logo from '../icons/logo';
 
 
 export function Sidebar() {
-  const { realUser, viewAsUser, users, loading, notifications, linkGoogleCalendar, teams, setViewAsUser: setContextViewAsUser, appSettings, logout } = useUser();
+  const { realUser, viewAsUser, users, loading, notifications, teams, setViewAsUser: setContextViewAsUser, appSettings, logout } = useUser();
   const router = useRouter();
   const pathname = usePathname();
   
@@ -147,22 +147,15 @@ export function Sidebar() {
                                     <span 
                                     className={cn(
                                         "absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-background",
-                                        viewAsUser.googleCalendarLinked ? "bg-green-500" : "bg-gray-400",
-                                        realUser.userId === viewAsUser.userId && !viewAsUser.googleCalendarLinked && "cursor-pointer"
+                                        viewAsUser.googleCalendarLinked ? "bg-green-500" : "bg-gray-400"
                                     )}
-                                    onClick={(e) => {
-                                        if (realUser.userId === viewAsUser.userId && !viewAsUser.googleCalendarLinked) {
-                                        e.stopPropagation();
-                                        linkGoogleCalendar(realUser.userId);
-                                        }
-                                    }}
                                     />
                                 </div>
                             </div>
                         </DropdownMenuTrigger>
                     </TooltipTrigger>
                     <TooltipContent side="right">
-                        <p>Google Calendar: {viewAsUser.googleCalendarLinked ? 'Connected' : realUser.userId === viewAsUser.userId ? 'Click to connect' : 'Not Connected'}</p>
+                        <p>Google Calendar: {viewAsUser.googleCalendarLinked ? 'Connected' : 'Not Connected'}</p>
                     </TooltipContent>
                 </Tooltip>
             </TooltipProvider>

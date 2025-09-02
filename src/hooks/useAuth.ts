@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider, type User as FirebaseUser } from 'firebase/auth';
@@ -72,7 +71,7 @@ export function useAuth() {
                     accountType,
                     memberOfTeamIds: [],
                     roles: [],
-                    googleCalendarLinked: false,
+                    googleCalendarLinked: true, // Calendar is linked by default with new OAuth flow
                     theme: 'light',
                     dragActivationKey: 'shift',
                     createdAt: new Date(),
@@ -135,6 +134,8 @@ export function useAuth() {
     
     const authInstance = getAuthInstance();
     const provider = new GoogleAuthProvider();
+    // Add the calendar scope to request permission at sign-in
+    provider.addScope('https://www.googleapis.com/auth/calendar');
     
     try {
       await signInWithPopup(authInstance, provider);

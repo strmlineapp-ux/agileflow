@@ -102,7 +102,6 @@ interface UserContextType {
   handleBadgeUnassignment: (badge: Badge, memberId: string) => void;
 
   // Utilities
-  linkGoogleCalendar: (userId: string) => Promise<void>;
   searchSharedTeams: (searchTerm: string) => Promise<Team[]>;
   predefinedColors: string[];
 }
