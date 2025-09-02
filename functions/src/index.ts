@@ -50,7 +50,7 @@ async function getAdminEmails(workspaceId: string): Promise<string[]> {
  * @param {string} htmlBody The HTML body of the email.
  * @return {Promise<void>} A promise that resolves when the email is sent.
  */
-export async function sendEmail(to: string[], subject: string, htmlBody: string): Promise<void> {
+async function sendEmail(to: string[], subject: string, htmlBody: string): Promise<void> {
   const mailOptions = {
     from: "AgileFlow Notifications <noreply@firebase.com>",
     to: to.join(","),
@@ -72,7 +72,7 @@ export async function sendEmail(to: string[], subject: string, htmlBody: string)
  *  snapshot The document that triggered the function.
  * @return {Promise<void>} A promise that resolves when the function completes.
  */
-export const onNewUserCreated = onDocumentCreated("users/{userId}", async (event) => {
+const onNewUserCreated = onDocumentCreated("users/{userId}", async (event) => {
   const newUser = event.data?.data();
 
   // If user is 'Full' (pre-approved or first user), no notification needed.
@@ -117,4 +117,4 @@ export const onNewUserCreated = onDocumentCreated("users/{userId}", async (event
 });
 
 
-export { sendInvitation, calendarWebhook };
+export { onNewUserCreated, sendInvitation, calendarWebhook, sendEmail };
