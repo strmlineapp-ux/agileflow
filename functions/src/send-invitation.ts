@@ -1,4 +1,5 @@
 
+
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
@@ -12,7 +13,7 @@ const db = admin.firestore();
  * @param {QueryDocumentSnapshot} snapshot The document that was created.
  * @return {Promise<void>} A promise that resolves when the function completes.
  */
-export const sendInvitation = onDocumentCreated("pre-approved-emails/{docId}", async (event) => {
+const sendInvitation = onDocumentCreated("pre-approved-emails/{docId}", async (event) => {
     const newInvitation = event.data?.data();
 
     if (!newInvitation) {
@@ -57,3 +58,5 @@ export const sendInvitation = onDocumentCreated("pre-approved-emails/{docId}", a
     
     return null;
 });
+
+export default sendInvitation;
