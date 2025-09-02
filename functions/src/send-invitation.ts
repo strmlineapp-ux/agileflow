@@ -4,13 +4,12 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import { sendEmail } from './user-management.js';
 
-const db = getFirestore();
-
 /**
  * Firestore trigger that sends an invitation email when a new email is added
  * to the pre-approved-emails collection for a specific workspace.
  */
 export const sendInvitation = onDocumentCreated('pre-approved-emails/{docId}', async (event) => {
+  const db = getFirestore();
   const newInvitation = event.data?.data();
 
   if (!newInvitation) {
