@@ -178,8 +178,8 @@ For near real-time updates, the application is designed to use **Google Calendar
 
 1.  **Watch Request**: When a calendar is linked, the application backend sends a request to the Google Calendar API to "watch" that specific calendar for changes.
 2.  **Webhook Notification**: When an event is created, updated, or deleted in the user's Google Calendar, Google instantly sends a small notification to a secure webhook (an HTTPS Cloud Function) in our backend.
-3.  **Workspace-Aware Sync**: The webhook receives the notification, which contains the `googleCalendarId`. **Crucially, the webhook must then query the `/calendars` collection to find the internal calendar document (and thus the `workspaceId`) that corresponds to this `googleCalendarId`.** This lookup is essential for security and data isolation.
-4.  **Targeted Sync**: Once the workspace is identified, the webhook triggers the `syncCalendar` flow *only for that specific calendar and workspace*.
+3.  **Workspace-Aware Sync**: The webhook receives the notification, which contains the `googleCalendarId`. **Crucially, the webhook queries the `/calendars` collection to find the internal calendar document (and thus the `workspaceId`) that corresponds to this `googleCalendarId`.** This lookup is essential for security and data isolation.
+4.  **Targeted Sync**: Once the workspace is identified, the webhook triggers the `syncCalendar` flow, passing both the `googleCalendarId` and the `workspaceId` to ensure the sync operation happens in the correct context.
 
 This event-driven architecture is superior to a scheduled (cron job) approach as it avoids unnecessary polling, reduces costs, and provides a much better user experience with immediate updates.
 
