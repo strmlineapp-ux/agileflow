@@ -5,6 +5,8 @@ import * as functions from "firebase-functions";
 import * as nodemailer from "nodemailer";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { onDocumentUpdated } from "firebase-functions/v2/firestore";
+import sendInvitation from "./send-invitation";
+import calendarWebhook from "./calendar-webhook";
 
 
 admin.initializeApp();
@@ -24,12 +26,12 @@ const mailTransport = nodemailer.createTransport({
 });
 
 /**
- * Helper function to get all administrator emails from Firestore for a specific tenant.
- * @param {string} tenantId The ID of the tenant.
+ * Helper function to get all administrator emails from Firestore for a specific workspace.
+ * @param {string} workspaceId The ID of the workspace.
  * @return {Promise<string[]>} A promise that resolves to an array of admin emails.
  */
-async function getAdminEmails(tenantId: string): Promise<string[]> {
-  const adminsRef = db.collection("users").where("isAdmin", "==", true).where("tenantId", "==", tenantId);
+async function getAdminEmails(workspaceId: string): Promise<string[]> {
+  const adminsRef = db.collection("users").where("isAdmin", "==", true).where("workspaceId", "==", workspaceId);
   const snapshot = await adminsRef.get();
   const adminEmails: string[] = [];
   snapshot.forEach((doc) => {
@@ -74,21 +76,21 @@ export const onNewUserCreated = onDocumentCreated("users/{userId}", async (event
   const newUser = event.data?.data();
 
   // If user is 'Full' (pre-approved or first user), no notification needed.
-  if (!newUser || newUser.accountType !== "Viewer" || !newUser.tenantId) {
-    console.log("User does not require approval or has no tenantId. Exiting function.");
+  if (!newUser || newUser.accountType !== "Viewer" || !newUser.workspaceId) {
+    console.log("User does not require approval or has no workspaceId. Exiting function.");
     return null;
   }
   
   const newUserName = newUser.displayName || "A new user";
   const newUserEmail = newUser.email || "No email provided";
-  const tenantId = newUser.tenantId;
+  const workspaceId = newUser.workspaceId;
 
-  console.log(`New user "${newUserName}" requires approval for tenant "${tenantId}".`);
+  console.log(`New user "${newUserName}" requires approval for workspace "${workspaceId}".`);
 
-  const adminEmails = await getAdminEmails(tenantId);
+  const adminEmails = await getAdminEmails(workspaceId);
 
   if (adminEmails.length === 0) {
-    console.log("No administrators found to notify for this tenant. Exiting function.");
+    console.log("No administrators found to notify for this workspace. Exiting function.");
     return null;
   }
 
@@ -114,4 +116,5 @@ export const onNewUserCreated = onDocumentCreated("users/{userId}", async (event
   return null;
 });
 
-export { sendInvitation } from "./send-invitation";
+
+export { sendInvitation, calendarWebhook };
