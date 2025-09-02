@@ -9,6 +9,9 @@ export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    plugins: {
+        "@typescript-eslint": tseslint.plugin,
+    },
     languageOptions: {
       globals: {
         ...globals.node,
