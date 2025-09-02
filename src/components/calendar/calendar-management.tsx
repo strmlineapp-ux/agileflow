@@ -108,7 +108,7 @@ function CalendarCard({
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <Button variant="default" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsLinkDialogOpen(true)}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsLinkDialogOpen(true)}>
                                 <GoogleSymbol name="add_link" />
                             </Button>
                         </TooltipTrigger>
@@ -122,7 +122,7 @@ function CalendarCard({
                        <TooltipTrigger asChild>
                            <span tabIndex={0} onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') { handleSync(e as any); }}}>
                                <Button
-                                   variant="default"
+                                   variant="ghost"
                                    size="icon"
                                    className="h-8 w-8 text-muted-foreground"
                                    onClick={handleSync}
@@ -154,7 +154,7 @@ function CalendarCard({
       <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
         <DialogContent className="max-w-md">
             <div className="absolute top-4 right-4">
-              <Button variant="default" size="icon" className="h-8 w-8" onClick={handleSaveGoogleCalendarId}>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSaveGoogleCalendarId}>
                   <GoogleSymbol name="check" className="text-xl" />
                   <span className="sr-only">Link Calendar</span>
               </Button>
