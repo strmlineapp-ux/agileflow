@@ -39,8 +39,8 @@ function CalendarCard({
   
   const {toast} = useToast();
   
-  const ownerUser = useMemo(() => users.find(u => u.userId === calendar.owner.id), [users, calendar.owner.id]);
-  const canManage = useMemo(() => !isSharedPreview && viewAsUser.userId === calendar.owner.id, [isSharedPreview, viewAsUser, calendar]);
+  const ownerUser = useMemo(() => users.find(u => u.userId === calendar.owner?.id), [users, calendar.owner?.id]);
+  const canManage = useMemo(() => !isSharedPreview && viewAsUser.userId === calendar.owner?.id, [isSharedPreview, viewAsUser, calendar]);
 
   React.useEffect(() => {
     if (isLinkDialogOpen) {
@@ -55,6 +55,7 @@ function CalendarCard({
     toast({ title: 'Setting Up Watch...', description: `Registering ${calendar.name} for real-time updates.` });
 
     try {
+      // In a real app, this URL would be dynamically configured and secured.
       const webhookUrl = `https://us-central1-agileflow-mlf18.cloudfunctions.net/calendarWebhook`;
       const result = await watchGoogleCalendar({
         googleCalendarId: calendar.googleCalendarId,
@@ -232,7 +233,7 @@ export function CalendarManagement({ tab, page, isActive }: { tab: AppTab; page:
   };
   
   const handleDelete = (calendar: SharedCalendar) => {
-    const isOwner = calendar.owner.id === viewAsUser.userId;
+    const isOwner = calendar.owner?.id === viewAsUser.userId;
     if (isOwner) {
         deleteCalendar(calendar.id);
         toast({ title: 'Calendar Deleted' });
@@ -251,12 +252,12 @@ export function CalendarManagement({ tab, page, isActive }: { tab: AppTab; page:
   
   const displayedCalendars = useMemo(() => {
     return calendars
-      .filter(c => c.owner.id === viewAsUser.userId || (viewAsUser.linkedCalendarIds || []).includes(c.id));
+      .filter(c => (c.owner && c.owner.id === viewAsUser.userId) || (viewAsUser.linkedCalendarIds || []).includes(c.id));
   }, [calendars, viewAsUser]);
 
   const sharedCalendars = useMemo(() => {
     const displayedIds = new Set(displayedCalendars.map(c => c.id));
-    return calendars.filter(c => c.isShared && c.owner.id !== viewAsUser.userId && !displayedIds.has(c.id));
+    return calendars.filter(c => c.isShared && c.owner?.id !== viewAsUser.userId && !displayedIds.has(c.id));
   }, [calendars, displayedCalendars, viewAsUser.userId]);
 
   const renderCalendarCard = useCallback((calendar: SharedCalendar) => (
