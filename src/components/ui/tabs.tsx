@@ -3,6 +3,22 @@
 
 import * as React from "react"
 import * as TabsPrimitive from "@radix-ui/react-tabs"
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core"
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  horizontalListSortingStrategy,
+} from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 
 import { cn } from "@/lib/utils"
 
@@ -16,7 +32,7 @@ const TabsList = React.forwardRef<
     <TabsPrimitive.List
       ref={ref}
       className={cn(
-        "inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground",
+        "inline-flex h-auto items-center justify-center rounded-md bg-muted p-1 text-muted-foreground",
         className
       )}
       {...props}
@@ -40,6 +56,73 @@ const TabsTrigger = React.forwardRef<
 ))
 TabsTrigger.displayName = TabsPrimitive.Trigger.displayName
 
+const SortableTabsTrigger = ({ id, children, disabled }: { id: string, children: React.ReactNode, disabled?: boolean }) => {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({ id, disabled });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? 1 : 'auto',
+    };
+
+    return (
+        <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+            {children}
+        </div>
+    );
+};
+
+
+interface SortableTabsListProps<T extends { id: string }> {
+  items: T[];
+  onReorder: (items: T[]) => void;
+  children: React.ReactNode;
+  className?: string;
+  disabled?: boolean;
+}
+
+function SortableTabsList<T extends { id: string }>({ items, onReorder, children, className, disabled }: SortableTabsListProps<T>) {
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+    
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (over && active.id !== over.id) {
+            const oldIndex = items.findIndex(item => item.id === active.id);
+            const newIndex = items.findIndex(item => item.id === over.id);
+            if (oldIndex !== -1 && newIndex !== -1) {
+                onReorder(arrayMove(items, oldIndex, newIndex));
+            }
+        }
+    };
+
+    return (
+        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+            <SortableContext items={items} strategy={horizontalListSortingStrategy}>
+                <TabsList className={className}>
+                    {React.Children.map(children, (child, index) => {
+                        if (React.isValidElement(child)) {
+                            return <SortableTabsTrigger id={items[index].id} disabled={disabled}>{child}</SortableTabsTrigger>;
+                        }
+                        return child;
+                    })}
+                </TabsList>
+            </SortableContext>
+        </DndContext>
+    );
+}
+
 const TabsContent = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content>
@@ -55,4 +138,4 @@ const TabsContent = React.forwardRef<
 ))
 TabsContent.displayName = TabsPrimitive.Content.displayName
 
-export { Tabs, TabsList, TabsTrigger, TabsContent }
+export { Tabs, TabsList, TabsTrigger, TabsContent, SortableTabsList, SortableTabsTrigger }

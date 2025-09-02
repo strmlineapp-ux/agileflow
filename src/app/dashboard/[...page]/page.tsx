@@ -25,7 +25,7 @@ import { SettingsContent } from '@/components/dashboard/tabs/settings-tab';
 import { CalendarPageContent } from '@/components/dashboard/tabs/calendar-tab';
 import { ProjectsContent } from '@/components/dashboard/tabs/projects-tab';
 import { EventsContent } from '@/components/dashboard/tabs/events-tab';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsTrigger, TabsContent, SortableTabsList } from '@/components/ui/tabs';
 import { CenteredTabList } from '@/components/common/centered-tab-list';
 import { PageTitle } from '@/components/common/page-title';
 
@@ -54,7 +54,7 @@ const componentMap = {
 
 export default function DynamicPage() {
   const params = useParams();
-  const { appSettings, viewAsUser, loading, teams, updatePage, updateAppTab } = useUser();
+  const { appSettings, viewAsUser, loading, teams, updatePage, reorderTabs, isDragModifierPressed } = useUser();
   const { page: pagePath } = params;
 
   const path = Array.isArray(pagePath) ? `/dashboard/${pagePath.join('/')}` : `/dashboard/${pagePath}`;
@@ -125,14 +125,18 @@ export default function DynamicPage() {
     return (
        <Tabs defaultValue={pageTabs[0].id} className="flex flex-col h-full gap-6">
           <CenteredTabList>
-            <TabsList>
+            <SortableTabsList
+                items={pageTabs}
+                onReorder={reorderTabs}
+                disabled={!isDragModifierPressed}
+            >
                 {pageTabs.map(tab => (
                   <TabsTrigger key={tab.id} value={tab.id} className="gap-2">
                      <GoogleSymbol name={tab.icon} className="text-4xl" weight={100} />
                      <span>{tab.name}</span>
                   </TabsTrigger>
                 ))}
-            </TabsList>
+            </SortableTabsList>
           </CenteredTabList>
          <div className="flex-1 overflow-hidden">
             {pageTabs.map(tab => {
