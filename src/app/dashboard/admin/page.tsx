@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -7,23 +6,37 @@ import { AdminsManagement, PagesManagement, TabsManagement } from '@/components/
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { useUser } from '@/context/user-context';
-import { InlineEditor } from '@/components/common/inline-editor';
-import { toast } from '@/hooks/use-toast';
 import { CenteredTabList } from '@/components/common/centered-tab-list';
 import { type AppTab } from '@/types';
 
 export default function AdminPage() {
   const { appSettings } = useUser();
-  const [activeTabKey, setActiveTabKey] = useState('admins');
+  const [activeTabKey, setActiveTabKey] = useState('tab-admins');
 
   const adminPage = appSettings.pages.find(p => p.id === 'page-admin-management');
 
-  const adminTabs: AppTab[] = useMemo(() => {
-      const tabIds = ['tab-admins', 'tab-admin-pages', 'tab-admin-tabs'];
-      return tabIds.map(id => appSettings.tabs.find(t => t.id === id)).filter((t): t is AppTab => !!t);
+  const adminTabsMap = useMemo<{ [key: string]: AppTab | undefined }>(() => {
+    return {
+      'tab-admins': appSettings.tabs.find(t => t.id === 'tab-admins'),
+      'tab-admin-pages': appSettings.tabs.find(t => t.id === 'tab-admin-pages'),
+      'tab-admin-tabs': appSettings.tabs.find(t => t.id === 'tab-admin-tabs'),
+    };
   }, [appSettings.tabs]);
+
+  const adminTabs = useMemo(() => {
+    return Object.values(adminTabsMap).filter((t): t is AppTab => !!t);
+  }, [adminTabsMap]);
   
   if (!adminPage) return null;
+
+  const renderComponent = (tab: AppTab) => {
+    switch (tab.componentKey) {
+      case 'admins': return <AdminsManagement isActive={activeTabKey === tab.id} />;
+      case 'pages': return <PagesManagement isActive={activeTabKey === tab.id} />;
+      case 'tabs': return <TabsManagement isActive={activeTabKey === tab.id} />;
+      default: return null;
+    }
+  };
 
   return (
     <div className="flex flex-col h-full gap-6">
@@ -39,20 +52,11 @@ export default function AdminPage() {
                 </TabsList>
             </CenteredTabList>
             <div className="flex-1 overflow-hidden">
-                {adminTabs.map(tab => {
-                  let Component;
-                  switch (tab.componentKey) {
-                    case 'admins': Component = AdminsManagement; break;
-                    case 'pages': Component = PagesManagement; break;
-                    case 'tabs': Component = TabsManagement; break;
-                    default: return null;
-                  }
-                  return (
+                {adminTabs.map(tab => (
                     <TabsContent key={tab.id} value={tab.id} className="h-full mt-0">
-                      <Component isActive={activeTabKey === tab.id} />
+                      {renderComponent(tab)}
                     </TabsContent>
-                  )
-                })}
+                ))}
             </div>
         </Tabs>
     </div>
