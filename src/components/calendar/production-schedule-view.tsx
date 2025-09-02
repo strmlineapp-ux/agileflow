@@ -227,23 +227,23 @@ const ProductionScheduleLocationRow = React.memo(({
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="w-56 p-0">
-                <div className="p-2 border-b"><p className="text-sm font-normal text-center">{alias || location}</p></div>
+                <div className="p-2 border-b-2"><p className="text-sm font-normal text-center">{alias || location}</p></div>
                 <div className="flex flex-col gap-1 max-h-48 overflow-y-auto p-1">
                     {dailyCheckUsers.length > 0 ? dailyCheckUsers.filter(user => user.userId !== assignedUserId).map(user => (
                         <Button key={user.userId} variant="default" className="justify-start h-8" onClick={() => handleAssignCheck(dayIso, location, user.userId)}>
-                            <Avatar className="h-6 w-6 mr-2"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
+                            <Avatar className="h-6 w-6 mr-2"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar"/><AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
                             <span className="text-sm">{user.displayName}</span>
                         </Button>
                     )) : <p className="text-sm text-muted-foreground text-center p-2">No users to assign.</p>}
                 </div>
-                {assignedUser && <div className="p-1 border-t"><Button variant="outline" size="sm" className="w-full text-destructive hover:text-destructive" onClick={() => handleAssignCheck(dayIso, location, null)}>Unassign</Button></div>}
+                {assignedUser && <div className="p-1 border-t-2"><Button variant="outline" size="sm" className="w-full text-destructive hover:text-destructive" onClick={() => handleAssignCheck(dayIso, location, null)}>Unassign</Button></div>}
             </PopoverContent>
         </Popover>
     );
 
     return (
-        <div className={cn("flex", { "border-b": !isLast }, {"bg-muted/10": index % 2 !== 0})}>
-            <div className="w-[160px] shrink-0 p-2 border-r flex items-start justify-between bg-muted sticky left-0 z-30">
+        <div className={cn("flex", { "border-b-2": !isLast }, {"bg-muted/10": index % 2 !== 0})}>
+            <div className="w-[160px] shrink-0 p-2 border-r-2 flex items-start justify-between bg-muted sticky left-0 z-30">
                 <div className="flex items-start gap-1 cursor-pointer flex-1 min-w-0" onClick={() => toggleLocationCollapse(dayIso, location)}>
                     {isLocationCollapsed ? <GoogleSymbol name="chevron_right" className="mt-1" weight={100} /> : <GoogleSymbol name="expand_more" className="mt-1" weight={100} />}
                     <p className="font-normal text-sm" title={alias ? location : undefined}>{alias || location}</p>
@@ -254,7 +254,7 @@ const ProductionScheduleLocationRow = React.memo(({
                 className={cn("relative flex-1", isLocationCollapsed ? "h-10" : "min-h-[5rem] py-1")}
                 onClick={(e) => handleEasyBookingClick(e, day, location)}
             >
-                {Array.from({ length: 23 }).map((_, hour) => <div key={`line-${location}-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * hourWidth}px` }}></div>)}
+                {Array.from({ length: 23 }).map((_, hour) => <div key={`line-${location}-${hour}`} className="absolute top-0 bottom-0 border-r-2" style={{ left: `${(hour + 1) * hourWidth}px` }}></div>)}
                 {!isLocationCollapsed && eventsInRow.map(event => {
                     const { left, width } = getEventPosition(event);
                     const colors = calendarColorMap[event.calendarId];
@@ -284,7 +284,7 @@ const ProductionScheduleLocationRow = React.memo(({
                                                     <TooltipTrigger asChild>
                                                         <div className="relative">
                                                             <Avatar className="h-5 w-5">
-                                                                <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                                                <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar"/>
                                                                 <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                                                             </Avatar>
                                                             {roleIcon && (
@@ -598,16 +598,16 @@ export const ProductionScheduleView = React.memo(({ date, events, containerRef, 
                                     const pill = canManageThisCheckLocation ? (
                                         <Popover key={location}><PopoverTrigger asChild><UiBadge variant={assignedUser ? "default" : "outline"} className={cn("rounded-full h-8 cursor-pointer", isTempCheck && "border-dashed")}>{pillContent}</UiBadge></PopoverTrigger>
                                             <PopoverContent className="w-56 p-0">
-                                                <div className="p-2 border-b"><p className="text-sm font-normal text-center">{locationAliasMap[location] || location}</p></div>
+                                                <div className="p-2 border-b-2"><p className="text-sm font-normal text-center">{locationAliasMap[location] || location}</p></div>
                                                 <div className="flex flex-col gap-1 max-h-48 overflow-y-auto p-1">
                                                     {dailyCheckUsers.length > 0 ? dailyCheckUsers.filter(user => user.userId !== assignedUserId).map(user => (
                                                         <Button key={user.userId} variant="default" className="justify-start h-8" onClick={() => handleAssignCheck(dayIso, location, user.userId)}>
-                                                            <Avatar className="h-6 w-6 mr-2"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
+                                                            <Avatar className="h-6 w-6 mr-2"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar"/><AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback></Avatar>
                                                             <span className="text-sm">{user.displayName}</span>
                                                         </Button>
                                                     )) : <p className="text-sm text-muted-foreground text-center p-2">No users to assign.</p>}
                                                 </div>
-                                                {assignedUser && <div className="p-1 border-t"><Button variant="outline" size="sm" className="w-full text-destructive hover:text-destructive" onClick={() => handleAssignCheck(dayIso, location, null)}>Unassign</Button></div>}
+                                                {assignedUser && <div className="p-1 border-t-2"><Button variant="outline" size="sm" className="w-full text-destructive hover:text-destructive" onClick={() => handleAssignCheck(dayIso, location, null)}>Unassign</Button></div>}
                                             </PopoverContent>
                                         </Popover>
                                     ) : (<UiBadge key={location} variant={assignedUser ? "default" : "outline"} className={cn("rounded-full h-8", isTempCheck && "border-dashed")}>{pillContent}</UiBadge>);
@@ -637,7 +637,7 @@ export const ProductionScheduleView = React.memo(({ date, events, containerRef, 
                                             </TooltipProvider>
                                         </PopoverTrigger>
                                         <PopoverContent className="w-[300px] p-0">
-                                            <div className="p-2 border-b">
+                                            <div className="p-2 border-b-2">
                                                 <Input
                                                     placeholder="Search locations..."
                                                     value={checkSearchTerm}
@@ -688,8 +688,8 @@ export const ProductionScheduleView = React.memo(({ date, events, containerRef, 
                             <div ref={el => timelineScrollerRefs.current.set(dayIso, el)}>
                                 <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}}>
                                     <CardHeader className="p-0 sticky top-0 bg-muted z-20 flex flex-row">
-                                        <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-normal text-sm sticky left-0 bg-muted z-30">Location</div>
-                                        {hours.map(hour => <div key={hour} className="shrink-0 text-left p-2 border-r" style={{ width: `${hourWidth}px`}}><span className="text-xs text-muted-foreground">{format(addHours(startOfDay(day), hour), timeFormatTimeline)}</span></div>)}
+                                        <div className="w-[160px] shrink-0 border-r-2 p-2 flex items-center font-normal text-sm sticky left-0 bg-muted z-30">Location</div>
+                                        {hours.map(hour => <div key={hour} className="shrink-0 text-left p-2 border-r-2" style={{ width: `${hourWidth}px`}}><span className="text-xs text-muted-foreground">{format(addHours(startOfDay(day), hour), timeFormatTimeline)}</span></div>)}
                                     </CardHeader>
                                     <CardContent className="p-0 relative">
                                         <div className="absolute inset-y-0 lunch-break-pattern z-0 pointer-events-none" style={{ left: `${LOCATION_LABEL_WIDTH_PX + 12 * hourWidth}px`, width: `${2.5 * hourWidth}px` }} title="Lunch Break" />

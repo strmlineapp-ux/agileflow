@@ -64,9 +64,9 @@ const DayViewLocationRow = React.memo(({
     }
 
     return (
-        <div className={cn("flex", { "border-b": !isLast }, { "bg-muted/10": index % 2 !== 0 })}>
+        <div className={cn("flex", { "border-b-2": !isLast }, { "bg-muted/10": index % 2 !== 0 })}>
             <div 
-                className="w-[160px] shrink-0 p-2 border-r flex items-start justify-start bg-muted sticky left-0 z-30 gap-1 cursor-pointer"
+                className="w-[160px] shrink-0 p-2 border-r-2 flex items-start justify-start bg-muted sticky left-0 z-30 gap-1 cursor-pointer"
                 onClick={() => toggleLocationCollapse(location)}
             >
                 <GoogleSymbol name={isCollapsed ? "chevron_right" : "expand_more"} className="text-lg mt-1 text-foreground" weight={100} />
@@ -74,7 +74,7 @@ const DayViewLocationRow = React.memo(({
             </div>
             <div className={cn("relative flex-1", isCollapsed ? "h-10" : "min-h-[5rem] py-1")} onClick={(e) => handleEasyBookingClick(e, 'standard', day, location)}>
                 {Array.from({ length: 23 }).map((_, hour) => (
-                    <div key={`line-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * hourWidth}px` }}></div>
+                    <div key={`line-${hour}`} className="absolute top-0 bottom-0 border-r-2" style={{ left: `${(hour + 1) * hourWidth}px` }}></div>
                 ))}
                 {!isCollapsed && eventsInRow.map(event => {
                     const { left, width } = getEventPositionStandard(event);
@@ -330,10 +330,10 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
         <Card className="h-full flex flex-col flex-1">
             <div className="overflow-y-hidden" ref={timelineScrollerRef}>
                 <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}} className="flex flex-col flex-1 h-full">
-                    <CardHeader className="p-0 border-b sticky top-0 bg-muted z-20 flex flex-row">
-                        <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-normal text-sm sticky left-0 bg-muted z-30 text-foreground">Location</div>
+                    <CardHeader className="p-0 border-b-2 sticky top-0 bg-muted z-20 flex flex-row">
+                        <div className="w-[160px] shrink-0 border-r-2 p-2 flex items-center font-normal text-sm sticky left-0 bg-muted z-30 text-foreground">Location</div>
                         {hours.map(hour => (
-                            <div key={hour} className="shrink-0 text-left p-2 border-r" style={{ width: `${hourWidth}px` }}>
+                            <div key={hour} className="shrink-0 text-left p-2 border-r-2" style={{ width: `${hourWidth}px` }}>
                                 <span className="text-xs text-foreground">{format(addHours(startOfDay(date), hour), timeFormatTimeline)}</span>
                             </div>
                         ))}
@@ -394,9 +394,9 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
             <div className="flex-1 overflow-y-auto" ref={timelineScrollerRef}>
                 <CardContent className="p-0 relative flex-1">
                     <div className="grid grid-cols-[auto,1fr] min-h-full h-full">
-                        <div className="w-20 border-r bg-muted">
+                        <div className="w-20 border-r-2 bg-muted">
                             {hours.map(hour => (
-                                <div key={hour} className="relative text-right pr-2 border-b" style={{ height: `${hourHeight}px` }}>
+                                <div key={hour} className="relative text-right pr-2 border-b-2" style={{ height: `${hourHeight}px` }}>
                                     <span className="text-xs text-foreground relative -top-2">{format(addHours(startOfDay(date), hour), viewAsUser.timeFormat === '24h' ? 'HH:00' : 'h a')}</span>
                                 </div>
                             ))}
@@ -412,7 +412,7 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
                                 title="Lunch Break"
                             />
                             {hours.map(hour => (
-                                <div key={hour} className="border-b" style={{ height: `${hourHeight}px` }}></div>
+                                <div key={hour} className="border-b-2" style={{ height: `${hourHeight}px` }}></div>
                             ))}
 
                             {dayEvents.length === 0 ? (
@@ -452,7 +452,7 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
                                                                         <TooltipTrigger asChild>
                                                                             <div className="relative">
                                                                                 <Avatar className="h-6 w-6">
-                                                                                    <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar"/>
+                                                                                    <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
                                                                                     <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                                                                                 </Avatar>
                                                                                 {roleIcon && (

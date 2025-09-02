@@ -146,14 +146,14 @@ export const WeekView = React.memo(({ date, events, containerRef, zoomLevel, onE
 
     return (
         <Card className="h-full flex flex-col flex-1">
-            <CardHeader className="p-0 border-b sticky top-0 bg-muted z-10">
+            <CardHeader className="p-0 border-b-2 sticky top-0 bg-muted z-10">
                 <div className={cn("grid", gridColsClass)}>
                     <div className="w-20"></div> {/* Timeline spacer */}
                     {displayedDays.map((day, index) => {
                         const isWeekend = isSaturday(day) || isSunday(day);
                         const isDayHoliday = isHoliday(day, holidays);
                         return (
-                            <div key={day.toString()} className={cn("text-center p-2 border-l relative", { "bg-muted/50": isWeekend || isDayHoliday })}>
+                            <div key={day.toString()} className={cn("text-center p-2 border-l-2 relative", { "bg-muted/50": isWeekend || isDayHoliday })}>
                                 <p className={cn("text-sm text-foreground", { "text-foreground": isWeekend || isDayHoliday })}>{format(day, 'EEE')}</p>
                                 <p className={cn(
                                     "text-2xl text-foreground",
@@ -181,9 +181,9 @@ export const WeekView = React.memo(({ date, events, containerRef, zoomLevel, onE
                 <CardContent className="p-0 relative">
                     <div className={cn("grid min-h-full", gridColsClass)}>
                         {/* Timeline */}
-                        <div className="w-20 border-r bg-muted">
+                        <div className="w-20 border-r-2 bg-muted">
                             {hours.map((hour, index) => (
-                                <div key={hour} className={cn("relative text-right pr-2 border-b bg-muted", {"bg-muted/10": index % 2 !== 0})} style={{ height: `${hourHeight}px` }}>
+                                <div key={hour} className={cn("relative text-right pr-2 border-b-2 bg-muted", {"bg-muted/10": index % 2 !== 0})} style={{ height: `${hourHeight}px` }}>
                                     <span className="text-xs text-foreground relative -top-2">{format(addHours(startOfDay(date), hour), timeFormatTimeline)}</span>
                                 </div>
                             ))}
@@ -197,10 +197,10 @@ export const WeekView = React.memo(({ date, events, containerRef, zoomLevel, onE
                             return (
                                 <div 
                                     key={day.toString()} 
-                                    className={cn("relative border-l", { "bg-muted/10": index % 2 !== 0 })}
+                                    className={cn("relative border-l-2", { "bg-muted/10": index % 2 !== 0 })}
                                 >
                                     {allDayEvents.length > 0 && (
-                                        <div className="absolute top-0 left-0 right-0 z-20 p-1 space-y-1 bg-muted/20 border-b">
+                                        <div className="absolute top-0 left-0 right-0 z-20 p-1 space-y-1 bg-muted/20 border-b-2">
                                             {allDayEvents.map(event => {
                                                 const colors = calendarColorMap[event.calendarId];
                                                 return (
@@ -223,7 +223,7 @@ export const WeekView = React.memo(({ date, events, containerRef, zoomLevel, onE
                                         />
                                         {/* Grid lines */}
                                         {hours.map(hour => (
-                                            <div key={hour} className="border-b" style={{ height: `${hourHeight}px` }}></div>
+                                            <div key={hour} className="border-b-2" style={{ height: `${hourHeight}px` }}></div>
                                         ))}
                                         {/* Events */}
                                         <div className="absolute inset-0 z-10">
@@ -257,7 +257,7 @@ export const WeekView = React.memo(({ date, events, containerRef, zoomLevel, onE
                                                                                 <TooltipTrigger asChild>
                                                                                     <div className="relative">
                                                                                         <Avatar className="h-6 w-6">
-                                                                                            <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar"/>
+                                                                                            <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
                                                                                             <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                                                                                         </Avatar>
                                                                                         {roleIcon && (
