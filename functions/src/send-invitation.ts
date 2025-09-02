@@ -7,8 +7,6 @@ const db = admin.firestore();
 /**
  * Firestore trigger that sends an invitation email when a new email is added
  * to the pre-approved-emails collection for a specific workspace.
- * @param {QueryDocumentSnapshot} snapshot The document that was created.
- * @return {Promise<void>} A promise that resolves when the function completes.
  */
 export const sendInvitation = onDocumentCreated('pre-approved-emails/{docId}', async (event) => {
   const newInvitation = event.data?.data();
