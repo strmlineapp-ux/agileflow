@@ -19,9 +19,34 @@ import { type Event, type AppPage } from '@/types';
 import { EventDetailsDialog } from '@/components/calendar/event-details-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { CenteredTabList } from '@/components/common/centered-tab-list';
+import { Card, CardDescription, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+
+function CalendarLinkPrompt() {
+  const { linkGoogleCalendar, realUser } = useUser();
+  if (!realUser) return null;
+
+  return (
+    <div className="flex-1 flex items-center justify-center">
+      <Card className="max-w-md text-center">
+        <CardHeader>
+          <CardTitle>Connect Your Google Calendar</CardTitle>
+          <CardDescription>
+            To view and manage events, you need to connect your Google Calendar. This will allow AgileFlow to sync your events.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button onClick={() => linkGoogleCalendar(realUser.userId)}>
+            <GoogleSymbol name="link" className="mr-2" />
+            Connect Google Calendar
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
 
 export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
-  const { viewAsUser, calendars, fetchEvents, addEvent, updateEvent, deleteEvent } = useUser();
+  const { viewAsUser, calendars, fetchEvents, addEvent, updateEvent, deleteEvent, linkGoogleCalendar } = useUser();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>(viewAsUser.defaultCalendarView || 'day');
   const [zoomLevel, setZoomLevel] = useState<'normal' | 'fit'>('normal');
@@ -38,6 +63,10 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
   const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
 
   useEffect(() => {
+    if (!viewAsUser.googleCalendarLinked) {
+      setIsDataLoading(false);
+      return;
+    }
     let start: Date;
     let end: Date;
     switch (view) {
@@ -63,7 +92,7 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
         setIsDataLoading(false);
     });
 
-  }, [currentDate, view, fetchEvents]);
+  }, [currentDate, view, fetchEvents, viewAsUser.googleCalendarLinked]);
   
   const handlePrev = useCallback(() => {
     switch (view) {
@@ -171,6 +200,10 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
 
   const renderCurrentView = () => {
     if (isDataLoading) return <div className="flex-1 flex items-center justify-center"><GoogleSymbol name="progress_activity" className="animate-spin text-4xl text-muted-foreground" /></div>;
+    
+    if (!viewAsUser.googleCalendarLinked) {
+      return <CalendarLinkPrompt />;
+    }
 
     switch (view) {
         case 'month':
