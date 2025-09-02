@@ -55,11 +55,7 @@ export async function sendEmail(to: string[], subject: string, htmlBody: string)
 }
 
 /**
- * Firestore trigger that sends an email
- *  to admins when a new user signs up.
- * @param {QueryDocumentSnapshot}
- *  snapshot The document that triggered the function.
- * @return {Promise<void>} A promise that resolves when the function completes.
+ * Firestore trigger that sends an email to admins when a new user signs up.
  */
 export const onNewUserCreated = onDocumentCreated('users/{userId}', async (event) => {
   const newUser = event.data?.data();
