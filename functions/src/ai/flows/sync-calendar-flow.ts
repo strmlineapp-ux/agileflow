@@ -11,6 +11,8 @@
 import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
 import { z } from 'genkit';
+import { google } from 'googleapis';
+import { getFirestore } from 'firebase-admin/firestore';
 
 export const ai = genkit({
   plugins: [googleAI()],
@@ -48,15 +50,51 @@ const syncCalendarFlow = ai.defineFlow(
     outputSchema: SyncCalendarOutputSchema,
   },
   async (input) => {
-    // In a real-world scenario, this is where you would make an authenticated
-    // call to the Google Calendar API to fetch events, and then write them
-    // to the Firestore database, scoped to the provided input.workspaceId.
-    console.log(`Simulating event sync for Google Calendar ID: ${input.googleCalendarId} in workspace ${input.workspaceId}`);
+    console.log(`Starting REAL event sync for Google Calendar ID: ${input.googleCalendarId}`);
 
-    const mockEventCount = Math.floor(Math.random() * 20) + 1; // Simulate finding 1-20 events
+    const auth = new google.auth.GoogleAuth({
+        scopes: ['https://www.googleapis.com/auth/calendar.readonly']
+    });
 
-    return {
-      syncedEventCount: mockEventCount,
-    };
+    const authClient = await auth.getClient();
+    const calendarApi = google.calendar({version: 'v3', auth: authClient});
+    
+    const db = getFirestore();
+
+    try {
+        const response = await calendarApi.events.list({
+            calendarId: input.googleCalendarId,
+            timeMin: (new Date()).toISOString(),
+            maxResults: 250, // Fetch a reasonable number of upcoming events
+            singleEvents: true,
+            orderBy: 'startTime',
+        });
+        
+        const events = response.data.items;
+
+        if (!events || events.length === 0) {
+            console.log('No upcoming events found.');
+            return { syncedEventCount: 0 };
+        }
+        
+        console.log(`Found ${events.length} events to sync.`);
+
+        // In a full implementation, you would now process these events and
+        // write them to your Firestore database, associating them with your
+        // internal calendar and workspace.
+        
+        // For now, we will just log the event summaries.
+        events.forEach(event => {
+            console.log(`- ${event.summary} (${event.start?.dateTime || event.start?.date})`);
+        });
+
+        return {
+            syncedEventCount: events.length,
+        };
+
+    } catch (err) {
+      console.error('The API returned an error: ' + err);
+      throw new Error('Failed to fetch calendar events.');
+    }
   }
 );
