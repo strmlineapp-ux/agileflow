@@ -13,6 +13,7 @@ import { googleAI } from '@genkit-ai/googleai';
 import { z } from 'genkit';
 import { google } from 'googleapis';
 import { getFirestore } from 'firebase-admin/firestore';
+import { startOfDay } from 'date-fns';
 
 export const ai = genkit({
   plugins: [googleAI()],
@@ -64,7 +65,7 @@ const syncCalendarFlow = ai.defineFlow(
     try {
         const response = await calendarApi.events.list({
             calendarId: input.googleCalendarId,
-            timeMin: (new Date()).toISOString(),
+            timeMin: (startOfDay(new Date())).toISOString(),
             maxResults: 250, // Fetch a reasonable number of upcoming events
             singleEvents: true,
             orderBy: 'startTime',
