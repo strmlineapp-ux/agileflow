@@ -15,6 +15,7 @@ import { ManagementPageLayout } from '../common/management-page-layout';
 import { SortableItem } from '../common/sortable-item';
 import { InlineEditor } from '../common/inline-editor';
 import { PageTitle } from '../common/page-title';
+import { watchGoogleCalendar } from '@/ai/flows/watch-google-calendar-flow';
 
 function CalendarCard({
     calendar,
@@ -47,17 +48,24 @@ function CalendarCard({
     }
   }, [isLinkDialogOpen]);
   
-  const handleSync = async (e: React.MouseEvent) => {
+  const handleWatchCalendar = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!calendar.googleCalendarId) return;
-    toast({ title: 'Sync Started', description: `Simulating sync with ${calendar.name}...` });
-    console.log(`Simulating event sync for Google Calendar ID: ${calendar.googleCalendarId}`);
-    // In a real-world scenario, you would call the backend flow here.
-    // For now, we just show a success toast after a delay.
-    setTimeout(() => {
-      const mockEventCount = Math.floor(Math.random() * 20) + 1;
-      toast({ title: 'Sync Complete', description: `Simulated finding ${mockEventCount} events in ${calendar.name}.` });
-    }, 2000);
+
+    toast({ title: 'Setting Up Watch...', description: `Registering ${calendar.name} for real-time updates.` });
+
+    try {
+      const webhookUrl = `https://us-central1-agileflow-mlf18.cloudfunctions.net/calendarWebhook`;
+      const result = await watchGoogleCalendar({
+        googleCalendarId: calendar.googleCalendarId,
+        webhookUrl: webhookUrl,
+      });
+      console.log('Watch setup result:', result);
+      toast({ title: 'Watch Setup Complete', description: `Now listening for changes to ${calendar.name}. Channel expires: ${new Date(result.expiration).toLocaleDateString()}`});
+    } catch (error) {
+      console.error('Failed to set up watch:', error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not set up real-time sync.' });
+    }
   };
   
   const handleSaveGoogleCalendarId = () => {
@@ -118,19 +126,19 @@ function CalendarCard({
                <TooltipProvider>
                    <Tooltip>
                        <TooltipTrigger asChild>
-                           <span tabIndex={0} onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') { handleSync(e as any); }}}>
+                           <span tabIndex={0} onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') { handleWatchCalendar(e as any); }}}>
                                <Button
                                    variant="ghost"
                                    size="icon"
                                    className="h-8 w-8 text-muted-foreground"
-                                   onClick={handleSync}
+                                   onClick={handleWatchCalendar}
                                >
-                                   <GoogleSymbol name="sync" />
+                                   <GoogleSymbol name="rss_feed" />
                                </Button>
                            </span>
                        </TooltipTrigger>
                        <TooltipContent>
-                        <p>Sync with {calendar.googleCalendarId}</p>
+                        <p>Watch for real-time updates</p>
                        </TooltipContent>
                    </Tooltip>
                </TooltipProvider>
