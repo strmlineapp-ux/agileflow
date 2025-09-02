@@ -115,3 +115,4 @@ export const onNewUserCreated = onDocumentCreated("users/{userId}", async (event
 });
 
 export { sendInvitation } from "./send-invitation";
+export { calendarWebhook } from "./calendar-webhook";
