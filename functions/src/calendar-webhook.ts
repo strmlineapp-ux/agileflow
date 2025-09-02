@@ -1,6 +1,6 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { syncCalendar } from '../../ai/flows/sync-calendar-flow';
+import { syncCalendar } from '../../ai/flows/sync-calendar-flow.js';
 
 const db = admin.firestore();
 
