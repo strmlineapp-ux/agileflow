@@ -54,7 +54,7 @@ const componentMap = {
 
 export default function DynamicPage() {
   const params = useParams();
-  const { appSettings, viewAsUser, loading, teams, updatePage, reorderTabs } = useUser();
+  const { appSettings, viewAsUser, loading, teams, updatePage } = useUser();
   const { page: pagePath } = params;
 
   const path = Array.isArray(pagePath) ? `/dashboard/${pagePath.join('/')}` : `/dashboard/${pagePath}`;
@@ -123,20 +123,8 @@ export default function DynamicPage() {
     }
     
     const handleReorderPageTabs = (reorderedPageTabs: AppTab[]) => {
-      // Create a map for quick lookups of the new order
-      const newOrderMap = new Map(reorderedPageTabs.map((tab, index) => [tab.id, index]));
-      
-      // Create a new master list of tabs, preserving the order of un-sorted tabs
-      const fullReorderedTabs = [...appSettings.tabs];
-      fullReorderedTabs.sort((a, b) => {
-          const aIndex = newOrderMap.get(a.id);
-          const bIndex = newOrderMap.get(b.id);
-          if (aIndex !== undefined && bIndex !== undefined) {
-              return aIndex - bIndex; // Sort based on the new order from the page
-          }
-          return 0; // Keep original relative order for other tabs
-      });
-      reorderTabs(fullReorderedTabs);
+      const newTabIds = reorderedPageTabs.map(tab => tab.id);
+      updatePage(page.id, { associatedTabs: newTabIds });
     };
     
     return (
@@ -145,6 +133,7 @@ export default function DynamicPage() {
             <SortableTabsList
                 items={pageTabs}
                 onReorder={handleReorderPageTabs}
+                disabled={!viewAsUser.isAdmin}
             >
                 {pageTabs.map(tab => (
                   <TabsTrigger key={tab.id} value={tab.id} className="gap-2">
