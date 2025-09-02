@@ -87,7 +87,7 @@ Your user preferences appear in a compact, icon-driven row on your user card. Ho
 - **Set Time Format**: Click the clock icon to choose between 12-hour and 24-hour time display from a popover menu.
 - **Enable Easy Booking**: Click the toggle icon to turn on or off the ability to quickly create events by clicking on empty calendar slots. The current status (**On** or **Off**) is shown in the tooltip.
 - **Set Modifier Key**: Click the `keyboard_command_key` icon to set a custom modifier key (`Shift`, `Alt`, `Control`, or `Meta`) that must be held down to trigger secondary actions like resetting preferences.
-- **Link Google Calendar**: To connect your Google Calendar, hover over the status dot on your avatar in the sidebar user menu. If disconnected, a tooltip will prompt you to click to connect. A simulated Google sign-in will appear and, once complete, will enable features like creating Google Meet links for your events.
+- **Google Calendar Status**: Your Google Calendar connection status is shown by the colored dot on your avatar in the sidebar user menu. The connection is handled automatically when you sign in.
 
 ## 8. Management Pages (Admin & Manager Roles)
 
@@ -118,3 +118,4 @@ Administrators can view the application from another user's perspective.
 2.  Select "View as" from the dropdown menu.
 3.  Choose a user from the list.
 4.  A banner will appear at the top of the screen indicating whose view you are using. To return to your own view, repeat the process and select "Return to your view".
+

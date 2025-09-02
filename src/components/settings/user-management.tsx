@@ -122,7 +122,7 @@ const CustomColorPicker = ({ colorValue, onUpdate, onClose }: { colorValue: stri
 };
 
 function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }: { user: User, isCurrentUser: boolean, canEditPreferences: boolean, className?: string }) {
-    const { updateUser, linkGoogleCalendar } = useUser();
+    const { updateUser } = useUser();
     const [isPrimaryColorPopoverOpen, setIsPrimaryColorPopoverOpen] = useState(false);
     const [isFontWeightPopoverOpen, setIsFontWeightPopoverOpen] = useState(false);
     const [isIconGradePopoverOpen, setIsIconGradePopoverOpen] = useState(false);
@@ -203,20 +203,13 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                         </Avatar>
                                         <span className={cn(
                                             "absolute bottom-0 right-0 block h-3.5 w-3.5 rounded-full ring-2 ring-card",
-                                            user.googleCalendarLinked ? "bg-green-500" : "bg-gray-400",
-                                            isCurrentUser && !user.googleCalendarLinked && "cursor-pointer"
+                                            user.googleCalendarLinked ? "bg-green-500" : "bg-gray-400"
                                         )} 
-                                        onClick={(e) => {
-                                            if (isCurrentUser && !user.googleCalendarLinked) {
-                                              e.stopPropagation();
-                                              linkGoogleCalendar(user.userId);
-                                            }
-                                        }}
                                         />
                                     </div>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                    <p>Google Calendar: {user.googleCalendarLinked ? 'Connected' : isCurrentUser ? 'Click to connect' : 'Not Connected'}</p>
+                                    <p>Google Calendar: {user.googleCalendarLinked ? 'Connected' : 'Not Connected'}</p>
                                 </TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
@@ -455,7 +448,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                             <p>Time Format: <span className="font-semibold">{currentTimeFormatLabel}</span>. Modifier+Click to reset.</p>
                                         </TooltipContent>
                                     </Tooltip>
-                                </TooltipProvider>
+                                </PopoverContent>
                                 <PopoverContent className="w-auto p-1" align="start">
                                     {timeFormatOptions.map(option => (
                                     <Button
