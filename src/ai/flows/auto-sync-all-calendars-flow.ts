@@ -52,7 +52,13 @@ const autoSyncAllCalendarsFlow = ai.defineFlow(
 
     const syncPromises = linkedCalendars.map(async (calendar) => {
       try {
-        const syncInput: SyncCalendarInput = { googleCalendarId: calendar.googleCalendarId! };
+        if (!calendar.workspaceId) {
+          throw new Error('Calendar is missing workspaceId.');
+        }
+        const syncInput: SyncCalendarInput = { 
+            googleCalendarId: calendar.googleCalendarId!, 
+            workspaceId: calendar.workspaceId 
+        };
         const result = await syncCalendar(syncInput);
         return {
           status: 'fulfilled' as const,
