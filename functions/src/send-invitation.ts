@@ -1,8 +1,11 @@
+
+'use server';
 import * as admin from 'firebase-admin';
+import { getFirestore } from 'firebase-admin/firestore';
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import { sendEmail } from './user-management.js';
 
-const db = admin.firestore();
+const db = getFirestore();
 
 /**
  * Firestore trigger that sends an invitation email when a new email is added
