@@ -1,6 +1,6 @@
 import * as admin from 'firebase-admin';
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
-import { sendEmail } from './user-management';
+import { sendEmail } from './user-management.js';
 
 const db = admin.firestore();
 
