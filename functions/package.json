@@ -1,3 +1,4 @@
+
 {
   "name": "functions",
   "type": "module",
@@ -25,6 +26,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.14.11",
+    "@types/nodemailer": "^6.4.15",
     "firebase-functions-test": "^3.3.0",
     "typescript": "^5.5.3"
   },
