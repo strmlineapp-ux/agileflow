@@ -5,8 +5,8 @@ import * as functions from "firebase-functions";
 import * as nodemailer from "nodemailer";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { onDocumentUpdated } from "firebase-functions/v2/firestore";
-import sendInvitation from "./send-invitation";
-import calendarWebhook from "./calendar-webhook";
+import { sendInvitation } from "./send-invitation.js";
+import { calendarWebhook } from "./calendar-webhook.js";
 
 
 admin.initializeApp();
