@@ -5,7 +5,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import {
   DndContext,
-  rectIntersection,
+  pointerWithin,
   KeyboardSensor,
   PointerSensor,
   useSensor,
@@ -86,7 +86,7 @@ export function DraggableGrid<T extends { id: string }>({
   return (
     <DndContext 
         sensors={sensors} 
-        collisionDetection={rectIntersection} 
+        collisionDetection={pointerWithin} 
         onDragStart={handleDragStart} 
         onDragEnd={handleDragEnd}
     >
