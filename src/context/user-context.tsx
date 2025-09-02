@@ -9,8 +9,9 @@ import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.
 import { useAuth } from '@/hooks/useAuth';
 import { useData } from '@/hooks/useData';
 import { useTheme } from 'next-themes';
-import { hexToHsl } from '@/lib/utils';
 import { arrayMove } from '@dnd-kit/sortable';
+import { googleSymbolNames } from '@/lib/google-symbols';
+import { predefinedColors } from '@/lib/colors';
 
 // --- Context Definition ---
 interface UserContextType {
@@ -47,14 +48,14 @@ interface UserContextType {
   addUser: (newUser: User) => Promise<void>;
   deleteUser: (userId: string) => Promise<void>;
   reorderUsers: (reorderedUsers: User[]) => Promise<void>;
-  addTeam: (teamData: Omit<Team, 'id'>) => Promise<void>;
+  addTeam: (teamData: Partial<Omit<Team, 'id'>>) => Promise<void>;
   updateTeam: (teamId: string, teamData: Partial<Team>) => Promise<void>;
   deleteTeam: (teamId: string, router: AppRouterInstance, pathname: string) => Promise<void>;
   reorderTeams: (teams: Team[]) => Promise<void>;
   addProject: (projectData: Partial<Project>) => Promise<void>;
   updateProject: (projectId: string, projectData: Partial<Project>) => Promise<void>;
   deleteProject: (projectId: string) => Promise<void>;
-  addCalendar: (newCalendar: Omit<SharedCalendar, 'id'>) => Promise<void>;
+  addCalendar: (newCalendar: Partial<Omit<SharedCalendar, 'id'>>) => Promise<void>;
   updateCalendar: (calendarId: string, calendarData: Partial<SharedCalendar>) => Promise<void>;
   deleteCalendar: (calendarId: string) => Promise<void>;
   reorderCalendars: (calendars: SharedCalendar[]) => Promise<void>;
@@ -128,6 +129,20 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     return dataHook.users.find(u => u.userId === viewAsUserId) || realUser;
   }, [dataHook.users, viewAsUserId, realUser]);
   
+  const addCalendarWithDefaults = useCallback(async (calendarData: Partial<Omit<SharedCalendar, 'id'>>) => {
+    if (!realUser) return;
+    
+    const newCalendarData = {
+      name: 'New Calendar',
+      icon: 'calendar_month',
+      color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
+      owner: { type: 'user', id: realUser.userId },
+      ...calendarData,
+    };
+    
+    await dataHook.addCalendar(newCalendarData as Omit<SharedCalendar, 'id'>);
+  }, [realUser, dataHook.addCalendar]);
+  
   const contextValue = useMemo(() => {
     const setViewAsUserWithReset = (userId: string) => {
       if (userId === realUser?.userId) {
@@ -137,7 +152,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    const addTeamWithUser = (teamData: Omit<Team, 'id'>) => dataHook.addTeam(teamData, realUser!);
+    const addTeamWithUser = (teamData: Partial<Omit<Team, 'id'>>) => dataHook.addTeam(teamData, realUser!);
     const deleteUserWithUser = (userId: string) => dataHook.deleteUser(userId, realUser!);
     const addProjectWithUser = (projectData: Partial<Project>) => dataHook.addProject(projectData, realUser!);
     const deleteTeamWithRouter = (teamId: string, router: AppRouterInstance, pathname: string) => dataHook.deleteTeam(teamId, router, pathname, realUser!);
@@ -157,6 +172,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       loading,
       isFirebaseReady,
       ...dataHook,
+      addCalendar: addCalendarWithDefaults,
       addTeam: addTeamWithUser,
       deleteUser: deleteUserWithUser,
       addProject: addProjectWithUser,
@@ -169,7 +185,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       addPreApprovedEmail: addPreApprovedEmailWithUser,
     };
   }, [
-    realUser, viewAsUser, googleLogin, logout, loading, isFirebaseReady, dataHook
+    realUser, viewAsUser, googleLogin, logout, loading, isFirebaseReady, dataHook, addCalendarWithDefaults
   ]);
 
   return (
@@ -184,5 +200,3 @@ export function useUser() {
   if (!context) throw new Error('useUser must be used within a UserProvider');
   return context;
 }
-
-    
