@@ -36,7 +36,13 @@ export function SortableItem({ id, children, data, disabled = false }: SortableI
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...listeners} {...attributes} className="p-2 break-inside-avoid flex-grow-0 flex-shrink-0">
+    <div 
+        ref={setNodeRef} 
+        style={style} 
+        {...listeners} 
+        {...attributes} 
+        className="p-2 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5 2xl:basis-1/6 flex-grow-0 flex-shrink-0"
+    >
       {children(isDragging)}
     </div>
   );

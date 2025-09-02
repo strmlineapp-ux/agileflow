@@ -76,7 +76,7 @@ function SortableUserCard({ user, listId, onDeleteRequest, isExpanded, onToggleE
     const canDelete = listId === 'user-list';
 
     return (
-        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="break-inside-avoid p-2">
+        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="p-2 basis-full md:basis-1/2 lg:basis-1/3 xl:basis-1/4 flex-grow-0 flex-shrink-0">
              <CardTemplate
                 user={user}
                 entity={{ id: user.userId, name: user.displayName }}
@@ -109,7 +109,7 @@ function UserDropZone({ id, users, children, onDeleteRequest, expandedUsers, onT
         isOver && "ring-1 ring-border ring-inset"
     )}>
         <SortableContext items={sortableUserIds} strategy={verticalListSortingStrategy}>
-            <div className="gap-4 [column-fill:_balance] columns-1 sm:columns-2 md:columns-1 lg:columns-2 xl:columns-3 2xl:columns-4">
+            <div className="flex flex-wrap -m-2">
                 {users.map((user) => (
                     <SortableUserCard 
                         key={user.userId} 
@@ -877,5 +877,6 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
     );
 };
 // #endregion
+
 
 
