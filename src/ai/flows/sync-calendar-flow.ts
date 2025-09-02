@@ -15,6 +15,9 @@ const SyncCalendarInputSchema = z.object({
   googleCalendarId: z
     .string()
     .describe('The ID of the Google Calendar to sync.'),
+  workspaceId: z
+    .string()
+    .describe('The ID of the workspace this calendar belongs to.'),
 });
 export type SyncCalendarInput = z.infer<typeof SyncCalendarInputSchema>;
 
@@ -40,9 +43,9 @@ const syncCalendarFlow = ai.defineFlow(
   },
   async (input) => {
     // In a real-world scenario, this is where you would make an authenticated
-    // call to the Google Calendar API to fetch events.
-    // For this prototype, we will return a mock response.
-    console.log(`Simulating event sync for Google Calendar ID: ${input.googleCalendarId}`);
+    // call to the Google Calendar API to fetch events, and then write them
+    // to the Firestore database, scoped to the provided input.workspaceId.
+    console.log(`Simulating event sync for Google Calendar ID: ${input.googleCalendarId} in workspace ${input.workspaceId}`);
 
     const mockEventCount = Math.floor(Math.random() * 20) + 1; // Simulate finding 1-20 events
 
