@@ -7,7 +7,7 @@
 
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { syncCalendar } from '../../ai/flows/sync-calendar-flow';
+import { syncCalendar } from '../../ai/flows/sync-calendar-flow.js';
 
 const db = admin.firestore();
 
@@ -42,7 +42,7 @@ async function getWorkspaceForCalendar(googleCalendarId: string): Promise<{ work
  * This function is triggered by an HTTP POST request from the Google Calendar API.
  * It processes the notification and triggers a sync for the relevant calendar.
  */
-const calendarWebhook = functions.https.onRequest(async (request, response) => {
+export const calendarWebhook = functions.https.onRequest(async (request, response) => {
   // Google sends a 'sync' header to verify the webhook endpoint upon creation.
   if (request.headers['x-goog-channel-state'] === 'sync') {
     functions.logger.info('Received sync request from Google Calendar API, webhook is verified.');
@@ -81,5 +81,3 @@ const calendarWebhook = functions.https.onRequest(async (request, response) => {
     response.status(500).send('Internal Server Error.');
   }
 });
-
-export default calendarWebhook;
