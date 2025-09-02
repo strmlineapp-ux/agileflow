@@ -5,7 +5,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import {
   DndContext,
-  pointerWithin,
+  closestCenter,
   KeyboardSensor,
   PointerSensor,
   useSensor,
@@ -15,10 +15,10 @@ import {
   DragOverlay,
 } from '@dnd-kit/core';
 import {
+  arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   rectSortingStrategy,
-  arrayMove,
 } from '@dnd-kit/sortable';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { cn } from '@/lib/utils';
