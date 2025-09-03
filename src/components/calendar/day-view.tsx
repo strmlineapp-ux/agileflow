@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef, useCallback, useLayoutEffect } from 'react';
@@ -389,9 +388,10 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
     
     const renderReversedView = () => (
         <TimelineCard>
-            <TimelineCardContent className="p-0 relative" ref={timelineScrollerRef}>
-                <div className="grid grid-cols-[auto,1fr] min-h-full h-full">
-                    <div className="w-20 border-r bg-muted sticky top-0 z-20">
+            <TimelineCardContent className="overflow-y-auto" ref={timelineScrollerRef}>
+                <div className="relative grid grid-cols-[auto,1fr]">
+                    {/* Time Ruler */}
+                    <div className="w-20 bg-muted sticky top-0 z-20">
                         {hours.map(hour => (
                             <div key={hour} className="relative text-right pr-2 border-b-2" style={{ height: `${hourHeight}px` }}>
                                 <span className="text-xs text-foreground relative -top-2">{format(addHours(startOfDay(date), hour), viewAsUser.timeFormat === '24h' ? 'HH:00' : 'h a')}</span>
@@ -399,6 +399,7 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
                         ))}
                     </div>
 
+                    {/* Event Area */}
                     <div className="relative" onClick={(e) => handleEasyBookingClick(e, 'reversed', date)}>
                         <div
                             className="absolute inset-x-0 lunch-break-pattern z-0 pointer-events-none"
