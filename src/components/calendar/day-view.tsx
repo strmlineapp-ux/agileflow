@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef, useCallback, useLayoutEffect } from 'react';
@@ -390,7 +389,7 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
     const renderReversedView = () => (
         <Card className="h-full flex flex-col flex-1">
             <div className="flex-1 overflow-y-auto" ref={timelineScrollerRef}>
-                <CardContent className="p-0 relative flex-1">
+                <CardContent className="p-0 relative">
                     <div className="grid grid-cols-[auto,1fr] min-h-full h-full">
                         <div className="w-20 border-r bg-muted sticky top-0 z-20">
                             {hours.map(hour => (

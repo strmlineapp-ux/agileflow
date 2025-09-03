@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -113,7 +112,7 @@ export const MonthView = React.memo(({ date, events, containerRef, onEventClick 
                 key={key} 
                 ref={isDayToday ? todayRef : null}
                 className={cn(
-                "border-r border-b p-2 flex flex-col",
+                "border-r border-b p-2 flex flex-col min-h-[150px]",
                 { "bg-muted/10": colIndex % 2 !== 0 },
                 { "bg-accent/10": isDayToday },
                 { "bg-muted/50": !isDayToday && (isWeekend || isDayHoliday) && day.getMonth() === date.getMonth() }
@@ -163,10 +162,9 @@ export const MonthView = React.memo(({ date, events, containerRef, onEventClick 
             ...daysInMonth.map((day, index) => renderDayCell(day, `day-${index}`, index))
         ];
     } else {
-        // Build cells for 5-day week view
         let emptyCells = [];
         for (let i = 0; i < startingDayIndex; i++) {
-            if (i < 5) { // Only add placeholders for Mon-Fri
+            if (i < 5) {
                 emptyCells.push(<div key={`empty-${i}`} className="border-r border-b" />);
             }
         }
