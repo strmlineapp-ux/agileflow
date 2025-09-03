@@ -12,7 +12,7 @@ import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
 import { z } from 'genkit';
 import { google } from 'googleapis';
-import { getFirestore, Timestamp, FieldValue } from 'firebase-admin/firestore';
+import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { startOfDay } from 'date-fns';
 import { type Event, type SharedCalendar } from '@/types';
 
@@ -100,7 +100,9 @@ const syncCalendarFlow = ai.defineFlow(
                 continue;
             }
             
-            const eventDocRef = db.collection('events').doc(`${input.workspaceId}_${event.id}`);
+            // Use a consistent ID based on workspace and Google event ID
+            const eventDocId = `${input.workspaceId}_${event.id}`;
+            const eventDocRef = db.collection('events').doc(eventDocId);
             
             const newEventData: Omit<Event, 'eventId'> = {
                 title: event.summary,
@@ -113,7 +115,7 @@ const syncCalendarFlow = ai.defineFlow(
                 attendees: (event.attendees || []).map(a => ({
                     email: a.email!,
                     displayName: a.displayName || a.email!,
-                    responseStatus: a.responseStatus,
+                    responseStatus: a.responseStatus as any,
                 })),
                 attachments: [], // Attachments need more complex handling
                 createdBy: 'system-sync',
