@@ -89,8 +89,8 @@ export function TasksContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
     : tasks;
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col">
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
             <PageTitle 
               title={title}
@@ -132,7 +132,7 @@ export function TasksContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
       </div>
       
       {loading ? (
-        <div className="space-y-4">
+        <div className="space-y-4 mt-6">
             <Skeleton className="h-10 w-1/3" />
             <Skeleton className="h-8 w-24" />
             <div className="space-y-2">
@@ -142,11 +142,13 @@ export function TasksContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
             </div>
         </div>
       ) : (
-        <TaskList 
-            tasks={filteredTasks} 
-            onEdit={openEditTaskForm}
-            onDelete={handleTaskDeleted}
-        />
+        <div className="mt-6">
+            <TaskList 
+                tasks={filteredTasks} 
+                onEdit={openEditTaskForm}
+                onDelete={handleTaskDeleted}
+            />
+        </div>
       )}
     </div>
   );

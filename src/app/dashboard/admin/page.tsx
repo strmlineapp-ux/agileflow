@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -25,8 +26,8 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="flex flex-col h-full gap-6">
-        <Tabs defaultValue="admins" onValueChange={setActiveTabKey} className="flex flex-col flex-1 gap-6 min-h-0">
+    <div className="flex flex-col h-full">
+        <Tabs defaultValue="admins" onValueChange={setActiveTabKey} className="flex flex-col flex-1 min-h-0">
             <CenteredTabList>
                 <TabsList>
                     {adminTabs.map(tab => (
@@ -37,7 +38,7 @@ export default function AdminPage() {
                     ))}
                 </TabsList>
             </CenteredTabList>
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 overflow-hidden mt-6">
                 {adminTabs.map(tab => {
                   const Component = tab.component;
                   return (
