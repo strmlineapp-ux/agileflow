@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
@@ -20,6 +19,7 @@ import { EventDetailsDialog } from '@/components/calendar/event-details-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { CenteredTabList } from '@/components/common/centered-tab-list';
 import { Card, CardDescription, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 function CalendarLinkPrompt() {
   const { linkGoogleCalendar, realUser } = useUser();
@@ -197,6 +197,8 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
   const onEventClick = useCallback((event: Event) => {
     setSelectedEvent(event);
   }, []);
+  
+  const pageShouldScroll = view === 'month' || view === 'production-schedule';
 
   const renderCurrentView = () => {
     if (isDataLoading) return <div className="flex-1 flex items-center justify-center"><GoogleSymbol name="progress_activity" className="animate-spin text-4xl text-muted-foreground" /></div>;
@@ -292,7 +294,7 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
               </Tabs>
           </div>
         </div>
-        <div className="flex-1 overflow-auto" ref={viewContainerRef}>
+        <div className={cn("flex-1 min-h-0", pageShouldScroll ? "overflow-y-auto" : "overflow-hidden")} ref={viewContainerRef}>
             {renderCurrentView()}
         </div>
       </div>

@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useEffect, useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react';
@@ -212,7 +211,6 @@ export const WeekView = React.memo(({ date, events, containerRef, zoomLevel, onE
                                         </div>
                                     )}
                                     <div className="h-full w-full" onClick={(e) => handleEasyBookingClick(e, day)}>
-                                        {/* Lunch Break Cue */}
                                         <div
                                             className="absolute inset-x-0 lunch-break-pattern z-0 pointer-events-none"
                                             style={{
@@ -221,11 +219,9 @@ export const WeekView = React.memo(({ date, events, containerRef, zoomLevel, onE
                                             }}
                                             title="Lunch Break"
                                         />
-                                        {/* Grid lines */}
                                         {hours.map(hour => (
                                             <div key={hour} className="border-b-2" style={{ height: `${hourHeight}px` }}></div>
                                         ))}
-                                        {/* Events */}
                                         <div className="absolute inset-0 z-10">
                                             {timedEvents.map(event => {
                                                 const { top, height } = getEventPosition(event);
