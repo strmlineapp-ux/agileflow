@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
@@ -218,6 +219,8 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
     }
   };
   
+  const pageShouldScroll = view === 'month' || view === 'production-schedule';
+
   return (
     <>
       <div className="flex flex-col h-full gap-4">
@@ -291,8 +294,8 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
               </Tabs>
           </div>
         </div>
-        <div className="flex-1 min-h-0" ref={viewContainerRef}>
-            {renderCurrentView()}
+        <div className="flex-1 overflow-hidden" ref={viewContainerRef}>
+          {renderCurrentView()}
         </div>
       </div>
       <EventDetailsDialog

@@ -1,9 +1,9 @@
+
 'use client';
 
 import React, { useEffect, useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react';
 import { format, startOfWeek, addDays, eachDayOfInterval, startOfDay, addHours, isToday, isSaturday, isSunday, isSameDay, differenceInMinutes } from 'date-fns';
 import { type Event, type Team, type Badge } from '@/types';
-import { CardHeader } from '@/components/ui/card';
 import { cn, getContrastColor } from '@/lib/utils';
 import { Button } from '../ui/button';
 import { useUser } from '@/context/user-context';
