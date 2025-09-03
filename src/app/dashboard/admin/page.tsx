@@ -38,7 +38,7 @@ export default function AdminPage() {
                     ))}
                 </TabsList>
             </CenteredTabList>
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 overflow-hidden pt-6">
                 {adminTabs.map(tab => {
                   const Component = tab.component;
                   return (
