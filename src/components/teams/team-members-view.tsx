@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useUser } from '@/context/user-context';
@@ -94,6 +93,7 @@ function SortableTeamMember({ member, team, onSetAdmin, onRemoveUser }: { member
 
 function TeamMemberContent({ team }: { team: Team }) {
     const { viewAsUser, users, allBadges, updateTeam, handleBadgeAssignment, handleBadgeUnassignment } = useUser();
+    const { toast } = useToast();
     const [activeDragItem, setActiveDragItem] = useState<{type: string, id: string, data: any} | null>(null);
 
     const isViewer = useMemo(() => {

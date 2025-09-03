@@ -8,7 +8,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 export function SettingsContent({ isActive }: { isActive: boolean }) {
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col h-full gap-6">
       <UserManagement showSearch={true} isActive={isActive} />
     </div>
   );

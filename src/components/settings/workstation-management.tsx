@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -185,7 +184,7 @@ export function WorkstationManagement({ team: teamFromProps, tab, page }: { team
     };
   
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col h-full gap-6">
         <PageTitle 
           title={title}
           onSave={handleTitleSave}
@@ -204,4 +203,3 @@ export function WorkstationManagement({ team: teamFromProps, tab, page }: { team
       </div>
     );
 }
-
