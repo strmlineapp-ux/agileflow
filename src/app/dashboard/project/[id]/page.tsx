@@ -82,7 +82,7 @@ export default function ProjectDetailsPage() {
     }
     
     return (
-      <Tabs defaultValue={pageTabs[0].id} className="flex flex-col flex-1 gap-6">
+      <Tabs defaultValue={pageTabs[0].id} className="flex flex-col flex-1">
         <div className="center-and-scroll no-scrollbar">
             <TabsList>
                 {pageTabs.map(tab => (
@@ -93,7 +93,7 @@ export default function ProjectDetailsPage() {
                 ))}
             </TabsList>
         </div>
-         <div className="flex-1 overflow-y-auto">
+         <div className="flex-1 overflow-y-auto mt-6">
             {pageTabs.map(tab => {
                 const Component = componentMap[tab.componentKey as keyof typeof componentMap];
                 return Component ? (
