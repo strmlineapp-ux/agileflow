@@ -198,8 +198,6 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
     setSelectedEvent(event);
   }, []);
   
-  const pageShouldScroll = view === 'month' || view === 'production-schedule';
-
   const renderCurrentView = () => {
     if (isDataLoading) return <div className="flex-1 flex items-center justify-center"><GoogleSymbol name="progress_activity" className="animate-spin text-4xl text-muted-foreground" /></div>;
     
@@ -294,7 +292,7 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
               </Tabs>
           </div>
         </div>
-        <div className={cn("flex-1 min-h-0", pageShouldScroll ? "overflow-y-auto" : "overflow-hidden")} ref={viewContainerRef}>
+        <div className="flex-1 min-h-0 flex flex-col" ref={viewContainerRef}>
             {renderCurrentView()}
         </div>
       </div>
