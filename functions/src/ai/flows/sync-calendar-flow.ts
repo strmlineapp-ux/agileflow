@@ -12,8 +12,9 @@ import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
 import { z } from 'genkit';
 import { google } from 'googleapis';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, Timestamp, FieldValue } from 'firebase-admin/firestore';
 import { startOfDay } from 'date-fns';
+import { type Event, type SharedCalendar } from '@/types';
 
 export const ai = genkit({
   plugins: [googleAI()],
@@ -32,7 +33,6 @@ export type SyncCalendarInput = z.infer<typeof SyncCalendarInputSchema>;
 
 const SyncCalendarOutputSchema = z.object({
   syncedEventCount: z.number().describe('The number of events synced from the calendar.'),
-  // In a real implementation, you would return the actual event data.
 });
 export type SyncCalendarOutput = z.infer<typeof SyncCalendarOutputSchema>;
 
@@ -51,7 +51,7 @@ const syncCalendarFlow = ai.defineFlow(
     outputSchema: SyncCalendarOutputSchema,
   },
   async (input) => {
-    console.log(`Starting REAL event sync for Google Calendar ID: ${input.googleCalendarId}`);
+    console.log(`Starting REAL event sync for Google Calendar ID: ${input.googleCalendarId} in workspace ${input.workspaceId}`);
 
     const auth = new google.auth.GoogleAuth({
         scopes: ['https://www.googleapis.com/auth/calendar.readonly']
@@ -66,7 +66,7 @@ const syncCalendarFlow = ai.defineFlow(
         const response = await calendarApi.events.list({
             calendarId: input.googleCalendarId,
             timeMin: (startOfDay(new Date())).toISOString(),
-            maxResults: 250, // Fetch a reasonable number of upcoming events
+            maxResults: 250, 
             singleEvents: true,
             orderBy: 'startTime',
         });
@@ -80,14 +80,58 @@ const syncCalendarFlow = ai.defineFlow(
         
         console.log(`Found ${events.length} events to sync.`);
 
-        // In a full implementation, you would now process these events and
-        // write them to your Firestore database, associating them with your
-        // internal calendar and workspace.
+        const internalCalendarQuery = await db.collection('calendars')
+            .where('googleCalendarId', '==', input.googleCalendarId)
+            .where('workspaceId', '==', input.workspaceId)
+            .limit(1)
+            .get();
         
-        // For now, we will just log the event summaries.
-        events.forEach(event => {
-            console.log(`- ${event.summary} (${event.start?.dateTime || event.start?.date})`);
-        });
+        if (internalCalendarQuery.empty) {
+            throw new Error(`Could not find internal calendar for Google ID ${input.googleCalendarId}`);
+        }
+        
+        const internalCalendar = internalCalendarQuery.docs[0].data() as SharedCalendar;
+
+        const batch = db.batch();
+
+        for (const event of events) {
+            if (!event.id || !event.summary || !event.start?.dateTime || !event.end?.dateTime) {
+                console.warn('Skipping event with missing data:', event.summary || 'No Title');
+                continue;
+            }
+            
+            const eventDocRef = db.collection('events').doc(`${input.workspaceId}_${event.id}`);
+            
+            const newEventData: Omit<Event, 'eventId'> = {
+                title: event.summary,
+                googleEventId: event.id,
+                startTime: Timestamp.fromDate(new Date(event.start.dateTime)),
+                endTime: Timestamp.fromDate(new Date(event.end.dateTime)),
+                description: event.description || '',
+                location: event.location || '',
+                calendarId: internalCalendar.id, // Link to our internal calendar
+                attendees: (event.attendees || []).map(a => ({
+                    email: a.email!,
+                    displayName: a.displayName || a.email!,
+                    responseStatus: a.responseStatus,
+                })),
+                attachments: [], // Attachments need more complex handling
+                createdBy: 'system-sync',
+                createdAt: Timestamp.fromDate(new Date(event.created!)),
+                lastUpdated: Timestamp.fromDate(new Date(event.updated!)),
+                priority: 'badge-priority-normal', // Default priority
+                workspaceId: input.workspaceId,
+                // These fields need a mapping strategy from Google event data
+                projectId: '', 
+                roleAssignments: {},
+            };
+            
+            batch.set(eventDocRef, newEventData, { merge: true });
+        }
+        
+        await batch.commit();
+
+        console.log(`Successfully synced ${events.length} events to Firestore.`);
 
         return {
             syncedEventCount: events.length,
