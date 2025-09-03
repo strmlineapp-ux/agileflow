@@ -685,7 +685,7 @@ export const ProductionScheduleView = React.memo(({ date, events, containerRef, 
                             </div>
                         </CardHeader>
                         {!isDayCollapsed && (
-                            <div ref={el => timelineScrollerRefs.current.set(dayIso, el)}>
+                            <div className="overflow-x-auto" ref={el => timelineScrollerRefs.current.set(dayIso, el)}>
                                 <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}}>
                                     <CardHeader className="p-0 sticky top-0 bg-muted z-20 flex flex-row">
                                         <div className="w-[160px] shrink-0 border-r-2 p-2 flex items-center font-normal text-sm sticky left-0 bg-muted z-30">Location</div>
