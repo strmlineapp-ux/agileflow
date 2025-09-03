@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -316,7 +315,7 @@ function EventTemplateContent({ team }: { team: Team }) {
       <Dialog open={!!deletingPreset} onOpenChange={(isOpen) => !isOpen && setDeletingPreset(null)}>
         <DialogContent className="max-w-md">
             <div className="absolute top-4 right-4">
-                <Button variant="ghost" size="icon" className="hover:text-destructive p-0 hover:bg-transparent" onClick={handleDeletePreset}>
+                <Button variant="default" size="icon" className="hover:text-destructive p-0 hover:bg-transparent" onClick={handleDeletePreset}>
                     <GoogleSymbol name="delete" />
                     <span className="sr-only">Delete Preset</span>
                 </Button>
@@ -359,7 +358,7 @@ export function EventTemplateManagement({ team: teamFromProps, tab, page }: { te
     };
   
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col h-full gap-6">
         <PageTitle 
           title={title}
           onSave={handleTitleSave}
@@ -378,4 +377,3 @@ export function EventTemplateManagement({ team: teamFromProps, tab, page }: { te
       </div>
     );
 }
-
