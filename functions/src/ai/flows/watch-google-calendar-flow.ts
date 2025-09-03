@@ -8,8 +8,8 @@
  * - WatchGoogleCalendarOutput - The return type for the watchGoogleCalendar function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
 import { google } from 'googleapis';
 import { v4 as uuidv4 } from 'uuid';
 
