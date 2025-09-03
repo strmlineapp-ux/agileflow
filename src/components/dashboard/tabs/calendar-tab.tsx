@@ -22,7 +22,7 @@ import { Card, CardDescription, CardHeader, CardTitle, CardContent } from '@/com
 import { cn } from '@/lib/utils';
 
 function CalendarLinkPrompt() {
-  const { realUser } = useUser();
+  const { linkGoogleCalendar, realUser } = useUser();
   if (!realUser) return null;
 
   return (
@@ -35,7 +35,7 @@ function CalendarLinkPrompt() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button onClick={() => {}}>
+          <Button onClick={() => linkGoogleCalendar(realUser.userId)}>
             <GoogleSymbol name="link" className="mr-2" />
             Connect Google Calendar
           </Button>
@@ -198,6 +198,8 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
     setSelectedEvent(event);
   }, []);
   
+  const pageShouldScroll = view === 'month' || view === 'production-schedule';
+
   const renderCurrentView = () => {
     if (isDataLoading) return <div className="flex-1 flex items-center justify-center"><GoogleSymbol name="progress_activity" className="animate-spin text-4xl text-muted-foreground" /></div>;
     
@@ -219,8 +221,6 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
     }
   };
   
-  const pageShouldScroll = view === 'month' || view === 'production-schedule';
-
   return (
     <>
       <div className="flex flex-col h-full gap-4">
@@ -294,7 +294,7 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
               </Tabs>
           </div>
         </div>
-        <div className={cn("flex-1 min-h-0", pageShouldScroll ? "overflow-y-auto" : "flex flex-col")} ref={viewContainerRef}>
+        <div className={cn("flex-1", pageShouldScroll ? "overflow-y-auto" : "flex flex-col min-h-0")} ref={viewContainerRef}>
             {renderCurrentView()}
         </div>
       </div>
