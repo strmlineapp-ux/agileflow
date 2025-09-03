@@ -562,7 +562,7 @@ function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
 }
 
 export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: AppPage; isActive: boolean }) {
-    const { viewAsUser, users, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, setAllBadgeCollections, reorderBadgeCollections, updatePage } = useUser();
+    const { viewAsUser, users, updateUser, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, setAllBadgeCollections, reorderBadgeCollections, updatePage } = useUser();
     const { toast } = useToast();
 
     const [activeDragItem, setActiveDragItem] = useState<{type: string, id: string, data: any} | null>(null);
@@ -778,7 +778,7 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
                 }
             }
         }
-    }, [viewAsUser, teams, addBadgeCollection, updateUser, toast, updateBadgeCollection, allBadgeCollections, reorderBadges, addBadge, setAllBadgeCollections, displayedCollections, reorderBadgeCollections]);
+    }, [viewAsUser, addBadgeCollection, updateUser, toast, updateBadgeCollection, allBadgeCollections, reorderBadges, addBadge, setAllBadgeCollections, displayedCollections, reorderBadgeCollections]);
     
     const renderCollectionCard = useCallback((collection: BadgeCollection, isDragging: boolean) => (
         <BadgeCollectionCard
