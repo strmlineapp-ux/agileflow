@@ -12,6 +12,7 @@ import { GoogleSymbol } from '../icons/google-symbol';
 import { PriorityBadge } from './priority-badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { TimelineCard, TimelineCardContent, TimelineCardHeader } from '../ui/timeline-card';
 
 const DEFAULT_HOUR_WIDTH_PX = 120;
 const LOCATION_LABEL_WIDTH_PX = 160;
@@ -387,9 +388,9 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
     );
     
     const renderReversedView = () => (
-        <Card className="h-full flex flex-col flex-1">
+        <TimelineCard>
             <div className="flex-1 overflow-y-auto" ref={timelineScrollerRef}>
-                <CardContent className="p-0 relative">
+                <TimelineCardContent className="p-0 relative">
                     <div className="grid grid-cols-[auto,1fr] min-h-full h-full">
                         <div className="w-20 border-r bg-muted sticky top-0 z-20">
                             {hours.map(hour => (
@@ -493,9 +494,9 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
                             )}
                         </div>
                     </div>
-                </CardContent>
+                </TimelineCardContent>
             </div>
-        </Card>
+        </TimelineCard>
     );
     
     return axisView === 'reversed' ? renderReversedView() : renderStandardView();

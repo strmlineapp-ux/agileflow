@@ -4,7 +4,7 @@
 import React, { useEffect, useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react';
 import { format, startOfWeek, addDays, eachDayOfInterval, startOfDay, addHours, isToday, isSaturday, isSunday, isSameDay, differenceInMinutes } from 'date-fns';
 import { type Event, type Team, type Badge } from '@/types';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { CardHeader } from '@/components/ui/card';
 import { cn, getContrastColor } from '@/lib/utils';
 import { Button } from '../ui/button';
 import { useUser } from '@/context/user-context';
@@ -13,6 +13,7 @@ import { GoogleSymbol } from '../icons/google-symbol';
 import { PriorityBadge } from './priority-badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { TimelineCard, TimelineCardContent, TimelineCardHeader } from '../ui/timeline-card';
 
 const isHoliday = (day: Date, holidays: Date[]) => {
     return holidays.some(holiday => isSameDay(day, holiday));
@@ -144,8 +145,8 @@ export const WeekView = React.memo(({ date, events, containerRef, zoomLevel, onE
     const gridColsClass = showWeekends ? 'grid-cols-[auto,1fr,1fr,1fr,1fr,1fr,1fr,1fr]' : 'grid-cols-[auto,1fr,1fr,1fr,1fr,1fr]';
 
     return (
-        <Card className="h-full flex flex-col flex-1">
-            <CardHeader className="p-0 border-b sticky top-0 bg-muted z-10">
+        <TimelineCard>
+            <TimelineCardHeader className="p-0 border-b sticky top-0 bg-muted z-10">
                 <div className={cn("grid", gridColsClass)}>
                     <div className="w-20"></div> {/* Timeline spacer */}
                     {displayedDays.map((day, index) => {
@@ -175,9 +176,9 @@ export const WeekView = React.memo(({ date, events, containerRef, zoomLevel, onE
                         )
                     })}
                 </div>
-            </CardHeader>
-            <div className="flex-1 overflow-y-auto" ref={timelineScrollerRef}>
-                <CardContent className="p-0 relative">
+            </TimelineCardHeader>
+            <TimelineCardContent ref={timelineScrollerRef} className="p-0">
+                <div className="relative">
                     <div className={cn("grid min-h-full", gridColsClass)}>
                         {/* Timeline */}
                         <div className="w-20 border-r-2 bg-muted sticky left-0 z-20">
@@ -299,9 +300,9 @@ export const WeekView = React.memo(({ date, events, containerRef, zoomLevel, onE
                             )
                         })}
                     </div>
-                </CardContent>
-            </div>
-        </Card>
+                </div>
+            </TimelineCardContent>
+        </TimelineCard>
     );
 });
 WeekView.displayName = 'WeekView';
