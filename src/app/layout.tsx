@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { Toaster } from "@/components/ui/toaster";
@@ -17,7 +16,9 @@ const roboto = Roboto({
   variable: '--font-roboto',
 });
 
-function AppBody({ children }: { children: React.ReactNode }) {
+// This new client component will manage all theme and dynamic style updates.
+// It doesn't render any DOM itself, it just handles the side effects.
+function AppThemeManager({ children }: { children: React.ReactNode }) {
     const { viewAsUser } = useUser();
     const { setTheme, theme } = useTheme();
 
@@ -91,18 +92,12 @@ function AppBody({ children }: { children: React.ReactNode }) {
         }
     }, [viewAsUser, theme]);
     
-    return (
-        <body className={cn(
-            `${roboto.variable} antialiased`,
-            (viewAsUser?.fontWeight || 400) >= 700 ? 'bold-emphasis' : ''
-        )}>
-            {children}
-            <Toaster />
-        </body>
-    );
+    // This component just manages effects, it doesn't render a DOM wrapper.
+    return <>{children}</>;
 }
 
-// Wrapper to prevent rendering on the server and during initial hydration
+
+// Wrapper to prevent server-side rendering of components that need the window object
 function ClientOnly({ children }: { children: React.ReactNode }) {
   const [hasMounted, setHasMounted] = useState(false);
 
@@ -137,20 +132,23 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
         />
       </head>
-      <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
+      <body className={`${roboto.variable} antialiased`}>
+        <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
         >
-        <UserProvider>
-          <ClientOnly>
-              <AppBody>
-                {children}
-              </AppBody>
-          </ClientOnly>
-        </UserProvider>
-      </ThemeProvider>
+          <UserProvider>
+            <ClientOnly>
+                <AppThemeManager>
+                  {children}
+                </AppThemeManager>
+            </ClientOnly>
+            <Toaster />
+          </UserProvider>
+        </ThemeProvider>
+      </body>
     </html>
   );
 }
