@@ -300,13 +300,9 @@ export function useData(realUser: User | null, authLoading: boolean) {
 
   const deleteCalendar = useCallback(async (calendarId: string) => {
     const db = getDb();
-    if (calendars.length <= 1) {
-      toast({ variant: 'destructive', title: 'Cannot Delete Calendar', description: 'You cannot delete the last remaining calendar.' });
-      return;
-    }
     await deleteDoc(doc(db, 'calendars', calendarId));
     setCalendars(current => current.filter(c => c.id !== calendarId));
-  }, [calendars.length, toast]);
+  }, []);
   
   const reorderCalendars = useCallback(async (reorderedCalendars: SharedCalendar[]) => {
       // In a real app, this might update a 'sortOrder' field in Firestore

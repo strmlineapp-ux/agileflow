@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef, useCallback, useLayoutEffect } from 'react';
@@ -326,66 +327,64 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
     }
     
     const renderStandardView = () => (
-        <Card className="h-full flex flex-col flex-1">
-            <div className="overflow-auto flex-1" ref={timelineScrollerRef}>
-                <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}} className="flex flex-col flex-1 h-full">
-                    <CardHeader className="p-0 border-b-2 sticky top-0 bg-muted z-20 flex flex-row">
-                        <div className="w-[160px] shrink-0 border-r-2 p-2 flex items-center font-normal text-sm sticky left-0 bg-muted z-30 text-foreground">Location</div>
-                        {hours.map(hour => (
-                            <div key={hour} className="shrink-0 text-left p-2 border-r-2" style={{ width: `${hourWidth}px` }}>
-                                <span className="text-xs text-foreground">{format(addHours(startOfDay(date), hour), timeFormatTimeline)}</span>
-                            </div>
-                        ))}
-                    </CardHeader>
-                    {allLocations.length === 0 && dayEvents.length === 0 ? (
-                         <div className="flex items-center justify-center h-40 text-foreground flex-1">
-                            No events scheduled for this day.
+        <div className="overflow-auto flex-1" ref={timelineScrollerRef}>
+            <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}} className="flex flex-col flex-1 h-full">
+                <CardHeader className="p-0 border-b-2 sticky top-0 bg-muted z-20 flex flex-row">
+                    <div className="w-[160px] shrink-0 border-r-2 p-2 flex items-center font-normal text-sm sticky left-0 bg-muted z-30 text-foreground">Location</div>
+                    {hours.map(hour => (
+                        <div key={hour} className="shrink-0 text-left p-2 border-r-2" style={{ width: `${hourWidth}px` }}>
+                            <span className="text-xs text-foreground">{format(addHours(startOfDay(date), hour), timeFormatTimeline)}</span>
                         </div>
-                    ) : (
-                        <CardContent className="p-0 relative flex-1">
-                            <div
-                                className="absolute inset-y-0 lunch-break-pattern z-0 pointer-events-none"
-                                style={{
-                                    left: `${LOCATION_LABEL_WIDTH_PX + 12 * hourWidth}px`,
-                                    width: `${2.5 * hourWidth}px`
-                                }}
-                                title="Lunch Break"
-                            />
-                            
-                            {allLocations.map((location, index) => (
-                               <DayViewLocationRow
-                                    key={location}
-                                    location={location}
-                                    isLast={index === allLocations.length - 1}
-                                    index={index}
-                                    hourWidth={hourWidth}
-                                    groupedEvents={groupedEvents}
-                                    collapsedLocations={collapsedLocations}
-                                    calendarColorMap={calendarColorMap}
-                                    timeFormatEvent={timeFormatEvent}
-                                    toggleLocationCollapse={toggleLocationCollapse}
-                                    handleEasyBookingClick={handleEasyBookingClick}
-                                    day={date}
-                                    onEventClick={onEventClick}
-                                    users={users}
-                                    allBadges={allBadges}
-                               />
-                            ))}
-                            
-                            {isViewingToday && now && (
-                                <div 
-                                    ref={nowMarkerRef}
-                                    className="absolute top-0 bottom-0 z-20 pointer-events-none"
-                                    style={{ left: `${LOCATION_LABEL_WIDTH_PX + calculateCurrentTimePosition()}px` }}
-                                >
-                                    <div className="w-px h-full bg-primary"></div>
-                                </div>
-                            )}
-                        </CardContent>
-                    )}
-                </div>
+                    ))}
+                </CardHeader>
+                {allLocations.length === 0 && dayEvents.length === 0 ? (
+                     <div className="flex items-center justify-center h-40 text-foreground flex-1">
+                        No events scheduled for this day.
+                    </div>
+                ) : (
+                    <CardContent className="p-0 relative flex-1">
+                        <div
+                            className="absolute inset-y-0 lunch-break-pattern z-0 pointer-events-none"
+                            style={{
+                                left: `${LOCATION_LABEL_WIDTH_PX + 12 * hourWidth}px`,
+                                width: `${2.5 * hourWidth}px`
+                            }}
+                            title="Lunch Break"
+                        />
+                        
+                        {allLocations.map((location, index) => (
+                           <DayViewLocationRow
+                                key={location}
+                                location={location}
+                                isLast={index === allLocations.length - 1}
+                                index={index}
+                                hourWidth={hourWidth}
+                                groupedEvents={groupedEvents}
+                                collapsedLocations={collapsedLocations}
+                                calendarColorMap={calendarColorMap}
+                                timeFormatEvent={timeFormatEvent}
+                                toggleLocationCollapse={toggleLocationCollapse}
+                                handleEasyBookingClick={handleEasyBookingClick}
+                                day={date}
+                                onEventClick={onEventClick}
+                                users={users}
+                                allBadges={allBadges}
+                           />
+                        ))}
+                        
+                        {isViewingToday && now && (
+                            <div 
+                                ref={nowMarkerRef}
+                                className="absolute top-0 bottom-0 z-20 pointer-events-none"
+                                style={{ left: `${LOCATION_LABEL_WIDTH_PX + calculateCurrentTimePosition()}px` }}
+                            >
+                                <div className="w-px h-full bg-primary"></div>
+                            </div>
+                        )}
+                    </CardContent>
+                )}
             </div>
-        </Card>
+        </div>
     );
     
     const renderReversedView = () => (
@@ -393,7 +392,7 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
             <div className="flex-1 overflow-y-auto" ref={timelineScrollerRef}>
                 <CardContent className="p-0 relative flex-1">
                     <div className="grid grid-cols-[auto,1fr] min-h-full h-full">
-                        <div className="w-20 border-r-2 bg-muted">
+                        <div className="w-20 border-r-2 bg-muted sticky top-0 z-20">
                             {hours.map(hour => (
                                 <div key={hour} className="relative text-right pr-2 border-b-2" style={{ height: `${hourHeight}px` }}>
                                     <span className="text-xs text-foreground relative -top-2">{format(addHours(startOfDay(date), hour), viewAsUser.timeFormat === '24h' ? 'HH:00' : 'h a')}</span>

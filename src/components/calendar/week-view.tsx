@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useEffect, useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react';
@@ -180,7 +181,7 @@ export const WeekView = React.memo(({ date, events, containerRef, zoomLevel, onE
                 <CardContent className="p-0 relative">
                     <div className={cn("grid min-h-full", gridColsClass)}>
                         {/* Timeline */}
-                        <div className="w-20 border-r-2 bg-muted">
+                        <div className="w-20 border-r-2 bg-muted sticky left-0 z-20">
                             {hours.map((hour, index) => (
                                 <div key={hour} className={cn("relative text-right pr-2 border-b-2 bg-muted", {"bg-muted/10": index % 2 !== 0})} style={{ height: `${hourHeight}px` }}>
                                     <span className="text-xs text-foreground relative -top-2">{format(addHours(startOfDay(date), hour), timeFormatTimeline)}</span>
