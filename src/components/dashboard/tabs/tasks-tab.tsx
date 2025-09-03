@@ -8,7 +8,7 @@ import { TaskList } from '@/components/tasks/task-list';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { type Task, type AppPage, type AppTab } from '@/types';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useUser } from '@/context/user-context';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
@@ -89,7 +89,7 @@ export function TasksContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
     : tasks;
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col h-full">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
             <PageTitle 
@@ -120,36 +120,55 @@ export function TasksContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
             </Dialog>
         </div>
       </div>
-      <div className="flex items-center justify-between">
-         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="w-full">
-            <CenteredTabList>
-                <TabsList>
-                    <TabsTrigger value="my-tasks">My Tasks</TabsTrigger>
-                    <TabsTrigger value="all">All Tasks</TabsTrigger>
-                </TabsList>
-            </CenteredTabList>
-        </Tabs>
-      </div>
       
-      {loading ? (
-        <div className="space-y-4 mt-6">
-            <Skeleton className="h-10 w-1/3" />
-            <Skeleton className="h-8 w-24" />
-            <div className="space-y-2">
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
-            </div>
-        </div>
-      ) : (
-        <div className="mt-6">
-            <TaskList 
-                tasks={filteredTasks} 
-                onEdit={openEditTaskForm}
-                onDelete={handleTaskDeleted}
-            />
-        </div>
-      )}
+       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="w-full flex flex-col flex-1 min-h-0">
+          <CenteredTabList>
+              <TabsList>
+                  <TabsTrigger value="my-tasks">My Tasks</TabsTrigger>
+                  <TabsTrigger value="all">All Tasks</TabsTrigger>
+              </TabsList>
+          </CenteredTabList>
+          <div className="flex-1 overflow-y-auto pt-6">
+            <TabsContent value="my-tasks" className="mt-0">
+              {loading ? (
+                <div className="space-y-4">
+                    <Skeleton className="h-10 w-1/3" />
+                    <Skeleton className="h-8 w-24" />
+                    <div className="space-y-2">
+                        <Skeleton className="h-20 w-full" />
+                        <Skeleton className="h-20 w-full" />
+                        <Skeleton className="h-20 w-full" />
+                    </div>
+                </div>
+              ) : (
+                <TaskList 
+                    tasks={filteredTasks} 
+                    onEdit={openEditTaskForm}
+                    onDelete={handleTaskDeleted}
+                />
+              )}
+            </TabsContent>
+            <TabsContent value="all" className="mt-0">
+              {loading ? (
+                <div className="space-y-4">
+                    <Skeleton className="h-10 w-1/3" />
+                    <Skeleton className="h-8 w-24" />
+                    <div className="space-y-2">
+                        <Skeleton className="h-20 w-full" />
+                        <Skeleton className="h-20 w-full" />
+                        <Skeleton className="h-20 w-full" />
+                    </div>
+                </div>
+              ) : (
+                <TaskList 
+                    tasks={filteredTasks} 
+                    onEdit={openEditTaskForm}
+                    onDelete={handleTaskDeleted}
+                />
+              )}
+            </TabsContent>
+          </div>
+      </Tabs>
     </div>
   );
 }
