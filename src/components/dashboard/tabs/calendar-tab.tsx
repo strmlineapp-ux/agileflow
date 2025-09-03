@@ -292,7 +292,7 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
               </Tabs>
           </div>
         </div>
-        <div className="flex-1 overflow-auto flex flex-col" ref={viewContainerRef}>
+        <div className="flex-1 overflow-auto" ref={viewContainerRef}>
             {renderCurrentView()}
         </div>
       </div>

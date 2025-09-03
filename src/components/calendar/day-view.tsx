@@ -74,7 +74,7 @@ const DayViewLocationRow = React.memo(({
             </div>
             <div className={cn("relative flex-1", isCollapsed ? "h-10" : "min-h-[5rem] py-1")} onClick={(e) => handleEasyBookingClick(e, 'standard', day, location)}>
                 {Array.from({ length: 23 }).map((_, hour) => (
-                    <div key={`line-${hour}`} className="absolute top-0 bottom-0 border-r" style={{ left: `${(hour + 1) * hourWidth}px` }}></div>
+                    <div key={`line-${hour}`} className="absolute top-0 bottom-0 border-r-2" style={{ left: `${(hour + 1) * hourWidth}px` }}></div>
                 ))}
                 {!isCollapsed && eventsInRow.map(event => {
                     const { left, width } = getEventPositionStandard(event);
@@ -332,7 +332,7 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
                 <CardHeader className="p-0 border-b sticky top-0 bg-muted z-20 flex flex-row">
                     <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-normal text-sm sticky left-0 bg-muted z-30 text-foreground">Location</div>
                     {hours.map(hour => (
-                        <div key={hour} className="shrink-0 text-left p-2 border-r" style={{ width: `${hourWidth}px` }}>
+                        <div key={hour} className="shrink-0 text-left p-2 border-r-2" style={{ width: `${hourWidth}px` }}>
                             <span className="text-xs text-foreground">{format(addHours(startOfDay(date), hour), timeFormatTimeline)}</span>
                         </div>
                     ))}
@@ -394,7 +394,7 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
                     <div className="grid grid-cols-[auto,1fr] min-h-full h-full">
                         <div className="w-20 border-r bg-muted sticky top-0 z-20">
                             {hours.map(hour => (
-                                <div key={hour} className="relative text-right pr-2 border-b" style={{ height: `${hourHeight}px` }}>
+                                <div key={hour} className="relative text-right pr-2 border-b-2" style={{ height: `${hourHeight}px` }}>
                                     <span className="text-xs text-foreground relative -top-2">{format(addHours(startOfDay(date), hour), viewAsUser.timeFormat === '24h' ? 'HH:00' : 'h a')}</span>
                                 </div>
                             ))}
@@ -410,7 +410,7 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
                                 title="Lunch Break"
                             />
                             {hours.map(hour => (
-                                <div key={hour} className="border-b" style={{ height: `${hourHeight}px` }}></div>
+                                <div key={hour} className="border-b-2" style={{ height: `${hourHeight}px` }}></div>
                             ))}
 
                             {dayEvents.length === 0 ? (
