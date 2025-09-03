@@ -389,113 +389,111 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
     
     const renderReversedView = () => (
         <TimelineCard>
-            <div className="flex-1 overflow-y-auto" ref={timelineScrollerRef}>
-                <TimelineCardContent className="p-0 relative">
-                    <div className="grid grid-cols-[auto,1fr] min-h-full h-full">
-                        <div className="w-20 border-r bg-muted sticky top-0 z-20">
-                            {hours.map(hour => (
-                                <div key={hour} className="relative text-right pr-2 border-b-2" style={{ height: `${hourHeight}px` }}>
-                                    <span className="text-xs text-foreground relative -top-2">{format(addHours(startOfDay(date), hour), viewAsUser.timeFormat === '24h' ? 'HH:00' : 'h a')}</span>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="relative" onClick={(e) => handleEasyBookingClick(e, 'reversed', date)}>
-                            <div
-                                className="absolute inset-x-0 lunch-break-pattern z-0 pointer-events-none"
-                                style={{
-                                    top: `${12 * hourHeight}px`,
-                                    height: `${2.5 * hourHeight}px`
-                                }}
-                                title="Lunch Break"
-                            />
-                            {hours.map(hour => (
-                                <div key={hour} className="border-b-2" style={{ height: `${hourHeight}px` }}></div>
-                            ))}
-
-                            {dayEvents.length === 0 ? (
-                                 <div className="absolute inset-0 flex items-center justify-center text-foreground">
-                                    No events scheduled for this day.
-                                </div>
-                            ) : (
-                                <div className="absolute inset-0 z-10">
-                                    {dayEvents.map(event => {
-                                        const { top, height } = getEventPositionReversed(event);
-                                        const colors = calendarColorMap[event.calendarId];
-                                        const textColor = getContrastColor(colors?.bg || '#000000');
-                                        return (
-                                            <div 
-                                                key={event.eventId} 
-                                                data-event-id={event.eventId}
-                                                onClick={(e) => { e.stopPropagation(); onEventClick(event); }}
-                                                className={cn(
-                                                    "absolute left-1 right-1 p-1 rounded-md cursor-pointer flex flex-col overflow-hidden"
-                                                )}
-                                                style={{ top: `${top}px`, height: `${height}px`, backgroundColor: colors?.bg, color: textColor }}
-                                            >
-                                                <div className="flex items-center gap-2 flex-wrap mb-1">
-                                                    <PriorityBadge priorityId={event.priority} />
-                                                    {event.roleAssignments && Object.keys(event.roleAssignments).length > 0 && (
-                                                        <div className="flex flex-wrap -space-x-2">
-                                                            {Object.entries(event.roleAssignments).filter(([, userId]) => !!userId).map(([role, userId]) => {
-                                                                const user = users.find(u => u.userId === userId);
-                                                                if (!user) return null;
-                                                                const roleInfo = allBadges.find(b => b?.name === role);
-                                                                const roleIcon = roleInfo?.icon;
-                                                                const roleColor = roleInfo?.color;
-
-                                                                return (
-                                                                <TooltipProvider key={role}>
-                                                                    <Tooltip>
-                                                                        <TooltipTrigger asChild>
-                                                                            <div className="relative">
-                                                                                <Avatar className="h-6 w-6">
-                                                                                    <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
-                                                                                    <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                                                                </Avatar>
-                                                                                {roleIcon && (
-                                                                                    <div
-                                                                                        className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-background flex items-center justify-center"
-                                                                                        style={{ backgroundColor: roleColor, color: getContrastColor(roleColor || '#ffffff') }}
-                                                                                    >
-                                                                                        <GoogleSymbol name={roleIcon} style={{fontSize: '10px'}} weight={100} />
-                                                                                    </div>
-                                                                                )}
-                                                                            </div>
-                                                                        </TooltipTrigger>
-                                                                        <TooltipContent>
-                                                                            <p className="flex items-center gap-1">
-                                                                            {roleIcon && <GoogleSymbol name={roleIcon} className="text-sm" weight={100} />}
-                                                                            <span>{role}: {user.displayName}</span>
-                                                                            </p>
-                                                                        </TooltipContent>
-                                                                    </Tooltip>
-                                                                </TooltipProvider>
-                                                                );
-                                                            })}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <p className="font-normal text-xs truncate leading-tight">{event.title}</p>
-                                                <p className="text-[10px] opacity-90">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
-                                            </div>
-                                        )
-                                    })}
-                                    {isViewingToday && now && (
-                                        <div 
-                                            ref={nowMarkerRef}
-                                            className="absolute w-full z-10 pointer-events-none"
-                                            style={{ top: `${calculateCurrentTimePosition()}px` }}
-                                        >
-                                            <div className="relative h-px bg-primary"></div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
+            <TimelineCardContent className="p-0 relative" ref={timelineScrollerRef}>
+                <div className="grid grid-cols-[auto,1fr] min-h-full h-full">
+                    <div className="w-20 border-r bg-muted sticky top-0 z-20">
+                        {hours.map(hour => (
+                            <div key={hour} className="relative text-right pr-2 border-b-2" style={{ height: `${hourHeight}px` }}>
+                                <span className="text-xs text-foreground relative -top-2">{format(addHours(startOfDay(date), hour), viewAsUser.timeFormat === '24h' ? 'HH:00' : 'h a')}</span>
+                            </div>
+                        ))}
                     </div>
-                </TimelineCardContent>
-            </div>
+
+                    <div className="relative" onClick={(e) => handleEasyBookingClick(e, 'reversed', date)}>
+                        <div
+                            className="absolute inset-x-0 lunch-break-pattern z-0 pointer-events-none"
+                            style={{
+                                top: `${12 * hourHeight}px`,
+                                height: `${2.5 * hourHeight}px`
+                            }}
+                            title="Lunch Break"
+                        />
+                        {hours.map(hour => (
+                            <div key={hour} className="border-b-2" style={{ height: `${hourHeight}px` }}></div>
+                        ))}
+
+                        {dayEvents.length === 0 ? (
+                             <div className="absolute inset-0 flex items-center justify-center text-foreground">
+                                No events scheduled for this day.
+                            </div>
+                        ) : (
+                            <div className="absolute inset-0 z-10">
+                                {dayEvents.map(event => {
+                                    const { top, height } = getEventPositionReversed(event);
+                                    const colors = calendarColorMap[event.calendarId];
+                                    const textColor = getContrastColor(colors?.bg || '#000000');
+                                    return (
+                                        <div 
+                                            key={event.eventId} 
+                                            data-event-id={event.eventId}
+                                            onClick={(e) => { e.stopPropagation(); onEventClick(event); }}
+                                            className={cn(
+                                                "absolute left-1 right-1 p-1 rounded-md cursor-pointer flex flex-col overflow-hidden"
+                                            )}
+                                            style={{ top: `${top}px`, height: `${height}px`, backgroundColor: colors?.bg, color: textColor }}
+                                        >
+                                            <div className="flex items-center gap-2 flex-wrap mb-1">
+                                                <PriorityBadge priorityId={event.priority} />
+                                                {event.roleAssignments && Object.keys(event.roleAssignments).length > 0 && (
+                                                    <div className="flex flex-wrap -space-x-2">
+                                                        {Object.entries(event.roleAssignments).filter(([, userId]) => !!userId).map(([role, userId]) => {
+                                                            const user = users.find(u => u.userId === userId);
+                                                            if (!user) return null;
+                                                            const roleInfo = allBadges.find(b => b?.name === role);
+                                                            const roleIcon = roleInfo?.icon;
+                                                            const roleColor = roleInfo?.color;
+
+                                                            return (
+                                                            <TooltipProvider key={role}>
+                                                                <Tooltip>
+                                                                    <TooltipTrigger asChild>
+                                                                        <div className="relative">
+                                                                            <Avatar className="h-6 w-6">
+                                                                                <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                                                                                <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                                                            </Avatar>
+                                                                            {roleIcon && (
+                                                                                <div
+                                                                                    className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-background flex items-center justify-center"
+                                                                                    style={{ backgroundColor: roleColor, color: getContrastColor(roleColor || '#ffffff') }}
+                                                                                >
+                                                                                    <GoogleSymbol name={roleIcon} style={{fontSize: '10px'}} weight={100} />
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    </TooltipTrigger>
+                                                                    <TooltipContent>
+                                                                        <p className="flex items-center gap-1">
+                                                                        {roleIcon && <GoogleSymbol name={roleIcon} className="text-sm" weight={100} />}
+                                                                        <span>{role}: {user.displayName}</span>
+                                                                        </p>
+                                                                    </TooltipContent>
+                                                                </Tooltip>
+                                                            </TooltipProvider>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <p className="font-normal text-xs truncate leading-tight">{event.title}</p>
+                                            <p className="text-[10px] opacity-90">{format(event.startTime, timeFormatEvent)} - {format(event.endTime, timeFormatEvent)}</p>
+                                        </div>
+                                    )
+                                })}
+                                {isViewingToday && now && (
+                                    <div 
+                                        ref={nowMarkerRef}
+                                        className="absolute w-full z-10 pointer-events-none"
+                                        style={{ top: `${calculateCurrentTimePosition()}px` }}
+                                    >
+                                        <div className="relative h-px bg-primary"></div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </TimelineCardContent>
         </TimelineCard>
     );
     
