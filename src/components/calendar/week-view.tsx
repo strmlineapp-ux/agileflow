@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react';
@@ -177,7 +176,7 @@ export const WeekView = React.memo(({ date, events, containerRef, zoomLevel, onE
                     })}
                 </div>
             </TimelineCardHeader>
-            <TimelineCardContent ref={timelineScrollerRef} className="p-0">
+            <TimelineCardContent className="overflow-y-auto" ref={timelineScrollerRef}>
                 <div className="relative">
                     <div className={cn("grid min-h-full", gridColsClass)}>
                         {/* Timeline */}
