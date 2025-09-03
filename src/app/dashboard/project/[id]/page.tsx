@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useMemo } from 'react';
@@ -82,7 +81,7 @@ export default function ProjectDetailsPage() {
     }
     
     return (
-      <Tabs defaultValue={pageTabs[0].id} className="flex flex-col flex-1">
+      <Tabs defaultValue={pageTabs[0].id} className="flex flex-col flex-1 min-h-0">
         <div className="center-and-scroll no-scrollbar">
             <TabsList>
                 {pageTabs.map(tab => (

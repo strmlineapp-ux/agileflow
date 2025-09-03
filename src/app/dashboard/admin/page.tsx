@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState } from 'react';
@@ -43,7 +42,9 @@ export default function AdminPage() {
                   const Component = tab.component;
                   return (
                     <TabsContent key={tab.key} value={tab.key} className="h-full mt-0">
-                      <Component isActive={activeTabKey === tab.key} />
+                      <div className="flex-1 overflow-hidden">
+                        <Component isActive={activeTabKey === tab.key} />
+                      </div>
                     </TabsContent>
                   )
                 })}
