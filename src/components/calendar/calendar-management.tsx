@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useCallback } from 'react';
@@ -62,7 +63,7 @@ function CalendarCard({
         webhookUrl: webhookUrl,
       });
       console.log('Watch setup result:', result);
-      toast({ title: 'Watch Setup Complete', description: `Now listening for changes to ${calendar.name}. Channel expires: ${new Date(result.expiration).toLocaleDateString()}`});
+      toast({ title: 'Watch Setup Complete', description: `Now listening for changes to ${calendar.name}. Channel expires: ${new Date(parseInt(result.expiration)).toLocaleDateString()}`});
     } catch (error) {
       console.error('Failed to set up watch:', error);
       toast({ variant: 'destructive', title: 'Error', description: 'Could not set up real-time sync.' });
@@ -87,7 +88,7 @@ function CalendarCard({
             googleCalendarId: calendarIdToLink,
             webhookUrl: webhookUrl,
         });
-        toast({ title: 'Watch Setup Complete', description: `Now listening for changes to ${calendar.name}. Channel expires: ${new Date(result.expiration).toLocaleDateString()}` });
+        toast({ title: 'Watch Setup Complete', description: `Now listening for changes to ${calendar.name}. Channel expires: ${new Date(parseInt(result.expiration)).toLocaleDateString()}` });
     } catch (error) {
         console.error('Failed to set up watch:', error);
         toast({ variant: 'destructive', title: 'Error', description: 'Could not set up real-time sync.' });
