@@ -93,11 +93,11 @@ export default function ProjectDetailsPage() {
                 ))}
             </TabsList>
         </div>
-         <div className="flex-1 overflow-y-auto mt-6">
+         <div className="flex-1 overflow-y-auto pt-6">
             {pageTabs.map(tab => {
                 const Component = componentMap[tab.componentKey as keyof typeof componentMap];
                 return Component ? (
-                    <TabsContent key={tab.id} value={tab.id} className="h-full">
+                    <TabsContent key={tab.id} value={tab.id} className="h-full mt-0">
                         <Component project={projectContext} />
                     </TabsContent>
                 ) : null;
