@@ -46,6 +46,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
   const [allBadgeCollections, setAllBadgeCollections] = useState<BadgeCollection[]>([]);
   const [allPages, setAllPages] = useState<AppPage[]>([]);
   const [preApprovedEmails, setPreApprovedEmails] = useState<PreApprovedEmail[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
 
 
   const { toast } = useToast();
@@ -62,10 +63,10 @@ export function useData(realUser: User | null, authLoading: boolean) {
           const db = getDb();
           const workspaceId = realUser.workspaceId;
 
-          const collectionsToFetch = ['users', 'teams', 'calendars', 'locations', 'badges', 'badgeCollections', 'projects', 'pages', 'pre-approved-emails'];
+          const collectionsToFetch = ['users', 'teams', 'calendars', 'locations', 'badges', 'badgeCollections', 'projects', 'pages', 'pre-approved-emails', 'events'];
           const queries = collectionsToFetch.map(c => getDocs(query(collection(db, c), where("workspaceId", "==", workspaceId))));
           
-          const [usersSnapshot, teamsSnap, calendarsSnap, locationsSnap, badgesSnap, collectionsSnap, projectsSnap, pagesSnap, preApprovedEmailsSnap] = await Promise.all(queries);
+          const [usersSnapshot, teamsSnap, calendarsSnap, locationsSnap, badgesSnap, collectionsSnap, projectsSnap, pagesSnap, preApprovedEmailsSnap, eventsSnap] = await Promise.all(queries);
           
           const appSettingsSnap = await getDoc(doc(db, 'app-settings', workspaceId));
           
@@ -84,6 +85,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
           setAllBadges(badgesSnap.docs.map(d => ({ id: d.id, ...d.data() } as Badge)));
           setAllBadgeCollections(collectionsSnap.docs.map(d => ({ id: d.id, ...d.data() } as BadgeCollection)));
           setPreApprovedEmails(preApprovedEmailsSnap.docs.map(d => ({...d.data(), createdAt: d.data().createdAt.toDate()} as PreApprovedEmail)));
+          setEvents(eventsSnap.docs.map(d => ({...d.data(), eventId: d.id, startTime: d.data().startTime.toDate(), endTime: d.data().endTime.toDate()} as Event)));
           
           const userCreatedPages = pagesSnap.docs.map(d => ({ id: d.id, ...d.data() } as AppPage));
           setAllPages([...systemPages, ...userCreatedPages]);
@@ -311,29 +313,18 @@ export function useData(realUser: User | null, authLoading: boolean) {
   }, []);
 
   const fetchEvents = useCallback(async (start: Date, end: Date): Promise<Event[]> => {
-    const db = getDb();
-    const eventsQuery = query(collection(db, "events"), 
-      where("workspaceId", "==", realUser!.workspaceId),
-    );
-    const snapshot = await getDocs(eventsQuery);
-    const allEvents = snapshot.docs.map(doc => ({
-        ...doc.data(),
-        eventId: doc.id,
-        startTime: doc.data().startTime.toDate(),
-        endTime: doc.data().endTime.toDate(),
-    } as Event));
-
-    return allEvents.filter(event => {
+    return events.filter(event => {
         const eventStart = event.startTime;
         return eventStart >= start && eventStart < end;
     });
-  }, [realUser]);
+  }, [events]);
 
   const addEvent = useCallback(async (currentEvents: Event[], newEventData: Omit<Event, 'eventId'>) => {
     const db = getDb();
     const eventWithWorkspace = { ...newEventData, workspaceId: realUser!.workspaceId };
     const docRef = await addDoc(collection(db, "events"), eventWithWorkspace);
     const newEvent = { ...eventWithWorkspace, eventId: docRef.id };
+    setEvents(current => [...current, newEvent]);
     return [...currentEvents, newEvent];
   }, [realUser]);
 
@@ -341,12 +332,14 @@ export function useData(realUser: User | null, authLoading: boolean) {
       const db = getDb();
       await updateDoc(doc(db, 'events', eventId), { ...eventData, lastUpdated: new Date() });
       const updatedEvent = { ...currentEvents.find(e => e.eventId === eventId)!, ...eventData, lastUpdated: new Date() } as Event;
+      setEvents(current => current.map(e => e.eventId === eventId ? updatedEvent : e));
       return currentEvents.map(e => e.eventId === eventId ? updatedEvent : e);
   }, []);
 
   const deleteEvent = useCallback(async (currentEvents: Event[], eventId: string) => {
     const db = getDb();
     await deleteDoc(doc(db, 'events', eventId));
+    setEvents(current => current.filter(e => e.eventId !== eventId));
     return currentEvents.filter(e => e.eventId !== eventId);
   }, []);
 

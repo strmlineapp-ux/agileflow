@@ -10,8 +10,8 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import {syncCalendar, SyncCalendarInput} from './sync-calendar-flow';
+import { getFirestore, collection, getDocs, query, where } from 'firebase/firestore/lite';
 import { getDb } from '@/lib/firebase';
-import { getFirestore, collection, getDocs, query, where } from 'firebase/firestore';
 import { type SharedCalendar } from '@/types';
 
 
