@@ -22,7 +22,7 @@ import { Card, CardDescription, CardHeader, CardTitle, CardContent } from '@/com
 import { cn } from '@/lib/utils';
 
 function CalendarLinkPrompt() {
-  const { linkGoogleCalendar, realUser } = useUser();
+  const { realUser } = useUser();
   if (!realUser) return null;
 
   return (
@@ -35,7 +35,7 @@ function CalendarLinkPrompt() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button onClick={() => linkGoogleCalendar(realUser.userId)}>
+          <Button onClick={() => {}}>
             <GoogleSymbol name="link" className="mr-2" />
             Connect Google Calendar
           </Button>
@@ -46,7 +46,7 @@ function CalendarLinkPrompt() {
 }
 
 export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
-  const { viewAsUser, calendars, fetchEvents, addEvent, updateEvent, deleteEvent, linkGoogleCalendar } = useUser();
+  const { viewAsUser, calendars, fetchEvents, addEvent, updateEvent, deleteEvent } = useUser();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>(viewAsUser.defaultCalendarView || 'day');
   const [zoomLevel, setZoomLevel] = useState<'normal' | 'fit'>('normal');
@@ -294,8 +294,8 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
               </Tabs>
           </div>
         </div>
-        <div className="flex-1 overflow-hidden" ref={viewContainerRef}>
-          {renderCurrentView()}
+        <div className={cn("flex-1 min-h-0", pageShouldScroll ? "overflow-y-auto" : "flex flex-col")} ref={viewContainerRef}>
+            {renderCurrentView()}
         </div>
       </div>
       <EventDetailsDialog
