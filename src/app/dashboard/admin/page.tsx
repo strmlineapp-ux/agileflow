@@ -42,9 +42,7 @@ export default function AdminPage() {
                   const Component = tab.component;
                   return (
                     <TabsContent key={tab.key} value={tab.key} className="h-full mt-0">
-                      <div className="flex-1 overflow-hidden">
-                        <Component isActive={activeTabKey === tab.key} />
-                      </div>
+                      <Component isActive={activeTabKey === tab.key} />
                     </TabsContent>
                   )
                 })}

@@ -97,9 +97,7 @@ export default function ProjectDetailsPage() {
                 const Component = componentMap[tab.componentKey as keyof typeof componentMap];
                 return Component ? (
                     <TabsContent key={tab.id} value={tab.id} className="h-full mt-0">
-                      <div className="flex-1 flex flex-col min-h-0">
-                        <Component project={projectContext} />
-                      </div>
+                      <Component project={projectContext} />
                     </TabsContent>
                 ) : null;
             })}
