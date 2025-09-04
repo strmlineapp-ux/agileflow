@@ -127,7 +127,7 @@ export function TasksContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
                   <TabsTrigger value="all">All Tasks</TabsTrigger>
               </TabsList>
           </CenteredTabList>
-          <div className="flex-1 overflow-y-auto pt-6">
+          <div className="flex-1 overflow-y-auto">
             <TabsContent value="my-tasks" className="mt-0">
               {loading ? (
                 <div className="space-y-4">
