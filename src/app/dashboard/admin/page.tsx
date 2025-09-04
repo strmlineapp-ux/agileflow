@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { useUser } from '@/context/user-context';
 import { CenteredTabList } from '@/components/common/centered-tab-list';
+import { cn } from '@/lib/utils';
 
 export default function AdminPage() {
   const { appSettings } = useUser();
@@ -41,7 +42,14 @@ export default function AdminPage() {
                 {adminTabs.map(tab => {
                   const Component = tab.component;
                   return (
-                    <TabsContent key={tab.key} value={tab.key} className="h-full mt-0">
+                    <TabsContent 
+                        key={tab.key} 
+                        value={tab.key} 
+                        className={cn(
+                            "mt-0",
+                            activeTabKey === tab.key ? 'h-full' : 'h-0'
+                        )}
+                    >
                       <Component isActive={activeTabKey === tab.key} />
                     </TabsContent>
                   )
