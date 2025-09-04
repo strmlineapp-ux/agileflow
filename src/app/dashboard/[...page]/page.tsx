@@ -146,7 +146,7 @@ export default function DynamicPage() {
             {pageTabs.map(tab => {
                 const Component = componentMap[tab.componentKey as keyof typeof componentMap];
                 return Component ? (
-                    <TabsContent key={tab.id} value={tab.id} className="h-full flex-1 flex flex-col mt-0">
+                    <TabsContent key={tab.id} value={tab.id} className="flex-1 flex flex-col mt-0">
                       <Component tab={tab} page={page} team={teamContext} />
                     </TabsContent>
                 ) : null;
