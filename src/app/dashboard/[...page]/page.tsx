@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useUser } from '@/context/user-context';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
