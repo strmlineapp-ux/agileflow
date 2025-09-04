@@ -155,7 +155,7 @@ export default function DynamicPage() {
                 ))}
             </SortableTabsList>
           </CenteredTabList>
-         <div className="flex-1 flex flex-col min-h-0">
+         <div className="flex-1 flex flex-col min-h-0 pt-6">
             {pageTabs.map(tab => {
                 const Component = componentMap[tab.componentKey as keyof typeof componentMap];
                 return Component ? (
@@ -163,7 +163,7 @@ export default function DynamicPage() {
                         key={tab.id} 
                         value={tab.id} 
                         className={cn("mt-0", 
-                            activeTabValue === tab.id ? 'flex-1' : 'h-0'
+                            activeTabValue === tab.id ? 'flex flex-col flex-1' : 'hidden'
                         )}
                     >
                       <Component tab={tab} page={page} team={teamContext} isActive={activeTabValue === tab.id} />
