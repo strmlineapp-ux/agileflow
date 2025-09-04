@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -159,7 +158,6 @@ export default function DynamicPage() {
          <div className="flex-1 flex flex-col min-h-0">
             {pageTabs.map(tab => {
                 const Component = componentMap[tab.componentKey as keyof typeof componentMap];
-                const isCalendar = tab.componentKey === 'calendar';
                 return Component ? (
                     <TabsContent 
                         key={tab.id} 
@@ -192,3 +190,5 @@ export default function DynamicPage() {
     </div>
   )
 }
+
+    
