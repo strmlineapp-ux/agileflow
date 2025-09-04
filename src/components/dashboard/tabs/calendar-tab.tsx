@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
@@ -47,7 +48,7 @@ function CalendarLinkPrompt() {
   )
 }
 
-export function CalendarPageContent({ page, tab }: { page: AppPage, tab: AppTab }) {
+export function CalendarPageContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
   const { viewAsUser, calendars, fetchEvents, addEvent, updateEvent, deleteEvent, googleLogin, updatePage } = useUser();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>(viewAsUser.defaultCalendarView || 'day');
@@ -218,8 +219,6 @@ export function CalendarPageContent({ page, tab }: { page: AppPage, tab: AppTab 
     setSelectedEvent(event);
   }, []);
   
-  const pageShouldScroll = view === 'month' || view === 'production-schedule';
-
   const renderCurrentView = () => {
     if (isDataLoading) return <div className="flex-1 flex items-center justify-center"><GoogleSymbol name="progress_activity" className="animate-spin text-4xl text-muted-foreground" /></div>;
     
@@ -244,12 +243,12 @@ export function CalendarPageContent({ page, tab }: { page: AppPage, tab: AppTab 
   return (
     <>
       <div className="flex flex-col h-full gap-4">
-        <PageTitle 
+        {page && tab && <PageTitle 
           title={title}
           onSave={handleTitleSave}
           onReset={handleTitleReset}
           disabled={!canManagePage}
-        />
+        />}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-2">
             {userCanCreateEvent && (
@@ -320,7 +319,7 @@ export function CalendarPageContent({ page, tab }: { page: AppPage, tab: AppTab 
               </Tabs>
           </div>
         </div>
-        <div className={cn("flex-1 min-h-0", pageShouldScroll ? "overflow-y-auto" : "overflow-hidden flex flex-col")} ref={viewContainerRef}>
+        <div className="flex-1 min-h-0" ref={viewContainerRef}>
             {renderCurrentView()}
         </div>
       </div>
