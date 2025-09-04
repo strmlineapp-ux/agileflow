@@ -33,7 +33,7 @@ export function NotificationsContent({ page, tab }: { page?: AppPage, tab?: AppT
   };
 
   return (
-    <div className="flex flex-col h-full gap-6">
+    <div className="h-full">
       <PageTitle 
         title={title}
         onSave={handleTitleSave}
