@@ -151,7 +151,7 @@ export default function DynamicPage() {
                 ))}
             </SortableTabsList>
           </CenteredTabList>
-         <div className="flex-1 flex flex-col min-h-0 pt-6">
+         <div className="flex-1 flex flex-col min-h-0">
             {pageTabs.map(tab => {
                 const Component = componentMap[tab.componentKey as keyof typeof componentMap];
                 return Component ? (
