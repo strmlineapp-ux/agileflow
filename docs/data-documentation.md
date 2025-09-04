@@ -73,7 +73,7 @@ This table details the information stored directly within each `User` object.
 | `displayName: string` | **Google Service.** The user's full name. This is part of the basic profile information obtained during a standard "Sign in with Google" action and **does not require separate permissions**. |
 | `email: string` | **Internal / Google Service.** The user's email address. This is the primary field used for login. The "Sign in with Google" button uses **Firebase Authentication** with the **Google Auth Provider** to verify this email. |
 | `isAdmin: boolean` | **Internal.** A dedicated flag to indicate if a user has administrative privileges, granting them access to all settings and management pages. |
-| `accountType: 'Full' \| 'Viewer'` | **Internal.** Defines the user's access level. `Viewer` accounts have limited, read-only access. A user who has not linked their Google Calendar is automatically considered a `Viewer`. `Full` accounts have broader permissions and are typically linked to external services. |
+| `accountType: 'Full' \| 'Viewer'` | **Internal.** Defines the user's access level. `Viewer` accounts have limited, read-only access until they link their Google Calendar. `Full` accounts have broader permissions. |
 | `title?: string` | **Google Service.** The user's professional title. This is designed to be populated from the user's **Google Account profile** (from their organization details) **after the user grants the necessary permissions**. |
 | `avatarUrl?: string` | **Google Service.** A URL to the user's profile picture. This is part of the basic profile information obtained during a standard "Sign in with Google" action and **does not require separate permissions**. |
 | `location?: string` | **Google Service.** The user's primary work location. This is designed to be populated from the user's **Google Account profile** (from their address information) **after the user grants the necessary permissions**. |
@@ -121,15 +121,15 @@ The `Project` is a top-level container for organizing work. It holds its own sub
 ---
 
 ## Event Entity
-**Firestore Sub-Collection**: `/projects/{projectId}/events/{eventId}`
+**Firestore Collection**: `/events`
 
-Events are always associated with a parent `Project`.
+Events are globally stored and linked back to calendars and projects via IDs.
 
 | Data Point | Description |
 | :--- | :--- |
 | `eventId: string` | **Internal.** A unique identifier for the event. |
 | `title: string` | The name of the event. |
-| `projectId: string` | **Crucial.** The ID of the parent project. |
+| `projectId?: string` | The ID of the parent project, if applicable. |
 | `calendarId: string` | The ID of the calendar used for color-coding and default settings. |
 | `googleEventId?: string` | **External (Google Calendar).** The ID for the corresponding event in Google Calendar, used for synchronization. |
 | `startTime: Date` | The start date and time of the event. |
@@ -172,6 +172,17 @@ Tasks are always associated with a parent `Project`.
 
 This entity represents an internal AgileFlow calendar. These are managed on a dynamically configured page by an administrator (e.g., a page with a "Calendars" tab).
 
+### Synchronization Strategy: Google Calendar Push Notifications (Best Practice)
+
+For near real-time updates, the application is designed to use **Google Calendar Push Notifications**. This is the most efficient and responsive method for calendar synchronization.
+
+1.  **Watch Request**: When a calendar is linked, the application backend sends a request to the Google Calendar API to "watch" that specific calendar for changes.
+2.  **Webhook Notification**: When an event is created, updated, or deleted in the user's Google Calendar, Google instantly sends a small notification to a secure webhook (an HTTPS Cloud Function) in our backend.
+3.  **Workspace-Aware Sync**: The webhook receives the notification, which contains the `googleCalendarId`. **Crucially, the webhook queries the `/calendars` collection to find the internal calendar document (and thus the `workspaceId`) that corresponds to this `googleCalendarId`.** This lookup is essential for security and data isolation.
+4.  **Targeted Sync**: Once the workspace is identified, the webhook triggers the `syncCalendar` flow, passing both the `googleCalendarId` and the `workspaceId` to ensure the sync operation happens in the correct context.
+
+This event-driven architecture is superior to a scheduled (cron job) approach as it avoids unnecessary polling, reduces costs, and provides a much better user experience with immediate updates.
+
 ### SharedCalendar Data
 
 | Data Point | Description & Link to Services |
@@ -181,7 +192,7 @@ This entity represents an internal AgileFlow calendar. These are managed on a dy
 | `icon: string` | **Internal.** The Google Symbol name for the calendar's icon. |
 | `color: string` | **Internal.** The hex color code used for this calendar's events in the UI. |
 | `owner: { type: 'user', id: string }` | An object that defines which `User` owns the calendar. Ownership dictates who can edit the calendar's properties. |
-| `googleCalendarId?: string` | **External (Google Calendar).** The unique ID of the Google Calendar that this internal calendar is linked to. This is currently set manually but will be populated automatically by the future calendar linking flow. |
+| `googleCalendarId?: string` | **External (Google Calendar).** The unique ID of the Google Calendar that this internal calendar is linked to. This is the critical field that enables synchronization. |
 | `isShared?: boolean` | **Internal.** If `true`, this calendar will be visible to other users in the application for discovery and linking. |
 | `defaultEventTitle?: string` | **Internal.** A placeholder string for the title of new events created on this calendar. |
 | `roleAssignmentsLabel?: string` | **Internal.** A custom label for the "Role Assignments" section in the event details view. |

@@ -9,7 +9,7 @@ Welcome to AgileFlow, your team's central hub for managing tasks, scheduling eve
 ### 1.1 Requesting Access
 To begin using AgileFlow, you must first be invited or request access to your company's specific workspace from an administrator.
 1.  Navigate to your company's unique AgileFlow URL (e.g., `your-company.agileflow.app`).
-2.  Click the "Sign up with Google" button.
+2.  Click the "Sign up with Google" button. This will also request permission to view your Google Calendar.
 3.  If you have not been pre-approved by an administrator, your account will be created in a "pending" state.
 4.  An administrator for your company will review your request and grant you access. You will receive an email notification when this happens.
 
@@ -34,7 +34,7 @@ The **Overview** page gives you a high-level summary of team activity, including
 
 ## 4. Calendar
 
-The calendar is a powerful tool for visualizing and managing your team's schedule.
+The calendar is a powerful tool for visualizing and managing your team's schedule. It automatically syncs with your Google Calendar.
 
 ### 4.1 Creating Events
 - Click the **(+)** icon in the header to open the new event form.
@@ -86,8 +86,8 @@ Your user preferences appear in a compact, icon-driven row on your user card. Ho
 - **Set Default Calendar View**: Click the calendar icon to open a compact popover menu and select which calendar view you want to see when you log in.
 - **Set Time Format**: Click the clock icon to choose between 12-hour and 24-hour time display from a popover menu.
 - **Enable Easy Booking**: Click the toggle icon to turn on or off the ability to quickly create events by clicking on empty calendar slots. The current status (**On** or **Off**) is shown in the tooltip.
-- **Set Modifier Key**: Click the `keyboard_command_key` icon to set a custom modifier key (`Shift`, `Alt`, `Control`, or `Meta`) that must be held down to trigger secondary actions like reordering items or resetting preferences.
-- **Link Google Calendar**: To connect your Google Calendar, hover over the status dot on your avatar in the sidebar user menu. If disconnected, a tooltip will prompt you to click to connect. A simulated Google sign-in will appear and, once complete, will enable features like creating Google Meet links for your events.
+- **Set Modifier Key**: Click the `keyboard_command_key` icon to set a custom modifier key (`Shift`, `Alt`, `Control`, or `Meta`) that must be held down to trigger secondary actions like resetting preferences.
+- **Google Calendar Status**: Your Google Calendar connection status is shown by the colored dot on your avatar in the sidebar user menu. The connection is handled automatically when you sign in.
 
 ## 8. Management Pages (Admin & Manager Roles)
 
@@ -97,15 +97,15 @@ This is the central control panel for configuring the application itself. It doe
     - **Assigning Admins**: Drag and drop a user from the "Users" list to the "Admins" list to grant them administrative privileges. This action is secured by a 2-Factor Authentication code. For safety, the system prevents you from removing the last system administrator.
     - **Pre-approving Users**: Use the `add_circle` button in the "Users" card header to add an email address to the pre-approved list, allowing them to gain immediate access upon signing in.
     - **Deleting Users**: Hover over a user in the "Users" list to reveal a `cancel` icon. Clicking this will trigger the 2FA dialog to confirm deletion.
-- **Pages**: Configure the application's navigation. You can intuitively reorder pages by holding down your chosen modifier key (e.g., `Shift`) and dragging them in the grid. Key system pages are pinned and cannot be moved. You can also instantly duplicate any page by dragging it onto the "Add New Page" (+) button.
-- **Tabs**: Manage the reusable content blocks (tabs) that appear on pages. The order of this list can be changed via drag-and-drop and affects the default order in which tabs appear in popovers. You can also reorder tabs directly on a page by holding down your modifier key and dragging them.
-- **Calendar & Team Management**: Admins can create pages to manage global application settings, such as creating shared calendars or managing teams. When creating or editing a calendar, an administrator can choose to link it to an existing Google Calendar they manage or create a new one directly from the app. Once linked, events can be synced between both platforms.
+- **Pages**: Configure the application's navigation. You can intuitively reorder pages by dragging them in the grid. Key system pages are pinned and cannot be moved. You can also instantly duplicate any page by dragging it onto the "Add New Page" (+) button.
+- **Tabs**: Manage the reusable content blocks (tabs) that appear on pages. You can reorder this list and the tabs on any page by dragging and dropping them.
+- **Calendar & Team Management**: Admins can create pages to manage global application settings. When creating or editing a calendar, an administrator can link it to an existing Google Calendar to enable two-way sync.
 
 ### 8.2 Team Management (`/dashboard/teams/[teamId]`)
 This page is for managing the specifics of an individual team.
 -   **Members Tab**: This tab provides a drag-and-drop interface for managing team roles and badge assignments.
-    -   **Assigning Team Admins**: To designate a user as a Team Admin, hold down your modifier key (e.g., `Shift`) and drag their card from the "Members" list on the right to the "Team Admins" list on the left. To revoke admin status, drag their card back.
-    -   **Reordering Members**: You can reorder users within the "Admins" or "Members" lists by holding down your modifier key and dragging their cards into a new position.
+    -   **Assigning Team Admins**: To designate a user as a Team Admin, drag their card from the "Members" list on the right to the "Team Admins" list on the left. To revoke admin status, drag their card back.
+    -   **Reordering Members**: You can reorder users within the "Admins" or "Members" lists by dragging their cards into a new position.
     -   **Re-assigning Badges**: To quickly move a badge from one member to another, simply drag the badge from the source member's card and drop it onto the target member's card.
 - **Badge Management Tab**: Create and manage your team's badge collections. To share a collection, simply drag its card to the "Shared Collections" panel. To link a collection from another team, drag it from the shared panel onto your main board. To **activate** a collection for your team, click on its ghosted card; clicking an active card will deactivate it. To **delete** a collection you own, use the dropdown menu on its card.
 - **Pinned Locations Tab**: Pin locations to the team's Production Schedule. You can also designate locations as "check locations."
@@ -119,3 +119,5 @@ Administrators can view the application from another user's perspective.
 2.  Select "View as" from the dropdown menu.
 3.  Choose a user from the list.
 4.  A banner will appear at the top of the screen indicating whose view you are using. To return to your own view, repeat the process and select "Return to your view".
+
+

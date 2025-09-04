@@ -8,17 +8,12 @@
  * - SyncCalendarOutput - The return type for the syncCalendar function.
  */
 
-import { genkit } from 'genkit';
-import { googleAI } from '@genkit-ai/googleai';
+import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { google } from 'googleapis';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { startOfDay } from 'date-fns';
 import { type Event, type SharedCalendar } from '@/types';
-
-export const ai = genkit({
-  plugins: [googleAI()],
-});
 
 
 const SyncCalendarInputSchema = z.object({
@@ -139,8 +134,8 @@ const syncCalendarFlow = ai.defineFlow(
             syncedEventCount: events.length,
         };
 
-    } catch (err) {
-      console.error('The API returned an error: ' + err);
+    } catch (err: any) {
+      console.error('The API returned an error: ' + err.message, err);
       throw new Error('Failed to fetch calendar events.');
     }
   }
