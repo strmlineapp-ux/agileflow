@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useUser } from '@/context/user-context';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
@@ -27,6 +27,7 @@ import { EventsContent } from '@/components/dashboard/tabs/events-tab';
 import { Tabs, TabsTrigger, TabsContent, SortableTabsList } from '@/components/ui/tabs';
 import { CenteredTabList } from '@/components/common/centered-tab-list';
 import { PageTitle } from '@/components/common/page-title';
+import { cn } from '@/lib/utils';
 
 
 const componentMap = {
@@ -55,12 +56,14 @@ export default function DynamicPage() {
   const params = useParams();
   const { appSettings, viewAsUser, loading, teams, updatePage } = useUser();
   const { page: pagePath } = params;
+  
+  const [activeTabValue, setActiveTabValue] = useState<string | undefined>();
 
   const path = Array.isArray(pagePath) ? `/dashboard/${pagePath.join('/')}` : `/dashboard/${pagePath}`;
 
-  const { page, activeTab, teamContext } = useMemo(() => {
+  const { page, teamContext } = useMemo(() => {
     if (loading || !appSettings.pages.length) {
-      return { page: null, activeTab: null, teamContext: null };
+      return { page: null, teamContext: null };
     }
 
     const foundPage = appSettings.pages.find(p => p.isDynamic ? path.startsWith(p.path) : p.path === path);
@@ -72,15 +75,21 @@ export default function DynamicPage() {
     }
     
     if (!foundPage || !hasAccess(viewAsUser!, foundPage)) {
-        return { page: null, activeTab: null, teamContext: null };
+        return { page: null, teamContext: null };
     }
 
-    const firstTabId = foundPage.associatedTabs[0];
-    const firstTab = appSettings.tabs.find(t => t.id === firstTabId);
-
-    return { page: foundPage, activeTab: firstTab, teamContext: foundTeam };
+    return { page: foundPage, teamContext: foundTeam };
   }, [path, appSettings, viewAsUser, loading, teams]);
 
+  useEffect(() => {
+    if (page && page.associatedTabs.length > 0) {
+      const firstTabId = page.associatedTabs[0];
+      const firstTab = appSettings.tabs.find(t => t.id === firstTabId);
+      if(firstTab) {
+        setActiveTabValue(firstTab.id);
+      }
+    }
+  }, [page, appSettings.tabs]);
 
   if (loading) {
     return (
@@ -104,11 +113,6 @@ export default function DynamicPage() {
   const seamlessPageIds = ['page-overview', 'page-admin-management', 'page-calendar', 'page-tasks', 'page-notifications', 'page-settings'];
 
   const renderContent = () => {
-    if (page.associatedTabs.length === 1 && activeTab) {
-      const Component = componentMap[activeTab.componentKey as keyof typeof componentMap];
-      return Component ? <Component tab={activeTab} page={page} team={teamContext} isSingleTabPage={true} isActive={true} /> : null;
-    }
-    
     const pageTabs = page.associatedTabs
         .map(tabId => appSettings.tabs.find(t => t.id === tabId))
         .filter((t): t is AppTab => !!t);
@@ -121,13 +125,18 @@ export default function DynamicPage() {
         );
     }
     
+    if (page.associatedTabs.length === 1 && pageTabs[0]) {
+      const Component = componentMap[pageTabs[0].componentKey as keyof typeof componentMap];
+      return Component ? <div className="flex-1 min-h-0"><Component tab={pageTabs[0]} page={page} team={teamContext} isSingleTabPage={true} isActive={true} /></div> : null;
+    }
+    
     const handleReorderPageTabs = (reorderedPageTabs: AppTab[]) => {
       const newTabIds = reorderedPageTabs.map(tab => tab.id);
       updatePage(page.id, { associatedTabs: newTabIds });
     };
     
     return (
-       <Tabs defaultValue={pageTabs[0].id} className="flex flex-col h-full">
+       <Tabs value={activeTabValue} onValueChange={setActiveTabValue} className="flex flex-col h-full">
           <CenteredTabList>
             <SortableTabsList
                 items={pageTabs}
@@ -146,8 +155,12 @@ export default function DynamicPage() {
             {pageTabs.map(tab => {
                 const Component = componentMap[tab.componentKey as keyof typeof componentMap];
                 return Component ? (
-                    <TabsContent key={tab.id} value={tab.id} className="flex-1 flex flex-col mt-0">
-                      <Component tab={tab} page={page} team={teamContext} />
+                    <TabsContent 
+                        key={tab.id} 
+                        value={tab.id} 
+                        className={cn("flex-col mt-0", activeTabValue === tab.id ? 'flex flex-1' : 'h-0')}
+                    >
+                      <Component tab={tab} page={page} team={teamContext} isActive={activeTabValue === tab.id} />
                     </TabsContent>
                 ) : null;
             })}
