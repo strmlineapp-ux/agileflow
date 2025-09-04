@@ -17,7 +17,7 @@ import { predefinedColors } from '@/lib/colors';
 interface UserContextType {
   // Session
   realUser: User | null;
-  viewAsUser: User | null;
+  viewAsUser: User & { isDragModifierPressed?: boolean } | null;
   setViewAsUser: (userId: string) => void;
   googleLogin: () => Promise<boolean>;
   logout: (router: AppRouterInstance) => Promise<void>;
@@ -114,6 +114,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   
   const [viewAsUserId, setViewAsUserId] = useState<string | null>(null);
   const { setTheme, theme: currentTheme } = useTheme();
+  const [isDragModifierPressed, setIsDragModifierPressed] = useState(false);
 
   const loading = authLoading || dataHook.loading;
 
@@ -127,6 +128,31 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     if (!viewAsUserId) return realUser;
     return dataHook.users.find(u => u.userId === viewAsUserId) || realUser;
   }, [dataHook.users, viewAsUserId, realUser]);
+
+  useEffect(() => {
+    if (!viewAsUser) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+        const key = viewAsUser.modifierKey || 'shift';
+        if (e.key.toLowerCase() === key) {
+            setIsDragModifierPressed(true);
+        }
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+        const key = viewAsUser.modifierKey || 'shift';
+        if (e.key.toLowerCase() === key) {
+            setIsDragModifierPressed(false);
+        }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('keyup', handleKeyUp);
+    };
+}, [viewAsUser]);
   
   const addCalendarWithDefaults = useCallback(async (calendarData: Partial<Omit<SharedCalendar, 'id'>>) => {
     if (!realUser) return;
@@ -162,9 +188,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const addProjectEventWithUser = (projectId: string, currentEvents: Event[], newEventData: Omit<Event, 'eventId'>) => dataHook.addProjectEvent(projectId, currentEvents, newEventData, realUser!);
     const addPreApprovedEmailWithUser = (email: string) => dataHook.addPreApprovedEmail(email, realUser!);
 
+    const enrichedViewAsUser = viewAsUser ? { ...viewAsUser, isDragModifierPressed } : null;
+
     return {
       realUser,
-      viewAsUser,
+      viewAsUser: enrichedViewAsUser,
       setViewAsUser: setViewAsUserWithReset,
       googleLogin,
       logout,
@@ -184,7 +212,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       addPreApprovedEmail: addPreApprovedEmailWithUser,
     };
   }, [
-    realUser, viewAsUser, googleLogin, logout, loading, isFirebaseReady, dataHook, addCalendarWithDefaults
+    realUser, viewAsUser, googleLogin, logout, loading, isFirebaseReady, dataHook, addCalendarWithDefaults, isDragModifierPressed
   ]);
 
   return (
