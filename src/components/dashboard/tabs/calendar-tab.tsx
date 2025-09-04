@@ -14,15 +14,17 @@ import { canCreateAnyEvent } from '@/lib/permissions';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { EventForm } from '@/components/calendar/new-event-form';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
-import { type Event, type AppPage } from '@/types';
+import { type Event, type AppPage, type AppTab } from '@/types';
 import { EventDetailsDialog } from '@/components/calendar/event-details-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { CenteredTabList } from '@/components/common/centered-tab-list';
 import { Card, CardDescription, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { PageTitle } from '@/components/common/page-title';
+import { useToast } from '@/hooks/use-toast';
 
 function CalendarLinkPrompt() {
-  const { linkGoogleCalendar, realUser } = useUser();
+  const { googleLogin, realUser } = useUser();
   if (!realUser) return null;
 
   return (
@@ -35,7 +37,7 @@ function CalendarLinkPrompt() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button onClick={() => linkGoogleCalendar(realUser.userId)}>
+          <Button onClick={googleLogin}>
             <GoogleSymbol name="link" className="mr-2" />
             Connect Google Calendar
           </Button>
@@ -45,8 +47,8 @@ function CalendarLinkPrompt() {
   )
 }
 
-export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
-  const { viewAsUser, calendars, fetchEvents, addEvent, updateEvent, deleteEvent } = useUser();
+export function CalendarPageContent({ page, tab }: { page: AppPage, tab: AppTab }) {
+  const { viewAsUser, calendars, fetchEvents, addEvent, updateEvent, deleteEvent, googleLogin, updatePage } = useUser();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>(viewAsUser.defaultCalendarView || 'day');
   const [zoomLevel, setZoomLevel] = useState<'normal' | 'fit'>('normal');
@@ -59,8 +61,26 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
   const [isDataLoading, setIsDataLoading] = useState(true);
 
   const viewContainerRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
   
   const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
+
+  const title = page?.displayTitle ?? tab?.name ?? 'Calendar';
+  const canManagePage = viewAsUser.isAdmin;
+
+  const handleTitleSave = (newTitle: string) => {
+    if (page) {
+      updatePage(page.id, { displayTitle: newTitle });
+    }
+  };
+
+  const handleTitleReset = (e: React.MouseEvent) => {
+    if (page && (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey)) {
+        e.preventDefault();
+        updatePage(page.id, { displayTitle: null });
+        toast({title: "Title Reset", description: "The page title has been reset to its default."});
+    }
+  };
 
   useEffect(() => {
     if (!viewAsUser.googleCalendarLinked) {
@@ -224,6 +244,12 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
   return (
     <>
       <div className="flex flex-col h-full gap-4">
+        <PageTitle 
+          title={title}
+          onSave={handleTitleSave}
+          onReset={handleTitleReset}
+          disabled={!canManagePage}
+        />
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-2">
             {userCanCreateEvent && (
@@ -294,7 +320,7 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
               </Tabs>
           </div>
         </div>
-        <div className={cn("flex-1", pageShouldScroll ? "overflow-y-auto" : "flex flex-col min-h-0")} ref={viewContainerRef}>
+        <div className={cn("flex-1 min-h-0", pageShouldScroll ? "overflow-y-auto" : "overflow-hidden flex flex-col")} ref={viewContainerRef}>
             {renderCurrentView()}
         </div>
       </div>

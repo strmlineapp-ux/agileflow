@@ -8,8 +8,10 @@
  * - WatchGoogleCalendarOutput - The return type for the watchGoogleCalendar function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
+import { google } from 'googleapis';
+import { v4 as uuidv4 } from 'uuid';
 
 const WatchGoogleCalendarInputSchema = z.object({
   googleCalendarId: z.string().describe('The ID of the Google Calendar to watch.'),
@@ -38,28 +40,41 @@ const watchGoogleCalendarFlow = ai.defineFlow(
     outputSchema: WatchGoogleCalendarOutputSchema,
   },
   async (input) => {
-    // In a real-world scenario, this is where you would make an authenticated
-    // API call to the Google Calendar API's `events.watch()` endpoint.
-    // The request body would include:
-    // {
-    //   "id": "some-unique-channel-id", // A UUID you generate
-    //   "type": "web_hook",
-    //   "address": input.webhookUrl
-    // }
+    console.log(`Setting up a REAL watch on calendar: ${input.googleCalendarId}`);
     
-    console.log(`Simulating setting up a watch on calendar: ${input.googleCalendarId}`);
-    console.log(`Notifications will be sent to: ${input.webhookUrl}`);
+    const auth = new google.auth.GoogleAuth({
+        scopes: ['https://www.googleapis.com/auth/calendar']
+    });
 
-    // Mock response from the Google Calendar API
-    const mockChannelId = `channel-${crypto.randomUUID()}`;
-    const mockResourceId = `resource-${crypto.randomUUID()}`;
-    const expirationDate = new Date();
-    expirationDate.setDate(expirationDate.getDate() + 7); // Channels typically expire
+    const authClient = await auth.getClient();
+    const calendarApi = google.calendar({version: 'v3', auth: authClient});
 
-    return {
-      channelId: mockChannelId,
-      resourceId: mockResourceId,
-      expiration: expirationDate.toISOString(),
-    };
+    try {
+      const response = await calendarApi.events.watch({
+        calendarId: input.googleCalendarId,
+        requestBody: {
+          id: uuidv4(), // A unique ID for the channel
+          type: 'web_hook',
+          address: input.webhookUrl,
+        },
+      });
+
+      const { id, resourceId, expiration } = response.data;
+      if (!id || !resourceId || !expiration) {
+        throw new Error('Incomplete response from Google Calendar API watch request.');
+      }
+      
+      console.log(`Successfully created watch channel ${id} for calendar ${resourceId}. It expires on ${new Date(parseInt(expiration))}`);
+
+      return {
+        channelId: id,
+        resourceId: resourceId,
+        expiration: expiration,
+      };
+
+    } catch (err: any) {
+      console.error('The API returned an error: ' + err);
+      throw new Error(`Failed to set up watch for calendar ${input.googleCalendarId}. Error: ${err.message}`);
+    }
   }
 );
