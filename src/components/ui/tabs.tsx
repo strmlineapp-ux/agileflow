@@ -90,7 +90,7 @@ interface SortableTabsListProps<T extends { id: string }> {
 
 function SortableTabsList<T extends { id: string }>({ items, onReorder, children, className, disabled }: SortableTabsListProps<T>) {
     const { viewAsUser } = useUser();
-    const { isDragModifierPressed } = viewAsUser || {};
+    const isDragModifierPressed = viewAsUser?.isDragModifierPressed;
     
     const sensors = useSensors(
         useSensor(PointerSensor),
