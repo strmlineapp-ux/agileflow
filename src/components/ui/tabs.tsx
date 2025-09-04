@@ -90,7 +90,10 @@ interface SortableTabsListProps<T extends { id: string }> {
 
 function SortableTabsList<T extends { id: string }>({ items, onReorder, children, className, disabled }: SortableTabsListProps<T>) {
     const { viewAsUser } = useUser();
-    const isDragModifierPressed = viewAsUser?.isDragModifierPressed;
+    
+    // In a real app, you would use a more robust check for whether the modifier key is pressed.
+    // For this prototype, we'll assume a simple state `isDragModifierPressed` on the user object.
+    const isDragModifierPressed = true; // Placeholder for actual logic
     
     const sensors = useSensors(
         useSensor(PointerSensor),
@@ -116,7 +119,7 @@ function SortableTabsList<T extends { id: string }>({ items, onReorder, children
                 <TabsList className={className}>
                     {React.Children.map(children, (child, index) => {
                         if (React.isValidElement(child)) {
-                            return <SortableTabsTrigger id={items[index].id} disabled={disabled || !isDragModifierPressed}>{child}</SortableTabsTrigger>;
+                            return <SortableTabsTrigger id={items[index].id} disabled={disabled || !viewAsUser?.isDragModifierPressed}>{child}</SortableTabsTrigger>;
                         }
                         return child;
                     })}

@@ -300,7 +300,7 @@ export function TeamMembersView({ team: teamFromProps, tab, page }: { team?: Tea
     };
   
     return (
-      <div className="flex h-full flex-col gap-6">
+      <div className="flex flex-col h-full gap-6">
         <PageTitle 
           title={title}
           onSave={handleTitleSave}
