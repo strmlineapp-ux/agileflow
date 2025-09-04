@@ -127,7 +127,12 @@ export default function DynamicPage() {
     
     if (page.associatedTabs.length === 1 && pageTabs[0]) {
       const Component = componentMap[pageTabs[0].componentKey as keyof typeof componentMap];
-      return Component ? <div className="flex-1 min-h-0"><Component tab={pageTabs[0]} page={page} team={teamContext} isSingleTabPage={true} isActive={true} /></div> : null;
+      const isCalendar = pageTabs[0].componentKey === 'calendar';
+      return Component ? (
+        <div className={cn("flex-1 min-h-0", !isCalendar && "flex flex-col")}>
+            <Component tab={pageTabs[0]} page={page} team={teamContext} isSingleTabPage={true} isActive={true} />
+        </div>
+      ) : null;
     }
     
     const handleReorderPageTabs = (reorderedPageTabs: AppTab[]) => {
@@ -154,11 +159,14 @@ export default function DynamicPage() {
          <div className="flex-1 flex flex-col min-h-0">
             {pageTabs.map(tab => {
                 const Component = componentMap[tab.componentKey as keyof typeof componentMap];
+                const isCalendar = tab.componentKey === 'calendar';
                 return Component ? (
                     <TabsContent 
                         key={tab.id} 
                         value={tab.id} 
-                        className={cn("flex-col mt-0", activeTabValue === tab.id ? 'flex flex-1' : 'h-0')}
+                        className={cn("mt-0", 
+                            activeTabValue === tab.id ? (isCalendar ? 'flex-1' : 'flex flex-1 flex-col') : 'h-0'
+                        )}
                     >
                       <Component tab={tab} page={page} team={teamContext} isActive={activeTabValue === tab.id} />
                     </TabsContent>
