@@ -113,7 +113,7 @@ function SortableTabsList<T extends { id: string }>({ items, onReorder, children
             <SortableContext items={items} strategy={horizontalListSortingStrategy}>
                 <TabsList className={className}>
                     {React.Children.map(children, (child, index) => {
-                        if (React.isValidElement(child)) {
+                        if (React.isValidElement(child) && items[index]) {
                             return <SortableTabsTrigger id={items[index].id} disabled={disabled}>{child}</SortableTabsTrigger>;
                         }
                         return child;
@@ -131,7 +131,7 @@ const TabsContent = React.forwardRef<
   <TabsPrimitive.Content
     ref={ref}
     className={cn(
-      "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+      "mt-0 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
       className
     )}
     {...props}
