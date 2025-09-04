@@ -57,6 +57,7 @@ const TabsTrigger = React.forwardRef<
 TabsTrigger.displayName = TabsPrimitive.Trigger.displayName
 
 const SortableTabsTrigger = ({ id, children, disabled }: { id: string, children: React.ReactNode, disabled?: boolean }) => {
+    const { viewAsUser } = useUser();
     const {
         attributes,
         listeners,
@@ -64,7 +65,7 @@ const SortableTabsTrigger = ({ id, children, disabled }: { id: string, children:
         transform,
         transition,
         isDragging,
-    } = useSortable({ id, disabled });
+    } = useSortable({ id, disabled: disabled || !viewAsUser?.isDragModifierPressed });
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -89,12 +90,6 @@ interface SortableTabsListProps<T extends { id: string }> {
 }
 
 function SortableTabsList<T extends { id: string }>({ items, onReorder, children, className, disabled }: SortableTabsListProps<T>) {
-    const { viewAsUser } = useUser();
-    
-    // In a real app, you would use a more robust check for whether the modifier key is pressed.
-    // For this prototype, we'll assume a simple state `isDragModifierPressed` on the user object.
-    const isDragModifierPressed = true; // Placeholder for actual logic
-    
     const sensors = useSensors(
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
@@ -119,7 +114,7 @@ function SortableTabsList<T extends { id: string }>({ items, onReorder, children
                 <TabsList className={className}>
                     {React.Children.map(children, (child, index) => {
                         if (React.isValidElement(child)) {
-                            return <SortableTabsTrigger id={items[index].id} disabled={disabled || !viewAsUser?.isDragModifierPressed}>{child}</SortableTabsTrigger>;
+                            return <SortableTabsTrigger id={items[index].id} disabled={disabled}>{child}</SortableTabsTrigger>;
                         }
                         return child;
                     })}
