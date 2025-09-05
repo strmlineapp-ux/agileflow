@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { UserManagement } from '@/components/settings/user-management';
@@ -8,7 +9,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 export function SettingsContent({ isActive }: { isActive: boolean }) {
 
   return (
-    <div className="flex flex-col h-full gap-6">
+    <div className="flex flex-col h-full gap-6 overflow-y-auto hide-scrollbar">
       <UserManagement showSearch={true} isActive={isActive} />
     </div>
   );

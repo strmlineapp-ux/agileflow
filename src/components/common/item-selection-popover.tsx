@@ -152,7 +152,7 @@ export function ItemSelectionPopover({
             />
           </div>
           
-           <div className="overflow-y-auto">
+           <div className="overflow-y-auto hide-scrollbar">
               <div className="p-1 space-y-1">
                 {filteredItems.length > 0 ? (
                   filteredItems.map(item => {

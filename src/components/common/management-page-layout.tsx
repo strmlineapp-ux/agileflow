@@ -6,7 +6,6 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { type User, type Team, type SharedCalendar, type BadgeCollection, type AppPage } from '@/types';
 import { useUser } from '@/context/user-context';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DndContext, type DragEndEvent, type DragStartEvent, useSensor, useSensors, PointerSensor, KeyboardSensor, sortableKeyboardCoordinates, DragOverlay } from '@dnd-kit/core';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
@@ -200,7 +199,7 @@ export function ManagementPageLayout<T extends TEntity>({
               </TooltipProvider>
             </div>
           </div>
-          <ScrollArea className="flex-1 min-h-0 -mr-4 pr-4">
+          <div className="flex-1 min-h-0 -mr-4 pr-4 overflow-y-auto hide-scrollbar">
             <ManagementGrid
                 items={displayedItems}
                 setItems={onReorderItems}
@@ -209,7 +208,7 @@ export function ManagementPageLayout<T extends TEntity>({
             >
               {displayedItems.length === 0 && <p className="text-center text-sm text-muted-foreground p-4">No {entityType}s to display.</p>}
             </ManagementGrid>
-          </ScrollArea>
+          </div>
         </div>
         <SharedItemsPanel
           isOpen={isSharedPanelOpen}
