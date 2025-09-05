@@ -152,7 +152,7 @@ export const WeekView = React.memo(({ date, events, containerRef, zoomLevel, onE
                         const isWeekend = isSaturday(day) || isSunday(day);
                         const isDayHoliday = isHoliday(day, holidays);
                         return (
-                            <div key={day.toString()} className={cn("text-center p-2 border-l-2 relative", { "bg-muted/50": isWeekend || isDayHoliday })}>
+                            <div key={day.toString()} className={cn("text-center p-2 border-l-2 relative", { "bg-card": isWeekend || isDayHoliday })}>
                                 <p className={cn("text-sm text-foreground", { "text-foreground": isWeekend || isDayHoliday })}>{format(day, 'EEE')}</p>
                                 <p className={cn(
                                     "text-2xl text-foreground",
@@ -176,13 +176,13 @@ export const WeekView = React.memo(({ date, events, containerRef, zoomLevel, onE
                     })}
                 </div>
             </TimelineCardHeader>
-            <TimelineCardContent className="overflow-y-auto" ref={timelineScrollerRef}>
+            <TimelineCardContent className="overflow-y-auto hide-scrollbar" ref={timelineScrollerRef}>
                 <div className="relative">
                     <div className={cn("grid min-h-full", gridColsClass)}>
                         {/* Timeline */}
                         <div className="w-20 border-r-2 bg-card sticky left-0 z-20">
                             {hours.map((hour, index) => (
-                                <div key={hour} className={cn("relative text-right pr-2 border-b-2 bg-card", {"bg-card/10": index % 2 !== 0})} style={{ height: `${hourHeight}px` }}>
+                                <div key={hour} className={cn("relative text-right pr-2 border-b-2 bg-card", {"bg-card/10": index % 2 !== 0})} style={{ height: `${''\'\''}hourHeight{\'''\'\`}px` }}>
                                     <span className="text-xs text-foreground relative -top-2">{format(addHours(startOfDay(date), hour), timeFormatTimeline)}</span>
                                 </div>
                             ))}
@@ -214,13 +214,13 @@ export const WeekView = React.memo(({ date, events, containerRef, zoomLevel, onE
                                         <div
                                             className="absolute inset-x-0 lunch-break-pattern z-0 pointer-events-none"
                                             style={{
-                                                top: `${12 * hourHeight}px`,
-                                                height: `${2.5 * hourHeight}px`
+                                                top: `${''\'\''}12 * hourHeight{\'''\'\`}px`,
+                                                height: `${''\'\''}2.5 * hourHeight{\'''\'\`}px`
                                             }}
                                             title="Lunch Break"
                                         />
                                         {hours.map(hour => (
-                                            <div key={hour} className="border-b-2" style={{ height: `${hourHeight}px` }}></div>
+                                            <div key={hour} className="border-b-2" style={{ height: `${''\'\''}hourHeight{\'''\'\`}px` }}></div>
                                         ))}
                                         <div className="absolute inset-0 z-10">
                                             {timedEvents.map(event => {
@@ -234,7 +234,7 @@ export const WeekView = React.memo(({ date, events, containerRef, zoomLevel, onE
                                                         className={cn(
                                                             "absolute left-1 right-1 p-1 rounded-md cursor-pointer flex flex-col overflow-hidden"
                                                         )}
-                                                        style={{ top: `${top}px`, height: `${height}px`, backgroundColor: colors?.bg, color: getContrastColor(colors?.bg || '#000000') }}
+                                                        style={{ top: `${''\'\''}top{\'''\'\`}px`, height: `${''\'\''}height{\'''\'\`}px`, backgroundColor: colors?.bg, color: getContrastColor(colors?.bg || '#000000') }}
                                                     >
                                                         <div className="flex items-center gap-2 flex-wrap mb-1">
                                                             <PriorityBadge priorityId={event.priority} />
@@ -288,7 +288,7 @@ export const WeekView = React.memo(({ date, events, containerRef, zoomLevel, onE
                                                 <div 
                                                     ref={nowMarkerRef}
                                                     className="absolute w-full z-10 pointer-events-none"
-                                                    style={{ top: `${calculateCurrentTimePosition()}px` }}
+                                                    style={{ top: `${''\'\''}calculateCurrentTimePosition(){\'''\'\`}px` }}
                                                 >
                                                     <div className="relative h-px bg-primary"></div>
                                                 </div>

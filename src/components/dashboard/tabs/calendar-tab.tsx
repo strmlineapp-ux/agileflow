@@ -158,13 +158,13 @@ export function CalendarPageContent() {
     let range;
 
     if (format(start, 'yyyy') !== format(end, 'yyyy')) {
-      range = `${format(start, 'MMM d, yyyy')} – ${format(end, 'MMM d, yyyy')}`;
+      range = `${''\'\''}format(start, 'MMM d, yyyy'){\'''\'\`} – ${''\'\''}format(end, 'MMM d, yyyy'){\'''\'\``;
     } else if (format(start, 'MMMM') !== format(end, 'MMMM')) {
-      range = `${format(start, 'MMM d')} – ${format(end, 'MMM d, yyyy')}`;
+      range = `${''\'\''}format(start, 'MMM d'){\'''\'\`} – ${''\'\''}format(end, 'MMM d, yyyy'){\'''\'\``;
     } else {
-      range = `${format(start, 'd')}–${format(end, 'd')} ${format(end, 'MMMM, yyyy')}`;
+      range = `${''\'\''}format(start, 'd'){\'''\'\`}–${''\'\''}format(end, 'd'){\'''\'\`} ${''\'\''}format(end, 'MMMM, yyyy'){\'''\'\``;
     }
-    return `Week ${weekNumber} · ${range}`;
+    return `Week ${''\'\''}weekNumber{\'''\'\`} · ${''\'\''}range{\'''\'\``;
   }, [view, currentDate]);
 
   const handleEventMutation = useCallback(async (mutationType: 'add' | 'update' | 'delete', eventData: any) => {
@@ -294,7 +294,7 @@ export function CalendarPageContent() {
               </Tabs>
           </div>
         </div>
-        <div className={cn("flex-1 min-h-0", pageShouldScroll ? "overflow-y-auto" : "overflow-hidden flex flex-col")} ref={viewContainerRef}>
+        <div className={cn("flex-1 min-h-0 hide-scrollbar", pageShouldScroll ? "overflow-y-auto" : "overflow-hidden flex flex-col")} ref={viewContainerRef}>
             {renderCurrentView()}
         </div>
       </div>
