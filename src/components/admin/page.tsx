@@ -878,4 +878,3 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
     );
 };
 // #endregion
-

@@ -6,7 +6,7 @@ import React from 'react';
 
 export function CenteredTabList({ children, className }: { children: React.ReactNode, className?: string }) {
   return (
-    <div className={cn("center-and-scroll no-scrollbar", className)}>
+    <div className={cn("center-and-scroll hide-scrollbar", className)}>
       {children}
     </div>
   );
