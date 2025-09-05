@@ -9,7 +9,6 @@ import { ManagementGrid } from './management-grid';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { cn } from '@/lib/utils';
 import { useDroppable } from '@dnd-kit/core';
-import { ScrollArea } from '../ui/scroll-area';
 
 interface SharedItemsPanelProps<T extends { id: string, name: string, icon: string, color: string }> {
   isOpen: boolean;
@@ -69,7 +68,7 @@ export function SharedItemsPanel<T extends { id: string, name: string, icon: str
             <CardDescription>{description}</CardDescription>
           </CardHeader>
           <CardContent className="flex-1 p-2 overflow-hidden">
-            <ScrollArea className="h-full">
+            <div className="h-full overflow-y-auto hide-scrollbar">
               <ManagementGrid
                 items={items}
                 setItems={() => {}}
@@ -77,7 +76,7 @@ export function SharedItemsPanel<T extends { id: string, name: string, icon: str
               >
                 {items.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">{emptyMessage}</p>}
               </ManagementGrid>
-            </ScrollArea>
+            </div>
           </CardContent>
         </Card>
     </div>

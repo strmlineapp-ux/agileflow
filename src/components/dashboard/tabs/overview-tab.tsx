@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -75,7 +76,7 @@ export function OverviewContent({ page, tab }: { page?: AppPage, tab?: AppTab })
           </Card>
         ))}
       </div>
-      <div>
+      <div className="overflow-y-auto hide-scrollbar">
         <h2 className="text-2xl mb-4">Recent Tasks</h2>
         {loading ? (
             <Card><CardHeader className="h-64"><Skeleton className="h-full w-full" /></CardHeader></Card>
