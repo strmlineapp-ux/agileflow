@@ -326,64 +326,66 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
     }
     
     const renderStandardView = () => (
-        <div className="overflow-auto flex-1 h-full" ref={timelineScrollerRef}>
-            <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}} className="flex flex-col flex-1 h-full">
-                <TimelineCardHeader className="p-0 border-b sticky top-0 bg-muted z-20 flex flex-row">
-                    <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-normal text-sm sticky left-0 bg-muted z-30 text-foreground">Location</div>
-                    {hours.map(hour => (
-                        <div key={hour} className="shrink-0 text-left p-2 border-r-2" style={{ width: `${hourWidth}px` }}>
-                            <span className="text-xs text-foreground">{format(addHours(startOfDay(date), hour), timeFormatTimeline)}</span>
-                        </div>
-                    ))}
-                </TimelineCardHeader>
-                {allLocations.length === 0 && dayEvents.length === 0 ? (
-                     <div className="flex items-center justify-center h-40 text-foreground flex-1">
-                        No events scheduled for this day.
-                    </div>
-                ) : (
-                    <TimelineCardContent className="p-0 relative flex-1">
-                        <div
-                            className="absolute inset-y-0 lunch-break-pattern z-0 pointer-events-none"
-                            style={{
-                                left: `${LOCATION_LABEL_WIDTH_PX + 12 * hourWidth}px`,
-                                width: `${2.5 * hourWidth}px`
-                            }}
-                            title="Lunch Break"
-                        />
-                        
-                        {allLocations.map((location, index) => (
-                           <DayViewLocationRow
-                                key={location}
-                                location={location}
-                                isLast={index === allLocations.length - 1}
-                                index={index}
-                                hourWidth={hourWidth}
-                                groupedEvents={groupedEvents}
-                                collapsedLocations={collapsedLocations}
-                                calendarColorMap={calendarColorMap}
-                                timeFormatEvent={timeFormatEvent}
-                                toggleLocationCollapse={toggleLocationCollapse}
-                                handleEasyBookingClick={handleEasyBookingClick}
-                                day={date}
-                                onEventClick={onEventClick}
-                                users={users}
-                                allBadges={allBadges}
-                           />
-                        ))}
-                        
-                        {isViewingToday && now && (
-                            <div 
-                                ref={nowMarkerRef}
-                                className="absolute top-0 bottom-0 z-20 pointer-events-none"
-                                style={{ left: `${LOCATION_LABEL_WIDTH_PX + calculateCurrentTimePosition()}px` }}
-                            >
-                                <div className="w-px h-full bg-primary"></div>
+        <TimelineCard>
+            <div className="overflow-auto flex-1 h-full" ref={timelineScrollerRef}>
+                <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}} className="flex flex-col flex-1 h-full">
+                    <TimelineCardHeader className="p-0 border-b sticky top-0 bg-muted z-20 flex flex-row">
+                        <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-normal text-sm sticky left-0 bg-muted z-30 text-foreground">Location</div>
+                        {hours.map(hour => (
+                            <div key={hour} className="shrink-0 text-left p-2 border-r-2" style={{ width: `${hourWidth}px` }}>
+                                <span className="text-xs text-foreground">{format(addHours(startOfDay(date), hour), timeFormatTimeline)}</span>
                             </div>
-                        )}
-                    </TimelineCardContent>
-                )}
+                        ))}
+                    </TimelineCardHeader>
+                    {allLocations.length === 0 && dayEvents.length === 0 ? (
+                         <div className="flex items-center justify-center h-40 text-foreground flex-1">
+                            No events scheduled for this day.
+                        </div>
+                    ) : (
+                        <TimelineCardContent className="p-0 relative flex-1">
+                            <div
+                                className="absolute inset-y-0 lunch-break-pattern z-0 pointer-events-none"
+                                style={{
+                                    left: `${LOCATION_LABEL_WIDTH_PX + 12 * hourWidth}px`,
+                                    width: `${2.5 * hourWidth}px`
+                                }}
+                                title="Lunch Break"
+                            />
+                            
+                            {allLocations.map((location, index) => (
+                               <DayViewLocationRow
+                                    key={location}
+                                    location={location}
+                                    isLast={index === allLocations.length - 1}
+                                    index={index}
+                                    hourWidth={hourWidth}
+                                    groupedEvents={groupedEvents}
+                                    collapsedLocations={collapsedLocations}
+                                    calendarColorMap={calendarColorMap}
+                                    timeFormatEvent={timeFormatEvent}
+                                    toggleLocationCollapse={toggleLocationCollapse}
+                                    handleEasyBookingClick={handleEasyBookingClick}
+                                    day={date}
+                                    onEventClick={onEventClick}
+                                    users={users}
+                                    allBadges={allBadges}
+                               />
+                            ))}
+                            
+                            {isViewingToday && now && (
+                                <div 
+                                    ref={nowMarkerRef}
+                                    className="absolute top-0 bottom-0 z-20 pointer-events-none"
+                                    style={{ left: `${LOCATION_LABEL_WIDTH_PX + calculateCurrentTimePosition()}px` }}
+                                >
+                                    <div className="w-px h-full bg-primary"></div>
+                                </div>
+                            )}
+                        </TimelineCardContent>
+                    )}
+                </div>
             </div>
-        </div>
+        </TimelineCard>
     );
     
     const renderReversedView = () => (
@@ -501,3 +503,5 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
     return axisView === 'reversed' ? renderReversedView() : renderStandardView();
 });
 DayView.displayName = 'DayView';
+
+    
