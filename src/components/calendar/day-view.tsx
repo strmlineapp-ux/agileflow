@@ -65,7 +65,7 @@ const DayViewLocationRow = React.memo(({
     return (
         <div className={cn("flex", { "border-b": !isLast }, { "bg-muted/10": index % 2 !== 0 })}>
             <div 
-                className="w-[160px] shrink-0 p-2 border-r flex items-start justify-start bg-muted sticky left-0 z-30 gap-1 cursor-pointer"
+                className="w-[160px] shrink-0 p-2 border-r flex items-start justify-start bg-card sticky left-0 z-30 gap-1 cursor-pointer"
                 onClick={() => toggleLocationCollapse(location)}
             >
                 <GoogleSymbol name={isCollapsed ? "chevron_right" : "expand_more"} className="text-lg mt-1 text-foreground" weight={100} />
@@ -329,8 +329,8 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
         <TimelineCard>
             <div className="overflow-auto flex-1 h-full" ref={timelineScrollerRef}>
                 <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}} className="flex flex-col flex-1 h-full">
-                    <TimelineCardHeader className="p-0 border-b sticky top-0 bg-muted z-20 flex flex-row">
-                        <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-normal text-sm sticky left-0 bg-muted z-30 text-foreground">Location</div>
+                    <TimelineCardHeader className="p-0 border-b sticky top-0 bg-card z-20 flex flex-row">
+                        <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-normal text-sm sticky left-0 bg-card z-30 text-foreground">Location</div>
                         {hours.map(hour => (
                             <div key={hour} className="shrink-0 text-left p-2 border-r-2" style={{ width: `${hourWidth}px` }}>
                                 <span className="text-xs text-foreground">{format(addHours(startOfDay(date), hour), timeFormatTimeline)}</span>
@@ -393,9 +393,9 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
             <TimelineCardContent className="overflow-y-auto" ref={timelineScrollerRef}>
                 <div className="relative grid grid-cols-[auto,1fr]">
                     {/* Time Ruler */}
-                    <div className="w-20 bg-muted sticky top-0 z-20">
+                    <div className="w-20 bg-card sticky top-0 z-20">
                         {hours.map(hour => (
-                            <div key={hour} className="relative text-right pr-2 border-b-2" style={{ height: `${hourHeight}px` }}>
+                            <div key={hour} className="relative text-right pr-2 border-b-2 bg-card" style={{ height: `${hourHeight}px` }}>
                                 <span className="text-xs text-foreground relative -top-2">{format(addHours(startOfDay(date), hour), viewAsUser.timeFormat === '24h' ? 'HH:00' : 'h a')}</span>
                             </div>
                         ))}
@@ -503,5 +503,3 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
     return axisView === 'reversed' ? renderReversedView() : renderStandardView();
 });
 DayView.displayName = 'DayView';
-
-    
