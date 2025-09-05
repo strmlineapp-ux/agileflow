@@ -221,7 +221,7 @@ const ProductionScheduleLocationRow = React.memo(({
          <Popover>
             <PopoverTrigger asChild>
                 <Button variant="default" size={assignedUser ? "sm" : "icon"} className={cn("h-6 text-xs", assignedUser ? "w-auto px-1.5" : "w-6 ml-1")}>
-                    {assignedUser ? `${''\'\''}assignedUser.displayName.split(' ')[0]{\'''\'\`} ${''\'\''}assignedUser.displayName.split(' ').length > 1 ? `${''\'\''}assignedUser.displayName.split(' ')[1].charAt(0){\'''\'\`}.` : ''{\'''\'\`` : <GoogleSymbol name="person_add" weight={100} />}
+                    {assignedUser ? `${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}` : <GoogleSymbol name="person_add" weight={100} />}
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="w-56 p-0">
@@ -246,13 +246,13 @@ const ProductionScheduleLocationRow = React.memo(({
                     {isLocationCollapsed ? <GoogleSymbol name="chevron_right" className="mt-1" weight={100} /> : <GoogleSymbol name="expand_more" className="mt-1" weight={100} />}
                     <p className="font-normal text-sm" title={alias ? location : undefined}>{alias || location}</p>
                 </div>
-                 {canManageThisLocation ? assignmentControl : assignedUser && <div className="h-6 text-xs px-1.5 flex items-center justify-center text-muted-foreground">{`${''\'\''}assignedUser.displayName.split(' ')[0]{\'''\'\`} ${''\'\''}assignedUser.displayName.split(' ').length > 1 ? `${''\'\''}assignedUser.displayName.split(' ')[1].charAt(0){\'''\'\`}.` : ''{\'''\'\``}</div>}
+                 {canManageThisLocation ? assignmentControl : assignedUser && <div className="h-6 text-xs px-1.5 flex items-center justify-center text-muted-foreground">{`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`}</div>}
             </div>
             <div 
                 className={cn("relative flex-1", isLocationCollapsed ? "h-10" : "min-h-[5rem] py-1")}
                 onClick={(e) => handleEasyBookingClick(e, day, location)}
             >
-                {Array.from({ length: 23 }).map((_, hour) => <div key={`line-${location}-${hour}`} className="absolute top-0 bottom-0 border-r-2" style={{ left: `${''\'\''}(hour + 1) * hourWidth{\'''\'\`}px` }}></div>)}
+                {Array.from({ length: 23 }).map((_, hour) => <div key={`line-${location}-${hour}`} className="absolute top-0 bottom-0 border-r-2" style={{ left: `${(hour + 1) * hourWidth}px` }}></div>)}
                 {!isLocationCollapsed && eventsInRow.map(event => {
                     const { left, width } = getEventPosition(event);
                     const colors = calendarColorMap[event.calendarId];
@@ -263,7 +263,7 @@ const ProductionScheduleLocationRow = React.memo(({
                             data-event-id={event.eventId}
                             onClick={(e) => { e.stopPropagation(); onEventClick(event); }}
                             className={cn("absolute top-1 p-2 rounded-lg shadow-md cursor-pointer flex flex-col overflow-hidden h-[calc(100%-0.5rem)]")} 
-                            style={{ left: `${''\'\''}left + 2{\'''\'\`}px`, width: `${''\'\''}width{\'''\'\`}px`, backgroundColor: colors?.bg, color: textColor }}
+                            style={{ left: `${left + 2}px`, width: `${width}px`, backgroundColor: colors?.bg, color: textColor }}
                         >
                             <div className="flex items-center gap-2 flex-wrap mb-1.5">
                                 <PriorityBadge priorityId={event.priority} />
@@ -586,7 +586,7 @@ export const ProductionScheduleView = React.memo(({ date, events, containerRef, 
                                     const pillContent = (
                                         <>
                                             {locationAliasMap[location] || location}
-                                            {assignedUser && <span className="ml-2 font-normal text-muted-foreground">({`${''\'\''}assignedUser.displayName.split(' ')[0]{\'''\'\`} ${''\'\''}assignedUser.displayName.split(' ').length > 1 ? `${''\'\''}assignedUser.displayName.split(' ')[1].charAt(0){\'''\'\`}.` : ''{\'''\'\``})</span>}
+                                            {assignedUser && <span className="ml-2 font-normal text-muted-foreground">({`${assignedUser.displayName.split(' ')[0]} ${assignedUser.displayName.split(' ').length > 1 ? `${assignedUser.displayName.split(' ')[1].charAt(0)}.` : ''}`})</span>}
                                             {!assignedUser && canManageThisCheckLocation && <GoogleSymbol name="person_add" weight={100} className="ml-2" />}
                                         </>
                                     );
@@ -684,13 +684,13 @@ export const ProductionScheduleView = React.memo(({ date, events, containerRef, 
                         </CardHeader>
                         {!isDayCollapsed && (
                             <div className="overflow-x-auto hide-scrollbar" ref={el => timelineScrollerRefs.current.set(dayIso, el)}>
-                                <div style={{ width: `${''\'\''}LOCATION_LABEL_WIDTH_PX + (24 * hourWidth){\'''\'\`}px`}}>
+                                <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}}>
                                     <CardHeader className="p-0 sticky top-0 bg-card z-20 flex flex-row">
                                         <div className="w-[160px] shrink-0 border-r-2 p-2 flex items-center font-normal text-sm sticky left-0 bg-card z-30">Location</div>
-                                        {hours.map(hour => <div key={hour} className="shrink-0 text-left p-2 border-r-2" style={{ width: `${''\'\''}hourWidth{\'''\'\`}px`}}><span className="text-xs text-muted-foreground">{format(addHours(startOfDay(day), hour), timeFormatTimeline)}</span></div>)}
+                                        {hours.map(hour => <div key={hour} className="shrink-0 text-left p-2 border-r-2" style={{ width: `${hourWidth}px`}}><span className="text-xs text-muted-foreground">{format(addHours(startOfDay(day), hour), timeFormatTimeline)}</span></div>)}
                                     </CardHeader>
                                     <CardContent className="p-0 relative">
-                                        <div className="absolute inset-y-0 lunch-break-pattern z-0 pointer-events-none" style={{ left: `${''\'\''}LOCATION_LABEL_WIDTH_PX + 12 * hourWidth{\'''\'\`}px`, width: `${''\'\''}2.5 * hourWidth{\'''\'\`}px` }} title="Lunch Break" />
+                                        <div className="absolute inset-y-0 lunch-break-pattern z-0 pointer-events-none" style={{ left: `${LOCATION_LABEL_WIDTH_PX + 12 * hourWidth}px`, width: `${2.5 * hourWidth}px` }} title="Lunch Break" />
                                         {(gridLocations || []).map((location, index) => (
                                             <ProductionScheduleLocationRow
                                                 key={location}
@@ -714,7 +714,7 @@ export const ProductionScheduleView = React.memo(({ date, events, containerRef, 
                                                 allBadges={allBadges}
                                             />
                                         ))}
-                                        {isDayToday && now && <div ref={el => nowMarkerRefs.current.set(dayIso, el)} className="absolute top-0 bottom-0 z-20 pointer-events-none" style={{ left: `${''\'\''}LOCATION_LABEL_WIDTH_PX + calculateCurrentTimePosition(){\'''\'\`}px` }}><div className="relative w-px h-full bg-primary"></div></div>}
+                                        {isDayToday && now && <div ref={el => nowMarkerRefs.current.set(dayIso, el)} className="absolute top-0 bottom-0 z-20 pointer-events-none" style={{ left: `${LOCATION_LABEL_WIDTH_PX + calculateCurrentTimePosition()}px` }}><div className="relative w-px h-full bg-primary"></div></div>}
                                     </CardContent>
                                 </div>
                             </div>
