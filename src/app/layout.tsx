@@ -6,8 +6,7 @@ import './globals.css';
 import { UserProvider, useUser } from '@/context/user-context';
 import { Roboto } from 'next/font/google';
 import { ThemeProvider, useTheme } from 'next-themes';
-import React, { useState, useEffect } from 'react';
-import { GoogleSymbol } from "@/components/icons/google-symbol";
+import React, { useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 const roboto = Roboto({
@@ -16,19 +15,18 @@ const roboto = Roboto({
   variable: '--font-roboto',
 });
 
-// This new client component will manage all theme and dynamic style updates.
-// It doesn't render any DOM itself, it just handles the side effects.
+// This component now directly manages the theme and style effects.
 function AppThemeManager({ children }: { children: React.ReactNode }) {
     const { viewAsUser } = useUser();
     const { setTheme, theme } = useTheme();
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (viewAsUser?.theme) {
             setTheme(viewAsUser.theme);
         }
     }, [viewAsUser?.theme, setTheme]);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (viewAsUser) {
             const root = document.documentElement;
             
@@ -92,28 +90,7 @@ function AppThemeManager({ children }: { children: React.ReactNode }) {
         }
     }, [viewAsUser, theme]);
     
-    // This component just manages effects, it doesn't render a DOM wrapper.
     return <>{children}</>;
-}
-
-
-// Wrapper to prevent server-side rendering of components that need the window object
-function ClientOnly({ children }: { children: React.ReactNode }) {
-  const [hasMounted, setHasMounted] = useState(false);
-
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
-
-  if (!hasMounted) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-background">
-        <GoogleSymbol name="progress_activity" className="h-16 w-16 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  return <>{children}</>;
 }
 
 
@@ -132,7 +109,7 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
         />
       </head>
-      <body className={`${roboto.variable} antialiased`}>
+      <body className={cn(roboto.variable, "antialiased")}>
         <ThemeProvider
             attribute="class"
             defaultTheme="system"
@@ -140,11 +117,9 @@ export default function RootLayout({
             disableTransitionOnChange
         >
           <UserProvider>
-            <ClientOnly>
-                <AppThemeManager>
-                  {children}
-                </AppThemeManager>
-            </ClientOnly>
+            <AppThemeManager>
+              {children}
+            </AppThemeManager>
             <Toaster />
           </UserProvider>
         </ThemeProvider>
