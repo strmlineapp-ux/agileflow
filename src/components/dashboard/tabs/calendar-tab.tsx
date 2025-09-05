@@ -294,7 +294,7 @@ export function CalendarPageContent() {
               </Tabs>
           </div>
         </div>
-        <div className="flex-1 min-h-0" ref={viewContainerRef}>
+        <div className={cn("flex-1 min-h-0", pageShouldScroll ? "overflow-y-auto" : "overflow-hidden flex flex-col")} ref={viewContainerRef}>
             {renderCurrentView()}
         </div>
       </div>
@@ -308,5 +308,3 @@ export function CalendarPageContent() {
     </>
   );
 }
-
-    
