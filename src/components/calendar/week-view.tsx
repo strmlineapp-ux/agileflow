@@ -182,7 +182,7 @@ export const WeekView = React.memo(({ date, events, containerRef, zoomLevel, onE
                         {/* Timeline */}
                         <div className="w-20 border-r-2 bg-card sticky left-0 z-20">
                             {hours.map((hour, index) => (
-                                <div key={hour} className={cn("relative text-right pr-2 border-b-2 bg-card", {"bg-card/10": index % 2 !== 0})} style={{ height: `${''\'\''}hourHeight{\'''\'\`}px` }}>
+                                <div key={hour} className={cn("relative text-right pr-2 border-b-2 bg-card", {"bg-card/10": index % 2 !== 0})} style={{ height: `${hourHeight}px` }}>
                                     <span className="text-xs text-foreground relative -top-2">{format(addHours(startOfDay(date), hour), timeFormatTimeline)}</span>
                                 </div>
                             ))}
@@ -214,13 +214,13 @@ export const WeekView = React.memo(({ date, events, containerRef, zoomLevel, onE
                                         <div
                                             className="absolute inset-x-0 lunch-break-pattern z-0 pointer-events-none"
                                             style={{
-                                                top: `${''\'\''}12 * hourHeight{\'''\'\`}px`,
-                                                height: `${''\'\''}2.5 * hourHeight{\'''\'\`}px`
+                                                top: `${12 * hourHeight}px`,
+                                                height: `${2.5 * hourHeight}px`
                                             }}
                                             title="Lunch Break"
                                         />
                                         {hours.map(hour => (
-                                            <div key={hour} className="border-b-2" style={{ height: `${''\'\''}hourHeight{\'''\'\`}px` }}></div>
+                                            <div key={hour} className="border-b-2" style={{ height: `${hourHeight}px` }}></div>
                                         ))}
                                         <div className="absolute inset-0 z-10">
                                             {timedEvents.map(event => {
@@ -234,7 +234,7 @@ export const WeekView = React.memo(({ date, events, containerRef, zoomLevel, onE
                                                         className={cn(
                                                             "absolute left-1 right-1 p-1 rounded-md cursor-pointer flex flex-col overflow-hidden"
                                                         )}
-                                                        style={{ top: `${''\'\''}top{\'''\'\`}px`, height: `${''\'\''}height{\'''\'\`}px`, backgroundColor: colors?.bg, color: getContrastColor(colors?.bg || '#000000') }}
+                                                        style={{ top: `${top}px`, height: `${height}px`, backgroundColor: colors?.bg, color: getContrastColor(colors?.bg || '#000000') }}
                                                     >
                                                         <div className="flex items-center gap-2 flex-wrap mb-1">
                                                             <PriorityBadge priorityId={event.priority} />
@@ -288,7 +288,7 @@ export const WeekView = React.memo(({ date, events, containerRef, zoomLevel, onE
                                                 <div 
                                                     ref={nowMarkerRef}
                                                     className="absolute w-full z-10 pointer-events-none"
-                                                    style={{ top: `${''\'\''}calculateCurrentTimePosition(){\'''\'\`}px` }}
+                                                    style={{ top: `${calculateCurrentTimePosition()}px` }}
                                                 >
                                                     <div className="relative h-px bg-primary"></div>
                                                 </div>
