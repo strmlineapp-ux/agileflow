@@ -60,7 +60,7 @@ const DayViewLocationRow = React.memo(({
         const left = (startHour + startMinute / 60) * hourWidth;
         const width = Math.max(((endHour + endMinute / 60) - (startHour + startMinute / 60)) * hourWidth - 4, 20);
         return { left, width };
-    }
+    };
 
     return (
         <div className={cn("flex", { "border-b": !isLast }, { "bg-muted/10": index % 2 !== 0 })}>
@@ -73,7 +73,7 @@ const DayViewLocationRow = React.memo(({
             </div>
             <div className={cn("relative flex-1", isCollapsed ? "h-10" : "min-h-[5rem] py-1")} onClick={(e) => handleEasyBookingClick(e, 'standard', day, location)}>
                 {Array.from({ length: 23 }).map((_, hour) => (
-                    <div key={`line-${hour}`} className="absolute top-0 bottom-0 border-r-2" style={{ left: `${''\'\''}(hour + 1) * hourWidth{\'''\'\`}px` }}></div>
+                    <div key={`line-${hour}`} className="absolute top-0 bottom-0 border-r-2" style={{ left: `${(hour + 1) * hourWidth}px` }}></div>
                 ))}
                 {!isCollapsed && eventsInRow.map(event => {
                     const { left, width } = getEventPositionStandard(event);
@@ -85,7 +85,7 @@ const DayViewLocationRow = React.memo(({
                             data-event-id={event.eventId}
                             onClick={(e) => { e.stopPropagation(); onEventClick(event); }}
                             className="absolute top-1 p-2 rounded-lg cursor-pointer flex flex-col overflow-hidden h-[calc(100%-0.5rem)]"
-                            style={{ left: `${''\'\''}left + 2{\'''\'\`}px`, width: `${''\'\''}width{\'''\'\`}px`, backgroundColor: colors?.bg, color: textColor }}
+                            style={{ left: `${left + 2}px`, width: `${width}px`, backgroundColor: colors?.bg, color: textColor }}
                         >
                              <div className="flex items-center gap-2 flex-wrap mb-1.5">
                                 <PriorityBadge priorityId={event.priority} />
@@ -328,11 +328,11 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
     const renderStandardView = () => (
         <TimelineCard>
             <div className="overflow-auto flex-1 h-full hide-scrollbar" ref={timelineScrollerRef}>
-                <div style={{ width: `${''\'\''}LOCATION_LABEL_WIDTH_PX + (24 * hourWidth){\'''\'\`}px`}} className="flex flex-col flex-1 h-full">
+                <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}} className="flex flex-col flex-1 h-full">
                     <TimelineCardHeader className="p-0 border-b sticky top-0 bg-card z-20 flex flex-row">
                         <div className="w-[160px] shrink-0 border-r p-2 flex items-center font-normal text-sm sticky left-0 bg-card z-30 text-foreground">Location</div>
                         {hours.map(hour => (
-                            <div key={hour} className="shrink-0 text-left p-2 border-r-2" style={{ width: `${''\'\''}hourWidth{\'''\'\`}px` }}>
+                            <div key={hour} className="shrink-0 text-left p-2 border-r-2" style={{ width: `${hourWidth}px` }}>
                                 <span className="text-xs text-foreground">{format(addHours(startOfDay(date), hour), timeFormatTimeline)}</span>
                             </div>
                         ))}
@@ -346,8 +346,8 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
                             <div
                                 className="absolute inset-y-0 lunch-break-pattern z-0 pointer-events-none"
                                 style={{
-                                    left: `${''\'\''}LOCATION_LABEL_WIDTH_PX + 12 * hourWidth{\'''\'\`}px`,
-                                    width: `${''\'\''}2.5 * hourWidth{\'''\'\`}px`
+                                    left: `${LOCATION_LABEL_WIDTH_PX + 12 * hourWidth}px`,
+                                    width: `${2.5 * hourWidth}px`
                                 }}
                                 title="Lunch Break"
                             />
@@ -376,7 +376,7 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
                                 <div 
                                     ref={nowMarkerRef}
                                     className="absolute top-0 bottom-0 z-20 pointer-events-none"
-                                    style={{ left: `${''\'\''}LOCATION_LABEL_WIDTH_PX + calculateCurrentTimePosition(){\'''\'\`}px` }}
+                                    style={{ left: `${LOCATION_LABEL_WIDTH_PX + calculateCurrentTimePosition()}px` }}
                                 >
                                     <div className="w-px h-full bg-primary"></div>
                                 </div>
@@ -390,12 +390,12 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
     
     const renderReversedView = () => (
         <TimelineCard>
-            <TimelineCardContent className="overflow-y-auto" ref={timelineScrollerRef}>
+            <TimelineCardContent className="overflow-y-auto hide-scrollbar" ref={timelineScrollerRef}>
                 <div className="relative grid grid-cols-[auto,1fr]">
                     {/* Time Ruler */}
                     <div className="w-20 bg-card sticky top-0 z-20">
                         {hours.map(hour => (
-                            <div key={hour} className="relative text-right pr-2 border-b-2 bg-card" style={{ height: `${''\'\''}hourHeight{\'''\'\`}px` }}>
+                            <div key={hour} className="relative text-right pr-2 border-b-2 bg-card" style={{ height: `${hourHeight}px` }}>
                                 <span className="text-xs text-foreground relative -top-2">{format(addHours(startOfDay(date), hour), viewAsUser.timeFormat === '24h' ? 'HH:00' : 'h a')}</span>
                             </div>
                         ))}
@@ -406,13 +406,13 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
                         <div
                             className="absolute inset-x-0 lunch-break-pattern z-0 pointer-events-none"
                             style={{
-                                top: `${''\'\''}12 * hourHeight{\'''\'\`}px`,
-                                height: `${''\'\''}2.5 * hourHeight{\'''\'\`}px`
+                                top: `${12 * hourHeight}px`,
+                                height: `${2.5 * hourHeight}px`
                             }}
                             title="Lunch Break"
                         />
                         {hours.map(hour => (
-                            <div key={hour} className="border-b-2" style={{ height: `${''\'\''}hourHeight{\'''\'\`}px` }}></div>
+                            <div key={hour} className="border-b-2" style={{ height: `${hourHeight}px` }}></div>
                         ))}
 
                         {dayEvents.length === 0 ? (
@@ -433,7 +433,7 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
                                             className={cn(
                                                 "absolute left-1 right-1 p-1 rounded-md cursor-pointer flex flex-col overflow-hidden"
                                             )}
-                                            style={{ top: `${''\'\''}top{\'''\'\`}px`, height: `${''\'\''}height{\'''\'\`}px`, backgroundColor: colors?.bg, color: textColor }}
+                                            style={{ top: `${top}px`, height: `${height}px`, backgroundColor: colors?.bg, color: textColor }}
                                         >
                                             <div className="flex items-center gap-2 flex-wrap mb-1">
                                                 <PriorityBadge priorityId={event.priority} />
@@ -487,7 +487,7 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
                                     <div 
                                         ref={nowMarkerRef}
                                         className="absolute w-full z-10 pointer-events-none"
-                                        style={{ top: `${''\'\''}calculateCurrentTimePosition(){\'''\'\`}px` }}
+                                        style={{ top: `${calculateCurrentTimePosition()}px` }}
                                     >
                                         <div className="relative h-px bg-primary"></div>
                                     </div>
