@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef, useCallback, useLayoutEffect } from 'react';
@@ -241,7 +242,7 @@ const ProductionScheduleLocationRow = React.memo(({
 
     return (
         <div className={cn("flex", { "border-b": !isLast }, {"bg-muted/10": index % 2 !== 0})}>
-            <div className="w-[160px] shrink-0 p-2 border-r flex items-start justify-between bg-muted sticky left-0 z-30">
+            <div className="w-[160px] shrink-0 p-2 border-r flex items-start justify-between bg-card sticky left-0 z-30">
                 <div className="flex items-start gap-1 cursor-pointer flex-1 min-w-0" onClick={() => toggleLocationCollapse(dayIso, location)}>
                     {isLocationCollapsed ? <GoogleSymbol name="chevron_right" className="mt-1" weight={100} /> : <GoogleSymbol name="expand_more" className="mt-1" weight={100} />}
                     <p className="font-normal text-sm" title={alias ? location : undefined}>{alias || location}</p>
@@ -573,7 +574,7 @@ export const ProductionScheduleView = React.memo(({ date, events, containerRef, 
 
                 return (
                     <Card key={dayIso} ref={el => dayCardRefs.current.set(dayIso, el)}>
-                        <CardHeader className="p-2 bg-muted/50 flex flex-row items-center justify-between gap-4">
+                        <CardHeader className="p-2 bg-card/50 flex flex-row items-center justify-between gap-4">
                             <div className="flex items-center gap-2">
                                 {allChecksToRender.map(location => {
                                     const assignedUserId = dailyCheckAssignments[dayIso]?.[location];
@@ -685,8 +686,8 @@ export const ProductionScheduleView = React.memo(({ date, events, containerRef, 
                         {!isDayCollapsed && (
                             <div className="overflow-x-auto" ref={el => timelineScrollerRefs.current.set(dayIso, el)}>
                                 <div style={{ width: `${LOCATION_LABEL_WIDTH_PX + (24 * hourWidth)}px`}}>
-                                    <CardHeader className="p-0 sticky top-0 bg-muted z-20 flex flex-row">
-                                        <div className="w-[160px] shrink-0 border-r-2 p-2 flex items-center font-normal text-sm sticky left-0 bg-muted z-30">Location</div>
+                                    <CardHeader className="p-0 sticky top-0 bg-card z-20 flex flex-row">
+                                        <div className="w-[160px] shrink-0 border-r-2 p-2 flex items-center font-normal text-sm sticky left-0 bg-card z-30">Location</div>
                                         {hours.map(hour => <div key={hour} className="shrink-0 text-left p-2 border-r-2" style={{ width: `${hourWidth}px`}}><span className="text-xs text-muted-foreground">{format(addHours(startOfDay(day), hour), timeFormatTimeline)}</span></div>)}
                                     </CardHeader>
                                     <CardContent className="p-0 relative">

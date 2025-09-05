@@ -145,7 +145,7 @@ export const WeekView = React.memo(({ date, events, containerRef, zoomLevel, onE
 
     return (
         <TimelineCard>
-            <TimelineCardHeader className="p-0 border-b sticky top-0 bg-muted z-10">
+            <TimelineCardHeader className="p-0 border-b sticky top-0 bg-card z-10">
                 <div className={cn("grid", gridColsClass)}>
                     <div className="w-20"></div> {/* Timeline spacer */}
                     {displayedDays.map((day, index) => {
@@ -180,9 +180,9 @@ export const WeekView = React.memo(({ date, events, containerRef, zoomLevel, onE
                 <div className="relative">
                     <div className={cn("grid min-h-full", gridColsClass)}>
                         {/* Timeline */}
-                        <div className="w-20 border-r-2 bg-muted sticky left-0 z-20">
+                        <div className="w-20 border-r-2 bg-card sticky left-0 z-20">
                             {hours.map((hour, index) => (
-                                <div key={hour} className={cn("relative text-right pr-2 border-b-2 bg-muted", {"bg-muted/10": index % 2 !== 0})} style={{ height: `${hourHeight}px` }}>
+                                <div key={hour} className={cn("relative text-right pr-2 border-b-2 bg-card", {"bg-card/10": index % 2 !== 0})} style={{ height: `${hourHeight}px` }}>
                                     <span className="text-xs text-foreground relative -top-2">{format(addHours(startOfDay(date), hour), timeFormatTimeline)}</span>
                                 </div>
                             ))}
