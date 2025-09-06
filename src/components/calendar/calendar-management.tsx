@@ -146,19 +146,16 @@ export function CalendarManagement({ tab, page, isActive, isSharedPanelOpen, set
   const { viewAsUser, calendars, addCalendar, updateCalendar, deleteCalendar, updatePage, updateUser, reorderCalendars } = useUser();
   const { toast } = useToast();
   
-  const [expandedCalendars, setExpandedCalendars] = useState<Set<string>>(new Set());
-  
   const onToggleExpand = useCallback((calendarId: string) => {
-      setExpandedCalendars(prev => {
-          const newSet = new Set(prev);
-          if (newSet.has(calendarId)) {
-              newSet.delete(calendarId);
-          } else {
-              newSet.add(calendarId);
-          }
-          return newSet;
-      });
-  }, []);
+    if (!viewAsUser) return;
+      const currentExpanded = new Set(viewAsUser.expandedCardIds || []);
+      if (currentExpanded.has(calendarId)) {
+        currentExpanded.delete(calendarId);
+      } else {
+        currentExpanded.add(calendarId);
+      }
+      updateUser(viewAsUser.userId, { expandedCardIds: Array.from(currentExpanded) });
+  }, [viewAsUser, updateUser]);
 
   const title = page.displayTitle ?? tab.name;
   const canManagePage = viewAsUser.isAdmin;
@@ -212,19 +209,19 @@ export function CalendarManagement({ tab, page, isActive, isSharedPanelOpen, set
     return calendars.filter(c => c.isShared && c.owner?.id !== viewAsUser.userId && !displayedIds.has(c.id));
   }, [calendars, displayedCalendars, viewAsUser.userId]);
 
-  const renderCalendarCard = useCallback((calendar: SharedCalendar, isDragging: boolean) => (
+  const renderCalendarCard = useCallback((calendar: SharedCalendar) => (
       <SortableItem key={calendar.id} id={calendar.id} data={{ type: 'calendar-card', calendar, isSharedPreview: false }}>
         {(isDragging: boolean) => (
           <CalendarCard
             calendar={calendar}
             onUpdate={handleUpdate}
             onDelete={handleDelete}
-            isExpanded={expandedCalendars.has(calendar.id)}
+            isExpanded={viewAsUser.expandedCardIds?.includes(calendar.id) || false}
             onToggleExpand={() => onToggleExpand(calendar.id)}
           />
         )}
       </SortableItem>
-  ), [handleUpdate, handleDelete, expandedCalendars, onToggleExpand]);
+  ), [handleUpdate, handleDelete, viewAsUser.expandedCardIds, onToggleExpand]);
 
   const renderDragOverlay = useCallback((item: SharedCalendar) => (
       <GoogleSymbol name={item.icon} style={{color: item.color, fontSize: '48px'}} />
@@ -244,7 +241,7 @@ export function CalendarManagement({ tab, page, isActive, isSharedPanelOpen, set
         onDeleteItem={handleDelete}
         onReorderItems={reorderCalendars}
         onLinkItem={handleLinkCalendar}
-        renderItem={renderCalendarCard}
+        renderItem={(item, isDragging) => renderCalendarCard(item as SharedCalendar)}
         renderDragOverlay={renderDragOverlay}
         isActive={isActive ?? false}
         isSharedPanelOpen={isSharedPanelOpen}

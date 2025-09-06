@@ -21,16 +21,8 @@ import { useDroppable } from '@dnd-kit/core';
 import { InlineEditor } from '../common/inline-editor';
 import { PageTitle } from '../common/page-title';
 import { TeamSelection } from '../common/team-selection';
+import { SortableUserList } from '../common/sortable-user-list';
 
-
-function DroppableUserList({ id, children, className }: { id: string, children: React.ReactNode, className?: string }) {
-    const { setNodeRef, isOver } = useDroppable({ id, data: { type: 'user-list-container', id } });
-    return (
-        <div ref={setNodeRef} className={cn(className, "transition-colors rounded-md", isOver && "ring-1 ring-border ring-inset")}>
-            {children}
-        </div>
-    )
-}
 
 function SortableTeamMember({ member, team, onSetAdmin, onRemoveUser }: { member: User, team: Team, onSetAdmin: () => void, onRemoveUser: () => void }) {
   const { viewAsUser } = useUser();
@@ -66,7 +58,7 @@ function SortableTeamMember({ member, team, onSetAdmin, onRemoveUser }: { member
   };
 
   return (
-    <div ref={combinedRef} style={style} className={cn("relative rounded-md", isDragging && "shadow-xl")}>
+    <div ref={combinedRef} style={style} className={cn("relative rounded-md shadow-md", isDragging && "shadow-xl")}>
       <div {...attributes} {...listeners} className="relative group">
         <TeamMemberCard member={member} team={team} onSetAdmin={onSetAdmin} isOver={isOver} />
         {canManage && (
@@ -228,13 +220,11 @@ function TeamMemberContent({ team }: { team: Team }) {
                             className="text-xl"
                             disabled={!canManage}
                         />
-                        <DroppableUserList id="admins" className="space-y-4">
-                            <SortableContext items={adminIds} strategy={verticalListSortingStrategy}>
-                                {admins.map((member) => (
-                                    <SortableTeamMember key={member.userId} member={member} team={team} onSetAdmin={() => handleSetAdmin(team.id, member.userId)} onRemoveUser={() => handleRemoveUser(member.userId)} />
-                                ))}
-                            </SortableContext>
-                        </DroppableUserList>
+                        <SortableUserList id="admins" items={adminIds} className="space-y-4">
+                            {admins.map((member) => (
+                                <SortableTeamMember key={member.userId} member={member} team={team} onSetAdmin={() => handleSetAdmin(team.id, member.userId)} onRemoveUser={() => handleRemoveUser(member.userId)} />
+                            ))}
+                        </SortableUserList>
                     </div>
                 )}
 
@@ -246,17 +236,15 @@ function TeamMemberContent({ team }: { team: Team }) {
                             className="text-xl"
                             disabled={!canManage}
                         />
-                        <DroppableUserList id="members">
-                            <SortableContext items={memberIds} strategy={verticalListSortingStrategy}>
-                                <div className="flex flex-wrap -m-3">
-                                {members.map((member) => (
-                                    <div key={member.userId} className="p-3 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0">
-                                        <SortableTeamMember member={member} team={team} onSetAdmin={() => handleSetAdmin(team.id, member.userId)} onRemoveUser={() => handleRemoveUser(member.userId)} />
-                                    </div>
-                                ))}
+                        <SortableUserList id="members">
+                            <div className="flex flex-wrap -m-3">
+                            {members.map((member) => (
+                                <div key={member.userId} className="p-3 basis-full md:basis-1/2 flex-grow-0 flex-shrink-0">
+                                    <SortableTeamMember member={member} team={team} onSetAdmin={() => handleSetAdmin(team.id, member.userId)} onRemoveUser={() => handleRemoveUser(member.userId)} />
                                 </div>
-                            </SortableContext>
-                        </DroppableUserList>
+                            ))}
+                            </div>
+                        </SortableUserList>
                     </div>
                 )}
             </div>

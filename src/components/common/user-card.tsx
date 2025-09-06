@@ -21,7 +21,7 @@ interface UserCardProps {
 export function UserCard({ user, isDeletable, onDelete, className }: UserCardProps) {
 
     return (
-        <Card className={cn("group transition-colors", className)}>
+        <Card className={cn("group transition-colors shadow-md", className)}>
             <CardHeader className="p-2 flex-row items-center justify-between">
                 <div className="flex items-center gap-2">
                     <Avatar>
