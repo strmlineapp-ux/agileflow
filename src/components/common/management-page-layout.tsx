@@ -43,9 +43,10 @@ interface ManagementPageLayoutProps<T extends TEntity> {
   onLinkItem: (itemId: string) => void;
 
   renderItem: (item: T, isDragging: boolean) => React.ReactNode;
+  renderDragOverlay: (item: T) => React.ReactNode;
   
   isActive: boolean; // For auto-focusing search
-  customDragEnd?: (event: DragEndEvent) => void; // Allow custom drag end logic
+  isDragging: boolean;
 }
 
 export function ManagementPageLayout<T extends TEntity>({
@@ -62,8 +63,9 @@ export function ManagementPageLayout<T extends TEntity>({
   onReorderItems,
   onLinkItem,
   renderItem,
+  renderDragOverlay,
   isActive,
-  customDragEnd,
+  isDragging,
 }: ManagementPageLayoutProps<T>) {
   const { viewAsUser } = useUser();
   const { toast } = useToast();
@@ -110,17 +112,13 @@ export function ManagementPageLayout<T extends TEntity>({
     return filtered;
   }, [allSharedItems, sharedSearchTerm, sharedColorFilter]);
   
-  const handleDragEnd = (event: DragEndEvent) => {
-    if (customDragEnd) {
-      customDragEnd(event);
-      return;
-    }
-
+  const onDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+
     if (!over) return;
     
     const activeItem = allItems.find(i => i.id === active.id) || allSharedItems.find(i => i.id === active.id);
-    if (!activeItem || !viewAsUser) return;
+    if (!activeItem) return;
 
     // Handle dropping on duplicate zone
     if (over.id === `duplicate-${entityType}-zone`) {
@@ -130,7 +128,7 @@ export function ManagementPageLayout<T extends TEntity>({
     
     // Handle dropping on shared panel
     if (over.id === `shared-${entityType}-panel`) {
-      if (activeItem.owner?.id === viewAsUser.userId) { // If owned, toggle share status
+      if (activeItem.owner?.id === viewAsUser?.userId) { // If owned, toggle share status
         onUpdateItem(activeItem.id, { isShared: !activeItem.isShared } as Partial<T>);
         toast({ title: activeItem.isShared ? `${entityType.charAt(0).toUpperCase() + entityType.slice(1)} Unshared` : `${entityType.charAt(0).toUpperCase() + entityType.slice(1)} Shared` });
       } else { // If linked, unlink it
@@ -177,7 +175,7 @@ export function ManagementPageLayout<T extends TEntity>({
               onReset={onPageTitleReset}
               disabled={!canManagePage}
             />
-            <DuplicateZone id={`duplicate-${entityType}-zone`} onAdd={() => onAddItem()} isDragging={false} />
+            <DuplicateZone id={`duplicate-${entityType}-zone`} onAdd={() => onAddItem()} isDragging={isDragging} />
           </div>
           <div className="flex items-center gap-1">
             <CompactSearchInput
@@ -206,11 +204,11 @@ export function ManagementPageLayout<T extends TEntity>({
               id="collections-list"
               items={displayedItems}
               setItems={onReorderItems}
-              onDragEnd={handleDragEnd}
+              onDragEnd={onDragEnd}
               className={gridClassName}
               renderItem={renderItem}
           >
-            {(!displayedItems || displayedItems.length === 0) && <p className="text-center text-sm text-muted-foreground p-4">No {entityType}s to display.</p>}
+            {displayedItems.length === 0 && <p className="text-center text-sm text-muted-foreground p-4">No {entityType}s to display.</p>}
           </DraggableGrid>
         </div>
       </div>
@@ -229,7 +227,7 @@ export function ManagementPageLayout<T extends TEntity>({
             colorFilter={sharedColorFilter}
             onColorFilterChange={setSharedColorFilter}
             renderItem={renderItem}
-            onDrop={handleDragEnd}
+            onDrop={onDragEnd}
           />
       </div>
     </div>
