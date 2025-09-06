@@ -3,7 +3,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
@@ -128,28 +128,28 @@ export function CardTemplate({
     
     return (
         <>
-            <Card className="group relative bg-card flex flex-col h-full shadow-md" {...dragHandleProps}>
-                {!isPinned && canDelete && !isSharedPreview && (
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="default"
-                                size="sm"
-                                className="absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity z-10 p-0"
-                                onPointerDown={(e) => {
-                                    e.stopPropagation();
-                                    setIsDeleteDialogOpen(true);
-                                }}
-                            >
-                                <GoogleSymbol name="cancel" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent><p>{canManage ? `Delete ${entity.name}` : `Unlink ${entity.name}`}</p></TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-                )}
-                <CardHeader className="p-2">
+            <Card className="relative bg-card flex flex-col h-full shadow-md" {...dragHandleProps}>
+                <CardHeader className="group p-2">
+                    {!isPinned && canDelete && !isSharedPreview && (
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="default"
+                                        size="sm"
+                                        className="absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity z-10 p-0 bg-card"
+                                        onPointerDown={(e) => {
+                                            e.stopPropagation();
+                                            setIsDeleteDialogOpen(true);
+                                        }}
+                                    >
+                                        <GoogleSymbol name="cancel" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent><p>{canManage ? `Delete ${entity.name}` : `Unlink ${entity.name}`}</p></TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    )}
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                             <div className="relative">
@@ -189,7 +189,7 @@ export function CardTemplate({
                         </div>
                     </div>
                 </CardHeader>
-                {isExpanded && (
+                {isExpanded && body && (
                     <CardContent className="p-2 pt-0 flex-grow flex flex-col gap-2">
                         {body}
                     </CardContent>
