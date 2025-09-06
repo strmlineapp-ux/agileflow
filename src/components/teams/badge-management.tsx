@@ -543,6 +543,12 @@ export function BadgeManagement({ tab, page, isActive, isSharedPanelOpen, setIsS
         }
         updateUser(viewAsUser.userId, { expandedCardState: { ...currentState, [contextKey]: Array.from(currentExpanded) } });
     }, [viewAsUser, updateUser, contextKey]);
+    
+    const onCollapseAll = () => {
+        if (!viewAsUser) return;
+        const currentState = viewAsUser.expandedCardState || {};
+        updateUser(viewAsUser.userId, { expandedCardState: { ...currentState, [contextKey]: [] } });
+    };
 
     const handleUpdate = (collectionId: string, data: Partial<BadgeCollection>) => {
         updateBadgeCollection(collectionId, data);
@@ -634,6 +640,7 @@ export function BadgeManagement({ tab, page, isActive, isSharedPanelOpen, setIsS
             onDeleteItem={handleDelete}
             onReorderItems={reorderBadgeCollections}
             onLinkItem={handleLink}
+            onCollapseAll={onCollapseAll}
             renderItem={renderCollectionCard}
             renderDragOverlay={renderDragOverlay}
             isActive={isActive}

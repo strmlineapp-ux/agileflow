@@ -60,6 +60,12 @@ export function TeamManagement({ tab, page, isSingleTabPage = false, isActive = 
         }
         updateUser(viewAsUser.userId, { expandedCardState: { ...currentState, [contextKey]: Array.from(currentExpanded) } });
     }, [viewAsUser, updateUser, contextKey]);
+    
+    const onCollapseAll = () => {
+        if (!viewAsUser) return;
+        const currentState = viewAsUser.expandedCardState || {};
+        updateUser(viewAsUser.userId, { expandedCardState: { ...currentState, [contextKey]: [] } });
+    };
 
     const canManageTeam = useCallback((team: Team) => {
         if (!viewAsUser) return false;
@@ -195,6 +201,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false, isActive = 
             onDeleteItem={handleDelete}
             onReorderItems={reorderTeams}
             onLinkItem={handleLinkTeam}
+            onCollapseAll={onCollapseAll}
             renderItem={renderTeamCard}
             renderDragOverlay={renderDragOverlay}
             isActive={isActive}

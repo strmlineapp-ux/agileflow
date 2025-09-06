@@ -158,6 +158,12 @@ export function CalendarManagement({ tab, page, isActive, isSharedPanelOpen, set
       }
       updateUser(viewAsUser.userId, { expandedCardState: { ...currentState, [contextKey]: Array.from(currentExpanded) } });
   }, [viewAsUser, updateUser, contextKey]);
+  
+  const onCollapseAll = () => {
+    if (!viewAsUser) return;
+    const currentState = viewAsUser.expandedCardState || {};
+    updateUser(viewAsUser.userId, { expandedCardState: { ...currentState, [contextKey]: [] } });
+  };
 
   const title = page.displayTitle ?? tab.name;
   const canManagePage = viewAsUser.isAdmin;
@@ -245,6 +251,7 @@ export function CalendarManagement({ tab, page, isActive, isSharedPanelOpen, set
         onDeleteItem={handleDelete}
         onReorderItems={reorderCalendars}
         onLinkItem={handleLinkCalendar}
+        onCollapseAll={onCollapseAll}
         renderItem={(item, isDragging) => renderCalendarCard(item as SharedCalendar)}
         renderDragOverlay={renderDragOverlay}
         isActive={isActive ?? false}

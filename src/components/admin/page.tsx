@@ -617,10 +617,10 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
 export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelOpen, isDragging }: { isActive: boolean; isSharedPanelOpen?: boolean; setIsSharedPanelOpen?: (isOpen: boolean) => void; isDragging?: boolean; }) => {
     const { viewAsUser, appSettings, addPage, updatePage, deletePage, reorderPages, updateUser } = useUser();
     const { toast } = useToast();
+    const contextKey = 'pages-management';
 
     const onToggleExpand = useCallback((pageId: string) => {
         if (!viewAsUser) return;
-        const contextKey = 'pages-management';
         const currentState = viewAsUser.expandedCardState || {};
         const currentExpanded = new Set(currentState[contextKey] || []);
         if (currentExpanded.has(pageId)) {
@@ -629,7 +629,13 @@ export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelO
           currentExpanded.add(pageId);
         }
         updateUser(viewAsUser.userId, { expandedCardState: { ...currentState, [contextKey]: Array.from(currentExpanded) } });
-    }, [viewAsUser, updateUser]);
+    }, [viewAsUser, updateUser, contextKey]);
+    
+    const onCollapseAll = () => {
+        if (!viewAsUser) return;
+        const currentState = viewAsUser.expandedCardState || {};
+        updateUser(viewAsUser.userId, { expandedCardState: { ...currentState, [contextKey]: [] } });
+    };
     
     const handleUpdate = useCallback((pageId: string, data: Partial<AppPage>) => {
         updatePage(pageId, data);
@@ -690,7 +696,7 @@ export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelO
     }, [appSettings.pages, displayedPages, viewAsUser.userId]);
 
     const renderPageCard = useCallback((page: AppPage) => {
-        const expandedCardIds = viewAsUser?.expandedCardState?.['pages-management'] || [];
+        const expandedCardIds = viewAsUser?.expandedCardState?.[contextKey] || [];
       return (
       <SortableItem key={page.id} id={page.id} data={{ type: 'page-card', page, isSharedPreview: false }} disabled={page.isSystemPage}>
           {(isDragging: boolean) => (
@@ -703,7 +709,7 @@ export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelO
               />
           )}
       </SortableItem>
-    )}, [handleUpdate, handleDelete, viewAsUser, onToggleExpand]);
+    )}, [handleUpdate, handleDelete, viewAsUser, onToggleExpand, contextKey]);
 
     return (
         <div className="h-full flex flex-col">
@@ -719,6 +725,7 @@ export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelO
                 onDeleteItem={handleDelete}
                 onReorderItems={reorderPages}
                 onLinkItem={handleLinkPage}
+                onCollapseAll={onCollapseAll}
                 renderItem={(item, isDragging) => renderPageCard(item as AppPage)}
                 renderDragOverlay={(item) => <GoogleSymbol name={item.icon} style={{ color: item.color, fontSize: '48px' }} />}
                 isActive={isActive}
@@ -774,10 +781,10 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
     const { viewAsUser, appSettings, updateAppTab, reorderTabs, updateUser } = useUser();
     const [searchTerm, setSearchTerm] = useState('');
     const [colorFilter, setColorFilter] = useState<string | null>(null);
+    const contextKey = 'tabs-management';
 
     const onToggleExpand = useCallback((tabId: string) => {
         if (!viewAsUser) return;
-        const contextKey = 'tabs-management';
         const currentState = viewAsUser.expandedCardState || {};
         const currentExpanded = new Set(currentState[contextKey] || []);
         if (currentExpanded.has(tabId)) {
@@ -786,7 +793,13 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
           currentExpanded.add(tabId);
         }
         updateUser(viewAsUser.userId, { expandedCardState: { ...currentState, [contextKey]: Array.from(currentExpanded) } });
-    }, [viewAsUser, updateUser]);
+    }, [viewAsUser, updateUser, contextKey]);
+    
+    const onCollapseAll = () => {
+        if (!viewAsUser) return;
+        const currentState = viewAsUser.expandedCardState || {};
+        updateUser(viewAsUser.userId, { expandedCardState: { ...currentState, [contextKey]: [] } });
+    };
 
     const handleUpdateTab = useCallback((tabId: string, data: Partial<AppTab>) => {
         updateAppTab(tabId, data);
@@ -816,7 +829,7 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
     }, [appSettings.tabs, searchTerm, colorFilter]);
 
     const renderTabCard = useCallback((tab: AppTab, isDragging: boolean) => {
-        const expandedCardIds = viewAsUser?.expandedCardState?.['tabs-management'] || [];
+        const expandedCardIds = viewAsUser?.expandedCardState?.[contextKey] || [];
         return (
             <SortableItem key={tab.id} id={tab.id}>
              {(isDragging) => (
@@ -830,13 +843,23 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
              )}
             </SortableItem>
         )
-    }, [handleUpdateTab, viewAsUser, onToggleExpand]);
+    }, [handleUpdateTab, viewAsUser, onToggleExpand, contextKey]);
 
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <PageTitle title="Tabs" />
-                <div className="flex items-center">
+                <div className="flex items-center gap-1">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="default" size="icon" onClick={onCollapseAll}>
+                            <GoogleSymbol name="unfold_less" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>Collapse All</p></TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     <CompactSearchInput
                       searchTerm={searchTerm}
                       setSearchTerm={setSearchTerm}
