@@ -214,7 +214,7 @@ export default function DynamicPage() {
     };
     
     return (
-       <Tabs value={activeTabValue} onValueChange={setActiveTabValue} className="flex flex-col h-full min-h-0">
+       <Tabs value={activeTabValue} onValueChange={setActiveTabValue} className="flex flex-col h-full">
           <CenteredTabList>
             <SortableTabsList
                 items={pageTabs}
@@ -229,12 +229,12 @@ export default function DynamicPage() {
                 ))}
             </SortableTabsList>
           </CenteredTabList>
-         <div className="flex-1 pt-6 flex flex-col min-h-0 overflow-hidden">
+         <div className="flex-1 pt-6 overflow-hidden">
             {pageTabs.map(tab => (
                 <TabsContent 
                     key={tab.id} 
                     value={tab.id} 
-                    className="mt-0 flex-1 flex flex-col h-full"
+                    className="mt-0 h-full"
                 >
                   {renderTabContent(tab)}
                 </TabsContent>
