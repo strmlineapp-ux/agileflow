@@ -100,6 +100,16 @@
 
 
 @layer utilities {
+  /* Force hide all scrollbars */
+  *::-webkit-scrollbar {
+    display: none;
+  }
+
+  * {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
   .lunch-break-pattern {
     background-image: repeating-linear-gradient(
       -45deg,
@@ -108,15 +118,6 @@
       hsl(var(--foreground) / 0.06) 5px,
       hsl(var(--foreground) / 0.06) 10px
     );
-  }
-
-  .hide-scrollbar::-webkit-scrollbar {
-      display: none;
-  }
-
-  .hide-scrollbar {
-      -ms-overflow-style: none; /* IE and Edge */
-      scrollbar-width: none; /* Firefox */
   }
 
   .center-and-scroll {
