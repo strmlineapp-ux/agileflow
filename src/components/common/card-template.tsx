@@ -139,7 +139,7 @@ export function CardTemplate({
     
     const ownershipTrigger = (
       <div 
-        className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" 
+        className="absolute -top-0 -right-0.5 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" 
         style={{ backgroundColor: shareIconColor }}
       >
         <GoogleSymbol name={shareIcon!} style={{fontSize: '16px'}} />
