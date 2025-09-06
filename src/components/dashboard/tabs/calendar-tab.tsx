@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
@@ -14,7 +15,7 @@ import { canCreateAnyEvent } from '@/lib/permissions';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { EventForm } from '@/components/calendar/new-event-form';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
-import { type Event } from '@/types';
+import { type Event, type AppTab } from '@/types';
 import { EventDetailsDialog } from '@/components/calendar/event-details-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { CenteredTabList } from '@/components/common/centered-tab-list';
@@ -45,7 +46,7 @@ function CalendarLinkPrompt() {
   )
 }
 
-export function CalendarPageContent() {
+export function CalendarPageContent({ tab }: { tab: AppTab }) {
   const { viewAsUser, calendars, fetchEvents, addEvent, updateEvent, deleteEvent } = useUser();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>(viewAsUser.defaultCalendarView || 'day');
@@ -294,7 +295,7 @@ export function CalendarPageContent() {
               </Tabs>
           </div>
         </div>
-        <div className={cn("flex-1 min-h-0 hide-scrollbar", pageShouldScroll ? "overflow-y-auto" : "overflow-hidden flex flex-col")} ref={viewContainerRef}>
+        <div className={cn("flex-1 min-h-0", pageShouldScroll ? "overflow-y-auto" : "overflow-hidden flex flex-col")} ref={viewContainerRef}>
             {renderCurrentView()}
         </div>
       </div>
