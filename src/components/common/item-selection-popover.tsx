@@ -132,7 +132,7 @@ export function ItemSelectionPopover({
       <PopoverContent className="w-80 p-0 flex flex-col max-h-96" onPointerDownCapture={(e) => e.stopPropagation()}>
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full flex flex-col flex-1 min-h-0">
           {tabs.length > 1 && (
-            <div className="flex justify-center p-1 border-b">
+            <div className="flex justify-center p-1">
                 <TabsList className="grid w-full grid-cols-2">
                   {tabs.map(tab => <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>)}
                 </TabsList>
