@@ -93,13 +93,13 @@ function SortableUserCard({ user, listId, onDeleteRequest, isExpanded, onToggleE
     );
 }
 
-function UserDropZone({ id, users, children, onDeleteRequest, expandedUsers, onToggleUserExpand }: { 
+function UserDropZone({ id, users, children, onDeleteRequest, expandedCardState, onToggleUserExpand }: { 
   id: string, 
   users: User[], 
   children?: React.ReactNode, 
   onDeleteRequest?: (user: User) => void,
-  expandedUsers: Set<string>,
-  onToggleUserExpand: (userId: string) => void
+  expandedCardState: Record<string, string[]>,
+  onToggleUserExpand: (cardId: string) => void
 }) {
   const { setNodeRef, isOver } = useDroppable({ id, data: { type: 'user-list' }});
   
@@ -118,7 +118,7 @@ function UserDropZone({ id, users, children, onDeleteRequest, expandedUsers, onT
                         user={user} 
                         listId={id} 
                         onDeleteRequest={onDeleteRequest}
-                        isExpanded={expandedUsers.has(user.userId)}
+                        isExpanded={(expandedCardState['admins-tab'] || []).includes(user.userId)}
                         onToggleExpand={() => onToggleUserExpand(user.userId)}
                     />
                 ))}
@@ -152,13 +152,22 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
   
   const onToggleUserExpand = useCallback((userId: string) => {
     if (!viewAsUser) return;
-    const currentExpanded = new Set(viewAsUser.expandedCardIds || []);
+    const contextKey = 'admins-tab';
+    const currentState = viewAsUser.expandedCardState || {};
+    const currentExpanded = new Set(currentState[contextKey] || []);
+    
     if (currentExpanded.has(userId)) {
       currentExpanded.delete(userId);
     } else {
       currentExpanded.add(userId);
     }
-    updateUser(viewAsUser.userId, { expandedCardIds: Array.from(currentExpanded) });
+    
+    updateUser(viewAsUser.userId, { 
+      expandedCardState: {
+        ...currentState,
+        [contextKey]: Array.from(currentExpanded)
+      }
+    });
   }, [viewAsUser, updateUser]);
 
   const handleAddPreApprovedEmail = () => {
@@ -304,7 +313,7 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
                         </div>
                     </CardHeader>
                     <CardContent className="flex-grow">
-                        <UserDropZone id="admin-list" users={filteredAdminUsers} expandedUsers={new Set(viewAsUser?.expandedCardIds)} onToggleUserExpand={onToggleUserExpand} />
+                        <UserDropZone id="admin-list" users={filteredAdminUsers} expandedCardState={viewAsUser?.expandedCardState || {}} onToggleUserExpand={onToggleUserExpand} />
                     </CardContent>
                   </TransparentCard>
                   <TransparentCard className="flex flex-col h-full">
@@ -365,7 +374,7 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
                         </div>
                     </CardHeader>
                      <CardContent className="flex-grow">
-                         <UserDropZone id="user-list" users={filteredNonAdminUsers} onDeleteRequest={handleDeleteUserRequest} expandedUsers={new Set(viewAsUser?.expandedCardIds)} onToggleUserExpand={onToggleUserExpand} />
+                         <UserDropZone id="user-list" users={filteredNonAdminUsers} onDeleteRequest={handleDeleteUserRequest} expandedCardState={viewAsUser?.expandedCardState || {}} onToggleUserExpand={onToggleUserExpand} />
                     </CardContent>
                   </TransparentCard>
             </div>
@@ -611,13 +620,15 @@ export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelO
 
     const onToggleExpand = useCallback((pageId: string) => {
         if (!viewAsUser) return;
-        const currentExpanded = new Set(viewAsUser.expandedCardIds || []);
+        const contextKey = 'pages-management';
+        const currentState = viewAsUser.expandedCardState || {};
+        const currentExpanded = new Set(currentState[contextKey] || []);
         if (currentExpanded.has(pageId)) {
           currentExpanded.delete(pageId);
         } else {
           currentExpanded.add(pageId);
         }
-        updateUser(viewAsUser.userId, { expandedCardIds: Array.from(currentExpanded) });
+        updateUser(viewAsUser.userId, { expandedCardState: { ...currentState, [contextKey]: Array.from(currentExpanded) } });
     }, [viewAsUser, updateUser]);
     
     const handleUpdate = useCallback((pageId: string, data: Partial<AppPage>) => {
@@ -678,19 +689,21 @@ export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelO
         return appSettings.pages.filter(p => p.isShared && p.owner?.id !== viewAsUser.userId && !displayedIds.has(p.id));
     }, [appSettings.pages, displayedPages, viewAsUser.userId]);
 
-    const renderPageCard = useCallback((page: AppPage) => (
+    const renderPageCard = useCallback((page: AppPage) => {
+        const expandedCardIds = viewAsUser?.expandedCardState?.['pages-management'] || [];
+      return (
       <SortableItem key={page.id} id={page.id} data={{ type: 'page-card', page, isSharedPreview: false }} disabled={page.isSystemPage}>
           {(isDragging: boolean) => (
               <SortablePageCard
                   page={page}
                   onUpdate={handleUpdate}
                   onDelete={handleDelete}
-                  isExpanded={viewAsUser.expandedCardIds?.includes(page.id) || false}
+                  isExpanded={expandedCardIds.includes(page.id)}
                   onToggleExpand={() => onToggleExpand(page.id)}
               />
           )}
       </SortableItem>
-    ), [handleUpdate, handleDelete, viewAsUser.expandedCardIds, onToggleExpand]);
+    )}, [handleUpdate, handleDelete, viewAsUser, onToggleExpand]);
 
     return (
         <div className="h-full flex flex-col">
@@ -764,13 +777,15 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
 
     const onToggleExpand = useCallback((tabId: string) => {
         if (!viewAsUser) return;
-        const currentExpanded = new Set(viewAsUser.expandedCardIds || []);
+        const contextKey = 'tabs-management';
+        const currentState = viewAsUser.expandedCardState || {};
+        const currentExpanded = new Set(currentState[contextKey] || []);
         if (currentExpanded.has(tabId)) {
           currentExpanded.delete(tabId);
         } else {
           currentExpanded.add(tabId);
         }
-        updateUser(viewAsUser.userId, { expandedCardIds: Array.from(currentExpanded) });
+        updateUser(viewAsUser.userId, { expandedCardState: { ...currentState, [contextKey]: Array.from(currentExpanded) } });
     }, [viewAsUser, updateUser]);
 
     const handleUpdateTab = useCallback((tabId: string, data: Partial<AppTab>) => {
@@ -800,19 +815,22 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
         return results;
     }, [appSettings.tabs, searchTerm, colorFilter]);
 
-    const renderTabCard = useCallback((tab: AppTab, isDragging: boolean) => (
-        <SortableItem key={tab.id} id={tab.id}>
-         {(isDragging) => (
-            <SortableTabCard
-                key={tab.id}
-                tab={tab}
-                onUpdate={handleUpdateTab}
-                isExpanded={viewAsUser.expandedCardIds?.includes(tab.id) || false}
-                onToggleExpand={() => onToggleExpand(tab.id)}
-            />
-         )}
-        </SortableItem>
-    ), [handleUpdateTab, viewAsUser.expandedCardIds, onToggleExpand]);
+    const renderTabCard = useCallback((tab: AppTab, isDragging: boolean) => {
+        const expandedCardIds = viewAsUser?.expandedCardState?.['tabs-management'] || [];
+        return (
+            <SortableItem key={tab.id} id={tab.id}>
+             {(isDragging) => (
+                <SortableTabCard
+                    key={tab.id}
+                    tab={tab}
+                    onUpdate={handleUpdateTab}
+                    isExpanded={expandedCardIds.includes(tab.id)}
+                    onToggleExpand={() => onToggleExpand(tab.id)}
+                />
+             )}
+            </SortableItem>
+        )
+    }, [handleUpdateTab, viewAsUser, onToggleExpand]);
 
     return (
         <div className="space-y-6">

@@ -145,17 +145,19 @@ function CalendarCard({
 export function CalendarManagement({ tab, page, isActive, isSharedPanelOpen, setIsSharedPanelOpen, isDragging }: { tab: AppTab; page: AppPage, isActive?: boolean, isSharedPanelOpen: boolean, setIsSharedPanelOpen: (isOpen: boolean) => void, isDragging: boolean }) {
   const { viewAsUser, calendars, addCalendar, updateCalendar, deleteCalendar, updatePage, updateUser, reorderCalendars } = useUser();
   const { toast } = useToast();
+  const contextKey = `calendars-${page.id}`;
   
   const onToggleExpand = useCallback((calendarId: string) => {
     if (!viewAsUser) return;
-      const currentExpanded = new Set(viewAsUser.expandedCardIds || []);
+      const currentState = viewAsUser.expandedCardState || {};
+      const currentExpanded = new Set(currentState[contextKey] || []);
       if (currentExpanded.has(calendarId)) {
         currentExpanded.delete(calendarId);
       } else {
         currentExpanded.add(calendarId);
       }
-      updateUser(viewAsUser.userId, { expandedCardIds: Array.from(currentExpanded) });
-  }, [viewAsUser, updateUser]);
+      updateUser(viewAsUser.userId, { expandedCardState: { ...currentState, [contextKey]: Array.from(currentExpanded) } });
+  }, [viewAsUser, updateUser, contextKey]);
 
   const title = page.displayTitle ?? tab.name;
   const canManagePage = viewAsUser.isAdmin;
@@ -209,19 +211,21 @@ export function CalendarManagement({ tab, page, isActive, isSharedPanelOpen, set
     return calendars.filter(c => c.isShared && c.owner?.id !== viewAsUser.userId && !displayedIds.has(c.id));
   }, [calendars, displayedCalendars, viewAsUser.userId]);
 
-  const renderCalendarCard = useCallback((calendar: SharedCalendar) => (
+  const renderCalendarCard = useCallback((calendar: SharedCalendar) => {
+      const expandedCardIds = viewAsUser?.expandedCardState?.[contextKey] || [];
+      return (
       <SortableItem key={calendar.id} id={calendar.id} data={{ type: 'calendar-card', calendar, isSharedPreview: false }}>
         {(isDragging: boolean) => (
           <CalendarCard
             calendar={calendar}
             onUpdate={handleUpdate}
             onDelete={handleDelete}
-            isExpanded={viewAsUser.expandedCardIds?.includes(calendar.id) || false}
+            isExpanded={expandedCardIds.includes(calendar.id)}
             onToggleExpand={() => onToggleExpand(calendar.id)}
           />
         )}
       </SortableItem>
-  ), [handleUpdate, handleDelete, viewAsUser.expandedCardIds, onToggleExpand]);
+  )}, [handleUpdate, handleDelete, viewAsUser, onToggleExpand, contextKey]);
 
   const renderDragOverlay = useCallback((item: SharedCalendar) => (
       <GoogleSymbol name={item.icon} style={{color: item.color, fontSize: '48px'}} />
