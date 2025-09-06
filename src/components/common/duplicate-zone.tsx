@@ -29,7 +29,7 @@ export function DuplicateZone({ id, onAdd, tooltipText = 'Add New', isOverToolti
         dropZoneActive && "ring-1 ring-border ring-inset"
       )}
     >
-      <div className={cn(isDragging && 'hidden')}>
+      <div className={cn(isDragging ? "hidden" : "block")}>
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -45,7 +45,7 @@ export function DuplicateZone({ id, onAdd, tooltipText = 'Add New', isOverToolti
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>{tooltipText}</p>
+              <p>{isDragging && isOver ? isOverTooltipText : tooltipText}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
