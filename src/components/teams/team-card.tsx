@@ -125,9 +125,9 @@ export function TeamCard(props: TeamCardProps) {
     const { viewAsUser } = useUser();
     const { isExpanded, onToggleExpand } = otherProps;
     
-    const { setNodeRef: setUsersDroppableRef, isOver: isUsersDroppableOver } = useDroppable({
-        id: `team-users:${team.id}`,
-        data: { type: 'user-list', teamId: team.id },
+    const { setNodeRef: setCardDroppableRef, isOver: isCardDroppableOver } = useDroppable({
+        id: `team-card-droppable:${team.id}`,
+        data: { type: 'team-card-droppable', team: team },
     });
 
     const owner = useMemo(() => {
@@ -199,7 +199,7 @@ export function TeamCard(props: TeamCardProps) {
         {teamMembers.length > 0 && (
             <ScrollArea className="max-h-48 pr-2 hide-scrollbar">
                 <SortableContext items={teamMembers.map(m => `user-sort:${team.id}:${m.userId}`)} strategy={verticalListSortingStrategy}>
-                    <div ref={setUsersDroppableRef} className={cn("min-h-[60px] rounded-md p-2 -m-2 space-y-1 transition-colors", isUsersDroppableOver && "ring-1 ring-border ring-inset")}>
+                    <div className={cn("min-h-[60px] rounded-md p-2 -m-2 space-y-1 transition-colors", isCardDroppableOver && "ring-1 ring-border ring-inset")}>
                         {teamMembers.map((user) => (
                         <DraggableUserCard 
                             key={user.userId}
@@ -220,6 +220,7 @@ export function TeamCard(props: TeamCardProps) {
     );
 
     return (
+      <div ref={setCardDroppableRef} className={cn(isCardDroppableOver && "ring-2 ring-primary ring-inset")}>
         <CardTemplate
             entity={team}
             onUpdate={onUpdate}
@@ -234,5 +235,6 @@ export function TeamCard(props: TeamCardProps) {
             headerControls={headerControls}
             body={bodyContent}
         />
+      </div>
     );
 }
