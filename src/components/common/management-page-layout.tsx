@@ -42,6 +42,8 @@ interface ManagementPageLayoutProps<T extends TEntity> {
   onReorderItems: (reorderedItems: T[]) => void;
   onLinkItem: (itemId: string) => void;
 
+  onDragEnd?: (event: DragEndEvent) => void;
+
   renderItem: (item: T, isDragging: boolean) => React.ReactNode;
   renderDragOverlay: (item: T) => React.ReactNode;
   
@@ -62,6 +64,7 @@ export function ManagementPageLayout<T extends TEntity>({
   onDeleteItem,
   onReorderItems,
   onLinkItem,
+  onDragEnd: onCustomDragEnd,
   renderItem,
   renderDragOverlay,
   isActive,
@@ -77,7 +80,6 @@ export function ManagementPageLayout<T extends TEntity>({
   const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
   
   const displayedItems = useMemo(() => {
-    if (!allItems) return [];
     let filtered = allItems;
     if (searchTerm) {
       filtered = filtered.filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -114,16 +116,21 @@ export function ManagementPageLayout<T extends TEntity>({
   }, [allSharedItems, sharedSearchTerm, sharedColorFilter]);
   
   const handleDragEnd = (event: DragEndEvent) => {
+    if (onCustomDragEnd) {
+      onCustomDragEnd(event);
+      return;
+    }
+    
     const { active, over } = event;
 
     if (!over) return;
     
-    const activeItem = [...allItems, ...allSharedItems].find(i => i.id === active.id);
+    const activeItem = [...allItems, ...allSharedItems].find(i => i.id === active.id) as T | undefined;
     if (!activeItem) return;
 
     // Handle dropping on duplicate zone
     if (over.id === `duplicate-${entityType}-zone`) {
-      onAddItem(activeItem as T);
+      onAddItem(activeItem);
       return;
     }
     
@@ -133,7 +140,7 @@ export function ManagementPageLayout<T extends TEntity>({
         onUpdateItem(activeItem.id, { isShared: !activeItem.isShared } as Partial<T>);
         toast({ title: activeItem.isShared ? `${entityType.charAt(0).toUpperCase() + entityType.slice(1)} Unshared` : `${entityType.charAt(0).toUpperCase() + entityType.slice(1)} Shared` });
       } else { // If linked, unlink it
-        onDeleteItem(activeItem as T);
+        onDeleteItem(activeItem);
       }
       return;
     }
@@ -208,8 +215,8 @@ export function ManagementPageLayout<T extends TEntity>({
               onDragEnd={handleDragEnd}
               className={gridClassName}
           >
-            {displayedItems && displayedItems.length === 0 && <p className="text-center text-sm text-muted-foreground p-4">No {entityType}s to display.</p>}
-            {displayedItems && displayedItems.map(item => renderItem(item, isDragging))}
+            {displayedItems.length === 0 && <p className="text-center text-sm text-muted-foreground p-4">No {entityType}s to display.</p>}
+            {displayedItems.map(item => renderItem(item, isDragging))}
           </DraggableGrid>
         </div>
       </div>
