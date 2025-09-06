@@ -9,9 +9,8 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { getFirestore, doc, updateDoc } from 'firebase/firestore';
+import { getFirestore } from 'firebase-admin/firestore';
 import { watchGoogleCalendar, WatchGoogleCalendarOutput } from './watch-google-calendar-flow';
-import { getDb } from '@/lib/firebase';
 
 const LinkAndWatchCalendarInputSchema = z.object({
   calendarId: z.string().describe('The internal Firestore ID of the calendar document.'),
@@ -30,16 +29,16 @@ const linkAndWatchCalendarFlow = ai.defineFlow(
   {
     name: 'linkAndWatchCalendarFlow',
     inputSchema: LinkAndWatchCalendarInputSchema,
-    outputSchema: WatchGoogleCalendarOutputSchema,
+    outputSchema: WatchGoogleCalendarOutput,
   },
   async (input) => {
     console.log(`Starting link and watch process for internal calendar ${input.calendarId}`);
 
     // 1. Update the Firestore document with the Google Calendar ID.
-    const db = getDb();
-    const calendarDocRef = doc(db, 'calendars', input.calendarId);
+    const db = getFirestore();
+    const calendarDocRef = db.collection('calendars').doc(input.calendarId);
     
-    await updateDoc(calendarDocRef, {
+    await calendarDocRef.update({
       googleCalendarId: input.googleCalendarId,
     });
     
