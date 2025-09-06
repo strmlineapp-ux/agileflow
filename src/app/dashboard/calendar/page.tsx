@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { CalendarPageContent } from '@/components/dashboard/tabs/calendar-tab';
@@ -17,8 +18,10 @@ export default function CalendarPage() {
   }
   
   const calendarPageConfig = appSettings.pages.find(p => p.id === 'page-calendar');
+  const calendarTabConfig = appSettings.tabs.find(t => t.id === 'tab-calendar');
 
-  if (!calendarPageConfig) {
+
+  if (!calendarPageConfig || !calendarTabConfig) {
     return (
         <div className="flex h-full w-full items-center justify-center">
             <div className="text-center">
@@ -29,5 +32,5 @@ export default function CalendarPage() {
     )
   }
 
-  return <CalendarPageContent tab={calendarPageConfig} />;
+  return <CalendarPageContent tab={calendarTabConfig} />;
 }
