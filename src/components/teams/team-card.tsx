@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
@@ -77,9 +78,9 @@ function DraggableUserCard({ user, onRemove, isTeamAdmin, onSetAdmin, canManage,
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <Button
-                                variant="ghost"
+                                variant="default"
                                 size="icon"
-                                className="font-emphasis absolute top-0 right-0 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100"
+                                className="absolute top-0 right-0 h-6 w-6 text-muted-foreground bg-card opacity-0 group-hover:opacity-100"
                                 onClick={(e) => { e.stopPropagation(); onRemove(); }}
                                 onPointerDown={(e) => e.stopPropagation()} // Prevent drag from starting
                             >
