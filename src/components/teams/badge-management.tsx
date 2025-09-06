@@ -350,7 +350,8 @@ function BadgeCollectionCard({
     const { viewAsUser, users } = useUser();
     const [isViewModePopoverOpen, setIsViewModePopoverOpen] = useState(false);
     const [expandedBadges, setExpandedBadges] = useState<Set<string>>(new Set());
-    
+    const buttonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+
     const isOwner = useMemo(() => collection.owner.id === viewAsUser.userId, [collection.owner.id, viewAsUser.userId]);
     
     const onToggleBadgeExpand = useCallback((badgeId: string) => {
@@ -393,6 +394,7 @@ function BadgeCollectionCard({
             currentApplications.add(application);
         }
         onUpdateCollection(collection.id, { applications: Array.from(currentApplications) });
+        buttonRefs.current[application]?.blur();
     };
 
     const headerControls = (
@@ -485,6 +487,7 @@ function BadgeCollectionCard({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
+                      ref={el => buttonRefs.current[app.key] = el}
                       variant="ghost"
                       size="icon"
                       className="h-6 w-6 text-muted-foreground font-emphasis"
@@ -631,6 +634,36 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
         );
     }, []);
 
+    const onDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (!over) return;
+    
+        // Handle dropping a badge
+        if (active.data.current?.type === 'badge') {
+            const badge = active.data.current.badge as Badge;
+            const sourceCollectionId = active.data.current.collectionId;
+            const targetCollectionId = over.data.current?.type === 'collection'
+                ? over.data.current.collection.id
+                : over.data.current?.collectionId;
+
+            if (targetCollectionId) {
+                const targetCollection = allBadgeCollections.find(c => c.id === targetCollectionId);
+                const sourceCollection = allBadgeCollections.find(c => c.id === sourceCollectionId);
+
+                if(targetCollection && sourceCollection && targetCollection.owner.id === viewAsUser.userId) {
+                    deleteBadge(badge.id, sourceCollection.id);
+                    // Add/link badge to the new collection
+                    updateBadgeCollection(targetCollection.id, {
+                        badgeIds: [badge.id, ...targetCollection.badgeIds]
+                    });
+                }
+            } else if (over.data.current?.type === 'duplicate-badge-zone') {
+                const collectionId = over.data.current.collectionId;
+                addBadge(collectionId, badge);
+            }
+        }
+    };
+
     return (
         <ManagementPageLayout
             pageTitle={page.displayTitle ?? tab.name}
@@ -654,6 +687,8 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
             renderItem={renderCollectionCard}
             renderDragOverlay={renderDragOverlay}
             isActive={isActive}
+            onDragEnd={onDragEnd}
         />
     );
 }
+
