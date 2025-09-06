@@ -40,7 +40,7 @@ const watchGoogleCalendarFlow = ai.defineFlow(
     outputSchema: WatchGoogleCalendarOutputSchema,
   },
   async (input) => {
-    console.log(`Setting up a REAL watch on calendar: ${input.googleCalendarId}`);
+    console.log(`Setting up a watch on calendar: ${input.googleCalendarId}`);
     
     const auth = new google.auth.GoogleAuth({
         scopes: ['https://www.googleapis.com/auth/calendar']
