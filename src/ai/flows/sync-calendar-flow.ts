@@ -48,12 +48,15 @@ const syncCalendarFlow = ai.defineFlow(
   async (input) => {
     console.log(`Starting REAL event sync for Google Calendar ID: ${input.googleCalendarId} in workspace ${input.workspaceId}`);
 
-    const oAuth2Client = new google.auth.OAuth2();
-
+    const auth = new google.auth.GoogleAuth({
+        scopes: ['https://www.googleapis.com/auth/calendar.readonly']
+    });
+    
     const db = getFirestore();
 
     try {
-        const calendarApi = google.calendar({version: 'v3', auth: oAuth2Client});
+        const authClient = await auth.getClient();
+        const calendarApi = google.calendar({version: 'v3', auth: authClient});
         const response = await calendarApi.events.list({
             calendarId: input.googleCalendarId,
             timeMin: (startOfDay(new Date())).toISOString(),
