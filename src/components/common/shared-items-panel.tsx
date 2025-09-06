@@ -68,7 +68,7 @@ export function SharedItemsPanel<T extends { id: string, name: string, icon: str
             <CardDescription>{description}</CardDescription>
           </CardHeader>
           <CardContent className="flex-1 p-2 overflow-hidden">
-            <div className="h-full overflow-y-auto hide-scrollbar">
+            <div className="h-full overflow-y-auto">
               <ManagementGrid
                 items={items}
                 setItems={() => {}}
