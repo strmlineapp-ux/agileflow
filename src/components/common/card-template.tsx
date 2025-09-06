@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -71,37 +70,41 @@ export function CardTemplate({
         const ownerUser = users.find(u => u.userId === entity.owner?.id);
         const isOwned = entity.owner?.id === viewAsUser.userId;
         const protectedPages = ['page-admin-management', 'page-settings', 'page-notifications'];
+        
+        if (protectedPages.includes(entity.id)) {
+            return { shareIcon: null, shareIconTitle: 'System Owned', shareIconColor: 'hsl(var(--muted-foreground))' };
+        }
 
         if (entity.owner?.type === 'system') {
-             if (protectedPages.includes(entity.id)) return { shareIcon: null };
+             if (isSharedPreview || !viewAsUser.isAdmin) return { shareIcon: null };
             return {
                 shareIcon: 'shield_person',
                 shareIconTitle: 'System Owned',
-                shareIconColor: 'hsl(220, 13%, 47%)',
+                shareIconColor: 'hsl(var(--muted-foreground))',
             };
         }
         if (isOwned && entity.isShared) {
             return {
                 shareIcon: 'change_circle',
                 shareIconTitle: 'Owned & Shared by you',
-                shareIconColor: viewAsUser.primaryColor || 'hsl(220, 13%, 47%)',
+                shareIconColor: viewAsUser.primaryColor || 'hsl(var(--primary))',
             };
         }
         if (!isOwned && !isSharedPreview) {
             return {
                 shareIcon: 'link',
                 shareIconTitle: `Owned by ${ownerUser?.displayName || 'another user'}`,
-                shareIconColor: ownerUser?.primaryColor || 'hsl(220, 13%, 47%)',
+                shareIconColor: ownerUser?.primaryColor || 'hsl(var(--muted-foreground))',
             };
         }
         if (isSharedPreview) {
             return {
                 shareIcon: 'change_circle',
                 shareIconTitle: `Owned by ${ownerUser?.displayName || 'another user'}`,
-                shareIconColor: ownerUser?.primaryColor || 'hsl(220, 13%, 47%)',
+                shareIconColor: ownerUser?.primaryColor || 'hsl(var(--muted-foreground))',
             };
         }
-        return { shareIcon: null, shareIconTitle: '', shareIconColor: 'hsl(220, 13%, 47%)' };
+        return { shareIcon: null, shareIconTitle: '', shareIconColor: 'hsl(var(--muted-foreground))' };
     }, [entity, viewAsUser, users, isSharedPreview]);
 
     const handleOwnershipReset = (e: React.MouseEvent) => {
@@ -170,8 +173,8 @@ export function CardTemplate({
 
     const ownershipTrigger = shareIcon && (
         <div 
-            className="absolute -top-1 -left-1 h-4 w-4 rounded-full ring-2 ring-card flex items-center justify-center text-white" 
-            style={{ backgroundColor: shareIconColor }}
+            className="absolute -top-1 -left-1 h-4 w-4 rounded-full ring-2 ring-card flex items-center justify-center text-white"
+            style={{ backgroundColor: shareIconColor || undefined }}
         >
             <GoogleSymbol name={shareIcon!} style={{fontSize: '16px'}} />
         </div>
@@ -244,7 +247,11 @@ export function CardTemplate({
                         {body}
                     </CardContent>
                 )}
-                {footer && <CardFooter className="p-2 pt-0">{footer}</CardFooter>}
+                {footer && (
+                    <CardFooter className="p-2 pt-0">
+                        {footer}
+                    </CardFooter>
+                )}
                 {body && (
                     <div className="absolute -bottom-1 right-0">
                         <Button variant="default" size="icon" onClick={onToggleExpand} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">

@@ -599,7 +599,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
             isSharedPreview={isSharedPreview}
             canChangeOwnership={canChangeOwnership}
             body={bodyContent}
-            footer={isExpanded ? footerContent : undefined}
+            footer={footerContent}
         />
     );
 }
