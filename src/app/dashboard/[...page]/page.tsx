@@ -141,7 +141,7 @@ export default function DynamicPage() {
     };
     
     return (
-       <Tabs value={activeTabValue} onValueChange={setActiveTabValue} className="flex flex-col h-full">
+       <Tabs value={activeTabValue} onValueChange={setActiveTabValue} className="flex flex-col h-full min-h-0">
           <CenteredTabList>
             <SortableTabsList
                 items={pageTabs}
@@ -156,16 +156,14 @@ export default function DynamicPage() {
                 ))}
             </SortableTabsList>
           </CenteredTabList>
-         <div className="flex-1 flex flex-col min-h-0 pt-6">
+         <div className="flex-1 min-h-0 pt-6">
             {pageTabs.map(tab => {
                 const Component = componentMap[tab.componentKey as keyof typeof componentMap];
                 return Component ? (
                     <TabsContent 
                         key={tab.id} 
                         value={tab.id} 
-                        className={cn("mt-0", 
-                            activeTabValue === tab.id ? 'flex flex-col flex-1' : 'hidden'
-                        )}
+                        className="mt-0 flex-1 h-full"
                     >
                       <Component tab={tab} page={page} team={teamContext} isActive={activeTabValue === tab.id} />
                     </TabsContent>
@@ -191,5 +189,3 @@ export default function DynamicPage() {
     </div>
   )
 }
-
-    
