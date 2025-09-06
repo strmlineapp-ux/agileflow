@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useCallback, useMemo } from 'react';
@@ -7,7 +6,7 @@ import { type User, type Team, type SharedCalendar, type BadgeCollection, type A
 import { useUser } from '@/context/user-context';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { DndContext, type DragEndEvent, type DragStartEvent, useSensor, useSensors, PointerSensor, KeyboardSensor, sortableKeyboardCoordinates, DragOverlay } from '@dnd-kit/core';
+import { DndContext, type DragEndEvent, type DragStartEvent, useSensor, useSensors, PointerSensor, KeyboardSensor, sortableKeyboardCoordinates, DragOverlay, pointerWithin } from '@dnd-kit/core';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { arrayMove } from '@dnd-kit/sortable';
 import { CompactSearchInput } from './compact-search-input';
@@ -145,7 +144,7 @@ export function ManagementPageLayout<T extends TEntity>({
     
     // Handle linking from shared panel
     const isSharedPreview = active.data.current?.isSharedPreview;
-    if (isSharedPreview && over.id === `${entityType}-list`) {
+    if (isSharedPreview && over.id === `collections-list`) { // Use a static ID for the main board droppable area
         onLinkItem(active.id as string);
         return;
     }
@@ -164,7 +163,7 @@ export function ManagementPageLayout<T extends TEntity>({
   const entityTitle = entityType.charAt(0).toUpperCase() + entityType.slice(1) + 's';
 
   return (
-    <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd} sensors={sensors}>
+    <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd} sensors={sensors} collisionDetection={pointerWithin}>
       <div className="flex h-full gap-4">
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="flex items-center justify-between mb-6 shrink-0">
@@ -201,6 +200,7 @@ export function ManagementPageLayout<T extends TEntity>({
           </div>
           <div className="flex-1 min-h-0 -mr-4 pr-4 overflow-y-auto hide-scrollbar">
             <ManagementGrid
+                id="collections-list"
                 items={displayedItems}
                 setItems={onReorderItems}
                 onDragEnd={onDragEnd}

@@ -1,5 +1,4 @@
 
-
 # AgileFlow: Design System & UI Patterns
 
 This document outlines the established UI patterns and design choices that ensure a consistent and intuitive user experience across the AgileFlow application. These patterns serve as a guide for both current and future development.
@@ -132,13 +131,12 @@ This pattern describes how a single entity (like a **Team**, **Calendar**, or **
 ---
 
 ### 8. Draggable Card Management blueprint
-This is the application's gold-standard pattern for managing a collection of entities displayed as cards. It provides an intuitive, responsive, grid that works reliably with drag-and-drop, automatically adjusting the number of columns based on available space. It is the required pattern for managing Pages, Calendars, Teams, and Badge Collections.
+This is the application's gold-standard pattern for managing a collection of entities displayed as cards. It provides an intuitive, responsive, masonry-style grid that works reliably with drag-and-drop. It is the required pattern for managing Pages, Calendars, Teams, and Badge Collections.
 
--   **Layout**: The grid container **must** use a `flex flex-wrap` layout.
+-   **Layout**: The grid uses CSS Columns (`columns-1 sm:columns-2...`) to create a true masonry-style layout. This allows columns to have flexible heights and for content to flow naturally between them.
 -   **Critical Stability Properties**:
-    -   Each draggable item (the `<SortableItem>` wrapper) **must** have responsive `basis-*` classes (e.g., `basis-full sm:basis-[calc(50%-1rem)] ...`) to control its width at different breakpoints. This allows the items to wrap naturally.
-    -   Each draggable item **must** have `flex-grow-0` and `flex-shrink-0` to prevent items from resizing during a drag operation, which is a major source of layout instability.
--   **Collision Detection**: The `<DndContext>` provider **must** use the `closestCenter` collision detection algorithm for intuitive reordering within the flexible grid.
+    -   **`break-inside: avoid`**: Each individual draggable card **must** have a class that applies `break-inside: avoid`. This is critical for preventing a card from being visually split across two columns, which is a major source of layout bugs in masonry grids. This is applied in the `<SortableItem>` component.
+-   **Collision Detection**: The `<DndContext>` provider **must** use the `pointerWithin` collision detection algorithm. This strategy detects a collision only with the single droppable item that is directly under the user's mouse pointer. This prevents the issue where multiple cards react at once during a drag, providing a more precise and controlled user experience.
 -   **Initiating a Drag**: The **sole method** for initiating a drag action is by clicking and dragging any non-interactive part of a card.
 -   **Drag-Ready State**: When a drag action is initiated, the application enters a "drag-ready" state to provide clear visual feedback and prevent accidental actions.
     - **Hide Interactive Elements**: All secondary interactive elements within draggable cards—such as delete buttons, color swatch badges, and expand/collapse icons—**must be hidden**. This is typically achieved by adding a `.hidden` class based on a global state.
