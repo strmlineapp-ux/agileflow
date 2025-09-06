@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -29,6 +28,22 @@ const randomDescriptions = [
     "Planning and execution of marketing campaigns.",
     "Development and testing for the new feature.",
 ];
+
+const adjustHue = (hslColor: string): string => {
+    const match = hslColor.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
+    if (!match) return hslColor; // Return original if format is wrong
+
+    let hue = parseInt(match[1]);
+    const saturation = match[2];
+    const lightness = match[3];
+
+    // Get a random shift between -20 and 20
+    const shift = Math.floor(Math.random() * 41) - 20;
+    
+    hue = (hue + shift + 360) % 360; // Add shift and wrap around
+
+    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+};
 
 export function useData(realUser: User | null, authLoading: boolean) {
   const [loading, setLoading] = useState(true);
@@ -207,14 +222,15 @@ export function useData(realUser: User | null, authLoading: boolean) {
 
   const addTeam = useCallback(async (teamData: Partial<Omit<Team, 'id'>>, realUser: User) => {
     const db = getDb();
+    const isDuplicating = !!teamData.id;
     const newTeamData = {
-      name: 'New Team',
-      icon: googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
-      color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
+      name: isDuplicating ? `${teamData.name} (Copy)` : 'New Team',
+      icon: teamData.icon || googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
+      color: isDuplicating && teamData.color ? adjustHue(teamData.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
       owner: { type: 'user', id: realUser.userId },
       members: [realUser.userId],
       isShared: false,
-      description: randomDescriptions[Math.floor(Math.random() * randomDescriptions.length)],
+      description: teamData.description || randomDescriptions[Math.floor(Math.random() * randomDescriptions.length)],
       workspaceId: realUser.workspaceId,
       ...teamData,
     };
@@ -293,11 +309,21 @@ export function useData(realUser: User | null, authLoading: boolean) {
     toast({ title: 'Project Deleted' });
   }, [toast]);
 
-  const addCalendar = useCallback(async (newCalendarData: Omit<SharedCalendar, 'id'>) => {
+  const addCalendar = useCallback(async (calendarData: Partial<Omit<SharedCalendar, 'id'>>) => {
+    if (!realUser) return;
+    const isDuplicating = !!calendarData.id;
+    const newCalendarData = {
+      name: isDuplicating ? `${calendarData.name} (Copy)` : 'New Calendar',
+      icon: calendarData.icon || 'calendar_month',
+      color: isDuplicating && calendarData.color ? adjustHue(calendarData.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
+      owner: { type: 'user', id: realUser.userId },
+      ...calendarData,
+      workspaceId: realUser.workspaceId,
+    };
+    
     const db = getDb();
-    const fullCalendarData = { ...newCalendarData, workspaceId: realUser!.workspaceId };
-    const docRef = await addDoc(collection(db, 'calendars'), fullCalendarData);
-    const newCalendar = { ...fullCalendarData, id: docRef.id };
+    const docRef = await addDoc(collection(db, 'calendars'), newCalendarData);
+    const newCalendar = { ...newCalendarData, id: docRef.id };
     setCalendars(current => [...current, newCalendar]);
   }, [realUser]);
 
@@ -386,24 +412,25 @@ export function useData(realUser: User | null, authLoading: boolean) {
     if (!realUser) return;
     const db = getDb();
     
+    const isDuplicating = !!pageData.id;
+
     const randomIcon = googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)];
     const randomDesc = randomDescriptions[Math.floor(Math.random() * randomDescriptions.length)];
-    const pageName = pageData.name || "New Page";
+    const pageName = isDuplicating ? `${pageData.name} (Copy)` : (pageData.name || "New Page");
 
     // Create a slug from the name
     const slug = pageName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 
     const newPageData: Omit<AppPage, 'id' | 'path'> = {
       name: pageName,
-      icon: randomIcon,
-      color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
-      description: randomDesc,
-      isDynamic: false,
-      associatedTabs: [],
-      access: { users: [], teams: [] },
+      icon: pageData.icon || randomIcon,
+      color: pageData.color ? adjustHue(pageData.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
+      description: pageData.description || randomDesc,
+      isDynamic: pageData.isDynamic || false,
+      associatedTabs: pageData.associatedTabs || [],
+      access: pageData.access || { users: [], teams: [] },
       owner: { type: 'user', id: realUser.userId },
       workspaceId: realUser.workspaceId,
-      ...pageData,
     };
     
     const docRef = await addDoc(collection(db, 'pages'), newPageData);
@@ -470,13 +497,22 @@ export function useData(realUser: User | null, authLoading: boolean) {
     let newBadges: Badge[] = [];
     let newCollection: BadgeCollection;
     const ownerContext: BadgeOwner = { type: 'user', id: owner.userId };
+    const isDuplicating = !!sourceCollection;
 
     if (sourceCollection) {
         newBadges = sourceCollection.badgeIds.map(bId => {
             const originalBadge = allBadges.find(b => b.id === bId);
             if (!originalBadge) return null;
             const newBadgeId = crypto.randomUUID();
-            const newBadge = { ...originalBadge, id: newBadgeId, owner: ownerContext, ownerCollectionId: newCollectionId, name: `${originalBadge.name} (Copy)`, workspaceId };
+            const newBadge = { 
+                ...originalBadge, 
+                id: newBadgeId, 
+                owner: ownerContext, 
+                ownerCollectionId: newCollectionId, 
+                name: `${originalBadge.name} (Copy)`,
+                color: adjustHue(originalBadge.color),
+                workspaceId 
+            };
             batch.set(doc(db, 'badges', newBadgeId), newBadge);
             return newBadge;
         }).filter((b): b is Badge => b !== null);
@@ -485,6 +521,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
             ...JSON.parse(JSON.stringify(sourceCollection)),
             id: newCollectionId,
             name: `${sourceCollection.name} (Copy)`,
+            color: adjustHue(sourceCollection.color),
             owner: ownerContext,
             isShared: false,
             description: sourceCollection.description || '',
@@ -577,6 +614,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
     const batch = writeBatch(db);
     let newBadge: Badge;
     const workspaceId = realUser.workspaceId;
+    const isDuplicating = !!sourceBadge;
 
     if (sourceBadge) {
         newBadge = {
@@ -585,7 +623,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
             ownerCollectionId: collectionId,
             name: `${sourceBadge.name} (Copy)`,
             icon: sourceBadge.icon,
-            color: sourceBadge.color,
+            color: adjustHue(sourceBadge.color),
             description: sourceBadge.description,
             workspaceId,
         };
@@ -769,3 +807,5 @@ export function useData(realUser: User | null, authLoading: boolean) {
     seedDatabase, // Expose seed function
   };
 }
+
+    
