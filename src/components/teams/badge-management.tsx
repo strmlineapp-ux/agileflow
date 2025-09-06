@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -476,8 +475,9 @@ function BadgeCollectionCard({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={cn("h-6 w-6 text-muted-foreground", isActive && "text-primary")}
+                      className={cn("font-emphasis h-6 w-6 text-muted-foreground", isActive && "text-primary")}
                       onClick={() => handleToggleApplication(app.key)}
+                      onPointerDown={(e) => e.stopPropagation()}
                       disabled={!isOwner}
                     >
                       <GoogleSymbol name={app.icon} className="text-lg" />
@@ -892,3 +892,5 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
         </DndContext>
     );
 }
+
+    
