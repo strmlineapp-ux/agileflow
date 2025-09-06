@@ -574,11 +574,11 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
         shareIconColor = viewAsUser.primaryColor || shareIconColor;
     } else if (!isOwned && !isSharedPreview) { 
         shareIcon = 'link';
-        shareIconTitle = `Owned by ${ownerUser?.displayName}`;
+        shareIconTitle = `Owned by ${ownerUser?.displayName || 'another user'}`;
         shareIconColor = ownerUser?.primaryColor || shareIconColor;
     } else if (isSharedPreview) { 
         shareIcon = 'change_circle';
-        shareIconTitle = `Owned by ${ownerUser?.displayName}`;
+        shareIconTitle = `Owned by ${ownerUser?.displayName || 'another user'}`;
         shareIconColor = ownerUser?.primaryColor || shareIconColor;
     }
 
@@ -670,8 +670,8 @@ export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
         const updatedLinkedIds = [...(viewAsUser.linkedPageIds || []), pageId];
         updateUser(viewAsUser.userId, { linkedPageIds: Array.from(new Set(updatedLinkedIds)) });
         toast({ title: 'Page Linked' });
-    };
-
+    }
+  
     const displayedPages = useMemo(() => {
         if (!viewAsUser) return [];
 
