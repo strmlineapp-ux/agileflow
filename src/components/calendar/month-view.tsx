@@ -119,7 +119,7 @@ export const MonthView = React.memo(({ date, events, containerRef, onEventClick 
             )}>
                 <span className={cn(
                     "h-6 w-6 flex items-center justify-center rounded-full text-sm text-foreground",
-                    { "bg-primary text-primary-foreground": isDayToday },
+                    { "font-emphasis": isDayToday },
                     { "text-foreground/50": day.getMonth() !== date.getMonth() },
                     { "text-foreground/50": (isWeekend || isDayHoliday) }
                 )}>
