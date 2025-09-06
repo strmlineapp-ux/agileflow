@@ -25,7 +25,7 @@ export function DuplicateZone({ id, onAdd, tooltipText = 'Add New', isOverToolti
       ref={setNodeRef}
       className={cn(
         "rounded-full transition-all p-0.5",
-        isOver && "ring-1 ring-border ring-inset"
+        isOver && isDragging && "ring-1 ring-border ring-inset"
       )}
     >
       <TooltipProvider>
@@ -43,7 +43,7 @@ export function DuplicateZone({ id, onAdd, tooltipText = 'Add New', isOverToolti
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p>{isOver ? isOverTooltipText : tooltipText}</p>
+            <p>{isDragging && isOver ? isOverTooltipText : tooltipText}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
