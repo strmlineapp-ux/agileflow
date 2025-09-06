@@ -131,24 +131,23 @@ export function CardTemplate({
             <Card className="relative bg-card flex flex-col h-full shadow-md" {...dragHandleProps}>
                 <CardHeader className="group p-2">
                     {!isPinned && canDelete && !isSharedPreview && (
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        variant="default"
-                                        size="sm"
-                                        className="absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity z-10 p-0 bg-card"
-                                        onPointerDown={(e) => {
-                                            e.stopPropagation();
-                                            setIsDeleteDialogOpen(true);
-                                        }}
-                                    >
-                                        <GoogleSymbol name="cancel" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent><p>{canManage ? `Delete ${entity.name}` : `Unlink ${entity.name}`}</p></TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
+                        <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10" onPointerDown={(e) => e.stopPropagation()}>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="default"
+                                            size="sm"
+                                            className="h-6 w-6 p-0 bg-card"
+                                            onClick={() => setIsDeleteDialogOpen(true)}
+                                        >
+                                            <GoogleSymbol name="cancel" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>{canManage ? `Delete ${entity.name}` : `Unlink ${entity.name}`}</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </div>
                     )}
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2 flex-1 min-w-0">
