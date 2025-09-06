@@ -19,6 +19,8 @@ import { EventDetailsDialog } from '@/components/calendar/event-details-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { getDb } from '@/lib/firebase';
 import { collection, query, where, onSnapshot, addDoc, doc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
+import { cn } from '@/lib/utils';
+import { CenteredTabList } from '@/components/common/centered-tab-list';
 
 export function EventsContent({ project }: { project: Project }) {
   const { viewAsUser, calendars } = useUser();
@@ -158,13 +160,13 @@ export function EventsContent({ project }: { project: Project }) {
     let range;
 
     if (format(start, 'yyyy') !== format(end, 'yyyy')) {
-      range = `${format(start, 'MMM d, yyyy')} – ${format(end, 'MMM d, yyyy')}`;
+      range = `${''}${format(start, 'MMM d, yyyy')} – ${''}${format(end, 'MMM d, yyyy')}`;
     } else if (format(start, 'MMMM') !== format(end, 'MMMM')) {
-      range = `${format(start, 'MMM d')} – ${format(end, 'MMM d, yyyy')}`;
+      range = `${''}${format(start, 'MMM d')} – ${''}${format(end, 'MMM d, yyyy')}`;
     } else {
-      range = `${format(start, 'd')}–${format(end, 'd')} ${format(end, 'MMMM, yyyy')}`;
+      range = `${''}${format(start, 'd')}–${''}${format(end, 'd')} ${''}${format(end, 'MMMM, yyyy')}`;
     }
-    return `Week ${weekNumber} · ${range}`;
+    return `Week ${''}${weekNumber} · ${''}${range}`;
   }, [view, currentDate]);
 
   const closeDialogs = useCallback(() => {
@@ -205,7 +207,7 @@ export function EventsContent({ project }: { project: Project }) {
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button variant="default" size="icon" className="h-8 w-8 rounded-full">
+                        <Button variant="default" size="icon">
                           <GoogleSymbol name="add_circle" className="text-4xl" weight={100} />
                           <span className="sr-only">New Event</span>
                         </Button>
@@ -230,7 +232,7 @@ export function EventsContent({ project }: { project: Project }) {
             </div>
             <p className="text-muted-foreground text-sm font-normal">{dateRange}</p>
           </div>
-          <div className="flex items-center justify-center gap-2 flex-1">
+          <div className="flex items-center justify-end gap-2 flex-1">
               <TooltipProvider>
                 {(view === 'production-schedule' || view === 'day' || view === 'week') && (
                   <Tooltip>
@@ -256,12 +258,14 @@ export function EventsContent({ project }: { project: Project }) {
                 )}
               </TooltipProvider>
               <Tabs value={view} onValueChange={(v) => setView(v as any)} className="w-auto">
+                <CenteredTabList>
                   <TabsList>
                       <TabsTrigger value="month">Month</TabsTrigger>
                       <TabsTrigger value="week">Week</TabsTrigger>
                       <TabsTrigger value="day">Day</TabsTrigger>
                       <TabsTrigger value="production-schedule">Production Schedule</TabsTrigger>
                   </TabsList>
+                </CenteredTabList>
               </Tabs>
           </div>
         </div>

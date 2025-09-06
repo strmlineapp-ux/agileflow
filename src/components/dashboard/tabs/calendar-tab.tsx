@@ -186,13 +186,13 @@ export function CalendarPageContent({ tab }: { tab: AppTab }) {
     let range;
 
     if (format(start, 'yyyy') !== format(end, 'yyyy')) {
-      range = `${format(start, 'MMM d, yyyy')} – ${format(end, 'MMM d, yyyy')}`;
+      range = `${''}${format(start, 'MMM d, yyyy')} – ${''}${format(end, 'MMM d, yyyy')}`;
     } else if (format(start, 'MMMM') !== format(end, 'MMMM')) {
-      range = `${format(start, 'MMM d')} – ${format(end, 'MMM d, yyyy')}`;
+      range = `${''}${format(start, 'MMM d')} – ${''}${format(end, 'MMM d, yyyy')}`;
     } else {
-      range = `${format(start, 'd')}–${format(end, 'd')} ${format(end, 'MMMM, yyyy')}`;
+      range = `${''}${format(start, 'd')}–${''}${format(end, 'd')} ${''}${format(end, 'MMMM, yyyy')}`;
     }
-    return `Week ${weekNumber} · ${range}`;
+    return `Week ${''}${weekNumber} · ${''}${range}`;
   }, [view, currentDate]);
 
   const handleAddEvent = async (data: Omit<Event, 'eventId'>) => {
@@ -277,7 +277,7 @@ export function CalendarPageContent({ tab }: { tab: AppTab }) {
             </div>
             <p className="text-muted-foreground text-sm font-normal">{dateRange}</p>
           </div>
-          <div className="flex items-center justify-center gap-2 flex-1">
+          <div className="flex items-center justify-end gap-2 flex-1">
               <TooltipProvider>
                 {(view === 'production-schedule' || view === 'day' || view === 'week') && (
                   <Tooltip>
