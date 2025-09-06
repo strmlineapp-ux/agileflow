@@ -142,7 +142,7 @@ function CalendarCard({
 }
 
 
-export function CalendarManagement({ tab, page, isActive }: { tab: AppTab; page: AppPage, isActive?: boolean }) {
+export function CalendarManagement({ tab, page, isActive, isSharedPanelOpen, setIsSharedPanelOpen, isDragging }: { tab: AppTab; page: AppPage, isActive?: boolean, isSharedPanelOpen: boolean, setIsSharedPanelOpen: (isOpen: boolean) => void, isDragging: boolean }) {
   const { viewAsUser, calendars, addCalendar, updateCalendar, deleteCalendar, updatePage, updateUser, reorderCalendars } = useUser();
   const { toast } = useToast();
   
@@ -212,7 +212,7 @@ export function CalendarManagement({ tab, page, isActive }: { tab: AppTab; page:
     return calendars.filter(c => c.isShared && c.owner?.id !== viewAsUser.userId && !displayedIds.has(c.id));
   }, [calendars, displayedCalendars, viewAsUser.userId]);
 
-  const renderCalendarCard = useCallback((calendar: SharedCalendar) => (
+  const renderCalendarCard = useCallback((calendar: SharedCalendar, isDragging: boolean) => (
       <SortableItem key={calendar.id} id={calendar.id} data={{ type: 'calendar-card', calendar, isSharedPreview: false }}>
         {(isDragging: boolean) => (
           <CalendarCard
@@ -222,21 +222,6 @@ export function CalendarManagement({ tab, page, isActive }: { tab: AppTab; page:
             isExpanded={expandedCalendars.has(calendar.id)}
             onToggleExpand={() => onToggleExpand(calendar.id)}
           />
-        )}
-      </SortableItem>
-  ), [handleUpdate, handleDelete, expandedCalendars, onToggleExpand]);
-  
-  const renderSharedCalendarCard = useCallback((calendar: SharedCalendar) => (
-      <SortableItem key={calendar.id} id={calendar.id} data={{ type: 'calendar-card', calendar, isSharedPreview: true }}>
-        {(isDragging: boolean) => (
-            <CalendarCard
-              calendar={calendar}
-              onUpdate={handleUpdate}
-              onDelete={handleDelete}
-              isSharedPreview={true}
-              isExpanded={expandedCalendars.has(calendar.id)}
-              onToggleExpand={() => onToggleExpand(calendar.id)}
-            />
         )}
       </SortableItem>
   ), [handleUpdate, handleDelete, expandedCalendars, onToggleExpand]);
@@ -262,6 +247,9 @@ export function CalendarManagement({ tab, page, isActive }: { tab: AppTab; page:
         renderItem={renderCalendarCard}
         renderDragOverlay={renderDragOverlay}
         isActive={isActive ?? false}
+        isSharedPanelOpen={isSharedPanelOpen}
+        setIsSharedPanelOpen={setIsSharedPanelOpen}
+        isDragging={isDragging}
     />
   );
 }

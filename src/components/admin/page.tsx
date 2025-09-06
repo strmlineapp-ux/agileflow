@@ -606,7 +606,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
     );
 }
 
-export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
+export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelOpen, isDragging }: { isActive: boolean; isSharedPanelOpen: boolean; setIsSharedPanelOpen: (isOpen: boolean) => void; isDragging: boolean; }) => {
     const { viewAsUser, appSettings, addPage, updatePage, deletePage, reorderPages, updateUser } = useUser();
     const { toast } = useToast();
     const [expandedPages, setExpandedPages] = useState<Set<string>>(new Set());
@@ -678,7 +678,7 @@ export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
         return appSettings.pages.filter(p => p.isShared && p.owner?.id !== viewAsUser.userId && !displayedIds.has(p.id));
     }, [appSettings.pages, displayedPages, viewAsUser.userId]);
 
-    const renderPageCard = useCallback((page: AppPage, isDragging: boolean) => (
+    const renderPageCard = useCallback((page: AppPage) => (
       <SortableItem key={page.id} id={page.id} data={{ type: 'page-card', page, isSharedPreview: false }} disabled={page.isSystemPage}>
           {(isDragging: boolean) => (
               <SortablePageCard
@@ -691,21 +691,6 @@ export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
           )}
       </SortableItem>
     ), [handleUpdate, handleDelete, expandedPages, onToggleExpand]);
-    
-    const renderSharedPageCard = useCallback((page: AppPage, isDragging: boolean) => (
-      <SortableItem key={page.id} id={page.id} data={{ type: 'page-card', page, isSharedPreview: true }}>
-          {(isDragging: boolean) => (
-              <SortablePageCard
-                  page={page}
-                  onUpdate={handleUpdate}
-                  onDelete={() => {}} // Can't delete/unlink from shared panel directly
-                  isSharedPreview={true}
-                  isExpanded={expandedPages.has(page.id)}
-                  onToggleExpand={() => onToggleExpand(page.id)}
-              />
-          )}
-      </SortableItem>
-    ), [handleUpdate, expandedPages, onToggleExpand]);
 
     return (
         <div className="h-full flex flex-col">
@@ -721,9 +706,12 @@ export const PagesManagement = ({ isActive }: { isActive: boolean }) => {
                 onDeleteItem={handleDelete}
                 onReorderItems={reorderPages}
                 onLinkItem={handleLinkPage}
-                renderItem={renderPageCard}
+                renderItem={(item, isDragging) => renderPageCard(item as AppPage)}
                 renderDragOverlay={(item) => <GoogleSymbol name={item.icon} style={{ color: item.color, fontSize: '48px' }} />}
                 isActive={isActive}
+                isSharedPanelOpen={isSharedPanelOpen}
+                setIsSharedPanelOpen={setIsSharedPanelOpen}
+                isDragging={isDragging}
             />
         </div>
     );
@@ -847,7 +835,7 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
                 items={filteredTabs}
                 setItems={reorderTabs}
                 renderItem={(item) => renderTabCard(item as AppTab)}
-                renderDragOverlay={(item) => <GoogleSymbol name={item.icon} style={{ color: item.color, fontSize: '48px' }} />}
+                className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4"
             />
         </div>
     );
