@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React from 'react';
@@ -41,6 +40,7 @@ export function SortableItem({ id, children, data, disabled = false }: SortableI
         style={style} 
         {...listeners} 
         {...attributes} 
+        className="break-inside-avoid mb-4"
     >
       {children(isDragging)}
     </div>
