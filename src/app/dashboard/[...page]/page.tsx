@@ -206,12 +206,14 @@ export default function DynamicPage() {
         const Component = componentMap[tab.componentKey as keyof typeof componentMap];
         if (!Component) return null;
         
-        // Pass the isDragging state down to the management layout
-        if (isManagementPage) {
-            return <Component tab={tab} page={page} team={teamContext} isActive={activeTabValue === tab.id} isDragging={!!activeDragItem} />;
-        }
-        
-        return <Component tab={tab} page={page} team={teamContext} isSingleTabPage={pageTabs.length === 1} isActive={activeTabValue === tab.id} />;
+        return <Component 
+          tab={tab} 
+          page={page} 
+          team={teamContext} 
+          isSingleTabPage={pageTabs.length === 1} 
+          isActive={activeTabValue === tab.id}
+          isDragging={!!activeDragItem}
+        />;
     };
     
     return (
@@ -230,14 +232,16 @@ export default function DynamicPage() {
                 ))}
             </SortableTabsList>
           </CenteredTabList>
-         <div className="flex-1 pt-6 overflow-hidden">
+         <div className="flex-1 pt-6 min-h-0">
             {pageTabs.map(tab => (
                 <TabsContent 
                     key={tab.id} 
                     value={tab.id} 
                     className="mt-0 h-full"
                 >
-                  {renderTabContent(tab)}
+                  <div className="h-full overflow-hidden">
+                    {renderTabContent(tab)}
+                  </div>
                 </TabsContent>
             ))}
         </div>
