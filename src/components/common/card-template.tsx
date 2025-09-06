@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState } from 'react';
@@ -130,25 +129,6 @@ export function CardTemplate({
         <>
             <Card className="relative bg-card flex flex-col h-full shadow-md" {...dragHandleProps}>
                 <CardHeader className="group p-2">
-                    {!isPinned && canDelete && !isSharedPreview && (
-                        <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10" onPointerDown={(e) => e.stopPropagation()}>
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            variant="default"
-                                            size="sm"
-                                            className="h-6 w-6 p-0 bg-card"
-                                            onClick={() => setIsDeleteDialogOpen(true)}
-                                        >
-                                            <GoogleSymbol name="cancel" />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>{canManage ? `Delete ${entity.name}` : `Unlink ${entity.name}`}</p></TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        </div>
-                    )}
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                             <div className="relative">
@@ -187,6 +167,25 @@ export function CardTemplate({
                             </div>
                         </div>
                     </div>
+                     {!isPinned && canDelete && !isSharedPreview && (
+                        <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10" onPointerDown={(e) => e.stopPropagation()}>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="default"
+                                            size="sm"
+                                            className="h-6 w-6 p-0 bg-card"
+                                            onClick={() => setIsDeleteDialogOpen(true)}
+                                        >
+                                            <GoogleSymbol name="cancel" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>{canManage ? `Delete ${entity.name}` : `Unlink ${entity.name}`}</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </div>
+                    )}
                 </CardHeader>
                 {isExpanded && body && (
                     <CardContent className="p-2 pt-0 flex-grow flex flex-col gap-2">
@@ -205,17 +204,10 @@ export function CardTemplate({
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <DialogContent className="max-w-md" onPointerDownCapture={(e) => e.stopPropagation()}>
                     <div className="absolute top-4 right-4">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="default" size="icon" className="hover:text-destructive p-0 hover:bg-transparent" onClick={() => { onDelete(entity); setIsDeleteDialogOpen(false); }}>
-                              <GoogleSymbol name="delete" className="text-4xl" />
-                              <span className="sr-only">Delete</span>
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent><p>Delete</p></TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                        <Button variant="default" size="icon" className="hover:text-destructive p-0 hover:bg-transparent bg-card" onClick={() => { onDelete(entity); setIsDeleteDialogOpen(false); }}>
+                            <GoogleSymbol name="delete" className="text-4xl" />
+                            <span className="sr-only">Delete</span>
+                        </Button>
                     </div>
                     <DialogHeader>
                         <UIDialogTitle>Delete "{entity.name}"?</UIDialogTitle>
