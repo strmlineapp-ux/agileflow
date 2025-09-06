@@ -33,6 +33,7 @@
     --font-weight-bold: 700;
     --font-weight-emphasis: 500;
     --emphasis-color: hsl(var(--foreground));
+    --emphasis-icon-fill: var(--global-icon-fill, 0);
   }
 
   .dark {
@@ -72,7 +73,7 @@
     .font-emphasis:focus .material-symbols-outlined,
     .font-emphasis[data-state=open] .material-symbols-outlined,
     .font-emphasis[data-state=active] .material-symbols-outlined {
-        font-variation-settings: 'FILL' var(--global-icon-fill, 0), 'wght' var(--font-weight-emphasis, 500), 'GRAD' var(--global-icon-grade, 0), 'opsz' var(--global-icon-optical-size, 24) !important;
+        font-variation-settings: 'FILL' var(--emphasis-icon-fill), 'wght' var(--font-weight-emphasis, 500), 'GRAD' var(--global-icon-grade, 0), 'opsz' var(--global-icon-optical-size, 24) !important;
     }
     
     .font-emphasized {
@@ -95,6 +96,14 @@
     body.bold-emphasis .font-emphasis[data-state=open] .material-symbols-outlined,
     body.bold-emphasis .font-emphasis[data-state=active] .material-symbols-outlined {
         color: hsl(var(--primary)) !important;
+    }
+
+    body:not(.icon-fill-emphasis) {
+        --emphasis-icon-fill: 1;
+    }
+    
+    body.icon-fill-emphasis {
+        --emphasis-icon-fill: 0;
     }
 }
 

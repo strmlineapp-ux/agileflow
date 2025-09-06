@@ -61,6 +61,12 @@ function AppThemeManager({ children }: { children: React.ReactNode }) {
 
             const iconFill = viewAsUser.iconFill ? 1 : 0;
             root.style.setProperty('--global-icon-fill', iconFill.toString());
+            
+            if (viewAsUser.iconFill) {
+                document.body.classList.add('icon-fill-emphasis');
+            } else {
+                document.body.classList.remove('icon-fill-emphasis');
+            }
 
             const radius = viewAsUser.radius ?? 0.5;
             root.style.setProperty('--radius', `${radius}rem`);
