@@ -732,7 +732,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
     setUsers, setTeams, setAllBadgeCollections, setAppSettings, setCalendars, setLocations, setNotifications, setUserStatusAssignments, setAllBadges,
     handleApproveAccessRequest, updateUser, addUser, deleteUser, reorderUsers, addTeam, updateTeam, deleteTeam, reorderTeams,
     addProject, updateProject, deleteProject,
-    addCalendar: addCalendarWithDefaults, updateCalendar, deleteCalendar, reorderCalendars, fetchEvents, addEvent, updateEvent, deleteEvent, 
+    addCalendar, updateCalendar, deleteCalendar, reorderCalendars, fetchEvents, addEvent, updateEvent, deleteEvent, 
     fetchTasks,
     addTask, updateTask, deleteTask, addLocation, deleteLocation,
     updateAppSettings: (settings: Partial<Omit<AppSettings, 'preApprovedEmails'>>) => updateAppSettings(settings),
