@@ -561,22 +561,25 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
 
     let shareIcon: string | null = null;
     let shareIconTitle: string = '';
-    const shareIconColor = 'hsl(220, 13%, 47%)';
+    let shareIconColor = 'hsl(220, 13%, 47%)';
 
     const isOwned = page.owner?.id === viewAsUser.userId;
 
-    if (isOwned && page.isShared) {
-        shareIcon = 'change_circle';
-        shareIconTitle = 'Owned & Shared by you';
-    } else if (!isOwned && !isSharedPreview && page.owner?.type === 'user') { 
-        shareIcon = 'link';
-        shareIconTitle = `Owned by ${ownerUser?.displayName}`;
-    } else if (isSharedPreview && page.owner?.type === 'user') { 
-        shareIcon = 'change_circle';
-        shareIconTitle = `Owned by ${ownerUser?.displayName}`;
-    } else if(page.owner?.type === 'system') {
+    if (page.owner?.type === 'system') {
         shareIcon = 'shield_person';
         shareIconTitle = 'System Owned';
+    } else if (isOwned && page.isShared) {
+        shareIcon = 'change_circle';
+        shareIconTitle = 'Owned & Shared by you';
+        shareIconColor = viewAsUser.primaryColor || shareIconColor;
+    } else if (!isOwned && !isSharedPreview) { 
+        shareIcon = 'link';
+        shareIconTitle = `Owned by ${ownerUser?.displayName}`;
+        shareIconColor = ownerUser?.primaryColor || shareIconColor;
+    } else if (isSharedPreview) { 
+        shareIcon = 'change_circle';
+        shareIconTitle = `Owned by ${ownerUser?.displayName}`;
+        shareIconColor = ownerUser?.primaryColor || shareIconColor;
     }
 
 
