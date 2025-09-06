@@ -41,7 +41,7 @@ function DraggableUserCard({ user, onRemove, isTeamAdmin, onSetAdmin, canManage,
   return (
     <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
         <div 
-            className="group relative flex items-center gap-2 p-1 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
+            className="group relative flex items-center gap-2 p-1 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 shadow-md bg-card"
             onClick={(e) => { 
                 if (canManage) {
                     e.stopPropagation();
