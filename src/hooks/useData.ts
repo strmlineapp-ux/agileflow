@@ -315,20 +315,21 @@ export function useData(realUser: User | null, authLoading: boolean) {
   const fetchEvents = useCallback(async (start: Date, end: Date): Promise<Event[]> => {
     if (!realUser) return [];
     const db = getDb();
-    // Query only by workspaceId to avoid composite index requirement
     const eventsQuery = query(
       collection(db, "events"),
       where("workspaceId", "==", realUser.workspaceId)
     );
     const snapshot = await getDocs(eventsQuery);
-    
-    // Filter by date on the client
-    const allEvents = snapshot.docs.map(doc => ({
-      ...doc.data(),
-      eventId: doc.id,
-      startTime: doc.data().startTime.toDate(),
-      endTime: doc.data().endTime.toDate(),
-    } as Event));
+
+    const allEvents = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+            ...data,
+            eventId: doc.id,
+            startTime: data.startTime.toDate(),
+            endTime: data.endTime.toDate(),
+        } as Event;
+    });
 
     return allEvents.filter(event => 
         event.startTime >= start && event.startTime < end
@@ -753,4 +754,5 @@ export function useData(realUser: User | null, authLoading: boolean) {
 
 
     
+
 
