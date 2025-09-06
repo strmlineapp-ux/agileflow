@@ -1,8 +1,7 @@
 
-
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useUser } from '@/context/user-context';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
@@ -34,6 +33,7 @@ import { PageTitle } from '@/components/common/page-title';
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/components/ui/avatar';
 import { AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
+import { ManagementPageLayout } from '@/components/common/management-page-layout';
 
 
 const componentMap = {
@@ -59,9 +59,11 @@ const componentMap = {
 
 type DraggableItem = Team | SharedCalendar | BadgeCollection | AppPage | Badge | User;
 
+const managementComponentKeys = new Set(['calendars', 'teams', 'badges', 'pages']);
+
 export default function DynamicPage() {
   const params = useParams();
-  const { appSettings, viewAsUser, loading, teams, updatePage, allBadgeCollections, allBadges, users } = useUser();
+  const { appSettings, viewAsUser, loading, teams, updatePage, allBadgeCollections, allBadges, users, reorderPages, addPage, deletePage, updateUser } = useUser();
   const { page: pagePath } = params;
   
   const [activeTabValue, setActiveTabValue] = useState<string | undefined>();
@@ -101,8 +103,6 @@ export default function DynamicPage() {
   
   const onDragStart = (event: DragStartEvent) => {
     const { active } = event;
-    const type = active.data.current?.type;
-
     const item = active.data.current?.page || 
                  active.data.current?.team || 
                  active.data.current?.collection || 
@@ -110,9 +110,7 @@ export default function DynamicPage() {
                  active.data.current?.badge ||
                  active.data.current?.user;
     
-    if(item) {
-        setActiveDragItem(item);
-    }
+    if(item) setActiveDragItem(item);
   };
 
   const onDragEnd = () => {
@@ -194,18 +192,25 @@ export default function DynamicPage() {
         );
     }
     
-    if (page.associatedTabs.length === 1 && pageTabs[0]) {
-      const Component = componentMap[pageTabs[0].componentKey as keyof typeof componentMap];
-      return Component ? (
-        <div className="flex-1 flex flex-col min-h-0">
-            <Component tab={pageTabs[0]} page={page} team={teamContext} isSingleTabPage={true} isActive={true} />
-        </div>
-      ) : null;
-    }
+    // Check if the current active tab is a management page
+    const activeComponentKey = pageTabs.find(t => t.id === activeTabValue)?.componentKey;
+    const isManagementPage = activeComponentKey && managementComponentKeys.has(activeComponentKey);
     
     const handleReorderPageTabs = (reorderedPageTabs: AppTab[]) => {
       const newTabIds = reorderedPageTabs.map(tab => tab.id);
       updatePage(page.id, { associatedTabs: newTabIds });
+    };
+
+    const renderTabContent = (tab: AppTab) => {
+        const Component = componentMap[tab.componentKey as keyof typeof componentMap];
+        if (!Component) return null;
+        
+        // The ManagementPageLayout is now part of the tab content, which simplifies layout logic
+        if (isManagementPage) {
+            return <Component tab={tab} page={page} team={teamContext} isActive={activeTabValue === tab.id} />;
+        }
+        
+        return <Component tab={tab} page={page} team={teamContext} isSingleTabPage={pageTabs.length === 1} isActive={activeTabValue === tab.id} />;
     };
     
     return (
@@ -224,19 +229,16 @@ export default function DynamicPage() {
                 ))}
             </SortableTabsList>
           </CenteredTabList>
-         <div className="flex-1 pt-6 flex flex-col min-h-0">
-            {pageTabs.map(tab => {
-                const Component = componentMap[tab.componentKey as keyof typeof componentMap];
-                return Component ? (
-                    <TabsContent 
-                        key={tab.id} 
-                        value={tab.id} 
-                        className="mt-0 flex-1 flex flex-col"
-                    >
-                      <Component tab={tab} page={page} team={teamContext} isActive={activeTabValue === tab.id} />
-                    </TabsContent>
-                ) : null;
-            })}
+         <div className="flex-1 pt-6 flex flex-col min-h-0 overflow-hidden">
+            {pageTabs.map(tab => (
+                <TabsContent 
+                    key={tab.id} 
+                    value={tab.id} 
+                    className="mt-0 flex-1 flex flex-col h-full"
+                >
+                  {renderTabContent(tab)}
+                </TabsContent>
+            ))}
         </div>
       </Tabs>
     )
