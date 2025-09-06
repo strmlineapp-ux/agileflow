@@ -17,7 +17,12 @@ const nextConfig = {
     ],
   },
   experimental: {
-    serverComponentsExternalPackages: ['@genkit-ai/googleai'],
+    serverComponentsExternalPackages: [
+        '@genkit-ai/googleai',
+        '@opentelemetry/instrumentation',
+        'handlebars',
+        'require-in-the-middle'
+    ],
   },
    webpack: (
     config,
