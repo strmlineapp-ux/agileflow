@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -295,7 +294,7 @@ function DuplicateBadgeZone({ collectionId, onAdd, isOwner }: { collectionId: st
               size="icon"
               onClick={onAdd}
               onPointerDown={(e) => e.stopPropagation()}
-              className="h-8 w-8 text-muted-foreground"
+              className="h-8 w-8 text-muted-foreground font-emphasis"
             >
               <GoogleSymbol name="add_circle" weight={100} opticalSize={20} />
               <span className="sr-only">New Badge or Drop to Duplicate</span>
@@ -403,7 +402,7 @@ function BadgeCollectionCard({
             <Tooltip>
               <TooltipTrigger asChild>
                 <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground font-emphasis">
                     <GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} opticalSize={20} />
                   </Button>
                 </PopoverTrigger>
@@ -416,7 +415,7 @@ function BadgeCollectionCard({
                 <TooltipProvider key={mode}>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={() => { onUpdateCollection(collection.id, { viewMode: mode }); setIsViewModePopoverOpen(false); }} className={cn("h-8 w-8", collection.viewMode === mode && "text-primary")}>
+                            <Button variant="ghost" size="icon" onClick={() => { onUpdateCollection(collection.id, { viewMode: mode }); setIsViewModePopoverOpen(false); }} className={cn("h-8 w-8 font-emphasis", collection.viewMode === mode && "text-primary")}>
                                 <GoogleSymbol name={icon} weight={100} opticalSize={20} />
                             </Button>
                         </TooltipTrigger>
