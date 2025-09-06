@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React from 'react';
@@ -43,13 +42,15 @@ export function SharedItemsPanel<T extends { id: string, name: string, icon: str
   const { setNodeRef, isOver } = useDroppable({ id: `shared-${type}-panel`, data: { type: `${type}-panel` } });
 
   return (
-    <div ref={setNodeRef} className={cn(
-        "transition-all duration-300", 
-        isOpen ? "w-96 p-2" : "w-0 p-0"
+    <div 
+        ref={setNodeRef} 
+        className={cn(
+            "h-full flex-shrink-0 transition-all duration-300",
+            isOpen ? "w-96 p-2" : "w-0 p-0"
     )}>
         <Card className={cn(
             "transition-opacity duration-300 h-full flex flex-col shadow-lg ring-1 ring-border/20", 
-            isOpen ? "opacity-100" : "opacity-0",
+            isOpen ? "opacity-100" : "opacity-0 invisible",
             isOver && "ring-1 ring-border ring-inset"
         )}>
           <CardHeader>
