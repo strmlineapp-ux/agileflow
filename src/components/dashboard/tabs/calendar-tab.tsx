@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
@@ -9,7 +8,7 @@ import { WeekView } from '@/components/calendar/week-view';
 import { DayView } from '@/components/calendar/day-view';
 import { ProductionScheduleView } from '@/components/calendar/production-schedule-view';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, startOfWeek, getWeek, isToday } from 'date-fns';
+import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, startOfWeek, getWeek, isToday, startOfMonth, endOfMonth } from 'date-fns';
 import { useUser } from '@/context/user-context';
 import { canCreateAnyEvent } from '@/lib/permissions';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
@@ -49,7 +48,7 @@ function CalendarLinkPrompt() {
 }
 
 export function CalendarPageContent({ tab }: { tab: AppTab }) {
-  const { viewAsUser, calendars } = useUser();
+  const { viewAsUser, calendars, fetchEvents, addEvent, updateEvent, deleteEvent } = useUser();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>(viewAsUser.defaultCalendarView || 'day');
   const [zoomLevel, setZoomLevel] = useState<'normal' | 'fit'>('normal');
@@ -66,62 +65,36 @@ export function CalendarPageContent({ tab }: { tab: AppTab }) {
   const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
 
   useEffect(() => {
-    if (!viewAsUser?.workspaceId || !viewAsUser.googleCalendarLinked) {
+    if (!viewAsUser.googleCalendarLinked) {
       setIsDataLoading(false);
       return;
     }
-
+    let start: Date;
+    let end: Date;
+    switch (view) {
+      case 'month':
+        start = startOfMonth(currentDate);
+        end = endOfMonth(currentDate);
+        break;
+      case 'week':
+      case 'production-schedule':
+        start = startOfWeek(currentDate, { weekStartsOn: 1 });
+        end = addDays(start, 7);
+        break;
+      case 'day':
+      default:
+        start = startOfDay(currentDate);
+        end = addDays(start, 1);
+        break;
+    }
+    
     setIsDataLoading(true);
-    const db = getDb();
-    const eventsQuery = query(
-      collection(db, "events"),
-      where("workspaceId", "==", viewAsUser.workspaceId)
-    );
-
-    const unsubscribe = onSnapshot(eventsQuery, (snapshot) => {
-      const allEvents = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          ...data,
-          eventId: doc.id,
-          startTime: data.startTime.toDate(),
-          endTime: data.endTime.toDate(),
-        } as Event;
-      });
-      setViewEvents(allEvents);
-      setIsDataLoading(false);
-    }, (error) => {
-      console.error("Error fetching events in real-time:", error);
-      setIsDataLoading(false);
+    fetchEvents(start, end).then(events => {
+        setViewEvents(events);
+        setIsDataLoading(false);
     });
 
-    return () => unsubscribe();
-  }, [viewAsUser?.workspaceId, viewAsUser.googleCalendarLinked]);
-
-  const addEvent = useCallback(async (newEventData: Omit<Event, 'eventId'>) => {
-    if (!viewAsUser) return;
-    const db = getDb();
-    const eventWithWorkspace = { 
-        ...newEventData,
-        startTime: Timestamp.fromDate(newEventData.startTime),
-        endTime: Timestamp.fromDate(newEventData.endTime),
-        workspaceId: viewAsUser.workspaceId 
-    };
-    await addDoc(collection(db, "events"), eventWithWorkspace);
-  }, [viewAsUser]);
-
-  const updateEvent = useCallback(async (eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => {
-      const db = getDb();
-      const dataToUpdate: Record<string, any> = { ...eventData, lastUpdated: new Date() };
-      if (eventData.startTime) dataToUpdate.startTime = Timestamp.fromDate(eventData.startTime);
-      if (eventData.endTime) dataToUpdate.endTime = Timestamp.fromDate(eventData.endTime);
-      await updateDoc(doc(db, 'events', eventId), dataToUpdate);
-  }, []);
-
-  const deleteEvent = useCallback(async (eventId: string) => {
-    const db = getDb();
-    await deleteDoc(doc(db, 'events', eventId));
-  }, []);
+  }, [currentDate, view, fetchEvents, viewAsUser.googleCalendarLinked]);
   
   const handlePrev = useCallback(() => {
     switch (view) {
@@ -187,28 +160,36 @@ export function CalendarPageContent({ tab }: { tab: AppTab }) {
     let range;
 
     if (format(start, 'yyyy') !== format(end, 'yyyy')) {
-      range = `${''}${format(start, 'MMM d, yyyy')} – ${''}${format(end, 'MMM d, yyyy')}`;
+      range = `${format(start, 'MMM d, yyyy')} – ${format(end, 'MMM d, yyyy')}`;
     } else if (format(start, 'MMMM') !== format(end, 'MMMM')) {
-      range = `${''}${format(start, 'MMM d')} – ${''}${format(end, 'MMM d, yyyy')}`;
+      range = `${format(start, 'MMM d')} – ${format(end, 'MMM d, yyyy')}`;
     } else {
-      range = `${''}${format(start, 'd')}–${''}${format(end, 'd')} ${''}${format(end, 'MMMM, yyyy')}`;
+      range = `${format(start, 'd')}–${format(end, 'd')} ${format(end, 'MMMM, yyyy')}`;
     }
-    return `Week ${''}${weekNumber} · ${''}${range}`;
+    return `Week ${weekNumber} · ${range}`;
   }, [view, currentDate]);
 
-  const handleAddEvent = async (data: Omit<Event, 'eventId'>) => {
-    await addEvent(data);
-    setInitialEventData(null);
-  };
-  
-  const handleUpdateEvent = async (eventId: string, data: Partial<Omit<Event, 'eventId'>>) => {
-    await updateEvent(eventId, data);
-  };
-  
-  const handleDeleteEvent = async (eventId: string) => {
-    await deleteEvent(eventId);
-  };
-  
+  const handleEventMutation = useCallback(async (mutationType: 'add' | 'update' | 'delete', eventData: any) => {
+    let updatedEvents: Event[];
+
+    switch (mutationType) {
+      case 'add':
+        updatedEvents = await addEvent(viewEvents, eventData);
+        setInitialEventData(null); // Reset form for next new event
+        break;
+      case 'update':
+        const { eventId, ...updateData } = eventData;
+        updatedEvents = await updateEvent(viewEvents, eventId, updateData);
+        break;
+      case 'delete':
+        updatedEvents = await deleteEvent(viewEvents, eventData.eventId);
+        break;
+      default:
+        return;
+    }
+    setViewEvents(updatedEvents);
+  }, [addEvent, updateEvent, deleteEvent, viewEvents]);
+
   const closeDialogs = useCallback(() => {
     setIsNewEventOpen(false);
     setSelectedEvent(null);
@@ -266,7 +247,7 @@ export function CalendarPageContent({ tab }: { tab: AppTab }) {
                   <EventForm 
                     onFinished={closeDialogs} 
                     initialData={initialEventData} 
-                    onAdd={handleAddEvent}
+                    onAdd={(data) => handleEventMutation('add', data)}
                   />
                 </DialogContent>
               </Dialog>
@@ -315,7 +296,7 @@ export function CalendarPageContent({ tab }: { tab: AppTab }) {
               </Tabs>
           </div>
         </div>
-        <div className={cn("flex-1 min-h-0", pageShouldScroll ? "overflow-y-auto hide-scrollbar" : "overflow-hidden flex flex-col")} ref={viewContainerRef}>
+        <div className={cn("flex-1 min-h-0", pageShouldScroll ? "overflow-y-auto" : "overflow-hidden flex flex-col")} ref={viewContainerRef}>
             {renderCurrentView()}
         </div>
       </div>
@@ -323,8 +304,8 @@ export function CalendarPageContent({ tab }: { tab: AppTab }) {
         event={selectedEvent}
         isOpen={!!selectedEvent}
         onOpenChange={(isOpen) => !isOpen && setSelectedEvent(null)}
-        onUpdate={handleUpdateEvent}
-        onDelete={handleDeleteEvent}
+        onUpdate={(eventId, eventData) => handleEventMutation('update', { eventId, ...eventData })}
+        onDelete={(eventId) => handleEventMutation('delete', { eventId })}
       />
     </>
   );
