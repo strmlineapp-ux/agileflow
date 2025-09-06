@@ -87,7 +87,7 @@ export interface User {
   iconFill?: boolean;
   radius?: number;
   highContrast?: boolean;
-  expandedCardIds?: string[];
+  expandedCardState?: Record<string, string[]>;
   linkedTeamIds?: string[];
   linkedBadgeCollectionIds?: string[];
   linkedCalendarIds?: string[];
@@ -265,4 +265,3 @@ export interface Tenant {
     ownerId: string;
     createdAt: Date;
 }
-

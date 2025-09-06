@@ -530,16 +530,19 @@ function BadgeCollectionCard({
 export function BadgeManagement({ tab, page, isActive, isSharedPanelOpen, setIsSharedPanelOpen, isDragging }: { tab: AppTab; page: AppPage; isActive: boolean; isSharedPanelOpen: boolean; setIsSharedPanelOpen: (isOpen: boolean) => void; isDragging: boolean; }) {
     const { viewAsUser, users, updateUser, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, setAllBadgeCollections, reorderBadgeCollections, updatePage } = useUser();
     const { toast } = useToast();
-    const [expandedCollections, setExpandedCollections] = useState<Set<string>>(new Set());
-
+    const contextKey = `badges-${page.id}`;
+    
     const onToggleExpand = useCallback((collectionId: string) => {
-        setExpandedCollections(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(collectionId)) newSet.delete(collectionId);
-            else newSet.add(collectionId);
-            return newSet;
-        });
-    }, []);
+        if (!viewAsUser) return;
+        const currentState = viewAsUser.expandedCardState || {};
+        const currentExpanded = new Set(currentState[contextKey] || []);
+        if (currentExpanded.has(collectionId)) {
+            currentExpanded.delete(collectionId);
+        } else {
+            currentExpanded.add(collectionId);
+        }
+        updateUser(viewAsUser.userId, { expandedCardState: { ...currentState, [contextKey]: Array.from(currentExpanded) } });
+    }, [viewAsUser, updateUser, contextKey]);
 
     const handleUpdate = (collectionId: string, data: Partial<BadgeCollection>) => {
         updateBadgeCollection(collectionId, data);
@@ -576,7 +579,7 @@ export function BadgeManagement({ tab, page, isActive, isSharedPanelOpen, setIsS
 
     const renderCollectionCard = useCallback((collection: BadgeCollection) => {
         const userBadgeIds = new Set(allBadges.filter(b => b.owner.id === viewAsUser.userId).map(b => b.id));
-
+        const expandedCardIds = viewAsUser?.expandedCardState?.[contextKey] || [];
         return (
             <SortableItem key={collection.id} id={collection.id} data={{ type: 'collection-card', collection, isSharedPreview: false }}>
               {(isDragging: boolean) => (
@@ -589,7 +592,7 @@ export function BadgeManagement({ tab, page, isActive, isSharedPanelOpen, setIsS
                     onUpdateBadge={updateBadge}
                     onDeleteBadge={deleteBadge}
                     isViewer={!viewAsUser}
-                    isExpanded={expandedCollections.has(collection.id)}
+                    isExpanded={expandedCardIds.includes(collection.id)}
                     onToggleExpand={() => onToggleExpand(collection.id)}
                     currentUserBadgeIds={userBadgeIds}
                     allCollections={allBadgeCollections}
@@ -597,7 +600,7 @@ export function BadgeManagement({ tab, page, isActive, isSharedPanelOpen, setIsS
               )}
             </SortableItem>
         );
-    }, [handleUpdate, handleDelete, addBadge, updateBadge, deleteBadge, viewAsUser, expandedCollections, onToggleExpand, allBadges, allBadgeCollections]);
+    }, [handleUpdate, handleDelete, addBadge, updateBadge, deleteBadge, viewAsUser, onToggleExpand, allBadges, allBadgeCollections, contextKey]);
 
     const renderDragOverlay = useCallback((item: BadgeCollection | Badge) => {
         if ('badgeIds' in item) { // It's a BadgeCollection

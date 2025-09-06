@@ -47,19 +47,19 @@ export function TeamManagement({ tab, page, isSingleTabPage = false, isActive = 
     const router = useRouter();
     const pathname = usePathname();
     const { toast } = useToast();
-    const [expandedTeams, setExpandedTeams] = useState<Set<string>>(new Set());
-
+    const contextKey = `teams-${page.id}`;
+    
     const onToggleExpand = useCallback((teamId: string) => {
-        setExpandedTeams(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(teamId)) {
-                newSet.delete(teamId);
-            } else {
-                newSet.add(teamId);
-            }
-            return newSet;
-        });
-    }, []);
+        if (!viewAsUser) return;
+        const currentState = viewAsUser.expandedCardState || {};
+        const currentExpanded = new Set(currentState[contextKey] || []);
+        if (currentExpanded.has(teamId)) {
+            currentExpanded.delete(teamId);
+        } else {
+            currentExpanded.add(teamId);
+        }
+        updateUser(viewAsUser.userId, { expandedCardState: { ...currentState, [contextKey]: Array.from(currentExpanded) } });
+    }, [viewAsUser, updateUser, contextKey]);
 
     const canManageTeam = useCallback((team: Team) => {
         if (!viewAsUser) return false;
@@ -141,24 +141,26 @@ export function TeamManagement({ tab, page, isSingleTabPage = false, isActive = 
         return teams.filter(c => c.isShared && c.owner && c.owner.id !== viewAsUser.userId && !displayedIds.has(c.id));
     }, [teams, allTeams, viewAsUser.userId]);
 
-    const renderTeamCard = (team: Team, isDragging: boolean) => (
-      <SortableItem key={team.id} id={team.id} data={{ type: 'team-card', team, isSharedPreview: false }}>
-        {(isDragging) => (
-          <TeamCard
-            team={team}
-            users={users}
-            onUpdate={handleUpdate}
-            onDelete={handleDelete}
-            onRemoveUser={handleRemoveUserFromTeam}
-            onAddUser={handleAddUserToTeam}
-            onSetAdmin={handleSetAdmin}
-            isDragging={isDragging}
-            isExpanded={expandedTeams.has(team.id)}
-            onToggleExpand={() => onToggleExpand(team.id)}
-          />
-        )}
-      </SortableItem>
-    );
+    const renderTeamCard = (team: Team, isDragging: boolean) => {
+        const expandedCardIds = viewAsUser?.expandedCardState?.[contextKey] || [];
+        return (
+          <SortableItem key={team.id} id={team.id} data={{ type: 'team-card', team, isSharedPreview: false }}>
+            {(isDragging) => (
+              <TeamCard
+                team={team}
+                users={users}
+                onUpdate={handleUpdate}
+                onDelete={handleDelete}
+                onRemoveUser={handleRemoveUserFromTeam}
+                onAddUser={handleAddUserToTeam}
+                onSetAdmin={handleSetAdmin}
+                isDragging={isDragging}
+                isExpanded={expandedCardIds.includes(team.id)}
+                onToggleExpand={() => onToggleExpand(team.id)}
+              />
+            )}
+          </SortableItem>
+    )};
 
     const renderDragOverlay = (item: Team | User) => {
         if ('members' in item) { // It's a Team
