@@ -69,20 +69,18 @@ export function CardTemplate({
     const { shareIcon, shareIconTitle, shareIconColor } = useMemo(() => {
         const ownerUser = users.find(u => u.userId === entity.owner?.id);
         const isOwned = entity.owner?.id === viewAsUser.userId;
-        const protectedPages = ['page-admin-management', 'page-settings', 'page-notifications'];
-        
-        if (protectedPages.includes(entity.id)) {
-            return { shareIcon: null, shareIconTitle: 'System Owned', shareIconColor: 'hsl(var(--muted-foreground))' };
-        }
 
         if (entity.owner?.type === 'system') {
-             if (isSharedPreview || !viewAsUser.isAdmin) return { shareIcon: null };
+            const protectedPages = ['page-admin-management', 'page-settings', 'page-notifications'];
+            if (protectedPages.includes(entity.id)) return { shareIcon: null };
+
             return {
                 shareIcon: 'shield_person',
                 shareIconTitle: 'System Owned',
                 shareIconColor: 'hsl(var(--muted-foreground))',
             };
         }
+
         if (isOwned && entity.isShared) {
             return {
                 shareIcon: 'change_circle',
@@ -104,7 +102,7 @@ export function CardTemplate({
                 shareIconColor: ownerUser?.primaryColor || 'hsl(var(--muted-foreground))',
             };
         }
-        return { shareIcon: null, shareIconTitle: '', shareIconColor: 'hsl(var(--muted-foreground))' };
+        return { shareIcon: null };
     }, [entity, viewAsUser, users, isSharedPreview]);
 
     const handleOwnershipReset = (e: React.MouseEvent) => {
@@ -183,7 +181,7 @@ export function CardTemplate({
     return (
         <>
             <Card className="relative bg-card flex flex-col h-full shadow-md" {...dragHandleProps}>
-                <CardHeader className="group p-2">
+                <CardHeader className="group p-2 relative">
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                             <div className="relative">
@@ -241,6 +239,13 @@ export function CardTemplate({
                             </TooltipProvider>
                         </div>
                     )}
+                    {body && (
+                        <div className="absolute -bottom-1 right-0">
+                            <Button variant="default" size="icon" onClick={onToggleExpand} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
+                                <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
+                            </Button>
+                        </div>
+                    )}
                 </CardHeader>
                 {isExpanded && body && (
                     <CardContent className="p-2 pt-0 flex-grow flex flex-col gap-2">
@@ -251,13 +256,6 @@ export function CardTemplate({
                     <CardFooter className="p-2 pt-0">
                         {footer}
                     </CardFooter>
-                )}
-                {body && (
-                    <div className="absolute -bottom-1 right-0">
-                        <Button variant="default" size="icon" onClick={onToggleExpand} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
-                            <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
-                        </Button>
-                    </div>
                 )}
             </Card>
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
