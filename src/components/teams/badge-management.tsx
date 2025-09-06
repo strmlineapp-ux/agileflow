@@ -424,8 +424,8 @@ function BadgeCollectionCard({
                                 onPointerDown={(e) => e.stopPropagation()}
                                 onClick={() => { onUpdateCollection(collection.id, { viewMode: mode }); setIsViewModePopoverOpen(false); }}
                                 className={cn(
-                                    "h-8 w-8 font-emphasis",
-                                    collection.viewMode === mode && "font-emphasized"
+                                    "h-8 w-8",
+                                    collection.viewMode === mode ? 'font-emphasized' : 'font-emphasis'
                                 )}
                             >
                                 <GoogleSymbol name={icon} weight={100} opticalSize={20} />
@@ -487,7 +487,8 @@ function BadgeCollectionCard({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={cn("h-6 w-6 text-muted-foreground", isActive ? "font-emphasized" : "font-emphasis")}
+                      className="h-6 w-6 text-muted-foreground font-emphasis"
+                      data-state={isActive ? "active" : "inactive"}
                       onClick={() => handleToggleApplication(app.key)}
                       onPointerDown={(e) => e.stopPropagation()}
                       disabled={!isOwner}
