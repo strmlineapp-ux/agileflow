@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -148,20 +149,18 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
   const [activeDragUser, setActiveDragUser] = useState<User | null>(null);
   const [isAddUserPopoverOpen, setIsAddUserPopoverOpen] = useState(false);
   const [newUserEmail, setNewUserEmail] = useState('');
-  const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
-
-  const handleToggleUserExpand = useCallback((userId: string) => {
-    setExpandedUsers(prev => {
-        const newSet = new Set(prev);
-        if (newSet.has(userId)) {
-            newSet.delete(userId);
-        } else {
-            newSet.add(userId);
-        }
-        return newSet;
-    });
-  }, []);
   
+  const onToggleUserExpand = useCallback((userId: string) => {
+    if (!viewAsUser) return;
+    const currentExpanded = new Set(viewAsUser.expandedCardIds || []);
+    if (currentExpanded.has(userId)) {
+      currentExpanded.delete(userId);
+    } else {
+      currentExpanded.add(userId);
+    }
+    updateUser(viewAsUser.userId, { expandedCardIds: Array.from(currentExpanded) });
+  }, [viewAsUser, updateUser]);
+
   const handleAddPreApprovedEmail = () => {
     if(!viewAsUser) return;
     const trimmedEmail = newUserEmail.trim();
@@ -305,7 +304,7 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
                         </div>
                     </CardHeader>
                     <CardContent className="flex-grow">
-                        <UserDropZone id="admin-list" users={filteredAdminUsers} expandedUsers={expandedUsers} onToggleUserExpand={handleToggleUserExpand} />
+                        <UserDropZone id="admin-list" users={filteredAdminUsers} expandedUsers={new Set(viewAsUser?.expandedCardIds)} onToggleUserExpand={onToggleUserExpand} />
                     </CardContent>
                   </TransparentCard>
                   <TransparentCard className="flex flex-col h-full">
@@ -366,7 +365,7 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
                         </div>
                     </CardHeader>
                      <CardContent className="flex-grow">
-                         <UserDropZone id="user-list" users={filteredNonAdminUsers} onDeleteRequest={handleDeleteUserRequest} expandedUsers={expandedUsers} onToggleUserExpand={handleToggleUserExpand} />
+                         <UserDropZone id="user-list" users={filteredNonAdminUsers} onDeleteRequest={handleDeleteUserRequest} expandedUsers={new Set(viewAsUser?.expandedCardIds)} onToggleUserExpand={onToggleUserExpand} />
                     </CardContent>
                   </TransparentCard>
             </div>
@@ -609,16 +608,17 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
 export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelOpen, isDragging }: { isActive: boolean; isSharedPanelOpen?: boolean; setIsSharedPanelOpen?: (isOpen: boolean) => void; isDragging?: boolean; }) => {
     const { viewAsUser, appSettings, addPage, updatePage, deletePage, reorderPages, updateUser } = useUser();
     const { toast } = useToast();
-    const [expandedPages, setExpandedPages] = useState<Set<string>>(new Set());
 
     const onToggleExpand = useCallback((pageId: string) => {
-        setExpandedPages(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(pageId)) newSet.delete(pageId);
-            else newSet.add(pageId);
-            return newSet;
-        });
-    }, []);
+        if (!viewAsUser) return;
+        const currentExpanded = new Set(viewAsUser.expandedCardIds || []);
+        if (currentExpanded.has(pageId)) {
+          currentExpanded.delete(pageId);
+        } else {
+          currentExpanded.add(pageId);
+        }
+        updateUser(viewAsUser.userId, { expandedCardIds: Array.from(currentExpanded) });
+    }, [viewAsUser, updateUser]);
     
     const handleUpdate = useCallback((pageId: string, data: Partial<AppPage>) => {
         updatePage(pageId, data);
@@ -685,12 +685,12 @@ export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelO
                   page={page}
                   onUpdate={handleUpdate}
                   onDelete={handleDelete}
-                  isExpanded={expandedPages.has(page.id)}
+                  isExpanded={viewAsUser.expandedCardIds?.includes(page.id) || false}
                   onToggleExpand={() => onToggleExpand(page.id)}
               />
           )}
       </SortableItem>
-    ), [handleUpdate, handleDelete, expandedPages, onToggleExpand]);
+    ), [handleUpdate, handleDelete, viewAsUser.expandedCardIds, onToggleExpand]);
 
     return (
         <div className="h-full flex flex-col">
@@ -758,22 +758,20 @@ function SortableTabCard({ tab, onUpdate, isExpanded, onToggleExpand }: {
 }
 
 export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
-    const { appSettings, updateAppTab, reorderTabs } = useUser();
+    const { viewAsUser, appSettings, updateAppTab, reorderTabs, updateUser } = useUser();
     const [searchTerm, setSearchTerm] = useState('');
     const [colorFilter, setColorFilter] = useState<string | null>(null);
-    const [expandedTabs, setExpandedTabs] = useState<Set<string>>(new Set());
 
     const onToggleExpand = useCallback((tabId: string) => {
-        setExpandedTabs(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(tabId)) {
-                newSet.delete(tabId);
-            } else {
-                newSet.add(tabId);
-            }
-            return newSet;
-        });
-    }, []);
+        if (!viewAsUser) return;
+        const currentExpanded = new Set(viewAsUser.expandedCardIds || []);
+        if (currentExpanded.has(tabId)) {
+          currentExpanded.delete(tabId);
+        } else {
+          currentExpanded.add(tabId);
+        }
+        updateUser(viewAsUser.userId, { expandedCardIds: Array.from(currentExpanded) });
+    }, [viewAsUser, updateUser]);
 
     const handleUpdateTab = useCallback((tabId: string, data: Partial<AppTab>) => {
         updateAppTab(tabId, data);
@@ -809,12 +807,12 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
                 key={tab.id}
                 tab={tab}
                 onUpdate={handleUpdateTab}
-                isExpanded={expandedTabs.has(tab.id)}
+                isExpanded={viewAsUser.expandedCardIds?.includes(tab.id) || false}
                 onToggleExpand={() => onToggleExpand(tab.id)}
             />
          )}
         </SortableItem>
-    ), [handleUpdateTab, expandedTabs, onToggleExpand]);
+    ), [handleUpdateTab, viewAsUser.expandedCardIds, onToggleExpand]);
 
     return (
         <div className="space-y-6">
@@ -836,7 +834,6 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
                 id="tabs-list"
                 items={filteredTabs}
                 setItems={reorderTabs}
-                renderItem={(item, isDragging) => renderTabCard(item as AppTab, isDragging)}
                 className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4"
             >
               {filteredTabs.map(tab => renderTabCard(tab, false))}
