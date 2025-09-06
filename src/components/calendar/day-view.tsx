@@ -503,3 +503,5 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
     return axisView === 'reversed' ? renderReversedView() : renderStandardView();
 });
 DayView.displayName = 'DayView';
+
+    
