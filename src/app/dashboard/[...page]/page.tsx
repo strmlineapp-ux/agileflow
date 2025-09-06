@@ -93,7 +93,7 @@ export default function DynamicPage() {
     }
 
     return { page: foundPage, teamContext: foundTeam };
-  }, [path, appSettings, viewAsUser, loading, teams]);
+  }, [path, appSettings.pages, viewAsUser, loading, teams]);
 
   useEffect(() => {
     if (page && page.associatedTabs.length > 0) {
@@ -289,13 +289,10 @@ export default function DynamicPage() {
       team: teamContext,
       isSingleTabPage: (page.associatedTabs || []).length === 1,
       isActive: activeTabValue === tab.id,
+      isSharedPanelOpen,
+      setIsSharedPanelOpen,
+      isDragging: !!activeDragItem,
     };
-    
-    if (managementComponentKeys.has(tab.componentKey)) {
-        (props as any).isSharedPanelOpen = isSharedPanelOpen;
-        (props as any).setIsSharedPanelOpen = setIsSharedPanelOpen;
-        (props as any).isDragging = !!activeDragItem;
-    }
     
     return <Component {...props} />;
   };
@@ -343,7 +340,7 @@ export default function DynamicPage() {
                     value={tab.id} 
                     className="mt-0 h-full"
                 >
-                  <div className={cn("h-full", isManagementPage && "flex flex-col")}>
+                  <div className={cn("h-full flex flex-col", isManagementPage && "overflow-hidden")}>
                     {renderTabContent(tab)}
                   </div>
                 </TabsContent>
