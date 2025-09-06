@@ -181,7 +181,7 @@ export function ManagementPageLayout<T extends TEntity>({
   return (
     <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd} sensors={sensors} collisionDetection={pointerWithin}>
       <div className="flex h-full gap-4">
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col min-h-0">
           <div className="flex items-center justify-between mb-6 shrink-0">
             <div className="flex items-center gap-2">
               <PageTitle
@@ -190,7 +190,7 @@ export function ManagementPageLayout<T extends TEntity>({
                 onReset={onPageTitleReset}
                 disabled={!canManagePage}
               />
-              <DuplicateZone id={`duplicate-${entityType}-zone`} onAdd={() => onAddItem()} />
+              <DuplicateZone id={`duplicate-${entityType}-zone`} onAdd={() => onAddItem()} isDragging={!!activeDragItem} />
             </div>
             <div className="flex items-center gap-1">
               <CompactSearchInput
@@ -226,20 +226,25 @@ export function ManagementPageLayout<T extends TEntity>({
             </DraggableGrid>
           </div>
         </div>
-        <SharedItemsPanel
-          isOpen={isSharedPanelOpen}
-          type={entityType}
-          title={`Shared ${entityTitle}`}
-          description={`Drag a ${entityType} you own here to share it. Drag a ${entityType} to your board to link it.`}
-          items={sharedItems}
-          searchTerm={sharedSearchTerm}
-          setSearchTerm={setSharedSearchTerm}
-          colorFilter={sharedColorFilter}
-          onColorFilterChange={setSharedColorFilter}
-          renderItem={(item, isDragging) => renderItem(item as T, isDragging)}
-          renderDragOverlay={(item) => renderDragOverlay(item as T)}
-          emptyMessage={`No other ${entityType}s are currently shared.`}
-        />
+        <div className={cn(
+            "transition-all duration-300", 
+            isSharedPanelOpen ? "w-96" : "w-0"
+        )}>
+            <SharedItemsPanel
+              isOpen={isSharedPanelOpen}
+              type={entityType}
+              title={`Shared ${entityTitle}`}
+              description={`Drag a ${entityType} you own here to share it. Drag a ${entityType} to your board to link it.`}
+              items={sharedItems}
+              searchTerm={sharedSearchTerm}
+              setSearchTerm={setSharedSearchTerm}
+              colorFilter={sharedColorFilter}
+              onColorFilterChange={setSharedColorFilter}
+              renderItem={(item, isDragging) => renderItem(item as T, isDragging)}
+              renderDragOverlay={(item) => renderDragOverlay(item as T)}
+              emptyMessage={`No other ${entityType}s are currently shared.`}
+            />
+        </div>
       </div>
       <DragOverlay modifiers={[snapCenterToCursor]}>
         {activeDragItem ? renderDragOverlay(activeDragItem) : null}

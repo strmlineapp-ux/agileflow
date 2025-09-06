@@ -13,9 +13,10 @@ interface DuplicateZoneProps {
   onAdd: () => void;
   tooltipText?: string;
   isOverTooltipText?: string;
+  isDragging: boolean;
 }
 
-export function DuplicateZone({ id, onAdd, tooltipText = 'Add New', isOverTooltipText = 'Drop to Duplicate' }: DuplicateZoneProps) {
+export function DuplicateZone({ id, onAdd, tooltipText = 'Add New', isOverTooltipText = 'Drop to Duplicate', isDragging }: DuplicateZoneProps) {
   const { setNodeRef, isOver } = useDroppable({ id });
 
   return (
@@ -29,7 +30,13 @@ export function DuplicateZone({ id, onAdd, tooltipText = 'Add New', isOverToolti
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="default" size="icon" className="rounded-full p-0" onClick={onAdd} onPointerDown={(e) => e.stopPropagation()}>
+            <Button 
+                variant="default" 
+                size="icon" 
+                className={cn("rounded-full p-0", isDragging && "hidden")} 
+                onClick={onAdd} 
+                onPointerDown={(e) => e.stopPropagation()}
+            >
               <GoogleSymbol name="add_circle" className="text-4xl text-foreground" weight={100} />
               <span className="sr-only">{tooltipText} or Drop to Duplicate</span>
             </Button>
