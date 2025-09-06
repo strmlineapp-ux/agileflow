@@ -1,30 +1,27 @@
 
+'use server';
 
-import * as functions from "firebase-functions";
-import * as admin from "firebase-admin";
-import { onDocumentCreated } from "firebase-functions/v2/firestore";
-import { sendEmail } from "./index";
-
-const db = admin.firestore();
+import { getFirestore } from 'firebase-admin/firestore';
+import { onDocumentCreated } from 'firebase-functions/v2/firestore';
+import { sendEmail } from './user-management.js';
 
 /**
  * Firestore trigger that sends an invitation email when a new email is added
  * to the pre-approved-emails collection for a specific workspace.
- * @param {QueryDocumentSnapshot} snapshot The document that was created.
- * @return {Promise<void>} A promise that resolves when the function completes.
  */
-export const sendInvitation = onDocumentCreated("pre-approved-emails/{docId}", async (event) => {
+export const sendInvitation = onDocumentCreated('pre-approved-emails/{docId}', async (event) => {
+    const db = getFirestore();
     const newInvitation = event.data?.data();
 
     if (!newInvitation) {
-        console.log("No data found in event.");
+        console.log('No data found in event.');
         return null;
     }
 
     const { email, invitedBy, workspaceId } = newInvitation;
 
     if (!email || !invitedBy || !workspaceId) {
-        console.log("Missing required fields in invitation document.");
+        console.log('Missing required fields in invitation document.');
         return null;
     }
     
