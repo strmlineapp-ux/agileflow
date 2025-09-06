@@ -419,8 +419,15 @@ export function useData(realUser: User | null, authLoading: boolean) {
   }, [realUser]);
 
   const updatePage = useCallback(async (pageId: string, pageData: Partial<AppPage>) => {
-    const db = getDb();
-    await updateDoc(doc(db, 'pages', pageId), pageData);
+    const page = allPages.find(p => p.id === pageId);
+    if (!page) return;
+
+    // Only write to Firestore for non-system pages
+    if (!page.isSystemPage) {
+        const db = getDb();
+        await updateDoc(doc(db, 'pages', pageId), pageData);
+    }
+    
     const updatedPages = allPages.map(p => p.id === pageId ? { ...p, ...pageData } : p);
     setAllPages(updatedPages);
     setAppSettings(current => ({ ...current, pages: updatedPages }));
