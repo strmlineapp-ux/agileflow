@@ -42,7 +42,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { SharedItemsPanel } from '../common/shared-items-panel';
 import { ManagementPageLayout } from '../common/management-page-layout';
 
-export function TeamManagement({ tab, page, isSingleTabPage = false, isActive = false }: { tab: AppTab; page: AppPage; isSingleTabPage?: boolean, isActive?: boolean }) {
+export function TeamManagement({ tab, page, isSingleTabPage = false, isActive = false, isSharedPanelOpen, setIsSharedPanelOpen, isDragging }: { tab: AppTab; page: AppPage; isSingleTabPage?: boolean; isActive?: boolean; isSharedPanelOpen: boolean; setIsSharedPanelOpen: (isOpen: boolean) => void; isDragging: boolean; }) {
     const { viewAsUser, users, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updatePage, updateUser } = useUser();
     const router = useRouter();
     const pathname = usePathname();
@@ -160,26 +160,6 @@ export function TeamManagement({ tab, page, isSingleTabPage = false, isActive = 
       </SortableItem>
     );
 
-    const renderSharedTeamCard = (team: Team, isDragging: boolean) => (
-      <SortableItem key={team.id} id={team.id} data={{ type: 'team-card', team, isSharedPreview: true }}>
-         {(isDragging) => (
-          <TeamCard
-            team={team}
-            users={users}
-            onUpdate={handleUpdate}
-            onDelete={handleDelete}
-            onRemoveUser={handleRemoveUserFromTeam}
-            onAddUser={handleAddUserToTeam}
-            onSetAdmin={handleSetAdmin}
-            isSharedPreview={true}
-            isDragging={isDragging}
-            isExpanded={expandedTeams.has(team.id)}
-            onToggleExpand={() => onToggleExpand(team.id)}
-          />
-        )}
-      </SortableItem>
-    );
-    
     const renderDragOverlay = (item: Team | User) => {
         if ('members' in item) { // It's a Team
             return <GoogleSymbol name={item.icon} style={{ color: item.color, fontSize: '48px' }} />;
@@ -216,6 +196,9 @@ export function TeamManagement({ tab, page, isSingleTabPage = false, isActive = 
             renderItem={renderTeamCard}
             renderDragOverlay={renderDragOverlay}
             isActive={isActive}
+            isSharedPanelOpen={isSharedPanelOpen}
+            setIsSharedPanelOpen={setIsSharedPanelOpen}
+            isDragging={isDragging}
         />
     );
 }

@@ -527,7 +527,7 @@ function BadgeCollectionCard({
     );
 }
 
-export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: AppPage; isActive: boolean }) {
+export function BadgeManagement({ tab, page, isActive, isSharedPanelOpen, setIsSharedPanelOpen, isDragging }: { tab: AppTab; page: AppPage; isActive: boolean; isSharedPanelOpen: boolean; setIsSharedPanelOpen: (isOpen: boolean) => void; isDragging: boolean; }) {
     const { viewAsUser, users, updateUser, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, setAllBadgeCollections, reorderBadgeCollections, updatePage } = useUser();
     const { toast } = useToast();
     const [expandedCollections, setExpandedCollections] = useState<Set<string>>(new Set());
@@ -574,12 +574,12 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
         return allBadgeCollections.filter(c => c.isShared && c.owner?.id !== viewAsUser.userId && !displayedIds.has(c.id));
     }, [allBadgeCollections, displayedCollections, viewAsUser.userId]);
 
-    const renderCollectionCard = useCallback((collection: BadgeCollection, isDragging: boolean) => {
+    const renderCollectionCard = useCallback((collection: BadgeCollection) => {
         const userBadgeIds = new Set(allBadges.filter(b => b.owner.id === viewAsUser.userId).map(b => b.id));
 
         return (
             <SortableItem key={collection.id} id={collection.id} data={{ type: 'collection-card', collection, isSharedPreview: false }}>
-              {(isDragging) => (
+              {(isDragging: boolean) => (
                 <BadgeCollectionCard
                     collection={collection}
                     allBadges={allBadges}
@@ -588,31 +588,6 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
                     onAddBadge={addBadge}
                     onUpdateBadge={updateBadge}
                     onDeleteBadge={deleteBadge}
-                    isViewer={!viewAsUser}
-                    isExpanded={expandedCollections.has(collection.id)}
-                    onToggleExpand={() => onToggleExpand(collection.id)}
-                    currentUserBadgeIds={userBadgeIds}
-                    allCollections={allBadgeCollections}
-                />
-              )}
-            </SortableItem>
-        );
-    }, [handleUpdate, handleDelete, addBadge, updateBadge, deleteBadge, viewAsUser, expandedCollections, onToggleExpand, allBadges, allBadgeCollections]);
-    
-    const renderSharedCollectionCard = useCallback((collection: BadgeCollection, isDragging: boolean) => {
-        const userBadgeIds = new Set(allBadges.filter(b => b.owner.id === viewAsUser.userId).map(b => b.id));
-        return (
-            <SortableItem key={collection.id} id={collection.id} data={{ type: 'collection-card', collection, isSharedPreview: true }}>
-              {(isDragging) => (
-                <BadgeCollectionCard
-                    collection={collection}
-                    allBadges={allBadges}
-                    onUpdateCollection={handleUpdate}
-                    onDeleteCollection={handleDelete}
-                    onAddBadge={addBadge}
-                    onUpdateBadge={updateBadge}
-                    onDeleteBadge={deleteBadge}
-                    isSharedPreview={true}
                     isViewer={!viewAsUser}
                     isExpanded={expandedCollections.has(collection.id)}
                     onToggleExpand={() => onToggleExpand(collection.id)}
@@ -635,39 +610,6 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
             </div>
         );
     }, []);
-
-    const onDragEnd = (event: DragEndEvent) => {
-        const { active, over } = event;
-        if (!over) return;
-    
-        // Handle dropping a badge
-        if (active.data.current?.type === 'badge') {
-            const badge = active.data.current.badge as Badge;
-            const sourceCollectionId = active.data.current.collectionId;
-            const targetCollectionId = over.data.current?.type === 'collection'
-                ? over.data.current.collection.id
-                : over.data.current?.collectionId;
-
-            if (targetCollectionId) {
-                const targetCollection = allBadgeCollections.find(c => c.id === targetCollectionId);
-                const sourceCollection = allBadgeCollections.find(c => c.id === sourceCollectionId);
-
-                if(targetCollection && sourceCollection && targetCollection.owner.id === viewAsUser.userId) {
-                    deleteBadge(badge.id, sourceCollection.id);
-                    // Add/link badge to the new collection
-                    updateBadgeCollection(targetCollection.id, {
-                        badgeIds: [badge.id, ...targetCollection.badgeIds]
-                    });
-                }
-            } else if (over.data.current?.type === 'duplicate-badge-zone') {
-                const collectionId = over.data.current.collectionId;
-                addBadge(collectionId, badge);
-            }
-        }
-    };
-    
-    const gridClassName = "columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4";
-
 
     return (
         <ManagementPageLayout
@@ -692,7 +634,9 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
             renderItem={renderCollectionCard}
             renderDragOverlay={renderDragOverlay}
             isActive={isActive}
-            onDragEnd={onDragEnd}
+            isSharedPanelOpen={isSharedPanelOpen}
+            setIsSharedPanelOpen={setIsSharedPanelOpen}
+            isDragging={isDragging}
         />
     );
 }
