@@ -490,12 +490,12 @@ export function useData(realUser: User | null, authLoading: boolean) {
             id: newCollectionId,
             name: `New Collection`,
             owner: ownerContext,
-            icon: 'category',
-            color: 'hsl(220, 13%, 47%)',
+            icon: googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
+            color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
             viewMode: 'compact',
             badgeIds: [newBadgeId],
             applications: [],
-            description: '',
+            description: 'A collection of badges.',
             isShared: false,
             workspaceId,
         };
@@ -673,6 +673,60 @@ export function useData(realUser: User | null, authLoading: boolean) {
     return teams.filter(team => team.isShared && team.name.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [teams]);
   
+  const fetchEvents = useCallback(async (start: Date, end: Date): Promise<Event[]> => {
+    if (!realUser?.workspaceId) return [];
+    
+    const db = getDb();
+    const eventsQuery = query(
+      collection(db, "events"),
+      where("workspaceId", "==", realUser.workspaceId)
+    );
+  
+    const snapshot = await getDocs(eventsQuery);
+    return snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        ...data,
+        eventId: doc.id,
+        startTime: data.startTime.toDate(),
+        endTime: data.endTime.toDate(),
+      } as Event;
+    });
+  }, [realUser?.workspaceId]);
+
+  const addEvent = useCallback(async (currentEvents: Event[], newEventData: Omit<Event, 'eventId'>): Promise<Event[]> => {
+    if (!realUser) throw new Error("User not authenticated");
+    const db = getDb();
+    const fullEventData = {
+      ...newEventData,
+      workspaceId: realUser.workspaceId,
+    };
+    const docRef = await addDoc(collection(db, "events"), {
+      ...fullEventData,
+      startTime: Timestamp.fromDate(fullEventData.startTime),
+      endTime: Timestamp.fromDate(fullEventData.endTime),
+    });
+    const newEvent: Event = { ...fullEventData, eventId: docRef.id };
+    return [newEvent, ...currentEvents];
+  }, [realUser]);
+
+  const updateEvent = useCallback(async (currentEvents: Event[], eventId: string, eventData: Partial<Omit<Event, 'eventId'>>): Promise<Event[]> => {
+    const db = getDb();
+    const dataToUpdate: Record<string, any> = { ...eventData, lastUpdated: new Date() };
+    if (eventData.startTime) dataToUpdate.startTime = Timestamp.fromDate(eventData.startTime);
+    if (eventData.endTime) dataToUpdate.endTime = Timestamp.fromDate(eventData.endTime);
+    
+    await updateDoc(doc(db, "events", eventId), dataToUpdate);
+    return currentEvents.map(e => e.eventId === eventId ? { ...e, ...eventData, lastUpdated: new Date() } : e);
+  }, []);
+
+  const deleteEvent = useCallback(async (currentEvents: Event[], eventId: string): Promise<Event[]> => {
+    const db = getDb();
+    await deleteDoc(doc(db, 'events', eventId));
+    return currentEvents.filter(e => e.eventId !== eventId);
+  }, []);
+
+
   // A placeholder for seeding the database if it's empty
   const seedDatabase = useCallback(async () => {
     console.log("Seeding is not implemented for live Firestore connection.");
@@ -685,8 +739,8 @@ export function useData(realUser: User | null, authLoading: boolean) {
     handleApproveAccessRequest, updateUser, addUser, deleteUser, reorderUsers, addTeam, updateTeam, deleteTeam, reorderTeams,
     addProject, updateProject, deleteProject,
     addCalendar, updateCalendar, deleteCalendar, reorderCalendars,
-    fetchTasks,
-    addTask, updateTask, deleteTask, addLocation, deleteLocation,
+    fetchEvents, addEvent, updateEvent, deleteEvent,
+    fetchTasks, addTask, updateTask, deleteTask, addLocation, deleteLocation,
     updateAppSettings: (settings: Partial<Omit<AppSettings, 'preApprovedEmails'>>) => updateAppSettings(settings),
     addPage, updatePage, deletePage, reorderPages,
     updateAppTab, reorderTabs,
@@ -697,3 +751,5 @@ export function useData(realUser: User | null, authLoading: boolean) {
     seedDatabase, // Expose seed function
   };
 }
+
+    
