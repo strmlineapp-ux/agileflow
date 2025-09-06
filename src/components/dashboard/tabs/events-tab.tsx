@@ -18,11 +18,13 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { type Event, type Project } from '@/types';
 import { EventDetailsDialog } from '@/components/calendar/event-details-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { getDb } from '@/lib/firebase';
+import { collection, query, where, getDocs, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 export function EventsContent({ project }: { project: Project }) {
-  const { realUser, viewAsUser, calendars, fetchEvents, addEvent, updateEvent, deleteEvent } = useUser();
+  const { viewAsUser, calendars } = useUser();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>(realUser.defaultCalendarView || 'day');
+  const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>(viewAsUser.defaultCalendarView || 'day');
   const [zoomLevel, setZoomLevel] = useState<'normal' | 'fit'>('normal');
   const [dayViewAxis, setDayViewAxis] = useState<'standard' | 'reversed'>('standard');
   const [isNewEventOpen, setIsNewEventOpen] = useState(false);
@@ -35,6 +37,40 @@ export function EventsContent({ project }: { project: Project }) {
   const viewContainerRef = useRef<HTMLDivElement>(null);
   
   const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
+
+  const fetchProjectEvents = useCallback(async (start: Date, end: Date) => {
+    if (!viewAsUser) return;
+    setIsDataLoading(true);
+    try {
+        const db = getDb();
+        const eventsQuery = query(
+            collection(db, "events"),
+            where("workspaceId", "==", viewAsUser.workspaceId),
+            where("projectId", "==", project.id)
+        );
+        const snapshot = await getDocs(eventsQuery);
+
+        const allEvents = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                ...data,
+                eventId: doc.id,
+                startTime: data.startTime.toDate(),
+                endTime: data.endTime.toDate(),
+            } as Event;
+        });
+
+        const filtered = allEvents.filter(event => 
+            event.startTime >= start && event.startTime < end
+        );
+        setViewEvents(filtered);
+    } catch (error) {
+        console.error("Error fetching project events:", error);
+        setViewEvents([]);
+    } finally {
+        setIsDataLoading(false);
+    }
+  }, [viewAsUser, project.id]);
 
   useEffect(() => {
     let start: Date;
@@ -56,13 +92,30 @@ export function EventsContent({ project }: { project: Project }) {
         break;
     }
     
-    setIsDataLoading(true);
-    fetchEvents(start, end).then(events => {
-        setViewEvents(events.filter(e => e.projectId === project.id));
-        setIsDataLoading(false);
-    });
+    fetchProjectEvents(start, end);
 
-  }, [currentDate, view, fetchEvents, project.id]);
+  }, [currentDate, view, fetchProjectEvents]);
+
+  const addEvent = useCallback(async (newEventData: Omit<Event, 'eventId'>) => {
+    if (!viewAsUser) return;
+    const db = getDb();
+    const eventWithWorkspace = { ...newEventData, workspaceId: viewAsUser.workspaceId };
+    const docRef = await addDoc(collection(db, "events"), eventWithWorkspace);
+    const newEvent = { ...eventWithWorkspace, eventId: docRef.id } as Event;
+    setViewEvents(current => [...current, newEvent]);
+  }, [viewAsUser]);
+
+  const updateEvent = useCallback(async (eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => {
+      const db = getDb();
+      await updateDoc(doc(db, 'events', eventId), { ...eventData, lastUpdated: new Date() });
+      setViewEvents(current => current.map(e => e.eventId === eventId ? { ...e, ...eventData, lastUpdated: new Date() } : e));
+  }, []);
+
+  const deleteEvent = useCallback(async (eventId: string) => {
+    const db = getDb();
+    await deleteDoc(doc(db, 'events', eventId));
+    setViewEvents(current => current.filter(e => e.eventId !== eventId));
+  }, []);
   
   const handlePrev = useCallback(() => {
     switch (view) {
@@ -137,27 +190,6 @@ export function EventsContent({ project }: { project: Project }) {
     return `Week ${weekNumber} · ${range}`;
   }, [view, currentDate]);
 
-  const handleEventMutation = useCallback(async (mutationType: 'add' | 'update' | 'delete', eventData: any) => {
-    let updatedEvents: Event[];
-    
-    switch (mutationType) {
-      case 'add':
-        updatedEvents = await addEvent(viewEvents, eventData);
-        setInitialEventData(null); 
-        break;
-      case 'update':
-        const { eventId, ...updateData } = eventData;
-        updatedEvents = await updateEvent(viewEvents, eventId, updateData);
-        break;
-      case 'delete':
-        updatedEvents = await deleteEvent(viewEvents, eventData.eventId);
-        break;
-      default:
-        return;
-    }
-    setViewEvents(updatedEvents.filter(e => e.projectId === project.id));
-  }, [addEvent, updateEvent, deleteEvent, viewEvents, project.id]);
-
   const closeDialogs = useCallback(() => {
     setIsNewEventOpen(false);
     setSelectedEvent(null);
@@ -209,7 +241,7 @@ export function EventsContent({ project }: { project: Project }) {
                   <EventForm 
                     onFinished={closeDialogs} 
                     initialData={{...initialEventData, calendarId: project.id, projectId: project.id}} 
-                    onAdd={(data) => handleEventMutation('add', data)}
+                    onAdd={(data) => addEvent(data)}
                   />
                 </DialogContent>
               </Dialog>
@@ -264,8 +296,8 @@ export function EventsContent({ project }: { project: Project }) {
         event={selectedEvent}
         isOpen={!!selectedEvent}
         onOpenChange={(isOpen) => !isOpen && setSelectedEvent(null)}
-        onUpdate={(eventId, eventData) => handleEventMutation('update', { eventId, ...eventData })}
-        onDelete={(eventId) => handleEventMutation('delete', { eventId })}
+        onUpdate={updateEvent}
+        onDelete={deleteEvent}
       />
     </>
   );

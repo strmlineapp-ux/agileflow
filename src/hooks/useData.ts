@@ -46,8 +46,6 @@ export function useData(realUser: User | null, authLoading: boolean) {
   const [allBadgeCollections, setAllBadgeCollections] = useState<BadgeCollection[]>([]);
   const [allPages, setAllPages] = useState<AppPage[]>([]);
   const [preApprovedEmails, setPreApprovedEmails] = useState<PreApprovedEmail[]>([]);
-  const [events, setEvents] = useState<Event[]>([]);
-
 
   const { toast } = useToast();
   
@@ -63,10 +61,10 @@ export function useData(realUser: User | null, authLoading: boolean) {
           const db = getDb();
           const workspaceId = realUser.workspaceId;
 
-          const collectionsToFetch = ['users', 'teams', 'calendars', 'locations', 'badges', 'badgeCollections', 'projects', 'pages', 'pre-approved-emails', 'events'];
+          const collectionsToFetch = ['users', 'teams', 'calendars', 'locations', 'badges', 'badgeCollections', 'projects', 'pages', 'pre-approved-emails'];
           const queries = collectionsToFetch.map(c => getDocs(query(collection(db, c), where("workspaceId", "==", workspaceId))));
           
-          const [usersSnapshot, teamsSnap, calendarsSnap, locationsSnap, badgesSnap, collectionsSnap, projectsSnap, pagesSnap, preApprovedEmailsSnap, eventsSnap] = await Promise.all(queries);
+          const [usersSnapshot, teamsSnap, calendarsSnap, locationsSnap, badgesSnap, collectionsSnap, projectsSnap, pagesSnap, preApprovedEmailsSnap] = await Promise.all(queries);
           
           const appSettingsSnap = await getDoc(doc(db, 'app-settings', workspaceId));
           
@@ -85,7 +83,6 @@ export function useData(realUser: User | null, authLoading: boolean) {
           setAllBadges(badgesSnap.docs.map(d => ({ id: d.id, ...d.data() } as Badge)));
           setAllBadgeCollections(collectionsSnap.docs.map(d => ({ id: d.id, ...d.data() } as BadgeCollection)));
           setPreApprovedEmails(preApprovedEmailsSnap.docs.map(d => ({...d.data(), createdAt: d.data().createdAt.toDate()} as PreApprovedEmail)));
-          setEvents(eventsSnap.docs.map(d => ({...d.data(), eventId: d.id, startTime: d.data().startTime.toDate(), endTime: d.data().endTime.toDate()} as Event)));
           
           const userCreatedPages = pagesSnap.docs.map(d => ({ id: d.id, ...d.data() } as AppPage));
           setAllPages([...systemPages, ...userCreatedPages]);
@@ -310,56 +307,6 @@ export function useData(realUser: User | null, authLoading: boolean) {
       // In a real app, this might update a 'sortOrder' field in Firestore
       await simulateApi();
       setCalendars([...reorderedCalendars]);
-  }, []);
-
-  const fetchEvents = useCallback(async (start: Date, end: Date): Promise<Event[]> => {
-    if (!realUser) return [];
-    const db = getDb();
-    const eventsQuery = query(
-      collection(db, "events"),
-      where("workspaceId", "==", realUser.workspaceId)
-    );
-    const snapshot = await getDocs(eventsQuery);
-
-    const allEvents = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-            ...data,
-            eventId: doc.id,
-            startTime: data.startTime.toDate(),
-            endTime: data.endTime.toDate(),
-        } as Event;
-    });
-
-    return allEvents.filter(event => 
-        event.startTime >= start && event.startTime < end
-    );
-  }, [realUser]);
-
-  const addEvent = useCallback(async (currentEvents: Event[], newEventData: Omit<Event, 'eventId'>) => {
-    const db = getDb();
-    const eventWithWorkspace = { ...newEventData, workspaceId: realUser!.workspaceId };
-    const docRef = await addDoc(collection(db, "events"), eventWithWorkspace);
-    const newEvent = { ...eventWithWorkspace, eventId: docRef.id, startTime: newEventData.startTime, endTime: newEventData.endTime } as Event;
-    setEvents(current => [...current, newEvent]);
-    return [...currentEvents, newEvent];
-  }, [realUser]);
-
-  const updateEvent = useCallback(async (currentEvents: Event[], eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => {
-      const db = getDb();
-      await updateDoc(doc(db, 'events', eventId), { ...eventData, lastUpdated: new Date() });
-      const eventToUpdate = events.find(e => e.eventId === eventId);
-      if (!eventToUpdate) return currentEvents;
-      const updatedEvent: Event = { ...eventToUpdate, ...eventData, lastUpdated: new Date() };
-      setEvents(current => current.map(e => e.eventId === eventId ? updatedEvent : e));
-      return currentEvents.map(e => e.eventId === eventId ? updatedEvent : e);
-  }, [events]);
-
-  const deleteEvent = useCallback(async (currentEvents: Event[], eventId: string) => {
-    const db = getDb();
-    await deleteDoc(doc(db, 'events', eventId));
-    setEvents(current => current.filter(e => e.eventId !== eventId));
-    return currentEvents.filter(e => e.eventId !== eventId);
   }, []);
 
   const fetchTasks = useCallback(async (): Promise<Task[]> => {
@@ -738,7 +685,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
     setUsers, setTeams, setAllBadgeCollections, setAppSettings, setCalendars, setLocations, setNotifications, setUserStatusAssignments, setAllBadges,
     handleApproveAccessRequest, updateUser, addUser, deleteUser, reorderUsers, addTeam, updateTeam, deleteTeam, reorderTeams,
     addProject, updateProject, deleteProject,
-    addCalendar, updateCalendar, deleteCalendar, reorderCalendars, fetchEvents, addEvent, updateEvent, deleteEvent, 
+    addCalendar, updateCalendar, deleteCalendar, reorderCalendars,
     fetchTasks,
     addTask, updateTask, deleteTask, addLocation, deleteLocation,
     updateAppSettings: (settings: Partial<Omit<AppSettings, 'preApprovedEmails'>>) => updateAppSettings(settings),
@@ -754,5 +701,6 @@ export function useData(realUser: User | null, authLoading: boolean) {
 
 
     
+
 
 

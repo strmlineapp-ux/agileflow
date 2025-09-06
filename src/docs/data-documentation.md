@@ -121,9 +121,9 @@ The `Project` is a top-level container for organizing work. It holds its own sub
 ---
 
 ## Event Entity
-**Firestore Collection**: `/events`
+**Firestore Collection**: `/events/{eventId}`
 
-Events are globally stored and linked back to calendars and projects via IDs.
+Events are stored in a global `/events` collection to allow for efficient cross-calendar and cross-project querying, which is essential for the main calendar views.
 
 | Data Point | Description |
 | :--- | :--- |
