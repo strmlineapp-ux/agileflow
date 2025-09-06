@@ -41,6 +41,7 @@ interface ManagementPageLayoutProps<T extends TEntity> {
   onDeleteItem: (item: T) => void;
   onReorderItems: (reorderedItems: T[]) => void;
   onLinkItem: (itemId: string) => void;
+  onCollapseAll: () => void;
 
   onDragEnd?: (event: DragEndEvent) => void;
 
@@ -66,6 +67,7 @@ export function ManagementPageLayout<T extends TEntity>({
   onDeleteItem,
   onReorderItems,
   onLinkItem,
+  onCollapseAll,
   onDragEnd,
   renderItem,
   renderDragOverlay,
@@ -139,6 +141,16 @@ export function ManagementPageLayout<T extends TEntity>({
              <DuplicateZone id={`duplicate-${entityType}-zone`} onAdd={() => onAddItem()} isDragging={isDragging} />
           </div>
           <div className="flex items-center gap-1">
+             <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="default" size="icon" onClick={onCollapseAll}>
+                    <GoogleSymbol name="unfold_less" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent><p>Collapse All</p></TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <CompactSearchInput
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
