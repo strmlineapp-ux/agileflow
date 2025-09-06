@@ -16,7 +16,7 @@ import { ManagementPageLayout } from '../common/management-page-layout';
 import { SortableItem } from '../common/sortable-item';
 import { InlineEditor } from '../common/inline-editor';
 import { PageTitle } from '../common/page-title';
-import { watchGoogleCalendar } from '@/ai/flows/watch-google-calendar-flow';
+import { linkAndWatchCalendar } from '@/ai/flows/link-and-watch-calendar-flow';
 
 function CalendarCard({
     calendar,
@@ -49,53 +49,29 @@ function CalendarCard({
     }
   }, [isLinkDialogOpen]);
   
-  const handleWatchCalendar = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!calendar.googleCalendarId) return;
-
-    toast({ title: 'Setting Up Watch...', description: `Registering ${calendar.name} for real-time updates.` });
-
-    try {
-      // In a real app, this URL would be dynamically configured and secured.
-      const webhookUrl = `https://us-central1-agileflow-mlf18.cloudfunctions.net/calendarWebhook`;
-      const result = await watchGoogleCalendar({
-        googleCalendarId: calendar.googleCalendarId,
-        webhookUrl: webhookUrl,
-      });
-      console.log('Watch setup result:', result);
-      toast({ title: 'Watch Setup Complete', description: `Now listening for changes to ${calendar.name}. Channel expires: ${new Date(parseInt(result.expiration)).toLocaleDateString()}`});
-    } catch (error) {
-      console.error('Failed to set up watch:', error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Could not set up real-time sync.' });
-    }
-  };
-  
-  const handleSaveGoogleCalendarId = async () => {
+  const handleLinkAndWatchCalendar = async () => {
     if (!canManage) return;
 
     const calendarIdToLink = googleCalendarIdInput.trim();
     if (!calendarIdToLink) return;
-
-    onUpdate(calendar.id, { googleCalendarId: calendarIdToLink });
-    toast({ title: 'Success', description: 'Google Calendar ID linked.' });
+    
     setIsLinkDialogOpen(false);
-
-    // Now, trigger the watch flow
-    toast({ title: 'Setting Up Watch...', description: `Registering ${calendar.name} for real-time updates.` });
+    toast({ title: 'Linking Calendar...', description: 'Setting up real-time sync. This may take a moment.' });
+    
     try {
-        const webhookUrl = `https://us-central1-agileflow-mlf18.cloudfunctions.net/calendarWebhook`;
-        const result = await watchGoogleCalendar({
+        await linkAndWatchCalendar({
+            calendarId: calendar.id,
             googleCalendarId: calendarIdToLink,
-            webhookUrl: webhookUrl,
         });
-        toast({ title: 'Watch Setup Complete', description: `Now listening for changes to ${calendar.name}. Channel expires: ${new Date(parseInt(result.expiration)).toLocaleDateString()}` });
+        toast({ title: 'Calendar Linked!', description: `Successfully linked and started watching ${calendar.name}.` });
     } catch (error) {
-        console.error('Failed to set up watch:', error);
-        toast({ variant: 'destructive', title: 'Error', description: 'Could not set up real-time sync.' });
+        console.error('Failed to link and watch calendar:', error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not set up real-time sync. Please check the calendar ID and permissions.' });
     } finally {
         setGoogleCalendarIdInput('');
     }
   };
+
 
   const shareIconColor = 'hsl(220, 13%, 47%)';
   let shareIcon: string | null = null;
@@ -142,27 +118,6 @@ function CalendarCard({
                     </Tooltip>
                 </TooltipProvider>
             )}
-           {calendar.googleCalendarId && (
-               <TooltipProvider>
-                   <Tooltip>
-                       <TooltipTrigger asChild>
-                           <span tabIndex={0} onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') { handleWatchCalendar(e as any); }}}>
-                               <Button
-                                   variant="ghost"
-                                   size="icon"
-                                   className="h-8 w-8 text-muted-foreground"
-                                   onClick={handleWatchCalendar}
-                               >
-                                   <GoogleSymbol name="rss_feed" />
-                               </Button>
-                           </span>
-                       </TooltipTrigger>
-                       <TooltipContent>
-                        <p>Watch for real-time updates</p>
-                       </TooltipContent>
-                   </Tooltip>
-               </TooltipProvider>
-           )}
             </>
         }
         body={
@@ -180,7 +135,7 @@ function CalendarCard({
       <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
         <DialogContent className="max-w-md">
             <div className="absolute top-4 right-4">
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSaveGoogleCalendarId}>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleLinkAndWatchCalendar}>
                   <GoogleSymbol name="check" className="text-xl" />
                   <span className="sr-only">Link Calendar</span>
               </Button>
@@ -198,7 +153,7 @@ function CalendarCard({
                   placeholder="your-calendar-id@group.calendar.google.com"
                   value={googleCalendarIdInput}
                   onChange={(e) => setGoogleCalendarIdInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSaveGoogleCalendarId()}
+                  onKeyDown={(e) => e.key === 'Enter' && handleLinkAndWatchCalendar()}
                   className="border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent"
               />
             </div>
