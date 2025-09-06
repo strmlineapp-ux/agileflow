@@ -17,7 +17,7 @@ const buttonVariants = cva(
         default: "font-emphasis",
         destructive: "bg-destructive text-destructive-foreground",
         outline: "bg-transparent font-emphasis",
-        ghost: "hover:bg-transparent font-emphasis",
+        ghost: "hover:bg-transparent",
         circle: "rounded-full font-emphasis",
       },
       size: {
@@ -78,4 +78,3 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = "Button"
 
 export { Button, buttonVariants }
-

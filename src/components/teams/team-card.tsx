@@ -196,24 +196,24 @@ export function TeamCard(props: TeamCardProps) {
           className="text-sm text-foreground"
         />
         {teamMembers.length > 0 && (
-          <ScrollArea className="max-h-48 pr-2 hide-scrollbar">
-            <SortableContext items={teamMembers.map(m => `user-sort:${team.id}:${m.userId}`)} strategy={verticalListSortingStrategy}>
-                <div ref={setUsersDroppableRef} className={cn("min-h-[60px] rounded-md p-2 -m-2 space-y-1 transition-colors", isUsersDroppableOver && "ring-1 ring-border ring-inset")}>
-                    {teamMembers.map((user) => (
-                    <DraggableUserCard 
-                        key={user.userId}
-                        user={user}
-                        teamId={team.id}
-                        onRemove={() => onRemoveUser(team.id, user.userId)}
-                        isTeamAdmin={(team.teamAdmins || []).includes(user.userId)}
-                        onSetAdmin={() => onSetAdmin(team.id, user.userId)}
-                        canManage={canManageTeam}
-                        memberCount={team.members.length}
-                    />
-                    ))}
-                </div>
-            </SortableContext>
-          </ScrollArea>
+            <ScrollArea className="max-h-48 pr-2 hide-scrollbar">
+                <SortableContext items={teamMembers.map(m => `user-sort:${team.id}:${m.userId}`)} strategy={verticalListSortingStrategy}>
+                    <div ref={setUsersDroppableRef} className={cn("min-h-[60px] rounded-md p-2 -m-2 space-y-1 transition-colors", isUsersDroppableOver && "ring-1 ring-border ring-inset")}>
+                        {teamMembers.map((user) => (
+                        <DraggableUserCard 
+                            key={user.userId}
+                            user={user}
+                            teamId={team.id}
+                            onRemove={() => onRemoveUser(team.id, user.userId)}
+                            isTeamAdmin={(team.teamAdmins || []).includes(user.userId)}
+                            onSetAdmin={() => onSetAdmin(team.id, user.userId)}
+                            canManage={canManageTeam}
+                            memberCount={team.members.length}
+                        />
+                        ))}
+                    </div>
+                </SortableContext>
+            </ScrollArea>
         )}
       </div>
     );
