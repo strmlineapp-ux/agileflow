@@ -80,6 +80,7 @@ export function ManagementPageLayout<T extends TEntity>({
   const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
   
   const displayedItems = useMemo(() => {
+    if (!allItems) return [];
     let filtered = allItems;
     if (searchTerm) {
       filtered = filtered.filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -120,7 +121,7 @@ export function ManagementPageLayout<T extends TEntity>({
       onCustomDragEnd(event);
       return;
     }
-    
+
     const { active, over } = event;
 
     if (!over) return;
@@ -136,10 +137,10 @@ export function ManagementPageLayout<T extends TEntity>({
     
     // Handle dropping on shared panel
     if (over.id === `shared-${entityType}-panel`) {
-      if (activeItem.owner?.id === viewAsUser?.userId) { // If owned, toggle share status
+      if (activeItem.owner?.id === viewAsUser?.userId) {
         onUpdateItem(activeItem.id, { isShared: !activeItem.isShared } as Partial<T>);
         toast({ title: activeItem.isShared ? `${entityType.charAt(0).toUpperCase() + entityType.slice(1)} Unshared` : `${entityType.charAt(0).toUpperCase() + entityType.slice(1)} Shared` });
-      } else { // If linked, unlink it
+      } else {
         onDeleteItem(activeItem);
       }
       return;
@@ -147,16 +148,17 @@ export function ManagementPageLayout<T extends TEntity>({
     
     // Handle linking from shared panel to main board
     const isFromShared = active.data.current?.isSharedPreview;
-    if (isFromShared && (over.data.current?.type === `${entityType}-card` || over.id === 'collections-list')) {
+    const isOverMainBoard = over.id === 'collections-list' || over.data.current?.type === `${entityType}-card`;
+    if (isFromShared && isOverMainBoard) {
         onLinkItem(active.id as string);
         return;
     }
 
     // Handle reordering within the main grid
-    const overIsCard = over.data.current?.type === `${entityType}-card` || over.data.current?.type === 'collection-card';
-    if (overIsCard && active.id !== over.id) {
+    if (over.id && active.id !== over.id && !isFromShared) {
         const oldIndex = displayedItems.findIndex(item => item.id === active.id);
         const newIndex = displayedItems.findIndex(item => item.id === over.id);
+
         if (oldIndex > -1 && newIndex > -1) {
             onReorderItems(arrayMove(displayedItems, oldIndex, newIndex));
         }
