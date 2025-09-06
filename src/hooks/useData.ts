@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -204,9 +205,19 @@ export function useData(realUser: User | null, authLoading: boolean) {
     setUsers(currentUsers => currentUsers.filter(u => u.userId !== userId));
   }, []);
 
-  const addTeam = useCallback(async (teamData: Omit<Team, 'id'>, realUser: User) => {
+  const addTeam = useCallback(async (teamData: Partial<Omit<Team, 'id'>>, realUser: User) => {
     const db = getDb();
-    const newTeamData = { ...teamData, workspaceId: realUser.workspaceId };
+    const newTeamData = {
+      name: 'New Team',
+      icon: googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
+      color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
+      owner: { type: 'user', id: realUser.userId },
+      members: [realUser.userId],
+      isShared: false,
+      description: randomDescriptions[Math.floor(Math.random() * randomDescriptions.length)],
+      workspaceId: realUser.workspaceId,
+      ...teamData,
+    };
     const docRef = await addDoc(collection(db, 'teams'), newTeamData);
     const newTeam = { ...newTeamData, id: docRef.id };
     setTeams(current => [...current, newTeam]);
@@ -751,5 +762,3 @@ export function useData(realUser: User | null, authLoading: boolean) {
     seedDatabase, // Expose seed function
   };
 }
-
-    
