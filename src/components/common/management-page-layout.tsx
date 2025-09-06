@@ -46,6 +46,7 @@ interface ManagementPageLayoutProps<T extends TEntity> {
   renderDragOverlay: (item: T) => React.ReactNode;
   
   isActive: boolean; // For auto-focusing search
+  onDragEnd?: (event: DragEndEvent) => void; // Allow custom drag end logic
 }
 
 export function ManagementPageLayout<T extends TEntity>({
@@ -63,7 +64,8 @@ export function ManagementPageLayout<T extends TEntity>({
   onLinkItem,
   renderItem,
   renderDragOverlay,
-  isActive
+  isActive,
+  onDragEnd: customOnDragEnd,
 }: ManagementPageLayoutProps<T>) {
   const { viewAsUser } = useUser();
   const { toast } = useToast();
@@ -120,6 +122,12 @@ export function ManagementPageLayout<T extends TEntity>({
 
   const onDragEnd = (event: DragEndEvent) => {
     setActiveDragItem(null);
+
+    if (customOnDragEnd) {
+        customOnDragEnd(event);
+        return;
+    }
+
     const { active, over } = event;
     if (!over) return;
     
@@ -151,7 +159,8 @@ export function ManagementPageLayout<T extends TEntity>({
     }
 
     // Handle reordering
-    if (over.data.current?.type === `${entityType}-card` && active.id !== over.id) {
+    const overIsCard = over.data.current?.type === `${entityType}-card` || over.data.current?.type === 'collection-card';
+    if (overIsCard && active.id !== over.id) {
         const oldIndex = displayedItems.findIndex(item => item.id === active.id);
         const newIndex = displayedItems.findIndex(item => item.id === over.id);
         if (oldIndex > -1 && newIndex > -1) {
@@ -163,12 +172,7 @@ export function ManagementPageLayout<T extends TEntity>({
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
   const entityTitle = entityType.charAt(0).toUpperCase() + entityType.slice(1) + 's';
   
-  const gridClassName = cn(
-    "gap-4 [column-fill:_balance]",
-    isSharedPanelOpen
-      ? "columns-1 sm:columns-2 lg:columns-3 xl:columns-4" // Fewer columns when panel is open
-      : "columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6" // More columns when panel is closed
-  );
+  const gridClassName = "grid grid-cols-[repeat(auto-fill,minmax(20rem,1fr))] gap-4";
 
   return (
     <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd} sensors={sensors} collisionDetection={pointerWithin}>
