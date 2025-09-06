@@ -45,10 +45,7 @@ export default function AdminPage() {
                     <TabsContent 
                         key={tab.key} 
                         value={tab.key} 
-                        className={cn(
-                            "mt-0",
-                            activeTabKey === tab.key ? 'h-full' : 'h-0'
-                        )}
+                        className="mt-0 h-full"
                     >
                       <Component isActive={activeTabKey === tab.key} />
                     </TabsContent>

@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -156,14 +155,14 @@ export default function DynamicPage() {
                 ))}
             </SortableTabsList>
           </CenteredTabList>
-         <div className="flex-1 min-h-0 pt-6">
+         <div className="flex-1 pt-6 overflow-hidden">
             {pageTabs.map(tab => {
                 const Component = componentMap[tab.componentKey as keyof typeof componentMap];
                 return Component ? (
                     <TabsContent 
                         key={tab.id} 
                         value={tab.id} 
-                        className="mt-0 flex-1 h-full"
+                        className="mt-0 h-full"
                     >
                       <Component tab={tab} page={page} team={teamContext} isActive={activeTabValue === tab.id} />
                     </TabsContent>

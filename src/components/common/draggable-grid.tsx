@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useCallback, useMemo } from 'react';
@@ -13,6 +12,7 @@ import {
   type DragEndEvent,
   type DragStartEvent,
   DragOverlay,
+  useDroppable,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -21,6 +21,7 @@ import {
 } from '@dnd-kit/sortable';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { cn } from '@/lib/utils';
+import { pointerWithin } from '@dnd-kit/core';
 
 interface DraggableGridProps<T extends { id: string }> {
   items: T[];
@@ -84,13 +85,13 @@ export function DraggableGrid<T extends { id: string }>({
   return (
     <DndContext 
         sensors={sensors} 
-        collisionDetection={closestCenter} 
+        collisionDetection={pointerWithin}
         onDragStart={handleDragStart} 
         onDragEnd={handleDragEnd}
     >
-      <div className={cn("flex flex-wrap -m-2", className)}>
-        {children}
+      <div className={cn("gap-4 [column-fill:_balance] columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6", className)}>
         <SortableContext items={itemIds}>
+            {children}
             {items.map(item => renderItem(item, activeItem?.id === item.id))}
         </SortableContext>
       </div>
