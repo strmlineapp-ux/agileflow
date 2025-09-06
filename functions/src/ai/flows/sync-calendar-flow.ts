@@ -8,7 +8,7 @@
  * - SyncCalendarOutput - The return type for the syncCalendar function.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai } from '../genkit';
 import { z } from 'genkit';
 import { google } from 'googleapis';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
