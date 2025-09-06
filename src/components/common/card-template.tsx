@@ -74,7 +74,7 @@ export function CardTemplate({
         if (user) {
             return (
                 <Avatar className="h-10 w-10">
-                    <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
+                    <AvatarImage src={user.avatarUrl} alt={user.displayName} />
                     <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
             )
@@ -118,7 +118,7 @@ export function CardTemplate({
     
     const ownershipTrigger = (
       <div 
-        className="absolute -top-0 -left-1 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" 
+        className="absolute -top-0.5 -right-1 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" 
         style={{ backgroundColor: shareIconColor }}
       >
         <GoogleSymbol name={shareIcon!} style={{fontSize: '16px'}} />
