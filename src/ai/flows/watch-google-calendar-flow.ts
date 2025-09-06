@@ -42,8 +42,12 @@ const watchGoogleCalendarFlow = ai.defineFlow(
   async (input) => {
     console.log(`Setting up a REAL watch on calendar: ${input.googleCalendarId}`);
     
-    const oAuth2Client = new google.auth.OAuth2();
-    const calendarApi = google.calendar({version: 'v3', auth: oAuth2Client});
+    const auth = new google.auth.GoogleAuth({
+        scopes: ['https://www.googleapis.com/auth/calendar']
+    });
+
+    const authClient = await auth.getClient();
+    const calendarApi = google.calendar({version: 'v3', auth: authClient});
 
     try {
       const response = await calendarApi.events.watch({
