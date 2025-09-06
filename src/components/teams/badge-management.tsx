@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -50,6 +49,7 @@ import { SortableItem } from '../common/sortable-item';
 import { SharedItemsPanel } from '../common/shared-items-panel';
 import { PageTitle } from '../common/page-title';
 import { predefinedColors } from '@/lib/colors';
+import { IconColorPicker } from '../common/icon-color-picker';
 
 
 function BadgeDisplayItem({ 
@@ -64,7 +64,9 @@ function BadgeDisplayItem({
     allCollections,
     isCollectionEditing,
     dragHandleProps,
-    currentUserBadgeIds
+    currentUserBadgeIds,
+    isExpanded,
+    onToggleExpand
 }: { 
     badge: Badge;
     viewMode: BadgeCollection['viewMode'];
@@ -78,66 +80,23 @@ function BadgeDisplayItem({
     isCollectionEditing: boolean;
     dragHandleProps?: any;
     currentUserBadgeIds?: Set<string>;
+    isExpanded: boolean;
+    onToggleExpand: () => void;
 }) {
     const { users } = useUser();
-    const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
-    const [iconSearch, setIconSearch] = useState('');
-    const iconSearchInputRef = useRef<HTMLInputElement>(null);
-    const [isColorPopoverOpen, setIsColorPopoverOpen] = useState(false);
 
     const handleUpdate = useCallback((data: Partial<Badge>) => {
         onUpdateBadge(badge.id, data);
     }, [badge.id, onUpdateBadge]);
 
-    useEffect(() => {
-        if (isIconPopoverOpen) {
-          setTimeout(() => iconSearchInputRef.current?.focus(), 100);
-        } else {
-          setIconSearch('');
-        }
-    }, [isIconPopoverOpen]);
-        
     const ownerUser = users.find(u => u.userId === badge.owner.id);
-
-    const filteredIcons = useMemo(() => {
-        if (!iconSearch) return googleSymbolNames;
-        return googleSymbolNames.filter(name => name.toLowerCase().includes(iconSearch.toLowerCase()));
-    }, [iconSearch]);
-    
-    const colorPickerContent = (
-        <PopoverContent className="w-auto p-4" onPointerDown={(e) => e.stopPropagation()}>
-            <div className="space-y-4">
-                <HslStringColorPicker color={badge.color} onChange={(newColor) => handleUpdate({ color: newColor })} className="!w-full" />
-                <div className="grid grid-cols-8 gap-1">
-                    {predefinedColors.map(c => (
-                        <button key={c} className="h-6 w-6 rounded-full border" style={{ backgroundColor: c }} onClick={() => { handleUpdate({ color: c }); setIsColorPopoverOpen(false); }} />
-                    ))}
-                </div>
-            </div>
-        </PopoverContent>
-    );
-
-    const iconPickerContent = (
-         <PopoverContent className="w-80 p-0" onPointerDown={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-1 p-2 border-b">
-                <CompactSearchInput searchTerm={iconSearch} setSearchTerm={setIconSearch} placeholder="Search icons..." inputRef={iconSearchInputRef} />
-            </div>
-            <ScrollArea className="h-64"><div className="grid grid-cols-6 gap-1 p-2">{googleSymbolNames.slice(0, 300).map((iconName) => (
-            <TooltipProvider key={iconName}><Tooltip><TooltipTrigger asChild>
-                <Button variant={badge.icon === iconName ? "default" : "ghost"} size="icon" onClick={() => { handleUpdate({ icon: iconName }); setIsIconPopoverOpen(false); }} className="h-8 w-8 p-0">
-                    <GoogleSymbol name={iconName} className="text-4xl" weight={100} opticalSize={20} />
-                </Button>
-            </TooltipTrigger><TooltipContent><p>{iconName}</p></TooltipContent></Tooltip></TooltipProvider>
-            ))}</div></ScrollArea>
-        </PopoverContent>
-    );
         
     const nameEditorElement = (
         <InlineEditor
             value={badge.name}
             onSave={(newValue) => handleUpdate({ name: newValue })}
             disabled={!isOwner}
-            className={cn("break-words", viewMode === 'grid' ? "text-base" : "text-sm", isOwner && "cursor-text")}
+            className={cn("break-words font-emphasis", viewMode === 'grid' ? "text-base" : "text-sm", isOwner && "cursor-text")}
         />
     );
 
@@ -155,38 +114,15 @@ function BadgeDisplayItem({
     
     if (viewMode === 'grid' || viewMode === 'list') {
       return (
-        <div className="flex items-start gap-4 p-2" {...dragHandleProps}>
+        <div className="flex items-start gap-2 p-2 relative" {...dragHandleProps}>
             <div className="relative">
-                <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                    <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                        <PopoverTrigger asChild disabled={!isOwner} onPointerDown={(e) => e.stopPropagation()}>
-                            <Button variant="ghost" className="h-10 w-12 flex items-center justify-center p-0">
-                                <GoogleSymbol name={badge.icon} weight={100} grade={-25} opticalSize={20} style={{ fontSize: '36px', color: badge.color }} />
-                            </Button>
-                        </PopoverTrigger>
-                        </TooltipTrigger>
-                        <TooltipContent><p>Change Icon</p></TooltipContent>
-                    </Tooltip>
-                    </TooltipProvider>
-                    {iconPickerContent}
-                </Popover>
-                {!isViewer && isOwner && (
-                    <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                         <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <PopoverTrigger asChild disabled={!isOwner} onPointerDown={(e) => e.stopPropagation()}>
-                                        <div className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", !isOwner ? "cursor-not-allowed" : "cursor-pointer")} style={{ backgroundColor: badge.color }} aria-label="Change badge color" />
-                                    </PopoverTrigger>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Change Color</p></TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                        {colorPickerContent}
-                    </Popover>
-                )}
+                <IconColorPicker
+                    icon={badge.icon}
+                    color={badge.color}
+                    onUpdateIcon={(newIcon) => handleUpdate({ icon: newIcon })}
+                    onUpdateColor={(newColor) => handleUpdate({ color: newColor })}
+                    disabled={!isOwner}
+                />
                  {shouldShowLinkIcon && (
                     <TooltipProvider>
                         <Tooltip>
@@ -202,7 +138,12 @@ function BadgeDisplayItem({
             </div>
             <div className="flex-1 space-y-1">
                 {nameEditorElement}
-                {descriptionEditorElement}
+                {isExpanded && descriptionEditorElement}
+            </div>
+            <div className="absolute -bottom-1 right-0">
+              <Button variant="ghost" size="icon" onClick={onToggleExpand} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
+                <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
+              </Button>
             </div>
         </div>
       );
@@ -217,30 +158,15 @@ function BadgeDisplayItem({
                 className="flex items-center gap-1.5 p-1 pl-2 rounded-full text-sm h-8"
             >
                 <div className="relative">
-                    <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
-                        <PopoverTrigger asChild disabled={!isOwner} onPointerDown={(e) => e.stopPropagation()}>
-                             <Button
-                                variant="ghost"
-                                className="h-auto p-0 hover:bg-transparent"
-                                style={{ color: badge.color }}
-                            >
-                                <GoogleSymbol name={badge.icon} style={{ fontSize: '28px' }} weight={100} opticalSize={20} />
-                            </Button>
-                        </PopoverTrigger>
-                        {iconPickerContent}
-                    </Popover>
-                     {!isViewer && isOwner && (
-                        <Popover open={isColorPopoverOpen} onOpenChange={setIsColorPopoverOpen}>
-                            <PopoverTrigger asChild disabled={!isOwner} onPointerDown={(e) => e.stopPropagation()}>
-                                <div
-                                    className={cn("absolute -bottom-1 -right-3 h-4 w-4 rounded-full border-0", !isOwner ? "cursor-not-allowed" : "cursor-pointer")}
-                                    style={{ backgroundColor: badge.color }}
-                                    aria-label="Change badge color"
-                                />
-                            </PopoverTrigger>
-                            {colorPickerContent}
-                        </Popover>
-                     )}
+                     <IconColorPicker
+                        icon={badge.icon}
+                        color={badge.color}
+                        onUpdateIcon={(newIcon) => handleUpdate({ icon: newIcon })}
+                        onUpdateColor={(newColor) => handleUpdate({ color: newColor })}
+                        disabled={!isOwner}
+                        buttonClassName="h-auto p-0 hover:bg-transparent"
+                        iconClassName='text-3xl'
+                     />
                      {shouldShowLinkIcon && (
                         <TooltipProvider>
                             <Tooltip>
@@ -420,9 +346,19 @@ function BadgeCollectionCard({
 }: BadgeCollectionCardProps) {
     const { viewAsUser, users } = useUser();
     const [isViewModePopoverOpen, setIsViewModePopoverOpen] = useState(false);
+    const [expandedBadges, setExpandedBadges] = useState<Set<string>>(new Set());
     
     const isOwner = useMemo(() => collection.owner.id === viewAsUser.userId, [collection.owner.id, viewAsUser.userId]);
     
+    const onToggleBadgeExpand = useCallback((badgeId: string) => {
+        setExpandedBadges(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(badgeId)) newSet.delete(badgeId);
+            else newSet.add(badgeId);
+            return newSet;
+        });
+    }, []);
+
     const collectionBadges = useMemo(() => {
         return collection.badgeIds
             .map(id => allBadges.find(b => b?.id === id))
@@ -518,6 +454,8 @@ function BadgeCollectionCard({
                 allCollections={allCollections}
                 isSharedPreview={isSharedPreview}
                 currentUserBadgeIds={currentUserBadgeIds}
+                isExpanded={expandedBadges.has(badge.id)}
+                onToggleExpand={() => onToggleBadgeExpand(badge.id)}
               />
             );
           })}
