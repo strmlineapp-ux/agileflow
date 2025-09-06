@@ -493,28 +493,36 @@ function BadgeCollectionCard({
     );
 
     const bodyContent = (
-      <DroppableCollectionContent collection={collection}>
+      <div className="space-y-2">
+        <InlineEditor
+            value={collection.description || ''}
+            onSave={(newDesc) => onUpdateCollection(collection.id, { description: newDesc })}
+            disabled={!isOwner}
+            placeholder="Click to add a description..."
+            className="text-sm text-foreground"
+        />
+        <DroppableCollectionContent collection={collection}>
           {collectionBadges.map((badge) => {
-              const badgeIsOwned = badge.owner.id === viewAsUser.userId;
-              return (
+            const badgeIsOwned = badge.owner.id === viewAsUser.userId;
+            return (
               <SortableBadgeItem
-                  key={badge.id}
-                  badge={badge}
-                  collection={collection}
-                  viewMode={collection.viewMode}
-                  onUpdateBadge={onUpdateBadge}
-                  onDelete={onDeleteBadge}
-                  isViewer={isViewer}
-                  predefinedColors={predefinedColors}
-                  isOwner={badgeIsOwned}
-                  isLinked={!badgeIsOwned}
-                  allCollections={allCollections}
-                  isSharedPreview={isSharedPreview}
-                  currentUserBadgeIds={currentUserBadgeIds}
+                key={badge.id}
+                badge={badge}
+                collection={collection}
+                viewMode={collection.viewMode}
+                onUpdateBadge={onUpdateBadge}
+                onDelete={onDeleteBadge}
+                isViewer={isViewer}
+                isOwner={badgeIsOwned}
+                isLinked={!badgeIsOwned}
+                allCollections={allCollections}
+                isSharedPreview={isSharedPreview}
+                currentUserBadgeIds={currentUserBadgeIds}
               />
-              )
+            );
           })}
-      </DroppableCollectionContent>
+        </DroppableCollectionContent>
+      </div>
     );
 
     return (
@@ -781,38 +789,44 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
     }, [viewAsUser, addBadgeCollection, updateUser, toast, updateBadgeCollection, allBadgeCollections, reorderBadges, addBadge, setAllBadgeCollections, displayedCollections, reorderBadgeCollections]);
     
     const renderCollectionCard = useCallback((collection: BadgeCollection, isDragging: boolean) => (
-        <BadgeCollectionCard
-            collection={collection}
-            allBadges={allBadges}
-            allCollections={allBadgeCollections}
-            predefinedColors={predefinedColors}
-            onUpdateCollection={updateBadgeCollection}
-            onDeleteCollection={handleDeleteCollection}
-            onAddBadge={addBadge}
-            onUpdateBadge={updateBadge}
-            onDeleteBadge={handleDeleteBadge}
-            isExpanded={expandedCollections.has(collection.id)}
-            onToggleExpand={() => onToggleExpand(collection.id)}
-        />
+       <SortableItem key={collection.id} id={collection.id} data={{ type: 'collection-card', collection, isSharedPreview: false }}>
+            {(isDragging) => (
+                <BadgeCollectionCard
+                    collection={collection}
+                    allBadges={allBadges}
+                    allCollections={allBadgeCollections}
+                    onUpdateCollection={updateBadgeCollection}
+                    onDeleteCollection={handleDeleteCollection}
+                    onAddBadge={addBadge}
+                    onUpdateBadge={updateBadge}
+                    onDeleteBadge={handleDeleteBadge}
+                    isExpanded={expandedCollections.has(collection.id)}
+                    onToggleExpand={() => onToggleExpand(collection.id)}
+                />
+            )}
+        </SortableItem>
     ), [allBadges, allBadgeCollections, updateBadgeCollection, handleDeleteCollection, addBadge, updateBadge, handleDeleteBadge, expandedCollections, onToggleExpand]);
 
     const renderSharedCollectionCard = useCallback((collection: BadgeCollection, isDragging: boolean) => (
-        <BadgeCollectionCard
-            collection={collection}
-            allBadges={allBadges}
-            allCollections={allBadgeCollections}
-            predefinedColors={predefinedColors}
-            onUpdateCollection={updateBadgeCollection}
-            onDeleteCollection={handleDeleteCollection}
-            onAddBadge={addBadge}
-            onUpdateBadge={updateBadge}
-            onDeleteBadge={handleDeleteBadge}
-            isSharedPreview={true}
-            isViewer={true}
-            currentUserBadgeIds={currentUserBadgeIds}
-            isExpanded={expandedCollections.has(collection.id)}
-            onToggleExpand={() => onToggleExpand(collection.id)}
-        />
+       <SortableItem key={collection.id} id={collection.id} data={{ type: 'collection-card', collection, isSharedPreview: true }}>
+            {(isDragging) => (
+                <BadgeCollectionCard
+                    collection={collection}
+                    allBadges={allBadges}
+                    allCollections={allBadgeCollections}
+                    onUpdateCollection={updateBadgeCollection}
+                    onDeleteCollection={handleDeleteCollection}
+                    onAddBadge={addBadge}
+                    onUpdateBadge={updateBadge}
+                    onDeleteBadge={handleDeleteBadge}
+                    isSharedPreview={true}
+                    isViewer={true}
+                    currentUserBadgeIds={currentUserBadgeIds}
+                    isExpanded={expandedCollections.has(collection.id)}
+                    onToggleExpand={() => onToggleExpand(collection.id)}
+                />
+            )}
+        </SortableItem>
     ), [allBadges, allBadgeCollections, updateBadgeCollection, handleDeleteCollection, addBadge, updateBadge, handleDeleteBadge, currentUserBadgeIds, expandedCollections, onToggleExpand]);
     
     const renderDragOverlay = (item: any) => {
@@ -897,6 +911,8 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
                     items={sharedCollections}
                     searchTerm={sharedSearchTerm}
                     setSearchTerm={setSharedSearchTerm}
+                    colorFilter={colorFilter}
+                    onColorFilterChange={setColorFilter}
                     renderItem={renderSharedCollectionCard}
                     renderDragOverlay={(item) => renderDragOverlay({type: 'collection-card', data: {collection: item}})}
                     emptyMessage="No other collections are currently shared."
