@@ -17,6 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useUser } from '@/context/user-context';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { ItemSelectionPopover, type ItemSelectionTab } from './item-selection-popover';
+import { useToast } from '@/hooks/use-toast';
 
 interface CardTemplateProps {
   entity: {
@@ -69,7 +70,25 @@ export function CardTemplate({
     const { viewAsUser, users } = useUser();
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const { theme } = useTheme();
+    const { toast } = useToast();
     const readableColor = getReadableColor(entity.color || '', theme);
+    
+    const handleOwnershipReset = (e: React.MouseEvent) => {
+        if (!canChangeOwnership) return;
+        const modifierKey = viewAsUser?.modifierKey || 'shift';
+        const isModifierPressed =
+            (modifierKey === 'shift' && e.shiftKey) ||
+            (modifierKey === 'alt' && e.altKey) ||
+            (modifierKey === 'ctrl' && e.ctrlKey) ||
+            (modifierKey === 'meta' && e.metaKey);
+
+        if (isModifierPressed) {
+            e.preventDefault();
+            e.stopPropagation();
+            onUpdate(entity.id, { owner: { type: 'system', id: 'system' } });
+            toast({ title: "Ownership Changed", description: `"${entity.name}" is now system owned.` });
+        }
+    };
     
     const renderIconOrAvatar = () => {
         if (user) {
@@ -87,6 +106,7 @@ export function CardTemplate({
                     color={entity.color}
                     onUpdateIcon={(newIcon) => onUpdate(entity.id, { icon: newIcon })}
                     onUpdateColor={(newColor) => onUpdate(entity.id, { color: newColor })}
+                    onClick={handleOwnershipReset}
                     disabled={!canManage}
                 />
             )
@@ -119,7 +139,7 @@ export function CardTemplate({
     
     const ownershipTrigger = (
       <div 
-        className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" 
+        className="absolute -top-0.5 -right-1 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" 
         style={{ backgroundColor: shareIconColor }}
       >
         <GoogleSymbol name={shareIcon!} style={{fontSize: '16px'}} />

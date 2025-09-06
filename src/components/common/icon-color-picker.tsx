@@ -34,9 +34,10 @@ interface IconColorPickerProps {
   onUpdateIcon: (icon: string) => void;
   onUpdateColor: (color: string) => void;
   disabled?: boolean;
+  onClick?: (e: React.MouseEvent) => void;
 }
 
-export function IconColorPicker({ icon, color, onUpdateIcon, onUpdateColor, disabled }: IconColorPickerProps) {
+export function IconColorPicker({ icon, color, onUpdateIcon, onUpdateColor, disabled, onClick }: IconColorPickerProps) {
   const { viewAsUser } = useUser();
   const [isIconPopoverOpen, setIsIconPopoverOpen] = useState(false);
   const [iconSearch, setIconSearch] = useState('');
@@ -61,6 +62,12 @@ export function IconColorPicker({ icon, color, onUpdateIcon, onUpdateColor, disa
   };
   
   const readableColor = getReadableColor(color, theme);
+  
+  const handleClick = (e: React.MouseEvent) => {
+    if (onClick) {
+        onClick(e);
+    }
+  };
 
   return (
     <Popover open={isIconPopoverOpen} onOpenChange={setIsIconPopoverOpen}>
@@ -68,7 +75,7 @@ export function IconColorPicker({ icon, color, onUpdateIcon, onUpdateColor, disa
             <Tooltip>
                 <TooltipTrigger asChild>
                     <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()} disabled={disabled}>
-                        <Button variant="default" size="xlarge" className="h-10 w-12 font-emphasis">
+                        <Button variant="default" size="xlarge" className="h-10 w-12 font-emphasis" onClick={handleClick}>
                             <GoogleSymbol name={icon} style={{ fontSize: '36px', color: readableColor }} weight={viewAsUser?.fontWeight} grade={viewAsUser?.iconGrade} />
                         </Button>
                     </PopoverTrigger>
