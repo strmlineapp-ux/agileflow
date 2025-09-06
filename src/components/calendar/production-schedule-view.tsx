@@ -468,24 +468,31 @@ export const ProductionScheduleView = React.memo(({ date, events, containerRef, 
     }, [zoomLevel, weeklyScheduleData]);
 
     useEffect(() => {
-        if(triggerScroll > 0) {
+        if (triggerScroll > 0) {
             const todayIso = weekDays.find(isToday)?.toISOString();
-            const todayCard = todayIso ? dayCardRefs.current.get(todayIso) : undefined;
-            if (isCurrentWeek && containerRef.current && todayCard) {
-                containerRef.current.scrollTo({ top: todayCard.offsetTop - 20, behavior: 'smooth' });
-            }
-
-            const scroller = todayIso ? timelineScrollerRefs.current.get(todayIso) : undefined;
-            if(scroller && now) {
-                let scrollLeft = 8 * hourWidth; // Default scroll to 8am
-                if (zoomLevel === 'fit') {
-                    scrollLeft = 8 * hourWidth; 
-                } else if (nowMarkerRefs.current.get(todayIso)) {
-                    scrollLeft = (nowMarkerRefs.current.get(todayIso) as HTMLDivElement).offsetLeft - (scroller.offsetWidth / 2) + (LOCATION_LABEL_WIDTH_PX / 2);
+            if (isCurrentWeek && containerRef.current && todayIso) {
+                const todayCard = dayCardRefs.current.get(todayIso);
+                if (todayCard) {
+                    containerRef.current.scrollTo({ top: todayCard.offsetTop - 20, behavior: 'smooth' });
                 }
-                scroller.scrollTo({ left: scrollLeft, behavior: 'smooth' });
             }
         }
+        
+        timelineScrollerRefs.current.forEach((scroller, dayIso) => {
+             if (!scroller) return;
+             const dayIsToday = isToday(new Date(dayIso));
+             
+             let scrollLeft = 8 * hourWidth; // Default scroll to 8am
+             const centerOnTime = (timeInHours: number) => (timeInHours * hourWidth) - (scroller.offsetWidth / 2) + (LOCATION_LABEL_WIDTH_PX / 2);
+             
+             if (zoomLevel === 'fit') {
+                 scrollLeft = centerOnTime(8); 
+             } else if (dayIsToday && now) {
+                 const nowInHours = now.getHours() + now.getMinutes() / 60;
+                 scrollLeft = centerOnTime(nowInHours);
+             }
+             scroller.scrollTo({ left: scrollLeft, behavior: triggerScroll > 0 ? 'smooth' : 'auto' });
+        });
     }, [triggerScroll, isCurrentWeek, hourWidth, now, zoomLevel, date, containerRef, weekDays]);
 
     const toggleDayCollapse = useCallback((dayIso: string) => {
@@ -557,7 +564,7 @@ export const ProductionScheduleView = React.memo(({ date, events, containerRef, 
     }, [editingStatusDayIso, weeklyScheduleData, userStatusAssignments]);
 
     return (
-        <div className="space-y-4 p-1 flex-1 hide-scrollbar">
+        <div className="space-y-4 p-1 flex-1">
             {weeklyScheduleData.map(({ day, dayIso, groupedEvents, gridLocations, allCheckLocationsForDay, locationAliasMap }) => {
                 const isDayCollapsed = collapsedDays.has(dayIso);
                 const isDayToday = isToday(day);
@@ -726,3 +733,5 @@ export const ProductionScheduleView = React.memo(({ date, events, containerRef, 
     );
 });
 ProductionScheduleView.displayName = 'ProductionScheduleView';
+
+    
