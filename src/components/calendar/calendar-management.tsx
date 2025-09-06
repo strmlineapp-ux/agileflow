@@ -33,14 +33,13 @@ function CalendarCard({
     onToggleExpand: () => void;
     isSharedPreview?: boolean;
 }) {
-  const { viewAsUser, users } = useUser();
+  const { viewAsUser } = useUser();
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
   const [googleCalendarIdInput, setGoogleCalendarIdInput] = useState('');
   const linkDialogInputRef = React.useRef<HTMLInputElement>(null);
   
   const {toast} = useToast();
   
-  const ownerUser = useMemo(() => users.find(u => u.userId === calendar.owner?.id), [users, calendar.owner?.id]);
   const canManage = useMemo(() => !isSharedPreview && viewAsUser.userId === calendar.owner?.id, [isSharedPreview, viewAsUser, calendar]);
 
   React.useEffect(() => {
@@ -73,24 +72,6 @@ function CalendarCard({
   };
 
 
-  const shareIconColor = 'hsl(220, 13%, 47%)';
-  let shareIcon: string | null = null;
-  let shareIconTitle: string = '';
-
-  const isOwned = ownerUser?.userId === viewAsUser.userId;
-
-  if (isOwned && calendar.isShared) {
-      shareIcon = 'change_circle';
-      shareIconTitle = 'Owned & Shared by you';
-  } else if (!isOwned && !isSharedPreview) { 
-      shareIcon = 'link';
-      shareIconTitle = `Owned by ${ownerUser?.displayName || 'another user'}`;
-  } else if (isSharedPreview) { 
-      shareIcon = 'change_circle';
-      shareIconTitle = `Owned by ${ownerUser?.displayName || 'another user'}`;
-  }
-
-
   return (
     <>
       <CardTemplate
@@ -101,9 +82,6 @@ function CalendarCard({
         isExpanded={isExpanded}
         onToggleExpand={onToggleExpand}
         isSharedPreview={isSharedPreview}
-        shareIcon={shareIcon || undefined}
-        shareIconTitle={shareIconTitle}
-        shareIconColor={shareIconColor}
         headerControls={
             <>
             {canManage && !calendar.googleCalendarId && (

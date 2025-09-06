@@ -541,7 +541,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
     onToggleExpand: () => void;
     isSharedPreview?: boolean;
 }) {
-    const { viewAsUser, users, isDragModifierPressed } = useUser();
+    const { viewAsUser } = useUser();
     
     const canManage = viewAsUser.isAdmin;
     const isPinned = page.isSystemPage;
@@ -554,36 +554,6 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
         ? `${page.path.replace('/dashboard/', '')}/[...]` 
         : page.path.replace('/dashboard/', '');
         
-    const ownerUser = users.find(u => u.userId === page.owner?.id);
-
-    let shareIcon: string | null = null;
-    let shareIconTitle: string = '';
-    let shareIconColor = 'hsl(220, 13%, 47%)';
-
-    const isOwned = page.owner?.id === viewAsUser.userId;
-
-    if (page.owner?.type === 'system') {
-        shareIcon = 'shield_person';
-        shareIconTitle = 'System Owned';
-    } else if (isOwned && page.isShared) {
-        shareIcon = 'change_circle';
-        shareIconTitle = 'Owned & Shared by you';
-        shareIconColor = viewAsUser.primaryColor || shareIconColor;
-    } else if (!isOwned && !isSharedPreview) { 
-        shareIcon = 'link';
-        shareIconTitle = `Owned by ${ownerUser?.displayName || 'another user'}`;
-        shareIconColor = ownerUser?.primaryColor || shareIconColor;
-    } else if (isSharedPreview) { 
-        shareIcon = 'change_circle';
-        shareIconTitle = `Owned by ${ownerUser?.displayName || 'another user'}`;
-        shareIconColor = ownerUser?.primaryColor || shareIconColor;
-    }
-
-    // Explicitly hide the badge for protected pages
-    if (protectedSystemPages.includes(page.id)) {
-        shareIcon = null;
-    }
-
     const bodyContent = (
       <>
         <div onPointerDown={(e) => e.stopPropagation()}>
@@ -620,9 +590,6 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
             isExpanded={isExpanded}
             onToggleExpand={onToggleExpand}
             isSharedPreview={isSharedPreview}
-            shareIcon={shareIcon || undefined}
-            shareIconTitle={shareIconTitle}
-            shareIconColor={shareIconColor}
             canChangeOwnership={canChangeOwnership}
             body={bodyContent}
             headerControls={
