@@ -69,13 +69,15 @@ export function SharedItemsPanel<T extends { id: string, name: string, icon: str
           </CardHeader>
           <CardContent className="flex-1 p-2 overflow-hidden">
             <div className="h-full overflow-y-auto">
-              <ManagementGrid
-                items={items}
-                setItems={() => {}}
-                renderItem={renderItem}
-              >
-                {items.length === 0 && <p className="text-xs text-muted-foreground text-center p-4">{emptyMessage}</p>}
-              </ManagementGrid>
+              {items.length > 0 ? (
+                <ManagementGrid
+                  items={items}
+                  setItems={() => {}}
+                  renderItem={renderItem}
+                />
+              ) : (
+                <p className="text-xs text-muted-foreground text-center p-4">{emptyMessage}</p>
+              )}
             </div>
           </CardContent>
         </Card>
