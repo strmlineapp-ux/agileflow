@@ -71,13 +71,10 @@ export function CardTemplate({
         const isOwned = entity.owner?.id === viewAsUser.userId;
 
         if (entity.owner?.type === 'system') {
-            const protectedPages = ['page-admin-management', 'page-settings', 'page-notifications'];
-            if (protectedPages.includes(entity.id)) return { shareIcon: null };
-
             return {
                 shareIcon: 'shield_person',
                 shareIconTitle: 'System Owned',
-                shareIconColor: 'hsl(var(--muted-foreground))',
+                shareIconColor: 'hsl(210, 0%, 50%)',
             };
         }
 
@@ -102,7 +99,7 @@ export function CardTemplate({
                 shareIconColor: ownerUser?.primaryColor || 'hsl(var(--muted-foreground))',
             };
         }
-        return { shareIcon: null };
+        return { shareIcon: null, shareIconTitle: null, shareIconColor: null };
     }, [entity, viewAsUser, users, isSharedPreview]);
 
     const handleOwnershipReset = (e: React.MouseEvent) => {
@@ -171,7 +168,7 @@ export function CardTemplate({
 
     const ownershipTrigger = shareIcon && (
         <div 
-            className="absolute -top-1 -left-1 h-4 w-4 rounded-full ring-2 ring-card flex items-center justify-center text-white"
+            className="absolute -top-0.5 -left-0.5 h-4 w-4 rounded-full ring-2 ring-card flex items-center justify-center text-white"
             style={{ backgroundColor: shareIconColor || undefined }}
         >
             <GoogleSymbol name={shareIcon!} style={{fontSize: '16px'}} />
@@ -241,7 +238,7 @@ export function CardTemplate({
                     )}
                     {body && (
                         <div className="absolute -bottom-1 right-0">
-                            <Button variant="default" size="icon" onClick={onToggleExpand} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
+                            <Button variant="ghost" size="icon" onClick={onToggleExpand} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
                                 <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
                             </Button>
                         </div>

@@ -127,7 +127,7 @@ function BadgeDisplayItem({
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <div className="absolute -top-0.5 -left-1 h-4 w-4 rounded-full ring-2 ring-card flex items-center justify-center text-white" style={{ backgroundColor: '#64748B' }}>
+                                <div className="absolute -top-1 -left-1 h-4 w-4 rounded-full ring-2 ring-card flex items-center justify-center text-white" style={{ backgroundColor: '#64748B' }}>
                                     <GoogleSymbol name="link" style={{fontSize: '16px'}} weight={100} opticalSize={20}/>
                                 </div>
                             </TooltipTrigger>
@@ -475,7 +475,7 @@ function BadgeCollectionCard({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={cn("font-emphasis h-6 w-6 text-muted-foreground", isActive && "text-primary")}
+                      className={cn("font-emphasis h-6 w-6 text-muted-foreground", isActive && "font-emphasized")}
                       onClick={() => handleToggleApplication(app.key)}
                       onPointerDown={(e) => e.stopPropagation()}
                       disabled={!isOwner}
