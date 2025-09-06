@@ -20,33 +20,37 @@ interface DuplicateZoneProps {
 export function DuplicateZone({ id, onAdd, tooltipText = 'Add New', isOverTooltipText = 'Drop to Duplicate', isDragging }: DuplicateZoneProps) {
   const { setNodeRef, isOver } = useDroppable({ id });
 
+  const dropZoneVisible = isDragging && isOver;
+
   return (
     <div
       ref={setNodeRef}
       className={cn(
         "rounded-full transition-all p-0.5",
-        isOver && isDragging && "ring-1 ring-border ring-inset"
+        dropZoneVisible && "ring-1 ring-border ring-inset"
       )}
     >
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button 
-                variant="default" 
-                size="icon" 
-                className={cn("rounded-full p-0", isDragging && "hidden")} 
-                onClick={onAdd} 
-                onPointerDown={(e) => e.stopPropagation()}
-            >
-              <GoogleSymbol name="add_circle" className="text-4xl text-foreground" weight={100} />
-              <span className="sr-only">{tooltipText} or Drop to Duplicate</span>
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{isDragging && isOver ? isOverTooltipText : tooltipText}</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <div className={cn(isDragging && 'hidden')}>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                  variant="default" 
+                  size="icon" 
+                  className="rounded-full p-0" 
+                  onClick={onAdd} 
+                  onPointerDown={(e) => e.stopPropagation()}
+              >
+                <GoogleSymbol name="add_circle" className="text-4xl text-foreground" weight={100} />
+                <span className="sr-only">{tooltipText}</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{tooltipText}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
     </div>
   );
 }

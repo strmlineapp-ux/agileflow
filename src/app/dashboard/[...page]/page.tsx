@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -205,9 +206,9 @@ export default function DynamicPage() {
         const Component = componentMap[tab.componentKey as keyof typeof componentMap];
         if (!Component) return null;
         
-        // The ManagementPageLayout is now part of the tab content, which simplifies layout logic
+        // Pass the isDragging state down to the management layout
         if (isManagementPage) {
-            return <Component tab={tab} page={page} team={teamContext} isActive={activeTabValue === tab.id} />;
+            return <Component tab={tab} page={page} team={teamContext} isActive={activeTabValue === tab.id} isDragging={!!activeDragItem} />;
         }
         
         return <Component tab={tab} page={page} team={teamContext} isSingleTabPage={pageTabs.length === 1} isActive={activeTabValue === tab.id} />;

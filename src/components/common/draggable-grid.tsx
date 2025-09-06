@@ -29,7 +29,6 @@ interface DraggableGridProps<T extends { id: string }> {
   setItems: (items: T[]) => void;
   onDragEnd?: (event: DragEndEvent) => void;
   onDragStart?: (event: DragStartEvent) => void;
-  renderItem: (item: T, isDragging: boolean) => React.ReactNode;
   children?: React.ReactNode;
   className?: string;
   id?: string;
@@ -40,7 +39,6 @@ export function DraggableGrid<T extends { id: string }>({
   setItems,
   onDragEnd,
   onDragStart,
-  renderItem,
   children,
   className,
   id
@@ -63,13 +61,12 @@ export function DraggableGrid<T extends { id: string }>({
   };
   
   const { setNodeRef } = useDroppable({ id: id || 'draggable-grid' });
-  const itemIds = React.useMemo(() => items.map(item => item.id), [items]);
+  const itemIds = useMemo(() => items.map(item => item.id), [items]);
 
   return (
     <div ref={setNodeRef} className={className}>
       <SortableContext items={itemIds}>
           {children}
-          {items.map(item => renderItem(item, false))}
       </SortableContext>
     </div>
   );

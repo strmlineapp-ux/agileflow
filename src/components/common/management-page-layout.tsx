@@ -77,6 +77,7 @@ export function ManagementPageLayout<T extends TEntity>({
   const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
   
   const displayedItems = useMemo(() => {
+    if (!allItems) return [];
     let filtered = allItems;
     if (searchTerm) {
       filtered = filtered.filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -112,12 +113,12 @@ export function ManagementPageLayout<T extends TEntity>({
     return filtered;
   }, [allSharedItems, sharedSearchTerm, sharedColorFilter]);
   
-  const onDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (!over) return;
     
-    const activeItem = allItems.find(i => i.id === active.id) || allSharedItems.find(i => i.id === active.id);
+    const activeItem = [...allItems, ...allSharedItems].find(i => i.id === active.id);
     if (!activeItem) return;
 
     // Handle dropping on duplicate zone
@@ -137,14 +138,14 @@ export function ManagementPageLayout<T extends TEntity>({
       return;
     }
     
-    // Handle linking from shared panel
-    const isSharedPreview = active.data.current?.isSharedPreview;
-    if (isSharedPreview && over.id === `collections-list`) { // Use a static ID for the main board droppable area
+    // Handle linking from shared panel to main board
+    const isFromShared = active.data.current?.isSharedPreview;
+    if (isFromShared && (over.data.current?.type === `${entityType}-card` || over.id === 'collections-list')) {
         onLinkItem(active.id as string);
         return;
     }
 
-    // Handle reordering
+    // Handle reordering within the main grid
     const overIsCard = over.data.current?.type === `${entityType}-card` || over.data.current?.type === 'collection-card';
     if (overIsCard && active.id !== over.id) {
         const oldIndex = displayedItems.findIndex(item => item.id === active.id);
@@ -204,11 +205,11 @@ export function ManagementPageLayout<T extends TEntity>({
               id="collections-list"
               items={displayedItems}
               setItems={onReorderItems}
-              onDragEnd={onDragEnd}
+              onDragEnd={handleDragEnd}
               className={gridClassName}
-              renderItem={renderItem}
           >
-            {displayedItems.length === 0 && <p className="text-center text-sm text-muted-foreground p-4">No {entityType}s to display.</p>}
+            {displayedItems && displayedItems.length === 0 && <p className="text-center text-sm text-muted-foreground p-4">No {entityType}s to display.</p>}
+            {displayedItems && displayedItems.map(item => renderItem(item, isDragging))}
           </DraggableGrid>
         </div>
       </div>
@@ -226,8 +227,8 @@ export function ManagementPageLayout<T extends TEntity>({
             setSearchTerm={setSharedSearchTerm}
             colorFilter={sharedColorFilter}
             onColorFilterChange={setSharedColorFilter}
-            renderItem={renderItem}
-            onDrop={onDragEnd}
+            renderItem={(item) => renderItem(item, isDragging)}
+            onDrop={handleDragEnd}
           />
       </div>
     </div>
