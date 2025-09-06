@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -64,7 +65,7 @@ const managementComponentKeys = new Set(['calendars', 'teams', 'badges', 'pages'
 
 export default function DynamicPage() {
   const params = useParams();
-  const { viewAsUser, loading, appSettings, teams, reorderPages, addPage, updatePage, deletePage, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, reorderBadgeCollections, allBadges, addBadge, updateBadge, deleteBadge, reorderBadges, users, updateUser, reorderTeams, addTeam, updateTeam, deleteTeam, reorderCalendars, addCalendar, updateCalendar, deleteCalendar } = useUser();
+  const { viewAsUser, loading, appSettings, teams, reorderPages, addPage, updatePage, deletePage, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, reorderBadgeCollections, allBadges, addBadge, updateBadge, deleteBadge, reorderBadges, users, updateUser, reorderTeams, addTeam, updateTeam, deleteTeam, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar } = useUser();
   const { page: pagePath } = params;
   const { toast } = useToast();
   
