@@ -119,7 +119,7 @@ export function CardTemplate({
     
     const ownershipTrigger = (
       <div 
-        className="absolute -top-0.5 -right-1 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" 
+        className="absolute -top-1 -right-1 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" 
         style={{ backgroundColor: shareIconColor }}
       >
         <GoogleSymbol name={shareIcon!} style={{fontSize: '16px'}} />
@@ -154,7 +154,7 @@ export function CardTemplate({
                                    )
                                 )}
                             </div>
-                            <div className="flex items-center flex-1 min-w-0" onPointerDown={(e) => { e.stopPropagation(); }}>
+                            <div className="flex-1 min-w-0" onPointerDown={(e) => { e.stopPropagation(); }}>
                                 <InlineEditor 
                                     value={entity.name} 
                                     onSave={(newName) => onUpdate(entity.id, { name: newName })}
