@@ -565,7 +565,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
 
     const isOwned = page.owner?.id === viewAsUser.userId;
 
-    if (page.owner?.type === 'system') {
+    if (page.owner?.type === 'system' && viewAsUser.isAdmin && !protectedSystemPages.includes(page.id)) {
         shareIcon = 'shield_person';
         shareIconTitle = 'System Owned';
     } else if (isOwned && page.isShared) {
