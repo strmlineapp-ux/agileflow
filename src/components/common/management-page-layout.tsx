@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useCallback, useMemo } from 'react';
@@ -172,7 +171,12 @@ export function ManagementPageLayout<T extends TEntity>({
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
   const entityTitle = entityType.charAt(0).toUpperCase() + entityType.slice(1) + 's';
   
-  const gridClassName = "grid grid-cols-[repeat(auto-fill,minmax(20rem,1fr))] gap-4";
+  const gridClassName = cn(
+    "gap-4",
+    isSharedPanelOpen
+      ? "columns-1 sm:columns-2 lg:columns-3 xl:columns-4"
+      : "columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6"
+  );
 
   return (
     <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd} sensors={sensors} collisionDetection={pointerWithin}>

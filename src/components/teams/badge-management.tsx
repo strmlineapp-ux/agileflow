@@ -243,16 +243,20 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
     const { setNodeRef, isOver } = useDroppable({ id: collection.id, data: { type: 'collection', collection }});
     
     let strategy;
+    let gridLayoutClass;
     switch(collection.viewMode) {
       case 'list':
         strategy = verticalListSortingStrategy;
+        gridLayoutClass = "flex flex-col gap-1";
         break;
       case 'grid':
-      case 'compact':
         strategy = rectSortingStrategy;
+        gridLayoutClass = "gap-4 [column-fill:_balance] columns-1 sm:columns-2";
         break;
+      case 'compact':
       default:
         strategy = rectSortingStrategy;
+        gridLayoutClass = "flex flex-wrap gap-2 items-start";
         break;
     }
     
@@ -262,9 +266,7 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
             className={cn(
                 "min-h-[60px] rounded-md p-2 transition-all",
                 isOver && "ring-1 ring-border ring-inset",
-                collection.viewMode === 'compact' && "flex flex-wrap gap-2 items-start",
-                collection.viewMode === 'list' && "flex flex-col gap-1",
-                collection.viewMode === 'grid' && "gap-4 [column-fill:_balance] columns-1 sm:columns-2"
+                gridLayoutClass
             )}
         >
             <SortableContext items={collection.badgeIds.map(id => `badge::${id}::${collection.id}`)} strategy={strategy}>
@@ -664,7 +666,7 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
         }
     };
     
-    const gridClassName = "grid grid-cols-[repeat(auto-fill,minmax(20rem,1fr))] gap-4";
+    const gridClassName = "columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4";
 
 
     return (
