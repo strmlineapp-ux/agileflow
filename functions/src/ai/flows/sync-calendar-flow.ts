@@ -51,13 +51,12 @@ const syncCalendarFlow = ai.defineFlow(
     const auth = new google.auth.GoogleAuth({
         scopes: ['https://www.googleapis.com/auth/calendar.readonly']
     });
-
-    const authClient = await auth.getClient();
-    const calendarApi = google.calendar({version: 'v3', auth: authClient});
     
     const db = getFirestore();
 
     try {
+        const authClient = await auth.getClient();
+        const calendarApi = google.calendar({version: 'v3', auth: authClient});
         const response = await calendarApi.events.list({
             calendarId: input.googleCalendarId,
             timeMin: (startOfDay(new Date())).toISOString(),
