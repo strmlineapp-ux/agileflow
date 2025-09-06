@@ -64,11 +64,6 @@ interface UserContextType {
   addEvent: (currentEvents: Event[], newEventData: Omit<Event, 'eventId'>) => Promise<Event[]>;
   updateEvent: (currentEvents: Event[], eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => Promise<Event[]>;
   deleteEvent: (currentEvents: Event[], eventId: string) => Promise<Event[]>;
-
-  fetchProjectEvents: (projectId: string, start: Date, end: Date) => Promise<Event[]>;
-  addProjectEvent: (projectId: string, currentEvents: Event[], newEventData: Omit<Event, 'eventId'>) => Promise<Event[]>;
-  updateProjectEvent: (projectId: string, currentEvents: Event[], eventId: string, eventData: Partial<Event>) => Promise<Event[]>;
-  deleteProjectEvent: (projectId: string, currentEvents: Event[], eventId: string) => Promise<Event[]>;
   
   fetchTasks: () => Promise<Task[]>;
   addTask: (currentTasks: Task[], newTaskData: Omit<Task, 'taskId' | 'createdAt' | 'lastUpdated'>) => Promise<Task[]>;
@@ -185,7 +180,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const addBadgeWithUser = (collectionId: string, sourceBadge?: Badge) => dataHook.addBadge(collectionId, sourceBadge, realUser!);
     const deleteBadgeWithUser = (badgeId: string, collectionId: string) => dataHook.deleteBadge(badgeId, collectionId, realUser!);
     const addTaskWithUser = (currentTasks: Task[], newTaskData: Omit<Task, 'taskId' | 'createdAt' | 'lastUpdated'>) => dataHook.addTask(currentTasks, newTaskData, realUser!);
-    const addProjectEventWithUser = (projectId: string, currentEvents: Event[], newEventData: Omit<Event, 'eventId'>) => dataHook.addProjectEvent(projectId, currentEvents, newEventData, realUser!);
     const addPreApprovedEmailWithUser = (email: string) => dataHook.addPreApprovedEmail(email, realUser!);
 
     const enrichedViewAsUser = viewAsUser ? { ...viewAsUser, isDragModifierPressed } : null;
@@ -208,7 +202,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       addBadge: addBadgeWithUser,
       deleteBadge: deleteBadgeWithUser,
       addTask: addTaskWithUser,
-      addProjectEvent: addProjectEventWithUser,
       addPreApprovedEmail: addPreApprovedEmailWithUser,
     };
   }, [
