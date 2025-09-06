@@ -45,6 +45,7 @@ import { ManagementPageLayout } from '../common/management-page-layout';
 export function TeamManagement({ tab, page, isSingleTabPage = false, isActive = false }: { tab: AppTab; page: AppPage; isSingleTabPage?: boolean, isActive?: boolean }) {
     const { viewAsUser, users, teams, addTeam, updateTeam, deleteTeam, reorderTeams, updatePage, updateUser } = useUser();
     const router = useRouter();
+    const pathname = usePathname();
     const { toast } = useToast();
     const [expandedTeams, setExpandedTeams] = useState<Set<string>>(new Set());
 
@@ -70,7 +71,7 @@ export function TeamManagement({ tab, page, isSingleTabPage = false, isActive = 
     const handleDelete = (team: Team) => {
         const isOwner = team.owner.id === viewAsUser.userId;
         if (isOwner) {
-            deleteTeam(team.id, router, usePathname());
+            deleteTeam(team.id, router, pathname);
         } else {
             const updatedLinkedTeamIds = (viewAsUser.linkedTeamIds || []).filter(id => id !== team.id);
             updateUser(viewAsUser.userId, { linkedTeamIds: updatedLinkedTeamIds });
