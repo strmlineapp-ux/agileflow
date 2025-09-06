@@ -544,13 +544,10 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
     const { viewAsUser, users, isDragModifierPressed } = useUser();
     
     const canManage = viewAsUser.isAdmin;
-    
     const isPinned = page.isSystemPage;
     
     const protectedSystemPages = ['page-admin-management', 'page-settings', 'page-notifications'];
     const isDeletable = viewAsUser.isAdmin && (!page.isSystemPage || !protectedSystemPages.includes(page.id));
-    const canBeDeleted = isDeletable;
-    
     const canChangeOwnership = viewAsUser.isAdmin && !protectedSystemPages.includes(page.id);
 
     const displayPath = page.isDynamic 
@@ -565,7 +562,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
 
     const isOwned = page.owner?.id === viewAsUser.userId;
 
-    if (page.owner?.type === 'system' && viewAsUser.isAdmin && !protectedSystemPages.includes(page.id)) {
+    if (page.owner?.type === 'system') {
         shareIcon = 'shield_person';
         shareIconTitle = 'System Owned';
     } else if (isOwned && page.isShared) {
@@ -582,6 +579,10 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
         shareIconColor = ownerUser?.primaryColor || shareIconColor;
     }
 
+    // Explicitly hide the badge for protected pages
+    if (protectedSystemPages.includes(page.id)) {
+        shareIcon = null;
+    }
 
     const bodyContent = (
       <>
@@ -614,7 +615,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
             onUpdate={onUpdate}
             onDelete={() => onDelete(page)}
             canManage={canManage}
-            canDelete={canBeDeleted}
+            canDelete={isDeletable}
             isPinned={isPinned}
             isExpanded={isExpanded}
             onToggleExpand={onToggleExpand}
