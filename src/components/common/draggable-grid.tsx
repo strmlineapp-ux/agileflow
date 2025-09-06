@@ -30,7 +30,6 @@ interface DraggableGridProps<T extends { id: string }> {
   onDragEnd?: (event: DragEndEvent) => void;
   onDragStart?: (event: DragStartEvent) => void;
   renderItem: (item: T, isDragging: boolean) => React.ReactNode;
-  renderDragOverlay?: (item: T) => React.ReactNode;
   children?: React.ReactNode;
   className?: string;
   id?: string;
@@ -42,32 +41,12 @@ export function DraggableGrid<T extends { id: string }>({
   onDragEnd,
   onDragStart,
   renderItem,
-  renderDragOverlay,
   children,
   className,
   id
 }: DraggableGridProps<T>) {
-  const [activeItem, setActiveItem] = useState<T | null>(null);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  const handleDragStart = useCallback((event: DragStartEvent) => {
-    const active = items.find(p => p.id === event.active.id);
-    if (active) {
-      setActiveItem(active);
-    }
-    if(onDragStart) {
-      onDragStart(event);
-    }
-  }, [items, onDragStart]);
 
   const handleDragEnd = (event: DragEndEvent) => {
-    setActiveItem(null);
     if (onDragEnd) {
       onDragEnd(event);
       return;
@@ -87,23 +66,11 @@ export function DraggableGrid<T extends { id: string }>({
   const itemIds = React.useMemo(() => items.map(item => item.id), [items]);
 
   return (
-    <DndContext 
-        sensors={sensors} 
-        collisionDetection={pointerWithin}
-        onDragStart={handleDragStart} 
-        onDragEnd={handleDragEnd}
-    >
-      <div ref={setNodeRef} className={className}>
-        <SortableContext items={itemIds}>
-            {children}
-            {items.map(item => renderItem(item, activeItem?.id === item.id))}
-        </SortableContext>
-      </div>
-       {renderDragOverlay && (
-        <DragOverlay modifiers={[snapCenterToCursor]}>
-            {activeItem ? renderDragOverlay(activeItem) : null}
-        </DragOverlay>
-       )}
-    </DndContext>
+    <div ref={setNodeRef} className={className}>
+      <SortableContext items={itemIds}>
+          {children}
+          {items.map(item => renderItem(item, false))}
+      </SortableContext>
+    </div>
   );
 }

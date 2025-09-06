@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -6,7 +7,10 @@ import { useParams } from 'next/navigation';
 import { useUser } from '@/context/user-context';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { hasAccess } from '@/lib/permissions';
-import { type AppTab, type Team } from '@/types';
+import { type AppTab, type Team, type AppPage, type BadgeCollection, type SharedCalendar, type Badge, type User } from '@/types';
+import { DndContext, DragOverlay, KeyboardSensor, PointerSensor, useSensor, useSensors, pointerWithin, type DragStartEvent, type DragEndEvent } from '@dnd-kit/core';
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { snapCenterToCursor } from '@dnd-kit/modifiers';
 
 // Import all possible tab content components
 import { AdminsManagement, PagesManagement, TabsManagement } from '@/components/admin/page';
@@ -28,6 +32,8 @@ import { Tabs, TabsTrigger, TabsContent, SortableTabsList } from '@/components/u
 import { CenteredTabList } from '@/components/common/centered-tab-list';
 import { PageTitle } from '@/components/common/page-title';
 import { cn } from '@/lib/utils';
+import { Avatar } from '@/components/ui/avatar';
+import { AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
 
 
 const componentMap = {
@@ -51,13 +57,15 @@ const componentMap = {
   // Add other mappings as needed
 };
 
+type DraggableItem = Team | SharedCalendar | BadgeCollection | AppPage | Badge | User;
 
 export default function DynamicPage() {
   const params = useParams();
-  const { appSettings, viewAsUser, loading, teams, updatePage } = useUser();
+  const { appSettings, viewAsUser, loading, teams, updatePage, allBadgeCollections, allBadges, users } = useUser();
   const { page: pagePath } = params;
   
   const [activeTabValue, setActiveTabValue] = useState<string | undefined>();
+  const [activeDragItem, setActiveDragItem] = useState<DraggableItem | null>(null);
 
   const path = Array.isArray(pagePath) ? `/dashboard/${pagePath.join('/')}` : `/dashboard/${pagePath}`;
 
@@ -90,6 +98,64 @@ export default function DynamicPage() {
       }
     }
   }, [page, appSettings.tabs]);
+  
+  const onDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    const type = active.data.current?.type;
+
+    if (type === 'page-card' || type === 'team-card' || type === 'collection-card' || type === 'calendar-card') {
+      setActiveDragItem(active.data.current.page || active.data.current.team || active.data.current.collection || active.data.current.calendar);
+    } else if (type === 'badge') {
+      setActiveDragItem(active.data.current.badge);
+    } else if (type === 'user') {
+      setActiveDragItem(active.data.current.user);
+    }
+  };
+
+  const onDragEnd = () => {
+    setActiveDragItem(null);
+  };
+  
+  const renderDragOverlay = () => {
+    if (!activeDragItem) return null;
+
+    if ('badgeIds' in activeDragItem) { // BadgeCollection
+        return <GoogleSymbol name={activeDragItem.icon} style={{color: activeDragItem.color, fontSize: '48px'}} />;
+    }
+    if ('ownerCollectionId' in activeDragItem) { // Badge
+        return (
+            <div className="h-9 w-9 rounded-full border-2 flex items-center justify-center bg-card shadow-lg" style={{ borderColor: activeDragItem.color }}>
+                <GoogleSymbol name={activeDragItem.icon} style={{ fontSize: '28px', color: activeDragItem.color }} weight={100} />
+            </div>
+        );
+    }
+    if ('members' in activeDragItem) { // Team
+        return <GoogleSymbol name={activeDragItem.icon} style={{color: activeDragItem.color, fontSize: '48px'}} />;
+    }
+    if ('googleCalendarId' in activeDragItem) { // SharedCalendar
+        return <GoogleSymbol name={activeDragItem.icon} style={{color: activeDragItem.color, fontSize: '48px'}} />;
+    }
+     if ('path' in activeDragItem) { // AppPage
+        return <GoogleSymbol name={activeDragItem.icon} style={{color: activeDragItem.color, fontSize: '48px'}} />;
+    }
+     if ('email' in activeDragItem) { // User
+        return (
+            <Avatar className="h-12 w-12">
+                <AvatarImage src={activeDragItem.avatarUrl} alt={activeDragItem.displayName} data-ai-hint="user avatar" />
+                <AvatarFallback>{activeDragItem.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+            </Avatar>
+        )
+    }
+
+    return null;
+  };
+  
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   if (loading) {
     return (
@@ -155,14 +221,14 @@ export default function DynamicPage() {
                 ))}
             </SortableTabsList>
           </CenteredTabList>
-         <div className="flex-1 pt-6 min-h-0">
+         <div className="flex-1 pt-6 flex flex-col">
             {pageTabs.map(tab => {
                 const Component = componentMap[tab.componentKey as keyof typeof componentMap];
                 return Component ? (
                     <TabsContent 
                         key={tab.id} 
                         value={tab.id} 
-                        className="mt-0 h-full"
+                        className="mt-0 flex-1 flex flex-col"
                     >
                       <Component tab={tab} page={page} team={teamContext} isActive={activeTabValue === tab.id} />
                     </TabsContent>
@@ -174,17 +240,22 @@ export default function DynamicPage() {
   }
   
   return (
-    <div className="flex flex-col h-full gap-6">
-       {!seamlessPageIds.includes(page.id) && (
-            <PageTitle 
-              title={page.displayTitle || page.name}
-              icon={page.icon}
-              iconColor={page.color}
-              onSave={(newTitle) => updatePage(page.id, { displayTitle: newTitle })}
-              disabled={!viewAsUser.isAdmin}
-            />
-       )}
-       {renderContent()}
-    </div>
+    <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={pointerWithin}>
+        <div className="flex flex-col h-full gap-6">
+           {!seamlessPageIds.includes(page.id) && (
+                <PageTitle 
+                  title={page.displayTitle || page.name}
+                  icon={page.icon}
+                  iconColor={page.color}
+                  onSave={(newTitle) => updatePage(page.id, { displayTitle: newTitle })}
+                  disabled={!viewAsUser.isAdmin}
+                />
+           )}
+           {renderContent()}
+        </div>
+        <DragOverlay modifiers={[snapCenterToCursor]}>
+          {renderDragOverlay()}
+        </DragOverlay>
+    </DndContext>
   )
 }

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useCallback, useMemo } from 'react';
@@ -42,10 +43,9 @@ interface ManagementPageLayoutProps<T extends TEntity> {
   onLinkItem: (itemId: string) => void;
 
   renderItem: (item: T, isDragging: boolean) => React.ReactNode;
-  renderDragOverlay: (item: T) => React.ReactNode;
   
   isActive: boolean; // For auto-focusing search
-  onDragEnd?: (event: DragEndEvent) => void; // Allow custom drag end logic
+  customDragEnd?: (event: DragEndEvent) => void; // Allow custom drag end logic
 }
 
 export function ManagementPageLayout<T extends TEntity>({
@@ -62,9 +62,8 @@ export function ManagementPageLayout<T extends TEntity>({
   onReorderItems,
   onLinkItem,
   renderItem,
-  renderDragOverlay,
   isActive,
-  onDragEnd: customOnDragEnd,
+  customDragEnd,
 }: ManagementPageLayoutProps<T>) {
   const { viewAsUser } = useUser();
   const { toast } = useToast();
@@ -74,7 +73,6 @@ export function ManagementPageLayout<T extends TEntity>({
   const [sharedSearchTerm, setSharedSearchTerm] = useState('');
   const [sharedColorFilter, setSharedColorFilter] = useState<string | null>(null);
   const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
-  const [activeDragItem, setActiveDragItem] = useState<T | null>(null);
   
   const displayedItems = useMemo(() => {
     let filtered = allItems;
@@ -111,25 +109,16 @@ export function ManagementPageLayout<T extends TEntity>({
     }
     return filtered;
   }, [allSharedItems, sharedSearchTerm, sharedColorFilter]);
-
-  const onDragStart = (event: DragStartEvent) => {
-    const item = allItems.find(i => i.id === event.active.id) || allSharedItems.find(i => i.id === event.active.id);
-    if(item) {
-        setActiveDragItem(item as T);
-    }
-  };
-
-  const onDragEnd = (event: DragEndEvent) => {
-    setActiveDragItem(null);
-
-    if (customOnDragEnd) {
-        customOnDragEnd(event);
-        return;
+  
+  const handleDragEnd = (event: DragEndEvent) => {
+    if (customDragEnd) {
+      customDragEnd(event);
+      return;
     }
 
     const { active, over } = event;
     if (!over) return;
-    
+
     const activeItem = allItems.find(i => i.id === active.id) || allSharedItems.find(i => i.id === active.id);
     if (!activeItem || !viewAsUser) return;
 
@@ -168,7 +157,6 @@ export function ManagementPageLayout<T extends TEntity>({
     }
   };
   
-  const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
   const entityTitle = entityType.charAt(0).toUpperCase() + entityType.slice(1) + 's';
   
   const gridClassName = cn(
@@ -179,76 +167,71 @@ export function ManagementPageLayout<T extends TEntity>({
   );
 
   return (
-    <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd} sensors={sensors} collisionDetection={pointerWithin}>
-      <div className="flex h-full gap-4">
-        <div className="flex-1 flex flex-col min-h-0">
-          <div className="flex items-center justify-between mb-6 shrink-0">
-            <div className="flex items-center gap-2">
-              <PageTitle
-                title={pageTitle}
-                onSave={onPageTitleSave}
-                onReset={onPageTitleReset}
-                disabled={!canManagePage}
-              />
-              <DuplicateZone id={`duplicate-${entityType}-zone`} onAdd={() => onAddItem()} isDragging={!!activeDragItem} />
-            </div>
-            <div className="flex items-center gap-1">
-              <CompactSearchInput
-                searchTerm={searchTerm}
-                setSearchTerm={setSearchTerm}
-                placeholder={`Search ${entityType}s...`}
-                autoFocus={isActive}
-                showColorFilter={true}
-                onColorSelect={setColorFilter}
-                activeColorFilter={colorFilter}
-              />
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="default" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
-                      <GoogleSymbol name="dynamic_feed" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent><p>Show Shared {entityTitle}</p></TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
+    <div className="flex h-full gap-4">
+      <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex items-center justify-between mb-6 shrink-0">
+          <div className="flex items-center gap-2">
+            <PageTitle
+              title={pageTitle}
+              onSave={onPageTitleSave}
+              onReset={onPageTitleReset}
+              disabled={!canManagePage}
+            />
+            <DuplicateZone id={`duplicate-${entityType}-zone`} onAdd={() => onAddItem()} isDragging={false} />
           </div>
-          <div className="h-full overflow-y-auto">
-            <DraggableGrid
-                id="collections-list"
-                items={displayedItems}
-                setItems={onReorderItems}
-                className={gridClassName}
-                renderItem={renderItem}
-            >
-              {displayedItems.length === 0 && <p className="text-center text-sm text-muted-foreground p-4">No {entityType}s to display.</p>}
-            </DraggableGrid>
+          <div className="flex items-center gap-1">
+            <CompactSearchInput
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              placeholder={`Search ${entityType}s...`}
+              autoFocus={isActive}
+              showColorFilter={true}
+              onColorSelect={setColorFilter}
+              activeColorFilter={colorFilter}
+            />
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="default" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
+                    <GoogleSymbol name="dynamic_feed" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent><p>Show Shared {entityTitle}</p></TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
-        <div className={cn(
-            "transition-all duration-300", 
-            isSharedPanelOpen ? "w-96" : "w-0"
-        )}>
-            <SharedItemsPanel
-              isOpen={isSharedPanelOpen}
-              type={entityType}
-              title={`Shared ${entityTitle}`}
-              description={`Drag a ${entityType} you own here to share it. Drag a ${entityType} to your board to link it.`}
-              items={sharedItems}
-              searchTerm={sharedSearchTerm}
-              setSearchTerm={setSharedSearchTerm}
-              colorFilter={sharedColorFilter}
-              onColorFilterChange={setSharedColorFilter}
-              renderItem={(item, isDragging) => renderItem(item as T, isDragging)}
-              renderDragOverlay={(item) => renderDragOverlay(item as T)}
-              emptyMessage={`No other ${entityType}s are currently shared.`}
-            />
+        <div className="h-full overflow-y-auto">
+          <DraggableGrid
+              id="collections-list"
+              items={displayedItems}
+              setItems={onReorderItems}
+              onDragEnd={handleDragEnd}
+              className={gridClassName}
+              renderItem={renderItem}
+          >
+            {displayedItems.length === 0 && <p className="text-center text-sm text-muted-foreground p-4">No {entityType}s to display.</p>}
+          </DraggableGrid>
         </div>
       </div>
-      <DragOverlay modifiers={[snapCenterToCursor]}>
-        {activeDragItem ? renderDragOverlay(activeDragItem) : null}
-      </DragOverlay>
-    </DndContext>
+      <div className={cn(
+          "transition-all duration-300", 
+          isSharedPanelOpen ? "w-96" : "w-0"
+      )}>
+          <SharedItemsPanel
+            isOpen={isSharedPanelOpen}
+            type={entityType}
+            title={`Shared ${entityTitle}`}
+            description={`Drag a ${entityType} you own here to share it. Drag a ${entityType} to your board to link it.`}
+            items={sharedItems}
+            searchTerm={sharedSearchTerm}
+            setSearchTerm={setSharedSearchTerm}
+            colorFilter={sharedColorFilter}
+            onColorFilterChange={setSharedColorFilter}
+            renderItem={renderItem}
+            onDrop={handleDragEnd}
+          />
+      </div>
+    </div>
   );
 }
