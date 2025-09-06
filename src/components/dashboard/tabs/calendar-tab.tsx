@@ -295,7 +295,7 @@ export function CalendarPageContent({ tab }: { tab: AppTab }) {
               </Tabs>
           </div>
         </div>
-        <div className={cn("flex-1 min-h-0", pageShouldScroll ? "overflow-y-auto" : "overflow-hidden flex flex-col")} ref={viewContainerRef}>
+        <div className={cn("flex-1 min-h-0", pageShouldScroll ? "overflow-y-auto hide-scrollbar" : "overflow-hidden flex flex-col")} ref={viewContainerRef}>
             {renderCurrentView()}
         </div>
       </div>
