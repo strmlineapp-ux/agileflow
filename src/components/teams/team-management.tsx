@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -131,12 +132,12 @@ export function TeamManagement({ tab, page, isSingleTabPage = false, isActive = 
 
     const allTeams = useMemo(() => {
          return teams
-            .filter(t => t.owner.id === viewAsUser.userId || (viewAsUser.linkedTeamIds || []).includes(t.id));
+            .filter(t => t.owner && (t.owner.id === viewAsUser.userId || (viewAsUser.linkedTeamIds || []).includes(t.id)));
     }, [teams, viewAsUser]);
 
     const sharedTeams = useMemo(() => {
         const displayedIds = new Set(allTeams.map(c => c.id));
-        return teams.filter(c => c.isShared && c.owner.id !== viewAsUser.userId && !displayedIds.has(c.id));
+        return teams.filter(c => c.isShared && c.owner && c.owner.id !== viewAsUser.userId && !displayedIds.has(c.id));
     }, [teams, allTeams, viewAsUser.userId]);
 
     const renderTeamCard = (team: Team, isDragging: boolean) => (
