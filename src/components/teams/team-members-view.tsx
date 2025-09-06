@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useUser } from '@/context/user-context';
@@ -237,14 +238,14 @@ function TeamMemberContent({ team }: { team: Team }) {
                     </div>
                 )}
 
-                <div className="flex-1 space-y-4">
-                     <InlineEditor
-                        value={membersLabel}
-                        onSave={(newValue) => updateTeam(team.id, { membersLabel: newValue })}
-                        className="text-xl"
-                        disabled={!canManage}
-                     />
-                    {members.length > 0 && (
+                {members.length > 0 && (
+                    <div className="flex-1 space-y-4">
+                        <InlineEditor
+                            value={membersLabel}
+                            onSave={(newValue) => updateTeam(team.id, { membersLabel: newValue })}
+                            className="text-xl"
+                            disabled={!canManage}
+                        />
                         <DroppableUserList id="members">
                             <SortableContext items={memberIds} strategy={verticalListSortingStrategy}>
                                 <div className="flex flex-wrap -m-3">
@@ -256,8 +257,8 @@ function TeamMemberContent({ team }: { team: Team }) {
                                 </div>
                             </SortableContext>
                         </DroppableUserList>
-                    )}
-                </div>
+                    </div>
+                )}
             </div>
             <DragOverlay modifiers={[snapCenterToCursor]}>
                 {activeDragItem?.type === 'member-card' && activeDragItem?.data?.member ? (
