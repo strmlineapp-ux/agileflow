@@ -42,6 +42,7 @@ export const systemPages: Omit<AppPage, 'workspaceId'>[] = [
         associatedTabs: ['tab-admins', 'tab-admin-pages', 'tab-admin-tabs'],
         access: { users: [], teams: [] }, // Special-cased in hasAccess to only allow isAdmin
         isSystemPage: true,
+        owner: { type: 'system', id: 'system' },
     },
     {
         id: 'page-overview',
@@ -54,6 +55,7 @@ export const systemPages: Omit<AppPage, 'workspaceId'>[] = [
         associatedTabs: ['tab-overview'],
         access: { users: [], teams: [] }, // Public
         isSystemPage: true,
+        owner: { type: 'system', id: 'system' },
     },
     {
         id: 'page-calendar',
@@ -66,6 +68,7 @@ export const systemPages: Omit<AppPage, 'workspaceId'>[] = [
         associatedTabs: ['tab-calendar'],
         access: { users: [], teams: [] }, // Public
         isSystemPage: true,
+        owner: { type: 'system', id: 'system' },
     },
     {
         id: 'page-tasks',
@@ -78,6 +81,7 @@ export const systemPages: Omit<AppPage, 'workspaceId'>[] = [
         associatedTabs: ['tab-tasks'],
         access: { users: [], teams: [] },
         isSystemPage: true,
+        owner: { type: 'system', id: 'system' },
     },
     {
         id: 'page-notifications',
@@ -90,6 +94,7 @@ export const systemPages: Omit<AppPage, 'workspaceId'>[] = [
         associatedTabs: ['tab-notifications'],
         access: { users: [], teams: [] }, // Public
         isSystemPage: true,
+        owner: { type: 'system', id: 'system' },
     },
     {
         id: 'page-settings',
@@ -102,5 +107,6 @@ export const systemPages: Omit<AppPage, 'workspaceId'>[] = [
         associatedTabs: ['tab-settings'],
         access: { users: [], teams: [] }, // Public
         isSystemPage: true,
+        owner: { type: 'system', id: 'system' },
     },
 ];
