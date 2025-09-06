@@ -289,8 +289,14 @@ export default function DynamicPage() {
       team: teamContext,
       isSingleTabPage: (page.associatedTabs || []).length === 1,
       isActive: activeTabValue === tab.id,
-      isDragging: !!activeDragItem
     };
+    
+    if (managementComponentKeys.has(tab.componentKey)) {
+        (props as any).isSharedPanelOpen = isSharedPanelOpen;
+        (props as any).setIsSharedPanelOpen = setIsSharedPanelOpen;
+        (props as any).isDragging = !!activeDragItem;
+    }
+    
     return <Component {...props} />;
   };
 
