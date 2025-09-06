@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -34,6 +33,9 @@ import { CenteredTabList } from '@/components/common/centered-tab-list';
 import { PageTitle } from '@/components/common/page-title';
 import { ManagementPageLayout } from '@/components/common/management-page-layout';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { DuplicateZone } from '@/components/common/duplicate-zone';
+import { SharedItemsPanel } from '@/components/common/shared-items-panel';
+import { cn } from '@/lib/utils';
 
 const componentMap = {
   admins: AdminsManagement,
@@ -68,6 +70,7 @@ export default function DynamicPage() {
   
   const [activeTabValue, setActiveTabValue] = useState<string | undefined>();
   const [activeDragItem, setActiveDragItem] = useState<DraggableItem | null>(null);
+  const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
 
   const path = Array.isArray(pagePath) ? `/dashboard/${pagePath.join('/')}` : `/dashboard/${pagePath}`;
 
@@ -110,11 +113,13 @@ export default function DynamicPage() {
     setActiveDragItem(null);
     const { active, over } = event;
     if (!over) return;
-    
+
     const activeItemData = active.data.current;
     if (!activeItemData) return;
 
-    // --- Badge Drag Logic ---
+    const allItems = [...appSettings.pages, ...teams, ...allBadgeCollections, ...calendars];
+    const activeItem = allItems.find(i => i.id === active.id) as DraggableItem | undefined;
+
     if (activeItemData.type === 'badge') {
         const badge = activeItemData.badge as Badge;
         const sourceCollectionId = activeItemData.collectionId;
@@ -124,7 +129,7 @@ export default function DynamicPage() {
 
         if (targetCollectionId) {
             const targetCollection = allBadgeCollections.find(c => c.id === targetCollectionId);
-            if(targetCollection && targetCollection.owner.id === viewAsUser.userId) {
+            if(targetCollection && targetCollection.owner.id === viewAsUser?.userId) {
                 deleteBadge(badge.id, sourceCollectionId);
                 updateBadgeCollection(targetCollection.id, {
                     badgeIds: [badge.id, ...targetCollection.badgeIds]
@@ -135,12 +140,9 @@ export default function DynamicPage() {
         }
         return;
     }
-
-    // --- Card Drag Logic ---
-    const allItems = [...appSettings.pages, ...teams, ...allBadgeCollections, ...calendars];
-    const activeItem = allItems.find(i => i.id === active.id);
+        
     if (!activeItem) return;
-
+        
     const entityType = 
         'path' in activeItem ? 'page' : 
         'members' in activeItem ? 'team' :
@@ -154,7 +156,7 @@ export default function DynamicPage() {
     if (over.id === `duplicate-${entityType}-zone`) {
         if (entityType === 'page') addPage(activeItem);
         if (entityType === 'team') addTeam(activeItem);
-        if (entityType === 'collection') addBadgeCollection(viewAsUser, activeItem);
+        if (entityType === 'collection' && viewAsUser) addBadgeCollection(viewAsUser, activeItem);
         if (entityType === 'calendar') addCalendar(activeItem);
         toast({ title: `${entityType.charAt(0).toUpperCase() + entityType.slice(1)} Duplicated` });
         return;
@@ -162,31 +164,30 @@ export default function DynamicPage() {
     
     // Handle sharing/unlinking
     if (over.id === `shared-${entityType}-panel`) {
-        if (activeItem.owner?.id === viewAsUser.userId) {
-            const isNowShared = !activeItem.isShared;
-            if (entityType === 'page') updatePage(activeItem.id, { isShared: isNowShared });
-            if (entityType === 'team') updateTeam(activeItem.id, { isShared: isNowShared });
-            if (entityType === 'collection') updateBadgeCollection(activeItem.id, { isShared: isNowShared });
-            if (entityType === 'calendar') updateCalendar(activeItem.id, { isShared: isNowShared });
-            toast({ title: isNowShared ? 'Item Shared' : 'Item Unshared' });
-        } else {
-            // Unlink from personal board
-             if (entityType === 'page') updateUser(viewAsUser.userId, { linkedPageIds: (viewAsUser.linkedPageIds || []).filter(id => id !== activeItem.id) });
-             if (entityType === 'team') updateUser(viewAsUser.userId, { linkedTeamIds: (viewAsUser.linkedTeamIds || []).filter(id => id !== activeItem.id) });
-             if (entityType === 'collection') updateUser(viewAsUser.userId, { linkedBadgeCollectionIds: (viewAsUser.linkedBadgeCollectionIds || []).filter(id => id !== activeItem.id) });
-             if (entityType === 'calendar') updateUser(viewAsUser.userId, { linkedCalendarIds: (viewAsUser.linkedCalendarIds || []).filter(id => id !== activeItem.id) });
-            toast({ title: 'Item Unlinked' });
-        }
-        return;
+      if (activeItem.owner?.id === viewAsUser?.userId) {
+        const isNowShared = !activeItem.isShared;
+        if (entityType === 'page') updatePage(activeItem.id, { isShared: isNowShared });
+        if (entityType === 'team') updateTeam(activeItem.id, { isShared: isNowShared });
+        if (entityType === 'collection') updateBadgeCollection(activeItem.id, { isShared: isNowShared });
+        if (entityType === 'calendar') updateCalendar(activeItem.id, { isShared: isNowShared });
+        toast({ title: isNowShared ? 'Item Shared' : 'Item Unshared' });
+      } else {
+        // Unlink from personal board
+        if (entityType === 'page') updateUser(viewAsUser!.userId, { linkedPageIds: (viewAsUser!.linkedPageIds || []).filter(id => id !== activeItem.id) });
+        if (entityType === 'team') updateUser(viewAsUser!.userId, { linkedTeamIds: (viewAsUser!.linkedTeamIds || []).filter(id => id !== activeItem.id) });
+        if (entityType === 'collection') updateUser(viewAsUser!.userId, { linkedBadgeCollectionIds: (viewAsUser!.linkedBadgeCollectionIds || []).filter(id => id !== activeItem.id) });
+        if (entityType === 'calendar') updateUser(viewAsUser!.userId, { linkedCalendarIds: (viewAsUser!.linkedCalendarIds || []).filter(id => id !== activeItem.id) });
+        toast({ title: 'Item Unlinked' });
+      }
+      return;
     }
-    
-    // Handle linking from shared panel
+
     if (activeItemData.isSharedPreview) {
-        if (over.id === 'collections-list' || over.data.current?.type === `${entityType}-card`) {
-             if (entityType === 'page') updateUser(viewAsUser.userId, { linkedPageIds: [...(viewAsUser.linkedPageIds || []), activeItem.id] });
-             if (entityType === 'team') updateUser(viewAsUser.userId, { linkedTeamIds: [...(viewAsUser.linkedTeamIds || []), activeItem.id] });
-             if (entityType === 'collection') updateUser(viewAsUser.userId, { linkedBadgeCollectionIds: [...(viewAsUser.linkedBadgeCollectionIds || []), activeItem.id] });
-             if (entityType === 'calendar') updateUser(viewAsUser.userId, { linkedCalendarIds: [...(viewAsUser.linkedCalendarIds || []), activeItem.id] });
+        if (over.data.current?.type === `${entityType}-card` || over.id === 'collections-list' || over.id === 'pages-list' || over.id === 'teams-list' || over.id === 'calendars-list' ) {
+            if (entityType === 'page') updateUser(viewAsUser!.userId, { linkedPageIds: [...(viewAsUser!.linkedPageIds || []), activeItem.id] });
+            if (entityType === 'team') updateUser(viewAsUser!.userId, { linkedTeamIds: [...(viewAsUser!.linkedTeamIds || []), activeItem.id] });
+            if (entityType === 'collection') updateUser(viewAsUser!.userId, { linkedBadgeCollectionIds: [...(viewAsUser!.linkedBadgeCollectionIds || []), activeItem.id] });
+            if (entityType === 'calendar') updateUser(viewAsUser!.userId, { linkedCalendarIds: [...(viewAsUser!.linkedCalendarIds || []), activeItem.id] });
             toast({ title: 'Item Linked' });
         }
         return;
@@ -214,7 +215,7 @@ export default function DynamicPage() {
         }
     }
   };
-  
+
   const renderDragOverlay = () => {
     if (!activeDragItem) return null;
     
@@ -256,7 +257,7 @@ export default function DynamicPage() {
     })
   );
 
-  if (loading) {
+  if (loading || !viewAsUser) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <GoogleSymbol name="progress_activity" className="animate-spin text-4xl text-primary" />
@@ -276,6 +277,21 @@ export default function DynamicPage() {
   }
 
   const seamlessPageIds = ['page-overview', 'page-admin-management', 'page-calendar', 'page-tasks', 'page-notifications', 'page-settings'];
+  
+  const renderTabContent = (tab: AppTab) => {
+    const Component = componentMap[tab.componentKey as keyof typeof componentMap];
+    if (!Component) return null;
+    
+    const props = {
+      tab: tab,
+      page: page,
+      team: teamContext,
+      isSingleTabPage: (page.associatedTabs || []).length === 1,
+      isActive: activeTabValue === tab.id,
+      isDragging: !!activeDragItem
+    };
+    return <Component {...props} />;
+  };
 
   const renderContent = () => {
     const pageTabs = page.associatedTabs
@@ -290,34 +306,13 @@ export default function DynamicPage() {
         );
     }
     
-    const activeComponentKey = pageTabs.find(t => t.id === activeTabValue)?.componentKey;
-    const isManagementPage = activeComponentKey && managementComponentKeys.has(activeComponentKey);
+    const isManagementPage = managementComponentKeys.has(pageTabs.find(t => t.id === activeTabValue)?.componentKey || '');
     
     const handleReorderPageTabs = (reorderedPageTabs: AppTab[]) => {
       const newTabIds = reorderedPageTabs.map(tab => tab.id);
       updatePage(page.id, { associatedTabs: newTabIds });
     };
 
-    const renderTabContent = (tab: AppTab) => {
-      const Component = componentMap[tab.componentKey as keyof typeof componentMap];
-      if (!Component) return null;
-      
-      const props = {
-        tab: tab,
-        page: page,
-        team: teamContext,
-        isSingleTabPage: pageTabs.length === 1,
-        isActive: activeTabValue === tab.id,
-        isDragging: !!activeDragItem
-      };
-
-      if (isManagementPage && (Component === CalendarManagement || Component === TeamManagement || Component === BadgeManagement || Component === PagesManagement)) {
-        return <Component {...props} />;
-      }
-      
-      return <Component {...props} />;
-    };
-    
     return (
        <Tabs value={activeTabValue} onValueChange={setActiveTabValue} className="flex flex-col h-full">
           <CenteredTabList>
@@ -341,7 +336,7 @@ export default function DynamicPage() {
                     value={tab.id} 
                     className="mt-0 h-full"
                 >
-                  <div className="h-full overflow-hidden">
+                  <div className={cn("h-full", isManagementPage && "flex flex-col")}>
                     {renderTabContent(tab)}
                   </div>
                 </TabsContent>

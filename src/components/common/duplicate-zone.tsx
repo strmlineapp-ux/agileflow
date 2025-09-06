@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React from 'react';
@@ -20,14 +19,14 @@ interface DuplicateZoneProps {
 export function DuplicateZone({ id, onAdd, tooltipText = 'Add New', isOverTooltipText = 'Drop to Duplicate', isDragging }: DuplicateZoneProps) {
   const { setNodeRef, isOver } = useDroppable({ id });
 
-  const dropZoneVisible = isDragging && isOver;
+  const dropZoneActive = isDragging && isOver;
 
   return (
     <div
       ref={setNodeRef}
       className={cn(
         "rounded-full transition-all p-0.5",
-        dropZoneVisible && "ring-1 ring-border ring-inset"
+        dropZoneActive && "ring-1 ring-border ring-inset"
       )}
     >
       <div className={cn(isDragging && 'hidden')}>
