@@ -578,6 +578,13 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
         </p>
       </>
     );
+
+    const footerContent = (
+      <div className="flex items-center justify-end w-full">
+          {!isPinned && <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />}
+          {!isPinned && <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />}
+      </div>
+    );
     
     return (
         <CardTemplate
@@ -592,12 +599,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
             isSharedPreview={isSharedPreview}
             canChangeOwnership={canChangeOwnership}
             body={bodyContent}
-            headerControls={
-                <div className="flex items-center">
-                    {!isPinned && <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />}
-                    {!isPinned && <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />}
-                </div>
-            }
+            footer={isExpanded ? footerContent : undefined}
         />
     );
 }

@@ -70,8 +70,10 @@ export function CardTemplate({
     const { shareIcon, shareIconTitle, shareIconColor } = useMemo(() => {
         const ownerUser = users.find(u => u.userId === entity.owner?.id);
         const isOwned = entity.owner?.id === viewAsUser.userId;
+        const protectedPages = ['page-admin-management', 'page-settings', 'page-notifications'];
 
         if (entity.owner?.type === 'system') {
+             if (protectedPages.includes(entity.id)) return { shareIcon: null };
             return {
                 shareIcon: 'shield_person',
                 shareIconTitle: 'System Owned',
