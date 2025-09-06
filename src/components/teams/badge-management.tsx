@@ -663,6 +663,9 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
             }
         }
     };
+    
+    const gridClassName = "grid grid-cols-[repeat(auto-fill,minmax(20rem,1fr))] gap-4";
+
 
     return (
         <ManagementPageLayout
@@ -691,4 +694,3 @@ export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: Ap
         />
     );
 }
-
