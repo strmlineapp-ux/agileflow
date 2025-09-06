@@ -141,6 +141,15 @@ export function ManagementPageLayout<T extends TEntity>({
              <DuplicateZone id={`duplicate-${entityType}-zone`} onAdd={() => onAddItem()} isDragging={isDragging} />
           </div>
           <div className="flex items-center gap-1">
+            <CompactSearchInput
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              placeholder={`Search ${entityType}s...`}
+              autoFocus={isActive}
+              showColorFilter={true}
+              onColorSelect={setColorFilter}
+              activeColorFilter={colorFilter}
+            />
              <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -151,15 +160,6 @@ export function ManagementPageLayout<T extends TEntity>({
                 <TooltipContent><p>Collapse All</p></TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <CompactSearchInput
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              placeholder={`Search ${entityType}s...`}
-              autoFocus={isActive}
-              showColorFilter={true}
-              onColorSelect={setColorFilter}
-              activeColorFilter={colorFilter}
-            />
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>

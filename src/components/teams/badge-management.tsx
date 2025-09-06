@@ -572,6 +572,37 @@ export function BadgeManagement({ tab, page, isActive, isSharedPanelOpen, setIsS
     const handleAddCollection = (sourceCollection?: BadgeCollection) => {
         addBadgeCollection(viewAsUser, sourceCollection);
     };
+    
+     const onDragEnd = useCallback((event: DragEndEvent) => {
+        const { active, over } = event;
+
+        if (!over) return;
+        
+        const activeType = active.data.current?.type;
+
+        if (activeType === 'badge') {
+            const badge = active.data.current?.badge as Badge;
+            const sourceCollectionId = active.data.current?.collectionId as string;
+            
+            const targetCollectionId = over.id as string;
+            const targetCollection = allBadgeCollections.find(c => c.id === targetCollectionId);
+            
+            if (targetCollection && targetCollectionId !== sourceCollectionId) {
+                // Link badge to new collection
+                const targetIsOwner = targetCollection.owner.id === viewAsUser?.userId;
+                if (targetIsOwner) {
+                  const updatedBadgeIds = [...targetCollection.badgeIds, badge.id];
+                  updateBadgeCollection(targetCollectionId, { badgeIds: updatedBadgeIds });
+                  toast({ title: 'Badge Linked', description: `"${badge.name}" linked to "${targetCollection.name}".`});
+                } else {
+                  toast({ variant: 'destructive', title: 'Permission Denied', description: 'You can only add badges to collections you own.'});
+                }
+            } else if (over.data.current?.type === 'duplicate-badge-zone') {
+                const targetCollectionIdForDupe = over.data.current.collectionId;
+                addBadge(targetCollectionIdForDupe, badge);
+            }
+        }
+    }, [allBadgeCollections, updateBadgeCollection, addBadge, viewAsUser, toast]);
 
     const displayedCollections = useMemo(() => {
         return allBadgeCollections
@@ -621,6 +652,7 @@ export function BadgeManagement({ tab, page, isActive, isSharedPanelOpen, setIsS
     }, []);
 
     return (
+      <DndContext onDragEnd={onDragEnd}>
         <ManagementPageLayout
             pageTitle={page.displayTitle ?? tab.name}
             onPageTitleSave={(newTitle) => updatePage(page.id, { displayTitle: newTitle })}
@@ -648,5 +680,6 @@ export function BadgeManagement({ tab, page, isActive, isSharedPanelOpen, setIsS
             setIsSharedPanelOpen={setIsSharedPanelOpen}
             isDragging={isDragging}
         />
+      </DndContext>
     );
 }
