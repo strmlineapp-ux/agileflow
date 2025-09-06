@@ -27,7 +27,7 @@ interface ManagementPageLayoutProps<T extends TEntity> {
   onPageTitleReset?: (e: React.MouseEvent) => void;
   canManagePage: boolean;
   
-  entityType: 'team' | 'calendar' | 'collection' | 'page';
+  entityType: string;
   
   // All items for the grid (owned and linked)
   allItems: T[];
@@ -118,7 +118,7 @@ export function ManagementPageLayout<T extends TEntity>({
 
     const { active, over } = event;
     if (!over) return;
-
+    
     const activeItem = allItems.find(i => i.id === active.id) || allSharedItems.find(i => i.id === active.id);
     if (!activeItem || !viewAsUser) return;
 
@@ -157,7 +157,7 @@ export function ManagementPageLayout<T extends TEntity>({
     }
   };
   
-  const entityTitle = entityType.charAt(0).toUpperCase() + entityType.slice(1) + 's';
+  const entityTitle = (entityType || '').charAt(0).toUpperCase() + (entityType || '').slice(1) + 's';
   
   const gridClassName = cn(
     "gap-4",
@@ -210,7 +210,7 @@ export function ManagementPageLayout<T extends TEntity>({
               className={gridClassName}
               renderItem={renderItem}
           >
-            {displayedItems.length === 0 && <p className="text-center text-sm text-muted-foreground p-4">No {entityType}s to display.</p>}
+            {(!displayedItems || displayedItems.length === 0) && <p className="text-center text-sm text-muted-foreground p-4">No {entityType}s to display.</p>}
           </DraggableGrid>
         </div>
       </div>
