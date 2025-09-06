@@ -128,7 +128,7 @@ function BadgeDisplayItem({
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <div className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: '#64748B' }}>
+                                <div className="absolute -top-0.5 -left-1 h-4 w-4 rounded-full ring-2 ring-card flex items-center justify-center text-white" style={{ backgroundColor: '#64748B' }}>
                                     <GoogleSymbol name="link" style={{fontSize: '16px'}} weight={100} opticalSize={20}/>
                                 </div>
                             </TooltipTrigger>
@@ -172,7 +172,7 @@ function BadgeDisplayItem({
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <div className="absolute -top-0 -right-3 h-4 w-4 rounded-full border-0 flex items-center justify-center text-white" style={{ backgroundColor: '#64748B' }}>
+                                    <div className="absolute -top-0.5 -left-1 h-4 w-4 rounded-full ring-2 ring-card flex items-center justify-center text-white" style={{ backgroundColor: '#64748B' }}>
                                         <GoogleSymbol name="link" style={{fontSize: '16px'}} weight={100} opticalSize={20} />
                                     </div>
                                 </TooltipTrigger>
@@ -463,6 +463,34 @@ function BadgeCollectionCard({
         </DroppableCollectionContent>
       </div>
     );
+    
+    const footerContent = (
+      <div className="flex items-center justify-end w-full">
+        <div className="flex flex-wrap items-center gap-1">
+          {associationsToRender.map(app => {
+            const isActive = collection.applications?.includes(app.key);
+            return (
+              <TooltipProvider key={app.key}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={cn("h-6 w-6 text-muted-foreground", isActive && "text-primary")}
+                      onClick={() => handleToggleApplication(app.key)}
+                      disabled={!isOwner}
+                    >
+                      <GoogleSymbol name={app.icon} className="text-lg" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent><p>{app.label}</p></TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            );
+          })}
+        </div>
+      </div>
+    );
 
     return (
         <CardTemplate
@@ -476,6 +504,7 @@ function BadgeCollectionCard({
             isSharedPreview={isSharedPreview}
             headerControls={headerControls}
             body={bodyContent}
+            footer={footerContent}
         />
     );
 }
