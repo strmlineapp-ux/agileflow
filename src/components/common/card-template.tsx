@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle as UIDialogTitle } from '@/components/ui/dialog';
@@ -37,9 +37,6 @@ interface CardTemplateProps {
   canDelete?: boolean; // Optional prop to control delete button
   isPinned?: boolean;
   isSharedPreview?: boolean;
-  shareIcon?: string;
-  shareIconTitle?: string;
-  shareIconColor?: string;
   body?: React.ReactNode;
   footer?: React.ReactNode;
   headerControls?: React.ReactNode;
@@ -58,9 +55,6 @@ export function CardTemplate({
   canDelete = canManage, // Default to canManage if not provided
   isPinned,
   isSharedPreview,
-  shareIcon,
-  shareIconTitle,
-  shareIconColor,
   body,
   footer,
   headerControls,
@@ -73,6 +67,41 @@ export function CardTemplate({
     const { toast } = useToast();
     const readableColor = getReadableColor(entity.color || '', theme);
     
+    const { shareIcon, shareIconTitle, shareIconColor } = useMemo(() => {
+        const ownerUser = users.find(u => u.userId === entity.owner?.id);
+        const isOwned = entity.owner?.id === viewAsUser.userId;
+
+        if (entity.owner?.type === 'system') {
+            return {
+                shareIcon: 'shield_person',
+                shareIconTitle: 'System Owned',
+                shareIconColor: 'hsl(220, 13%, 47%)',
+            };
+        }
+        if (isOwned && entity.isShared) {
+            return {
+                shareIcon: 'change_circle',
+                shareIconTitle: 'Owned & Shared by you',
+                shareIconColor: viewAsUser.primaryColor || 'hsl(220, 13%, 47%)',
+            };
+        }
+        if (!isOwned && !isSharedPreview) {
+            return {
+                shareIcon: 'link',
+                shareIconTitle: `Owned by ${ownerUser?.displayName || 'another user'}`,
+                shareIconColor: ownerUser?.primaryColor || 'hsl(220, 13%, 47%)',
+            };
+        }
+        if (isSharedPreview) {
+            return {
+                shareIcon: 'change_circle',
+                shareIconTitle: `Owned by ${ownerUser?.displayName || 'another user'}`,
+                shareIconColor: ownerUser?.primaryColor || 'hsl(220, 13%, 47%)',
+            };
+        }
+        return { shareIcon: null, shareIconTitle: '', shareIconColor: 'hsl(220, 13%, 47%)' };
+    }, [entity, viewAsUser, users, isSharedPreview]);
+
     const handleOwnershipReset = (e: React.MouseEvent) => {
         if (!canChangeOwnership) return;
         const modifierKey = viewAsUser?.modifierKey || 'shift';
@@ -136,14 +165,14 @@ export function CardTemplate({
             selectedIds: [entity.owner?.id || ''],
         },
     ];
-    
-    const ownershipTrigger = (
-      <div 
-        className="absolute -top-1 -left-1 h-4 w-4 rounded-full ring-2 ring-card flex items-center justify-center text-white" 
-        style={{ backgroundColor: shareIconColor }}
-      >
-        <GoogleSymbol name={shareIcon!} style={{fontSize: '16px'}} />
-      </div>
+
+    const ownershipTrigger = shareIcon && (
+        <div 
+            className="absolute -top-1 -left-1 h-4 w-4 rounded-full ring-2 ring-card flex items-center justify-center text-white" 
+            style={{ backgroundColor: shareIconColor }}
+        >
+            <GoogleSymbol name={shareIcon!} style={{fontSize: '16px'}} />
+        </div>
     );
     
     return (
@@ -154,7 +183,7 @@ export function CardTemplate({
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                             <div className="relative">
                                 {renderIconOrAvatar()}
-                                {shareIcon && shareIconTitle && (
+                                {ownershipTrigger && (
                                    canChangeOwnership ? (
                                         <ItemSelectionPopover
                                             tabs={ownershipTabs}
