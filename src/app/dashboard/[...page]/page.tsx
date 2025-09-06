@@ -103,12 +103,15 @@ export default function DynamicPage() {
     const { active } = event;
     const type = active.data.current?.type;
 
-    if (type === 'page-card' || type === 'team-card' || type === 'collection-card' || type === 'calendar-card') {
-      setActiveDragItem(active.data.current.page || active.data.current.team || active.data.current.collection || active.data.current.calendar);
-    } else if (type === 'badge') {
-      setActiveDragItem(active.data.current.badge);
-    } else if (type === 'user') {
-      setActiveDragItem(active.data.current.user);
+    const item = active.data.current?.page || 
+                 active.data.current?.team || 
+                 active.data.current?.collection || 
+                 active.data.current?.calendar ||
+                 active.data.current?.badge ||
+                 active.data.current?.user;
+    
+    if(item) {
+        setActiveDragItem(item);
     }
   };
 
@@ -221,7 +224,7 @@ export default function DynamicPage() {
                 ))}
             </SortableTabsList>
           </CenteredTabList>
-         <div className="flex-1 pt-6 flex flex-col">
+         <div className="flex-1 pt-6 flex flex-col min-h-0">
             {pageTabs.map(tab => {
                 const Component = componentMap[tab.componentKey as keyof typeof componentMap];
                 return Component ? (
@@ -241,7 +244,7 @@ export default function DynamicPage() {
   
   return (
     <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={pointerWithin}>
-        <div className="flex flex-col h-full gap-6">
+        <div className="h-full flex flex-col gap-6">
            {!seamlessPageIds.includes(page.id) && (
                 <PageTitle 
                   title={page.displayTitle || page.name}
@@ -251,7 +254,9 @@ export default function DynamicPage() {
                   disabled={!viewAsUser.isAdmin}
                 />
            )}
-           {renderContent()}
+           <div className="flex-1 min-h-0">
+               {renderContent()}
+           </div>
         </div>
         <DragOverlay modifiers={[snapCenterToCursor]}>
           {renderDragOverlay()}
