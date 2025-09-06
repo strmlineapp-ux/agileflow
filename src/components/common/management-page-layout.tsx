@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useCallback, useMemo } from 'react';
@@ -16,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { DuplicateZone } from './duplicate-zone';
 import { getHueFromHsl, isHueInRange, cn } from '@/lib/utils';
 import { PageTitle } from './page-title';
-import { ManagementGrid } from './management-grid';
+import { DraggableGrid } from './draggable-grid';
 
 type TEntity = (Team | SharedCalendar | BadgeCollection | AppPage) & { id: string, name: string, icon: string, color: string, owner?: {id: string}, isShared?: boolean };
 
@@ -161,6 +162,13 @@ export function ManagementPageLayout<T extends TEntity>({
   
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
   const entityTitle = entityType.charAt(0).toUpperCase() + entityType.slice(1) + 's';
+  
+  const gridClassName = cn(
+    "gap-4 [column-fill:_balance]",
+    isSharedPanelOpen
+      ? "columns-1 sm:columns-2 lg:columns-3 xl:columns-4" // Fewer columns when panel is open
+      : "columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6" // More columns when panel is closed
+  );
 
   return (
     <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd} sensors={sensors} collisionDetection={pointerWithin}>
@@ -199,15 +207,15 @@ export function ManagementPageLayout<T extends TEntity>({
             </div>
           </div>
           <div className="flex-1 min-h-0 -mr-4 pr-4 overflow-y-auto hide-scrollbar">
-            <ManagementGrid
+            <DraggableGrid
                 id="collections-list"
                 items={displayedItems}
                 setItems={onReorderItems}
-                onDragEnd={onDragEnd}
+                className={gridClassName}
                 renderItem={renderItem}
             >
               {displayedItems.length === 0 && <p className="text-center text-sm text-muted-foreground p-4">No {entityType}s to display.</p>}
-            </ManagementGrid>
+            </DraggableGrid>
           </div>
         </div>
         <SharedItemsPanel

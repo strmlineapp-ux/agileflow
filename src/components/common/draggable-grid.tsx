@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useCallback, useMemo } from 'react';
@@ -29,9 +30,10 @@ interface DraggableGridProps<T extends { id: string }> {
   onDragEnd?: (event: DragEndEvent) => void;
   onDragStart?: (event: DragStartEvent) => void;
   renderItem: (item: T, isDragging: boolean) => React.ReactNode;
-  renderDragOverlay: (item: T) => React.ReactNode;
+  renderDragOverlay?: (item: T) => React.ReactNode;
   children?: React.ReactNode;
   className?: string;
+  id?: string;
 }
 
 export function DraggableGrid<T extends { id: string }>({
@@ -42,7 +44,8 @@ export function DraggableGrid<T extends { id: string }>({
   renderItem,
   renderDragOverlay,
   children,
-  className
+  className,
+  id
 }: DraggableGridProps<T>) {
   const [activeItem, setActiveItem] = useState<T | null>(null);
 
@@ -80,6 +83,7 @@ export function DraggableGrid<T extends { id: string }>({
     }
   };
   
+  const { setNodeRef } = useDroppable({ id: id || 'draggable-grid' });
   const itemIds = React.useMemo(() => items.map(item => item.id), [items]);
 
   return (
@@ -89,15 +93,17 @@ export function DraggableGrid<T extends { id: string }>({
         onDragStart={handleDragStart} 
         onDragEnd={handleDragEnd}
     >
-      <div className={cn("gap-4 [column-fill:_balance] columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6", className)}>
+      <div ref={setNodeRef} className={className}>
         <SortableContext items={itemIds}>
             {children}
             {items.map(item => renderItem(item, activeItem?.id === item.id))}
         </SortableContext>
       </div>
-      <DragOverlay modifiers={[snapCenterToCursor]}>
-        {activeItem ? renderDragOverlay(activeItem) : null}
-      </DragOverlay>
+       {renderDragOverlay && (
+        <DragOverlay modifiers={[snapCenterToCursor]}>
+            {activeItem ? renderDragOverlay(activeItem) : null}
+        </DragOverlay>
+       )}
     </DndContext>
   );
 }
