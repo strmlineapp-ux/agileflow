@@ -18,7 +18,7 @@ import { type Event, type Project } from '@/types';
 import { EventDetailsDialog } from '@/components/calendar/event-details-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { getDb } from '@/lib/firebase';
-import { collection, query, where, getDocs, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 export function EventsContent({ project }: { project: Project }) {
   const { viewAsUser, calendars } = useUser();
@@ -37,43 +37,39 @@ export function EventsContent({ project }: { project: Project }) {
   
   const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
 
-  const fetchProjectEvents = useCallback(async (start: Date, end: Date) => {
-    if (!viewAsUser) return;
-    setIsDataLoading(true);
-    try {
-        const db = getDb();
-        const eventsQuery = query(
-            collection(db, "events"),
-            where("workspaceId", "==", viewAsUser.workspaceId),
-            where("projectId", "==", project.id)
-        );
-        const snapshot = await getDocs(eventsQuery);
-
-        const allEvents = snapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-                ...data,
-                eventId: doc.id,
-                startTime: data.startTime.toDate(),
-                endTime: data.endTime.toDate(),
-            } as Event;
-        });
-
-        const filtered = allEvents.filter(event => 
-            event.startTime >= start && event.startTime < end
-        );
-        setViewEvents(filtered);
-    } catch (error) {
-        console.error("Error fetching project events:", error);
-        setViewEvents([]);
-    } finally {
-        setIsDataLoading(false);
-    }
-  }, [viewAsUser, project.id]);
-
   useEffect(() => {
-    let start: Date;
-    let end: Date;
+    if (!viewAsUser?.workspaceId) return;
+
+    setIsDataLoading(true);
+    const db = getDb();
+    const eventsQuery = query(
+      collection(db, "events"),
+      where("workspaceId", "==", viewAsUser.workspaceId),
+      where("projectId", "==", project.id)
+    );
+
+    const unsubscribe = onSnapshot(eventsQuery, (snapshot) => {
+      const allEvents = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          eventId: doc.id,
+          startTime: data.startTime.toDate(),
+          endTime: data.endTime.toDate(),
+        } as Event;
+      });
+      setViewEvents(allEvents);
+      setIsDataLoading(false);
+    }, (error) => {
+      console.error("Error fetching project events in real-time:", error);
+      setIsDataLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [viewAsUser?.workspaceId, project.id]);
+  
+  const filteredViewEvents = useMemo(() => {
+    let start: Date, end: Date;
     switch (view) {
       case 'month':
         start = startOfMonth(currentDate);
@@ -90,30 +86,30 @@ export function EventsContent({ project }: { project: Project }) {
         end = addDays(start, 1);
         break;
     }
-    
-    fetchProjectEvents(start, end);
-
-  }, [currentDate, view, fetchProjectEvents]);
+     return viewEvents.filter(event => 
+        event.startTime >= start && event.startTime < end
+    );
+  }, [viewEvents, view, currentDate]);
 
   const addEvent = useCallback(async (newEventData: Omit<Event, 'eventId'>) => {
     if (!viewAsUser) return;
     const db = getDb();
-    const eventWithWorkspace = { ...newEventData, workspaceId: viewAsUser.workspaceId };
-    const docRef = await addDoc(collection(db, "events"), eventWithWorkspace);
-    const newEvent = { ...eventWithWorkspace, eventId: docRef.id } as Event;
-    setViewEvents(current => [...current, newEvent]);
-  }, [viewAsUser]);
+    const eventWithWorkspaceAndProject = { 
+      ...newEventData, 
+      workspaceId: viewAsUser.workspaceId,
+      projectId: project.id,
+    };
+    await addDoc(collection(db, "events"), eventWithWorkspaceAndProject);
+  }, [viewAsUser, project.id]);
 
   const updateEvent = useCallback(async (eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => {
       const db = getDb();
       await updateDoc(doc(db, 'events', eventId), { ...eventData, lastUpdated: new Date() });
-      setViewEvents(current => current.map(e => e.eventId === eventId ? { ...e, ...eventData, lastUpdated: new Date() } as Event : e));
   }, []);
 
   const deleteEvent = useCallback(async (eventId: string) => {
     const db = getDb();
     await deleteDoc(doc(db, 'events', eventId));
-    setViewEvents(current => current.filter(e => e.eventId !== eventId));
   }, []);
   
   const handlePrev = useCallback(() => {
@@ -204,13 +200,13 @@ export function EventsContent({ project }: { project: Project }) {
 
     switch (view) {
         case 'month':
-            return <MonthView date={currentDate} events={viewEvents} containerRef={viewContainerRef} onEventClick={onEventClick} />;
+            return <MonthView date={currentDate} events={filteredViewEvents} containerRef={viewContainerRef} onEventClick={onEventClick} />;
         case 'week':
-            return <WeekView date={currentDate} events={viewEvents} containerRef={viewContainerRef} zoomLevel={zoomLevel} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} triggerScroll={triggerScroll} />;
+            return <WeekView date={currentDate} events={filteredViewEvents} containerRef={viewContainerRef} zoomLevel={zoomLevel} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} triggerScroll={triggerScroll} />;
         case 'day':
-            return <DayView date={currentDate} events={viewEvents} containerRef={viewContainerRef} zoomLevel={zoomLevel} axisView={dayViewAxis} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} triggerScroll={triggerScroll} />;
+            return <DayView date={currentDate} events={filteredViewEvents} containerRef={viewContainerRef} zoomLevel={zoomLevel} axisView={dayViewAxis} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} triggerScroll={triggerScroll} />;
         case 'production-schedule':
-            return <ProductionScheduleView date={currentDate} events={viewEvents} containerRef={viewContainerRef} zoomLevel={zoomLevel} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} triggerScroll={triggerScroll} />;
+            return <ProductionScheduleView date={currentDate} events={filteredViewEvents} containerRef={viewContainerRef} zoomLevel={zoomLevel} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} triggerScroll={triggerScroll} />;
         default:
             return null;
     }

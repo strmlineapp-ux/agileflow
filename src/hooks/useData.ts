@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -698,9 +697,3 @@ export function useData(realUser: User | null, authLoading: boolean) {
     seedDatabase, // Expose seed function
   };
 }
-
-
-    
-
-
-
