@@ -549,6 +549,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
     const protectedSystemPages = ['page-admin-management', 'page-settings', 'page-notifications'];
     const isDeletable = viewAsUser.isAdmin && (!page.isSystemPage || !protectedSystemPages.includes(page.id));
     const canChangeOwnership = viewAsUser.isAdmin && !protectedSystemPages.includes(page.id);
+    const isOwnershipBadgeHidden = protectedSystemPages.includes(page.id);
 
     const displayPath = page.isDynamic 
         ? `${page.path.replace('/dashboard/', '')}/[...]` 
@@ -598,6 +599,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
             onToggleExpand={onToggleExpand}
             isSharedPreview={isSharedPreview}
             canChangeOwnership={canChangeOwnership}
+            hideOwnershipBadge={isOwnershipBadgeHidden}
             body={bodyContent}
             footer={footerContent}
         />

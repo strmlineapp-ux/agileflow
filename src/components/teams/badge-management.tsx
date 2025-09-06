@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -475,7 +476,7 @@ function BadgeCollectionCard({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={cn("font-emphasis h-6 w-6 text-muted-foreground", isActive && "font-emphasized")}
+                      className={cn("h-6 w-6 text-muted-foreground", isActive ? "font-emphasized" : "font-emphasis")}
                       onClick={() => handleToggleApplication(app.key)}
                       onPointerDown={(e) => e.stopPropagation()}
                       disabled={!isOwner}
