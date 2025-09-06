@@ -1,5 +1,4 @@
 
-
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -111,4 +110,27 @@ export const getHueFromHsl = (hsl: string | null): number | null => {
     if (!hsl || !hsl.startsWith('hsl')) return null;
     const match = hsl.match(/hsl\((\d+)/);
     return match ? parseInt(match[1], 10) : null;
+};
+
+export const adjustHslColor = (hslColor: string): string => {
+    const match = hslColor.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
+    if (!match) return hslColor; // Return original if format is wrong
+
+    let hue = parseInt(match[1]);
+    let saturation = parseInt(match[2]);
+    let lightness = parseInt(match[3]);
+
+    // Adjust Hue: +/- 20 degrees
+    const hueShift = Math.floor(Math.random() * 41) - 20;
+    hue = (hue + hueShift + 360) % 360;
+
+    // Adjust Saturation: +/- 10%
+    const saturationShift = Math.floor(Math.random() * 21) - 10;
+    saturation = Math.max(20, Math.min(100, saturation + saturationShift)); // Keep saturation reasonable
+
+    // Adjust Lightness: +/- 5%
+    const lightnessShift = Math.floor(Math.random() * 11) - 5;
+    lightness = Math.max(30, Math.min(70, lightness + lightnessShift)); // Avoid extremes of black/white
+
+    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 };

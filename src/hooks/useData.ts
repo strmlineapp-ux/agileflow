@@ -10,6 +10,7 @@ import { hasAccess } from '@/lib/permissions';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { systemPages, coreTabs } from '@/lib/core-data';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import { adjustHslColor } from '@/lib/utils';
 
 // Helper to simulate async operations
 const simulateApi = (delay = 50) => new Promise(res => setTimeout(res, delay));
@@ -28,22 +29,6 @@ const randomDescriptions = [
     "Planning and execution of marketing campaigns.",
     "Development and testing for the new feature.",
 ];
-
-const adjustHue = (hslColor: string): string => {
-    const match = hslColor.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
-    if (!match) return hslColor; // Return original if format is wrong
-
-    let hue = parseInt(match[1]);
-    const saturation = match[2];
-    const lightness = match[3];
-
-    // Get a random shift between -20 and 20
-    const shift = Math.floor(Math.random() * 41) - 20;
-    
-    hue = (hue + shift + 360) % 360; // Add shift and wrap around
-
-    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-};
 
 export function useData(realUser: User | null, authLoading: boolean) {
   const [loading, setLoading] = useState(true);
@@ -226,7 +211,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
     const newTeamData = {
       name: isDuplicating ? `${teamData.name} (Copy)` : 'New Team',
       icon: teamData.icon || googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
-      color: isDuplicating && teamData.color ? adjustHue(teamData.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
+      color: isDuplicating && teamData.color ? adjustHslColor(teamData.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
       owner: { type: 'user', id: realUser.userId },
       members: [realUser.userId],
       isShared: false,
@@ -315,7 +300,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
     const newCalendarData = {
       name: isDuplicating ? `${calendarData.name} (Copy)` : 'New Calendar',
       icon: calendarData.icon || 'calendar_month',
-      color: isDuplicating && calendarData.color ? adjustHue(calendarData.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
+      color: isDuplicating && calendarData.color ? adjustHslColor(calendarData.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
       owner: { type: 'user', id: realUser.userId },
       ...calendarData,
       workspaceId: realUser.workspaceId,
@@ -424,7 +409,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
     const newPageData: Omit<AppPage, 'id' | 'path'> = {
       name: pageName,
       icon: pageData.icon || randomIcon,
-      color: pageData.color ? adjustHue(pageData.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
+      color: pageData.color ? adjustHslColor(pageData.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
       description: pageData.description || randomDesc,
       isDynamic: pageData.isDynamic || false,
       associatedTabs: pageData.associatedTabs || [],
@@ -510,7 +495,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
                 owner: ownerContext, 
                 ownerCollectionId: newCollectionId, 
                 name: `${originalBadge.name} (Copy)`,
-                color: adjustHue(originalBadge.color),
+                color: adjustHslColor(originalBadge.color),
                 workspaceId 
             };
             batch.set(doc(db, 'badges', newBadgeId), newBadge);
@@ -521,7 +506,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
             ...JSON.parse(JSON.stringify(sourceCollection)),
             id: newCollectionId,
             name: `${sourceCollection.name} (Copy)`,
-            color: adjustHue(sourceCollection.color),
+            color: adjustHslColor(sourceCollection.color),
             owner: ownerContext,
             isShared: false,
             description: sourceCollection.description || '',
@@ -623,7 +608,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
             ownerCollectionId: collectionId,
             name: `${sourceBadge.name} (Copy)`,
             icon: sourceBadge.icon,
-            color: adjustHue(sourceBadge.color),
+            color: adjustHslColor(sourceBadge.color),
             description: sourceBadge.description,
             workspaceId,
         };
@@ -807,5 +792,3 @@ export function useData(realUser: User | null, authLoading: boolean) {
     seedDatabase, // Expose seed function
   };
 }
-
-    
