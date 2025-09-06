@@ -17,6 +17,7 @@ import { GoogleSymbol } from '../icons/google-symbol';
 import { CardTemplate } from '@/components/common/card-template';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { CompactSearchInput } from '@/components/common/compact-search-input';
+import { InlineEditor } from '../common/inline-editor';
 
 function DraggableUserCard({ user, onRemove, isTeamAdmin, onSetAdmin, canManage, memberCount, teamId }: { 
     user: User;
@@ -205,6 +206,36 @@ export function TeamCard(props: TeamCardProps) {
         </>
     );
 
+    const bodyContent = (
+      <div className="space-y-2">
+        <InlineEditor
+          value={team.description || ''}
+          onSave={(newDesc) => onUpdate(team.id, { description: newDesc })}
+          disabled={!canManageTeam}
+          placeholder="Click to add a description..."
+          className="text-sm text-foreground"
+        />
+        <ScrollArea className="max-h-48 pr-2 flex-grow">
+          <SortableContext items={teamMembers.map(m => `user-sort:${team.id}:${m.userId}`)} strategy={verticalListSortingStrategy}>
+              <div ref={setUsersDroppableRef} className={cn("min-h-[60px] rounded-md p-2 -m-2 space-y-1 transition-colors", isUsersDroppableOver && "ring-1 ring-border ring-inset")}>
+                  {teamMembers.map((user) => (
+                  <DraggableUserCard 
+                      key={user.userId}
+                      user={user}
+                      teamId={team.id}
+                      onRemove={() => onRemoveUser(team.id, user.userId)}
+                      isTeamAdmin={(team.teamAdmins || []).includes(user.userId)}
+                      onSetAdmin={() => onSetAdmin(team.id, user.userId)}
+                      canManage={canManageTeam}
+                      memberCount={team.members.length}
+                  />
+                  ))}
+              </div>
+          </SortableContext>
+        </ScrollArea>
+      </div>
+    );
+
     return (
         <CardTemplate
             entity={team}
@@ -218,26 +249,7 @@ export function TeamCard(props: TeamCardProps) {
             shareIconTitle={shareIconTitle}
             shareIconColor={shareIconColor}
             headerControls={headerControls}
-            body={
-                <ScrollArea className="max-h-48 pr-2 flex-grow">
-                    <SortableContext items={teamMembers.map(m => `user-sort:${team.id}:${m.userId}`)} strategy={verticalListSortingStrategy}>
-                        <div ref={setUsersDroppableRef} className={cn("min-h-[60px] rounded-md p-2 -m-2 space-y-1 transition-colors", isUsersDroppableOver && "ring-1 ring-border ring-inset")}>
-                            {teamMembers.map((user) => (
-                            <DraggableUserCard 
-                                key={user.userId}
-                                user={user}
-                                teamId={team.id}
-                                onRemove={() => onRemoveUser(team.id, user.userId)}
-                                isTeamAdmin={(team.teamAdmins || []).includes(user.userId)}
-                                onSetAdmin={() => onSetAdmin(team.id, user.userId)}
-                                canManage={canManageTeam}
-                                memberCount={team.members.length}
-                            />
-                            ))}
-                        </div>
-                    </SortableContext>
-                </ScrollArea>
-            }
+            body={bodyContent}
         />
     );
 }
