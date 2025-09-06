@@ -153,7 +153,7 @@ export function CardTemplate({
                                    )
                                 )}
                             </div>
-                            <div onPointerDown={(e) => { e.stopPropagation(); }} className="flex-1 min-w-0">
+                            <div className="flex items-center flex-1 min-w-0" onPointerDown={(e) => { e.stopPropagation(); }}>
                                 <InlineEditor 
                                     value={entity.name} 
                                     onSave={(newName) => onUpdate(entity.id, { name: newName })}
@@ -162,7 +162,7 @@ export function CardTemplate({
                                 />
                                 {user?.title && <p className="text-sm text-foreground">{user.title}</p>}
                             </div>
-                            <div className="flex items-center" onPointerDown={(e) => e.stopPropagation()}>
+                            <div className="flex items-center flex-shrink-0" onPointerDown={(e) => e.stopPropagation()}>
                                 {headerControls}
                             </div>
                         </div>
