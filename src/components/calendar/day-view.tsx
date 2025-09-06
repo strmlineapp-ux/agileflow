@@ -486,7 +486,7 @@ export const DayView = React.memo(({ date, events, containerRef, zoomLevel, axis
                                 {isViewingToday && now && (
                                     <div 
                                         ref={nowMarkerRef}
-                                        className="absolute w-full z-10 pointer-events-none"
+                                        className="absolute w-full z-20 pointer-events-none"
                                         style={{ top: `${calculateCurrentTimePosition()}px` }}
                                     >
                                         <div className="relative h-px bg-primary"></div>
