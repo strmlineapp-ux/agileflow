@@ -84,6 +84,7 @@ function SortableUserCard({ user, listId, onDeleteRequest, isExpanded, onToggleE
                 isExpanded={isExpanded}
                 onToggleExpand={onToggleExpand}
                 canManage={canDelete}
+                hideOwnershipBadge={true}
                 body={<p className="text-sm text-foreground">{user.email || <span className="italic">No email provided</span>}</p>}
             />
           )}
@@ -750,6 +751,7 @@ function SortableTabCard({ tab, onUpdate, isExpanded, onToggleExpand }: {
             isPinned={false}
             isExpanded={isExpanded}
             onToggleExpand={onToggleExpand}
+            hideOwnershipBadge={true}
             body={descriptionContent}
         />
     );
@@ -831,6 +833,7 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
                 </div>
             </div>
             <DraggableGrid
+                id="tabs-list"
                 items={filteredTabs}
                 setItems={reorderTabs}
                 renderItem={(item, isDragging) => renderTabCard(item as AppTab, isDragging)}

@@ -42,7 +42,7 @@ interface CardTemplateProps {
   headerControls?: React.ReactNode;
   dragHandleProps?: any;
   canChangeOwnership?: boolean;
-  hideOwnershipBadge?: boolean; // New prop
+  hideOwnershipBadge?: boolean;
 }
 
 export function CardTemplate({
@@ -61,7 +61,7 @@ export function CardTemplate({
   headerControls,
   dragHandleProps,
   canChangeOwnership = false,
-  hideOwnershipBadge = false, // Default to false
+  hideOwnershipBadge = false,
 }: CardTemplateProps) {
     const { viewAsUser, users } = useUser();
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -72,6 +72,10 @@ export function CardTemplate({
     let { shareIcon, shareIconTitle, shareIconColor } = useMemo(() => {
         const ownerUser = users.find(u => u.userId === entity.owner?.id);
         const isOwned = entity.owner?.id === viewAsUser.userId;
+
+        if (hideOwnershipBadge) {
+          return { shareIcon: null, shareIconTitle: null, shareIconColor: null };
+        }
 
         if (entity.owner?.type === 'system') {
             return {
@@ -103,11 +107,7 @@ export function CardTemplate({
             };
         }
         return { shareIcon: null, shareIconTitle: null, shareIconColor: null };
-    }, [entity, viewAsUser, users, isSharedPreview]);
-    
-    if (hideOwnershipBadge) {
-        shareIcon = null;
-    }
+    }, [entity, viewAsUser, users, isSharedPreview, hideOwnershipBadge]);
 
     const handleOwnershipReset = (e: React.MouseEvent) => {
         if (!canChangeOwnership) return;
