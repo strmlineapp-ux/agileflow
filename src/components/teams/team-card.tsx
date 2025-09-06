@@ -125,7 +125,7 @@ export function TeamCard(props: TeamCardProps) {
     const { viewAsUser } = useUser();
     const { isExpanded, onToggleExpand } = otherProps;
     
-    const { setNodeRef: setCardDroppableRef, isOver: isCardDroppableOver } = useDroppable({
+    const { setNodeRef, isOver } = useDroppable({
         id: `team-card-droppable:${team.id}`,
         data: { type: 'team-card-droppable', team: team },
     });
@@ -199,7 +199,7 @@ export function TeamCard(props: TeamCardProps) {
         {teamMembers.length > 0 && (
             <ScrollArea className="max-h-48 pr-2 hide-scrollbar">
                 <SortableContext items={teamMembers.map(m => `user-sort:${team.id}:${m.userId}`)} strategy={verticalListSortingStrategy}>
-                    <div className={cn("min-h-[60px] rounded-md p-2 -m-2 space-y-1 transition-colors", isCardDroppableOver && "ring-1 ring-border ring-inset")}>
+                    <div className={cn("min-h-[60px] rounded-md p-2 -m-2 space-y-1 transition-colors")}>
                         {teamMembers.map((user) => (
                         <DraggableUserCard 
                             key={user.userId}
@@ -220,21 +220,21 @@ export function TeamCard(props: TeamCardProps) {
     );
 
     return (
-      <div ref={setCardDroppableRef} className={cn(isCardDroppableOver && "ring-2 ring-primary ring-inset")}>
-        <CardTemplate
-            entity={team}
-            onUpdate={onUpdate}
-            onDelete={() => onDelete(team)}
-            canManage={canManageTeam}
-            isExpanded={isExpanded}
-            onToggleExpand={onToggleExpand}
-            isSharedPreview={isSharedPreview}
-            shareIcon={shareIcon || undefined}
-            shareIconTitle={shareIconTitle}
-            shareIconColor={shareIconColor}
-            headerControls={headerControls}
-            body={bodyContent}
-        />
-      </div>
+        <div ref={setNodeRef} className={cn(isOver && "ring-2 ring-primary ring-inset rounded-lg")}>
+            <CardTemplate
+                entity={team}
+                onUpdate={onUpdate}
+                onDelete={() => onDelete(team)}
+                canManage={canManageTeam}
+                isExpanded={isExpanded}
+                onToggleExpand={onToggleExpand}
+                isSharedPreview={isSharedPreview}
+                shareIcon={shareIcon || undefined}
+                shareIconTitle={shareIconTitle}
+                shareIconColor={shareIconColor}
+                headerControls={headerControls}
+                body={bodyContent}
+            />
+        </div>
     );
 }
