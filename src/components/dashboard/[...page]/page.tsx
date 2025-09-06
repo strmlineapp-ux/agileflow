@@ -138,7 +138,7 @@ export default function DynamicPage() {
                 ))}
             </TabsList>
           </CenteredTabList>
-         <div className="flex-1">
+         <div className="flex-1 overflow-y-auto">
             {pageTabs.map(tab => {
                 const Component = componentMap[tab.componentKey as keyof typeof componentMap];
                 return Component ? (
