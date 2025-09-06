@@ -214,7 +214,7 @@ export function ManagementPageLayout<T extends TEntity>({
               </TooltipProvider>
             </div>
           </div>
-          <div className="flex-1 min-h-0 -mr-4 pr-4 overflow-y-auto hide-scrollbar">
+          <div className="h-full overflow-y-auto">
             <DraggableGrid
                 id="collections-list"
                 items={displayedItems}
