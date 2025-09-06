@@ -20,7 +20,7 @@ import { EventDetailsDialog } from '@/components/calendar/event-details-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export function EventsContent({ project }: { project: Project }) {
-  const { realUser, viewAsUser, calendars, fetchProjectEvents, addProjectEvent, updateProjectEvent, deleteProjectEvent } = useUser();
+  const { realUser, viewAsUser, calendars, fetchEvents, addEvent, updateEvent, deleteEvent } = useUser();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>(realUser.defaultCalendarView || 'day');
   const [zoomLevel, setZoomLevel] = useState<'normal' | 'fit'>('normal');
@@ -57,12 +57,12 @@ export function EventsContent({ project }: { project: Project }) {
     }
     
     setIsDataLoading(true);
-    fetchProjectEvents(project.id, start, end).then(events => {
-        setViewEvents(events);
+    fetchEvents(start, end).then(events => {
+        setViewEvents(events.filter(e => e.projectId === project.id));
         setIsDataLoading(false);
     });
 
-  }, [currentDate, view, fetchProjectEvents, project.id]);
+  }, [currentDate, view, fetchEvents, project.id]);
   
   const handlePrev = useCallback(() => {
     switch (view) {
@@ -142,21 +142,21 @@ export function EventsContent({ project }: { project: Project }) {
     
     switch (mutationType) {
       case 'add':
-        updatedEvents = await addProjectEvent(project.id, viewEvents, eventData);
+        updatedEvents = await addEvent(viewEvents, eventData);
         setInitialEventData(null); 
         break;
       case 'update':
         const { eventId, ...updateData } = eventData;
-        updatedEvents = await updateProjectEvent(project.id, viewEvents, eventId, updateData);
+        updatedEvents = await updateEvent(viewEvents, eventId, updateData);
         break;
       case 'delete':
-        updatedEvents = await deleteProjectEvent(project.id, viewEvents, eventData.eventId);
+        updatedEvents = await deleteEvent(viewEvents, eventData.eventId);
         break;
       default:
         return;
     }
-    setViewEvents(updatedEvents);
-  }, [addProjectEvent, updateProjectEvent, deleteProjectEvent, viewEvents, project.id]);
+    setViewEvents(updatedEvents.filter(e => e.projectId === project.id));
+  }, [addEvent, updateEvent, deleteEvent, viewEvents, project.id]);
 
   const closeDialogs = useCallback(() => {
     setIsNewEventOpen(false);

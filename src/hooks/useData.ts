@@ -313,17 +313,28 @@ export function useData(realUser: User | null, authLoading: boolean) {
   }, []);
 
   const fetchEvents = useCallback(async (start: Date, end: Date): Promise<Event[]> => {
-    return events.filter(event => {
-        const eventStart = event.startTime;
-        return eventStart >= start && eventStart < end;
-    });
-  }, [events]);
+    if (!realUser) return [];
+    const db = getDb();
+    const eventsQuery = query(
+      collection(db, "events"),
+      where("workspaceId", "==", realUser.workspaceId),
+      where("startTime", ">=", start),
+      where("startTime", "<", end)
+    );
+    const snapshot = await getDocs(eventsQuery);
+    return snapshot.docs.map(doc => ({
+      ...doc.data(),
+      eventId: doc.id,
+      startTime: doc.data().startTime.toDate(),
+      endTime: doc.data().endTime.toDate(),
+    } as Event));
+  }, [realUser]);
 
   const addEvent = useCallback(async (currentEvents: Event[], newEventData: Omit<Event, 'eventId'>) => {
     const db = getDb();
     const eventWithWorkspace = { ...newEventData, workspaceId: realUser!.workspaceId };
     const docRef = await addDoc(collection(db, "events"), eventWithWorkspace);
-    const newEvent = { ...eventWithWorkspace, eventId: docRef.id };
+    const newEvent = { ...eventWithWorkspace, eventId: docRef.id, startTime: newEventData.startTime, endTime: newEventData.endTime } as Event;
     setEvents(current => [...current, newEvent]);
     return [...currentEvents, newEvent];
   }, [realUser]);
@@ -331,57 +342,17 @@ export function useData(realUser: User | null, authLoading: boolean) {
   const updateEvent = useCallback(async (currentEvents: Event[], eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => {
       const db = getDb();
       await updateDoc(doc(db, 'events', eventId), { ...eventData, lastUpdated: new Date() });
-      const updatedEvent = { ...currentEvents.find(e => e.eventId === eventId)!, ...eventData, lastUpdated: new Date() } as Event;
+      const eventToUpdate = events.find(e => e.eventId === eventId);
+      if (!eventToUpdate) return currentEvents;
+      const updatedEvent: Event = { ...eventToUpdate, ...eventData, lastUpdated: new Date() };
       setEvents(current => current.map(e => e.eventId === eventId ? updatedEvent : e));
       return currentEvents.map(e => e.eventId === eventId ? updatedEvent : e);
-  }, []);
+  }, [events]);
 
   const deleteEvent = useCallback(async (currentEvents: Event[], eventId: string) => {
     const db = getDb();
     await deleteDoc(doc(db, 'events', eventId));
     setEvents(current => current.filter(e => e.eventId !== eventId));
-    return currentEvents.filter(e => e.eventId !== eventId);
-  }, []);
-
-  const fetchProjectEvents = useCallback(async (projectId: string, start: Date, end: Date): Promise<Event[]> => {
-    const db = getDb();
-    const eventsQuery = query(collection(db, `projects/${projectId}/events`), 
-      where("startTime", ">=", start),
-      where("startTime", "<", end)
-    );
-    const snapshot = await getDocs(eventsQuery);
-    return snapshot.docs.map(doc => ({
-        ...doc.data(),
-        eventId: doc.id,
-        startTime: doc.data().startTime.toDate(),
-        endTime: doc.data().endTime.toDate(),
-    } as Event));
-  }, []);
-
-  const addProjectEvent = useCallback(async (projectId: string, currentEvents: Event[], newEventData: Omit<Event, 'eventId'>, realUser: User): Promise<Event[]> => {
-    if (!realUser) throw new Error("User not found");
-    const db = getDb();
-    const eventWithWorkspace = { ...newEventData, workspaceId: realUser!.workspaceId };
-    const docRef = await addDoc(collection(db, `projects/${projectId}/events`), eventWithWorkspace);
-    const newEvent: Event = {
-      ...eventWithWorkspace,
-      eventId: docRef.id,
-    };
-    return [...currentEvents, newEvent];
-  }, []);
-
-  const updateProjectEvent = useCallback(async (projectId: string, currentEvents: Event[], eventId: string, eventData: Partial<Event>): Promise<Event[]> => {
-    const db = getDb();
-    await updateDoc(doc(db, `projects/${projectId}/events`, eventId), { ...eventData, lastUpdated: new Date() });
-    const eventToUpdate = currentEvents.find(e => e.eventId === eventId);
-    if (!eventToUpdate) return currentEvents;
-    const updatedEvent = { ...eventToUpdate, ...eventData, lastUpdated: new Date() };
-    return currentEvents.map(e => (e.eventId === eventId ? updatedEvent : e));
-  }, []);
-
-  const deleteProjectEvent = useCallback(async (projectId: string, currentEvents: Event[], eventId: string): Promise<Event[]> => {
-    const db = getDb();
-    await deleteDoc(doc(db, `projects/${projectId}/events`, eventId));
     return currentEvents.filter(e => e.eventId !== eventId);
   }, []);
 
@@ -761,8 +732,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
     setUsers, setTeams, setAllBadgeCollections, setAppSettings, setCalendars, setLocations, setNotifications, setUserStatusAssignments, setAllBadges,
     handleApproveAccessRequest, updateUser, addUser, deleteUser, reorderUsers, addTeam, updateTeam, deleteTeam, reorderTeams,
     addProject, updateProject, deleteProject,
-    addCalendar, updateCalendar, deleteCalendar, reorderCalendars, fetchEvents, addEvent, updateEvent, deleteEvent, 
-    fetchProjectEvents, addProjectEvent, updateProjectEvent, deleteProjectEvent,
+    addCalendar: addCalendarWithDefaults, updateCalendar, deleteCalendar, reorderCalendars, fetchEvents, addEvent, updateEvent, deleteEvent, 
     fetchTasks,
     addTask, updateTask, deleteTask, addLocation, deleteLocation,
     updateAppSettings: (settings: Partial<Omit<AppSettings, 'preApprovedEmails'>>) => updateAppSettings(settings),

@@ -121,15 +121,15 @@ The `Project` is a top-level container for organizing work. It holds its own sub
 ---
 
 ## Event Entity
-**Firestore Sub-Collection**: `/projects/{projectId}/events/{eventId}`
+**Firestore Collection**: `/events`
 
-Events are always associated with a parent `Project`.
+Events are globally stored and linked back to calendars and projects via IDs.
 
 | Data Point | Description |
 | :--- | :--- |
 | `eventId: string` | **Internal.** A unique identifier for the event. |
 | `title: string` | The name of the event. |
-| `projectId: string` | **Crucial.** The ID of the parent project. |
+| `projectId?: string` | The ID of the parent project, if applicable. |
 | `calendarId: string` | The ID of the calendar used for color-coding and default settings. |
 | `googleEventId?: string` | **External (Google Calendar).** The ID for the corresponding event in Google Calendar, used for synchronization. |
 | `startTime: Date` | The start date and time of the event. |
