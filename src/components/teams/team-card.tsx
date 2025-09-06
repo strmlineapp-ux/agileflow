@@ -6,7 +6,6 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useUser } from '@/context/user-context';
 import { type Team, type User } from '@/types';
 import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '../ui/scroll-area';
 import { useDroppable } from '@dnd-kit/core';
@@ -16,8 +15,8 @@ import { cn } from '@/lib/utils';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { CardTemplate } from '@/components/common/card-template';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { CompactSearchInput } from '@/components/common/compact-search-input';
 import { InlineEditor } from '../common/inline-editor';
+import { ItemSelectionPopover, type ItemSelectionTab } from '../common/item-selection-popover';
 
 function DraggableUserCard({ user, onRemove, isTeamAdmin, onSetAdmin, canManage, memberCount, teamId }: { 
     user: User;
@@ -126,10 +125,6 @@ export function TeamCard(props: TeamCardProps) {
     const { viewAsUser } = useUser();
     const { isExpanded, onToggleExpand } = otherProps;
     
-    const [isAddUserPopoverOpen, setIsAddUserPopoverOpen] = useState(false);
-    const [userSearch, setUserSearch] = useState('');
-    const addUserSearchInputRef = useRef<HTMLInputElement>(null);
-    
     const { setNodeRef: setUsersDroppableRef, isOver: isUsersDroppableOver } = useDroppable({
         id: `team-users:${team.id}`,
         data: { type: 'user-list', teamId: team.id },
@@ -147,7 +142,7 @@ export function TeamCard(props: TeamCardProps) {
     }, [team, viewAsUser, isSharedPreview]);
 
     const teamMembers = useMemo(() => team.members.map(id => users.find(u => u.userId === id)).filter((u): u is User => !!u), [team.members, users]);
-    const availableUsersToAdd = useMemo(() => users.filter(u => !team.members.includes(u.userId) && u.displayName.toLowerCase().includes(userSearch.toLowerCase())), [users, team.members, userSearch]);
+    const availableUsersToAdd = useMemo(() => users.filter(u => !team.members.includes(u.userId)), [users, team.members]);
 
     let shareIcon: string | null = null;
     let shareIconTitle: string = '';
@@ -161,47 +156,33 @@ export function TeamCard(props: TeamCardProps) {
         shareIconTitle = `Owned by ${ownerName}`;
     }
 
-    useEffect(() => {
-        if (isAddUserPopoverOpen) {
-            setTimeout(() => addUserSearchInputRef.current?.focus(), 100);
-        } else {
-            setUserSearch('');
+    const userSelectionTabs: ItemSelectionTab[] = [
+        {
+            value: 'users',
+            label: 'Users',
+            items: availableUsersToAdd.map(user => ({
+                id: user.userId,
+                name: user.displayName,
+                icon: user.avatarUrl || '',
+                iconType: 'avatar' as const,
+            })),
+            selectedIds: [], // Not used for this single-selection purpose
         }
-    }, [isAddUserPopoverOpen]);
+    ];
 
     const headerControls = (
         <>
             {canManageTeam && !isSharedPreview && (
-                <Popover open={isAddUserPopoverOpen} onOpenChange={setIsAddUserPopoverOpen}>
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
-                                <Button variant="default" size="icon" className="h-8 w-8 text-muted-foreground">
-                                    <GoogleSymbol name="group_add" />
-                                </Button>
-                            </PopoverTrigger>
-                        </TooltipTrigger>
-                        <TooltipContent><p>Add User to Team</p></TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-                <PopoverContent className="w-64 p-0" onPointerDown={(e) => e.stopPropagation()}>
-                    <div className="p-2 border-b">
-                       <CompactSearchInput searchTerm={userSearch} setSearchTerm={setUserSearch} placeholder="Search users..." inputRef={addUserSearchInputRef} />
-                    </div>
-                    <ScrollArea className="h-64">
-                        <div className="p-2 space-y-1">
-                            {availableUsersToAdd.map(user => (
-                                <div key={user.userId} onPointerDown={() => {onAddUser(team.id, user.userId); setIsAddUserPopoverOpen(false);}} className="flex items-center gap-2 p-2 rounded-md hover:text-primary cursor-pointer">
-                                    <Avatar className="h-8 w-8"><AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" /><AvatarFallback>{user.displayName.slice(0,2)}</AvatarFallback></Avatar>
-                                    <p className="font-normal text-sm text-muted-foreground">{user.displayName}</p>
-                                </div>
-                            ))}
-                            {availableUsersToAdd.length === 0 && <p className="text-center text-xs text-muted-foreground py-4">No users found.</p>}
-                        </div>
-                    </ScrollArea>
-                </PopoverContent>
-            </Popover>
+                <ItemSelectionPopover
+                    tabs={userSelectionTabs}
+                    onSelectionChange={(_, userId) => onAddUser(team.id, userId)}
+                    trigger={
+                         <Button variant="default" size="icon" className="h-8 w-8 text-muted-foreground">
+                            <GoogleSymbol name="group_add" />
+                        </Button>
+                    }
+                    tooltip="Add User to Team"
+                />
             )}
         </>
     );
@@ -215,7 +196,7 @@ export function TeamCard(props: TeamCardProps) {
           placeholder="Click to add a description..."
           className="text-sm text-foreground"
         />
-        <ScrollArea className="max-h-48 pr-2 flex-grow hide-scrollbar">
+        <ScrollArea className="max-h-48 pr-2 hide-scrollbar">
           <SortableContext items={teamMembers.map(m => `user-sort:${team.id}:${m.userId}`)} strategy={verticalListSortingStrategy}>
               <div ref={setUsersDroppableRef} className={cn("min-h-[60px] rounded-md p-2 -m-2 space-y-1 transition-colors", isUsersDroppableOver && "ring-1 ring-border ring-inset")}>
                   {teamMembers.map((user) => (
