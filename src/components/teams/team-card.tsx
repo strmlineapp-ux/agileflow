@@ -8,7 +8,7 @@ import { type Team, type User } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea } from '../ui/scroll-area';
 import { useDroppable } from '@dnd-kit/core';
 import { useSortable, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -215,7 +215,7 @@ export function TeamCard(props: TeamCardProps) {
           placeholder="Click to add a description..."
           className="text-sm text-foreground"
         />
-        <ScrollArea className="max-h-48 pr-2 flex-grow">
+        <ScrollArea className="max-h-48 pr-2 flex-grow hide-scrollbar">
           <SortableContext items={teamMembers.map(m => `user-sort:${team.id}:${m.userId}`)} strategy={verticalListSortingStrategy}>
               <div ref={setUsersDroppableRef} className={cn("min-h-[60px] rounded-md p-2 -m-2 space-y-1 transition-colors", isUsersDroppableOver && "ring-1 ring-border ring-inset")}>
                   {teamMembers.map((user) => (
