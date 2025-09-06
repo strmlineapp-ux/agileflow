@@ -135,7 +135,7 @@ export function CalendarPageContent({ tab }: { tab: AppTab }) {
   const updateEvent = useCallback(async (eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => {
       const db = getDb();
       await updateDoc(doc(db, 'events', eventId), { ...eventData, lastUpdated: new Date() });
-      setViewEvents(current => current.map(e => e.eventId === eventId ? { ...e, ...eventData, lastUpdated: new Date() } : e));
+      setViewEvents(current => current.map(e => e.eventId === eventId ? { ...e, ...eventData, lastUpdated: new Date() } as Event : e));
   }, []);
 
   const deleteEvent = useCallback(async (eventId: string) => {
