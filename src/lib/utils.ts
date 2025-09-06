@@ -120,17 +120,19 @@ export const adjustHslColor = (hslColor: string): string => {
     let saturation = parseInt(match[2]);
     let lightness = parseInt(match[3]);
 
-    // Adjust Hue: +/- 20 degrees
-    const hueShift = Math.floor(Math.random() * 41) - 20;
+    // Adjust Hue: +/- 30 degrees for a more noticeable shift
+    const hueShift = Math.floor(Math.random() * 61) - 30;
     hue = (hue + hueShift + 360) % 360;
 
-    // Adjust Saturation: +/- 10%
-    const saturationShift = Math.floor(Math.random() * 21) - 10;
-    saturation = Math.max(20, Math.min(100, saturation + saturationShift)); // Keep saturation reasonable
+    // Adjust Saturation: +/- 20%
+    const saturationShift = Math.floor(Math.random() * 41) - 20;
+    // Keep saturation in a vibrant range, e.g., 40% to 100%
+    saturation = Math.max(40, Math.min(100, saturation + saturationShift)); 
 
-    // Adjust Lightness: +/- 5%
-    const lightnessShift = Math.floor(Math.random() * 11) - 5;
-    lightness = Math.max(30, Math.min(70, lightness + lightnessShift)); // Avoid extremes of black/white
+    // Adjust Lightness: +/- 15%
+    const lightnessShift = Math.floor(Math.random() * 31) - 15;
+    // Keep lightness in a pleasant range, e.g., 40% to 70% to avoid very dark/light colors
+    lightness = Math.max(40, Math.min(70, lightness + lightnessShift)); 
 
     return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 };
