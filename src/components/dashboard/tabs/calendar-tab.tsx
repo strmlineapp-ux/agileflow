@@ -8,7 +8,7 @@ import { WeekView } from '@/components/calendar/week-view';
 import { DayView } from '@/components/calendar/day-view';
 import { ProductionScheduleView } from '@/components/calendar/production-schedule-view';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, startOfWeek, getWeek, isToday, startOfDay, startOfMonth, endOfMonth } from 'date-fns';
+import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, startOfWeek, getWeek, isToday } from 'date-fns';
 import { useUser } from '@/context/user-context';
 import { canCreateAnyEvent } from '@/lib/permissions';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
@@ -21,7 +21,7 @@ import { CenteredTabList } from '@/components/common/centered-tab-list';
 import { Card, CardDescription, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { getDb } from '@/lib/firebase';
-import { collection, query, where, onSnapshot, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, doc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
 
 function CalendarLinkPrompt() {
   const { googleLogin, realUser } = useUser();
@@ -96,40 +96,25 @@ export function CalendarPageContent({ tab }: { tab: AppTab }) {
 
     return () => unsubscribe();
   }, [viewAsUser?.workspaceId, viewAsUser.googleCalendarLinked]);
-  
-  const filteredViewEvents = useMemo(() => {
-    let start: Date, end: Date;
-    switch (view) {
-      case 'month':
-        start = startOfMonth(currentDate);
-        end = endOfMonth(currentDate);
-        break;
-      case 'week':
-      case 'production-schedule':
-        start = startOfWeek(currentDate, { weekStartsOn: 1 });
-        end = addDays(start, 7);
-        break;
-      case 'day':
-      default:
-        start = startOfDay(currentDate);
-        end = addDays(start, 1);
-        break;
-    }
-     return viewEvents.filter(event => 
-        event.startTime >= start && event.startTime < end
-    );
-  }, [viewEvents, view, currentDate]);
 
   const addEvent = useCallback(async (newEventData: Omit<Event, 'eventId'>) => {
     if (!viewAsUser) return;
     const db = getDb();
-    const eventWithWorkspace = { ...newEventData, workspaceId: viewAsUser.workspaceId };
+    const eventWithWorkspace = { 
+        ...newEventData,
+        startTime: Timestamp.fromDate(newEventData.startTime),
+        endTime: Timestamp.fromDate(newEventData.endTime),
+        workspaceId: viewAsUser.workspaceId 
+    };
     await addDoc(collection(db, "events"), eventWithWorkspace);
   }, [viewAsUser]);
 
   const updateEvent = useCallback(async (eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => {
       const db = getDb();
-      await updateDoc(doc(db, 'events', eventId), { ...eventData, lastUpdated: new Date() });
+      const dataToUpdate: Record<string, any> = { ...eventData, lastUpdated: new Date() };
+      if (eventData.startTime) dataToUpdate.startTime = Timestamp.fromDate(eventData.startTime);
+      if (eventData.endTime) dataToUpdate.endTime = Timestamp.fromDate(eventData.endTime);
+      await updateDoc(doc(db, 'events', eventId), dataToUpdate);
   }, []);
 
   const deleteEvent = useCallback(async (eventId: string) => {
@@ -244,13 +229,13 @@ export function CalendarPageContent({ tab }: { tab: AppTab }) {
 
     switch (view) {
         case 'month':
-            return <MonthView date={currentDate} events={filteredViewEvents} containerRef={viewContainerRef} onEventClick={onEventClick} />;
+            return <MonthView date={currentDate} events={viewEvents} containerRef={viewContainerRef} onEventClick={onEventClick} />;
         case 'week':
-            return <WeekView date={currentDate} events={filteredViewEvents} containerRef={viewContainerRef} zoomLevel={zoomLevel} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} triggerScroll={triggerScroll} />;
+            return <WeekView date={currentDate} events={viewEvents} containerRef={viewContainerRef} zoomLevel={zoomLevel} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} triggerScroll={triggerScroll} />;
         case 'day':
-            return <DayView date={currentDate} events={filteredViewEvents} containerRef={viewContainerRef} zoomLevel={zoomLevel} axisView={dayViewAxis} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} triggerScroll={triggerScroll} />;
+            return <DayView date={currentDate} events={viewEvents} containerRef={viewContainerRef} zoomLevel={zoomLevel} axisView={dayViewAxis} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} triggerScroll={triggerScroll} />;
         case 'production-schedule':
-            return <ProductionScheduleView date={currentDate} events={filteredViewEvents} containerRef={viewContainerRef} zoomLevel={zoomLevel} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} triggerScroll={triggerScroll} />;
+            return <ProductionScheduleView date={currentDate} events={viewEvents} containerRef={viewContainerRef} zoomLevel={zoomLevel} onEasyBooking={handleEasyBooking} onEventClick={onEventClick} triggerScroll={triggerScroll} />;
         default:
             return null;
     }

@@ -2,8 +2,8 @@
 'use client';
 
 import React, { useEffect, useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react';
-import { format, startOfWeek, addDays, eachDayOfInterval, startOfDay, addHours, isToday, isSaturday, isSunday, isSameDay, differenceInMinutes } from 'date-fns';
-import { type Event, type Team, type Badge } from '@/types';
+import { format, startOfWeek, addDays, eachDayOfInterval, startOfDay, addHours, isToday, isSaturday, isSunday, isSameDay } from 'date-fns';
+import { type Event, type Badge } from '@/types';
 import { cn, getContrastColor } from '@/lib/utils';
 import { Button } from '../ui/button';
 import { useUser } from '@/context/user-context';
@@ -120,7 +120,7 @@ export const WeekView = React.memo(({ date, events, containerRef, zoomLevel, onE
     const hours = Array.from({ length: 24 }, (_, i) => i);
 
     const getEventsForDay = useCallback((day: Date) => {
-        return events.filter(event => format(event.startTime, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'));
+        return events.filter(event => isSameDay(event.startTime, day));
     }, [events]);
     
     const displayedDays = showWeekends ? weekDays : weekDays.slice(0, 5);
