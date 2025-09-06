@@ -557,7 +557,7 @@ export const ProductionScheduleView = React.memo(({ date, events, containerRef, 
     }, [editingStatusDayIso, weeklyScheduleData, userStatusAssignments]);
 
     return (
-        <div className="space-y-4 p-1 flex-1">
+        <div className="space-y-4 p-1 flex-1 hide-scrollbar">
             {weeklyScheduleData.map(({ day, dayIso, groupedEvents, gridLocations, allCheckLocationsForDay, locationAliasMap }) => {
                 const isDayCollapsed = collapsedDays.has(dayIso);
                 const isDayToday = isToday(day);

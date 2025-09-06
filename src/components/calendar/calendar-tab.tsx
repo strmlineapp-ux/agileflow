@@ -14,7 +14,7 @@ import { canCreateAnyEvent } from '@/lib/permissions';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { EventForm } from '@/components/calendar/new-event-form';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
-import { type Event, type AppPage } from '@/types';
+import { type Event, type AppTab } from '@/types';
 import { EventDetailsDialog } from '@/components/calendar/event-details-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { CenteredTabList } from '@/components/common/centered-tab-list';
@@ -22,7 +22,7 @@ import { Card, CardDescription, CardHeader, CardTitle, CardContent } from '@/com
 import { cn } from '@/lib/utils';
 
 function CalendarLinkPrompt() {
-  const { linkGoogleCalendar, realUser } = useUser();
+  const { googleLogin, realUser } = useUser();
   if (!realUser) return null;
 
   return (
@@ -35,7 +35,7 @@ function CalendarLinkPrompt() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button onClick={() => linkGoogleCalendar(realUser.userId)}>
+          <Button onClick={googleLogin}>
             <GoogleSymbol name="link" className="mr-2" />
             Connect Google Calendar
           </Button>
@@ -45,8 +45,8 @@ function CalendarLinkPrompt() {
   )
 }
 
-export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
-  const { viewAsUser, calendars, fetchEvents, addEvent, updateEvent, deleteEvent, linkGoogleCalendar } = useUser();
+export function CalendarPageContent({ tab }: { tab: AppTab }) {
+  const { viewAsUser, calendars, fetchEvents, addEvent, updateEvent, deleteEvent } = useUser();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>(viewAsUser.defaultCalendarView || 'day');
   const [zoomLevel, setZoomLevel] = useState<'normal' | 'fit'>('normal');
@@ -294,7 +294,7 @@ export function CalendarPageContent({ tab: pageConfig }: { tab: AppPage }) {
               </Tabs>
           </div>
         </div>
-        <div className={cn("flex-1 min-h-0", pageShouldScroll ? "overflow-y-auto" : "overflow-hidden flex flex-col")} ref={viewContainerRef}>
+        <div className={cn("flex-1 min-h-0", pageShouldScroll ? "overflow-y-auto hide-scrollbar" : "overflow-hidden flex flex-col")} ref={viewContainerRef}>
             {renderCurrentView()}
         </div>
       </div>
