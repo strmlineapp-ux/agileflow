@@ -15,7 +15,7 @@ import { SharedItemsPanel } from './shared-items-panel';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { useToast } from '@/hooks/use-toast';
 import { DuplicateZone } from './duplicate-zone';
-import { getHueFromHsl, isHueInRange } from '@/lib/utils';
+import { getHueFromHsl, isHueInRange, cn } from '@/lib/utils';
 import { PageTitle } from './page-title';
 import { ManagementGrid } from './management-grid';
 
@@ -163,6 +163,13 @@ export function ManagementPageLayout<T extends TEntity>({
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
   const entityTitle = entityType.charAt(0).toUpperCase() + entityType.slice(1) + 's';
 
+  const gridClassName = cn(
+      "gap-4 [column-fill:_balance]",
+      isSharedPanelOpen
+          ? "columns-1 sm:columns-1 md:columns-2 lg:columns-3 xl:columns-4"
+          : "columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6"
+  );
+
   return (
     <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd} sensors={sensors}>
       <div className="flex h-full gap-4">
@@ -205,6 +212,7 @@ export function ManagementPageLayout<T extends TEntity>({
                 setItems={onReorderItems}
                 onDragEnd={onDragEnd}
                 renderItem={renderItem}
+                className={gridClassName}
             >
               {displayedItems.length === 0 && <p className="text-center text-sm text-muted-foreground p-4">No {entityType}s to display.</p>}
             </ManagementGrid>
