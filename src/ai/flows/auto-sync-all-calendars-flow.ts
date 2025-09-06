@@ -10,8 +10,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import {syncCalendar, SyncCalendarInput} from './sync-calendar-flow';
-import { getFirestore, collection, getDocs, query, where } from 'firebase/firestore/lite';
-import { getDb } from '@/lib/firebase';
+import { getFirestore } from 'firebase-admin/firestore';
 import { type SharedCalendar } from '@/types';
 
 
@@ -42,10 +41,10 @@ const autoSyncAllCalendarsFlow = ai.defineFlow(
     console.log('Starting automatic synchronization for all calendars...');
 
     // 1. Fetch calendar data from Firestore.
-    const db = getDb();
-    const calendarsRef = collection(db, 'calendars');
-    const q = query(calendarsRef, where('googleCalendarId', '!=', null));
-    const querySnapshot = await getDocs(q);
+    const db = getFirestore();
+    const calendarsRef = db.collection('calendars');
+    const q = calendarsRef.where('googleCalendarId', '!=', null);
+    const querySnapshot = await q.get();
     const linkedCalendars = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SharedCalendar));
 
     console.log(`Found ${linkedCalendars.length} calendars to sync.`);
