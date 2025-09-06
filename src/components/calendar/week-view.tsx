@@ -156,7 +156,7 @@ export const WeekView = React.memo(({ date, events, containerRef, zoomLevel, onE
                                 <p className={cn("text-sm text-foreground", { "text-foreground": isWeekend || isDayHoliday })}>{format(day, 'EEE')}</p>
                                 <p className={cn(
                                     "text-2xl text-foreground",
-                                    isToday(day) && 'font-emphasis',
+                                    isToday(day) && 'font-emphasized',
                                      { "text-foreground": isWeekend || isDayHoliday }
                                 )}>
                                     {format(day, 'd')}

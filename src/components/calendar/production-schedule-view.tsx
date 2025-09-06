@@ -349,7 +349,7 @@ export const ProductionScheduleView = React.memo(({ date, events, containerRef, 
     }, [viewAsUser.isAdmin, viewAsUser.userId, teams]);
     
     const calendarColorMap = useMemo(() => {
-        const map: Record<string, { bg: string, text: string }> = {};
+        const map: Record<string, { bg: string; text: string }> = {};
         calendars.forEach(cal => {
             map[cal.id] = { bg: cal.color, text: getContrastColor(cal.color) };
         });
@@ -661,7 +661,7 @@ export const ProductionScheduleView = React.memo(({ date, events, containerRef, 
                             </div>
                             <div className="flex-1 flex justify-center items-center">
                                 <Button variant="default" className="h-8" onClick={() => toggleDayCollapse(dayIso)}>
-                                    <span className={cn("font-normal text-sm", { "font-emphasis": isDayToday })}>{format(day, 'EEE, MMMM d, yyyy').toUpperCase()}</span>
+                                    <span className={cn("font-normal text-sm", isDayToday && "font-emphasized")}>{format(day, 'EEE, MMMM d, yyyy').toUpperCase()}</span>
                                     {isDayCollapsed ? <GoogleSymbol name="chevron_right" weight={100} /> : <GoogleSymbol name="expand_more" weight={100} />}
                                 </Button>
                             </div>
