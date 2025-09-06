@@ -79,7 +79,7 @@ function DraggableUserCard({ user, onRemove, isTeamAdmin, onSetAdmin, canManage,
                             <Button
                                 variant="default"
                                 size="icon"
-                                className="absolute top-0 right-0 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100"
+                                className="absolute top-0 right-0 h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 bg-card"
                                 onClick={(e) => { e.stopPropagation(); onRemove(); }}
                                 onPointerDown={(e) => e.stopPropagation()} // Prevent drag from starting
                             >
@@ -195,24 +195,26 @@ export function TeamCard(props: TeamCardProps) {
           placeholder="Click to add a description..."
           className="text-sm text-foreground"
         />
-        <ScrollArea className="max-h-48 pr-2 hide-scrollbar">
-          <SortableContext items={teamMembers.map(m => `user-sort:${team.id}:${m.userId}`)} strategy={verticalListSortingStrategy}>
-              <div ref={setUsersDroppableRef} className={cn("min-h-[60px] rounded-md p-2 -m-2 space-y-1 transition-colors", isUsersDroppableOver && "ring-1 ring-border ring-inset")}>
-                  {teamMembers.map((user) => (
-                  <DraggableUserCard 
-                      key={user.userId}
-                      user={user}
-                      teamId={team.id}
-                      onRemove={() => onRemoveUser(team.id, user.userId)}
-                      isTeamAdmin={(team.teamAdmins || []).includes(user.userId)}
-                      onSetAdmin={() => onSetAdmin(team.id, user.userId)}
-                      canManage={canManageTeam}
-                      memberCount={team.members.length}
-                  />
-                  ))}
-              </div>
-          </SortableContext>
-        </ScrollArea>
+        {teamMembers.length > 0 && (
+          <ScrollArea className="max-h-48 pr-2">
+            <SortableContext items={teamMembers.map(m => `user-sort:${team.id}:${m.userId}`)} strategy={verticalListSortingStrategy}>
+                <div ref={setUsersDroppableRef} className={cn("min-h-[60px] rounded-md p-2 -m-2 space-y-1 transition-colors", isUsersDroppableOver && "ring-1 ring-border ring-inset")}>
+                    {teamMembers.map((user) => (
+                    <DraggableUserCard 
+                        key={user.userId}
+                        user={user}
+                        teamId={team.id}
+                        onRemove={() => onRemoveUser(team.id, user.userId)}
+                        isTeamAdmin={(team.teamAdmins || []).includes(user.userId)}
+                        onSetAdmin={() => onSetAdmin(team.id, user.userId)}
+                        canManage={canManageTeam}
+                        memberCount={team.members.length}
+                    />
+                    ))}
+                </div>
+            </SortableContext>
+          </ScrollArea>
+        )}
       </div>
     );
 
