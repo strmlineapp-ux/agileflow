@@ -32,6 +32,7 @@ import {
   useDroppable,
   DragOverlay,
   type DragStartEvent,
+  pointerWithin,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -50,6 +51,7 @@ import { SharedItemsPanel } from '../common/shared-items-panel';
 import { PageTitle } from '../common/page-title';
 import { predefinedColors } from '@/lib/colors';
 import { IconColorPicker } from '../common/icon-color-picker';
+import { ManagementPageLayout } from '../common/management-page-layout';
 
 
 function BadgeDisplayItem({ 
@@ -475,7 +477,10 @@ function BadgeCollectionCard({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={cn("h-6 w-6 text-muted-foreground", isActive ? "font-emphasized" : "font-emphasis")}
+                      className={cn(
+                        "h-6 w-6 text-muted-foreground",
+                        isActive ? 'font-emphasized' : 'font-emphasis'
+                      )}
                       onClick={() => handleToggleApplication(app.key)}
                       onPointerDown={(e) => e.stopPropagation()}
                       disabled={!isOwner}
@@ -523,7 +528,7 @@ function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
       <TooltipProvider>
           <Tooltip>
               <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full p-0" onClick={onAdd} onPointerDown={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="icon" className="rounded-full p-0 font-emphasis" onClick={onAdd} onPointerDown={(e) => e.stopPropagation()}>
                     <GoogleSymbol name="add_circle" className="text-4xl" weight={100} opticalSize={20} />
                     <span className="sr-only">New Collection or Drop to Duplicate</span>
                   </Button>
@@ -538,359 +543,4 @@ function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
 }
 
 export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: AppPage; isActive: boolean }) {
-    const { viewAsUser, users, updateUser, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, setAllBadgeCollections, reorderBadgeCollections, updatePage } = useUser();
-    const { toast } = useToast();
-
-    const [activeDragItem, setActiveDragItem] = useState<{type: string, id: string, data: any} | null>(null);
-    
-    const [mainSearchTerm, setMainSearchTerm] = useState('');
-    const [sharedSearchTerm, setSharedSearchTerm] = useState('');
-    const [colorFilter, setColorFilter] = useState<string | null>(null);
-    const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
-    const [expandedCollections, setExpandedCollections] = useState<Set<string>>(new Set());
-    
-    const onToggleExpand = useCallback((collectionId: string) => {
-        setExpandedCollections(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(collectionId)) {
-                newSet.delete(collectionId);
-            } else {
-                newSet.add(collectionId);
-            }
-            return newSet;
-        });
-    }, []);
-
-    const title = page.displayTitle ?? tab.name;
-    const canManage = viewAsUser.isAdmin;
-
-    const handleTitleSave = (newTitle: string) => {
-        updatePage(page.id, { displayTitle: newTitle });
-    };
-
-    const handleTitleReset = (e: React.MouseEvent) => {
-        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
-            e.preventDefault();
-            updatePage(page.id, { displayTitle: null });
-            toast({title: "Title Reset", description: "The page title has been reset to its default."});
-        }
-    };
-
-    const displayedCollections = useMemo(() => {
-        if (!viewAsUser) return [];
-        const owned = allBadgeCollections.filter(c => c.owner.id === viewAsUser.userId);
-        const linked = (viewAsUser.linkedBadgeCollectionIds || [])
-            .map(id => allBadgeCollections.find(c => c.id === id))
-            .filter((c): c is BadgeCollection => !!c);
-        
-        let collections = [...owned, ...linked];
-
-        if (mainSearchTerm) {
-            collections = collections.filter(c => c.name.toLowerCase().includes(mainSearchTerm.toLowerCase()));
-        }
-        if (colorFilter) {
-            const targetHue = getHueFromHsl(colorFilter);
-            if (targetHue !== null) {
-                collections = collections.filter(c => {
-                    const itemHue = getHueFromHsl(c.color);
-                    return itemHue !== null && isHueInRange(targetHue, itemHue);
-                });
-            }
-        }
-        return collections;
-    }, [allBadgeCollections, viewAsUser, mainSearchTerm, colorFilter]);
-
-    const sharedCollections = useMemo(() => {
-        if (!viewAsUser) return [];
-        const displayedIds = new Set(displayedCollections.map(c => c.id));
-        return allBadgeCollections
-            .filter(c => c.isShared && c.owner.id !== viewAsUser.userId && !displayedIds.has(c.id))
-            .filter(c => c.name.toLowerCase().includes(sharedSearchTerm.toLowerCase()));
-    }, [allBadgeCollections, displayedCollections, sharedSearchTerm, viewAsUser]);
-
-    const currentUserBadgeIds = useMemo(() => {
-        const badgeIds = new Set<string>();
-        displayedCollections.forEach(collection => {
-            collection.badgeIds.forEach(id => badgeIds.add(id));
-        });
-        return badgeIds;
-    }, [displayedCollections]);
-
-
-    const handleDeleteCollection = useCallback((collection: BadgeCollection) => {
-        if (!viewAsUser) return;
-        const isOwner = collection.owner.id === viewAsUser.userId;
-        if (isOwner) {
-            deleteBadgeCollection(collection.id);
-            toast({ title: 'Collection Deleted' });
-        } else {
-            const updatedLinkedIds = (viewAsUser.linkedBadgeCollectionIds || []).filter(id => id !== collection.id);
-            updateUser(viewAsUser.userId, { linkedBadgeCollectionIds: updatedLinkedIds });
-            toast({ title: 'Collection Unlinked' });
-        }
-    }, [viewAsUser, deleteBadgeCollection, updateUser, toast]);
-
-    const handleDeleteBadge = useCallback((badgeId: string, collectionId: string) => {
-        if (!viewAsUser) return;
-        const badge = allBadges.find(b => b.id === badgeId);
-        const isOwner = badge?.owner.id === viewAsUser.userId;
-        
-        if (isOwner) {
-            deleteBadge(badgeId, collectionId);
-            toast({ title: 'Badge Deleted' });
-        } else {
-            const newBadgeIds = allBadgeCollections.find(c => c.id === collectionId)?.badgeIds.filter(id => id !== badgeId);
-            if (newBadgeIds) {
-                updateBadgeCollection(collectionId, { badgeIds: newBadgeIds });
-                toast({ title: 'Badge Unlinked' });
-            }
-        }
-    }, [allBadges, allBadgeCollections, viewAsUser, deleteBadge, updateBadgeCollection, toast]);
-
-    const onDragEnd = useCallback((event: DragEndEvent) => {
-        setActiveDragItem(null);
-        if (!viewAsUser) return;
-
-        const { active, over } = event;
-        if (!over) return;
-        
-        const activeData = active.data.current || {};
-        const activeType = active.data.current?.type;
-        const overData = over.data.current || {};
-        const overType = over.data.current?.type;
-
-        if (activeType === 'badge' && overType === 'duplicate-badge-zone') {
-            const collectionId = overData.collectionId;
-            const sourceBadge = activeData.badge;
-            const targetCollection = allBadgeCollections.find(c => c.id === collectionId);
-            if (!targetCollection || targetCollection.owner.id !== viewAsUser.userId) {
-                toast({ variant: 'default', title: 'Permission Denied', description: 'You can only add badges to collections you own.' });
-                return;
-            }
-            if (collectionId && sourceBadge) {
-                addBadge(collectionId, sourceBadge);
-            }
-            return;
-        }
-
-        if (over.id === 'duplicate-collection-zone') {
-            const collection = activeData.collection as BadgeCollection;
-            if (collection) {
-                addBadgeCollection(viewAsUser, collection);
-                const isLinked = (viewAsUser.linkedBadgeCollectionIds || []).includes(collection.id);
-                if (isLinked) {
-                    const updatedLinkedIds = (viewAsUser.linkedBadgeCollectionIds || []).filter(id => id !== collection.id);
-                    updateUser(viewAsUser.userId, { linkedBadgeCollectionIds: updatedLinkedIds });
-                    toast({ title: 'Collection Copied', description: 'A new, independent collection has been created.' });
-                }
-            }
-            return;
-        }
-        
-        if (activeType === 'collection-card' && over.id === 'collections-list' && activeData.isSharedPreview) {
-             const collection = activeData.collection as BadgeCollection;
-             if (collection) {
-                 const updatedLinkedIds = [...(viewAsUser.linkedBadgeCollectionIds || []), collection.id];
-                 updateUser(viewAsUser.userId, { linkedBadgeCollectionIds: Array.from(new Set(updatedLinkedIds)) });
-                 toast({ title: 'Collection Linked' });
-             }
-            return;
-        }
-        
-        if (activeType === 'badge') {
-            const badge = activeData.badge as Badge;
-            const sourceCollectionId = activeData.collectionId;
-            const targetCollectionId = overData.collection?.id || overData.collectionId;
-            const targetCollection = allBadgeCollections.find(c => c.id === targetCollectionId);
-
-            if (targetCollection && targetCollection.owner.id !== viewAsUser.userId) {
-                toast({ variant: "destructive", title: 'Permission Denied', description: 'Cannot move badges to a collection you do not own.'});
-                return;
-            }
-
-            if (targetCollectionId && sourceCollectionId !== targetCollectionId) {
-                 if (targetCollection && !targetCollection.badgeIds.includes(badge.id)) {
-                    // LINKING: Add badge to new collection, but DO NOT remove from source if it's a shared preview
-                    if (!activeData.isSharedPreview) {
-                        updateBadgeCollection(sourceCollectionId, { badgeIds: allBadgeCollections.find(c => c.id === sourceCollectionId)!.badgeIds.filter(id => id !== badge.id) });
-                    }
-                    updateBadgeCollection(targetCollectionId, { badgeIds: [badge.id, ...targetCollection.badgeIds] });
-                    toast({title: "Badge Moved/Linked", description: `"${badge.name}" added to "${targetCollection.name}".`});
-                 }
-            } else if (targetCollectionId && sourceCollectionId === targetCollectionId) {
-                const collection = allBadgeCollections.find(c => c.id === sourceCollectionId);
-                const oldIndex = collection!.badgeIds.indexOf(badge.id);
-                const overBadgeId = over.data.current?.badge.id;
-                const newIndex = collection!.badgeIds.indexOf(overBadgeId);
-                if (oldIndex !== -1 && newIndex !== -1) {
-                    reorderBadges(sourceCollectionId, arrayMove(collection!.badgeIds, oldIndex, newIndex));
-                }
-            }
-            return;
-        }
-
-        if (activeType === 'collection-card' && over.id === 'shared-collections-panel') {
-            const collection = activeData.collection as BadgeCollection;
-            const isOwner = collection.owner.id === viewAsUser.userId;
-            
-            if (isOwner) {
-                updateBadgeCollection(collection.id, { isShared: !collection.isShared });
-                toast({ title: collection.isShared ? 'Collection Unshared' : 'Collection Shared' });
-            } else { // Is a linked collection, so unlink it
-                const updatedLinkedIds = (viewAsUser.linkedBadgeCollectionIds || []).filter(id => id !== collection.id);
-                updateUser(viewAsUser.userId, { linkedBadgeCollectionIds: updatedLinkedIds });
-                toast({ title: 'Collection Unlinked' });
-            }
-        } else if (activeType === 'collection-card' && overType === 'collection-card') {
-            const activeId = active.id.toString();
-            const overId = over.id.toString();
-
-            if (activeId !== overId) {
-                const oldIndex = displayedCollections.findIndex(c => c.id === activeId);
-                const newIndex = displayedCollections.findIndex(c => c.id === overId);
-                
-                if (oldIndex !== -1 && newIndex !== -1) {
-                    reorderBadgeCollections(arrayMove(displayedCollections, oldIndex, newIndex));
-                }
-            }
-        }
-    }, [viewAsUser, addBadgeCollection, updateUser, toast, updateBadgeCollection, allBadgeCollections, reorderBadges, addBadge, setAllBadgeCollections, displayedCollections, reorderBadgeCollections]);
-    
-    const renderCollectionCard = useCallback((collection: BadgeCollection, isDragging: boolean) => (
-       <SortableItem key={collection.id} id={collection.id} data={{ type: 'collection-card', collection, isSharedPreview: false }}>
-            {(isDragging) => (
-                <BadgeCollectionCard
-                    collection={collection}
-                    allBadges={allBadges}
-                    allCollections={allBadgeCollections}
-                    onUpdateCollection={updateBadgeCollection}
-                    onDeleteCollection={handleDeleteCollection}
-                    onAddBadge={addBadge}
-                    onUpdateBadge={updateBadge}
-                    onDeleteBadge={handleDeleteBadge}
-                    isExpanded={expandedCollections.has(collection.id)}
-                    onToggleExpand={() => onToggleExpand(collection.id)}
-                />
-            )}
-        </SortableItem>
-    ), [allBadges, allBadgeCollections, updateBadgeCollection, handleDeleteCollection, addBadge, updateBadge, handleDeleteBadge, expandedCollections, onToggleExpand]);
-
-    const renderSharedCollectionCard = useCallback((collection: BadgeCollection, isDragging: boolean) => (
-       <SortableItem key={collection.id} id={collection.id} data={{ type: 'collection-card', collection, isSharedPreview: true }}>
-            {(isDragging) => (
-                <BadgeCollectionCard
-                    collection={collection}
-                    allBadges={allBadges}
-                    allCollections={allBadgeCollections}
-                    onUpdateCollection={updateBadgeCollection}
-                    onDeleteCollection={handleDeleteCollection}
-                    onAddBadge={addBadge}
-                    onUpdateBadge={updateBadge}
-                    onDeleteBadge={handleDeleteBadge}
-                    isSharedPreview={true}
-                    isViewer={true}
-                    currentUserBadgeIds={currentUserBadgeIds}
-                    isExpanded={expandedCollections.has(collection.id)}
-                    onToggleExpand={() => onToggleExpand(collection.id)}
-                />
-            )}
-        </SortableItem>
-    ), [allBadges, allBadgeCollections, updateBadgeCollection, handleDeleteCollection, addBadge, updateBadge, handleDeleteBadge, currentUserBadgeIds, expandedCollections, onToggleExpand]);
-    
-    const renderDragOverlay = (item: any) => {
-        if (!item) return null;
-        if (item.type === 'collection-card') {
-            const collection = item.data.collection;
-            return <GoogleSymbol
-                name={collection.icon}
-                style={{ color: collection.color, fontSize: '48px' }}
-                weight={100}
-                grade={-25}
-                opticalSize={48}
-            />
-        }
-        if (item.type === 'badge') {
-            const badge = item.data.badge;
-            return <div className="h-9 w-9 rounded-full border-2 flex items-center justify-center bg-card shadow-lg" style={{ borderColor: badge.color }}>
-                      <GoogleSymbol
-                          name={badge.icon}
-                          style={{ fontSize: '28px', color: badge.color }}
-                          weight={100}
-                      />
-                    </div>
-        }
-        return null;
-    }
-
-    if (!viewAsUser) return null;
-
-    return (
-        <DndContext onDragEnd={onDragEnd} onDragStart={(e) => setActiveDragItem({type: e.active.data.current?.type, id: e.active.id as string, data: e.active.data.current})} sensors={useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, {coordinateGetter: sortableKeyboardCoordinates}))}>
-            <div className="flex h-full gap-4">
-                <div className="flex-1 flex flex-col overflow-hidden">
-                    <div className="flex items-center justify-between mb-6 shrink-0">
-                        <div className="flex items-center gap-2">
-                           <PageTitle 
-                                title={title}
-                                onSave={handleTitleSave}
-                                onReset={handleTitleReset}
-                                disabled={!canManage}
-                           />
-                            <DuplicateZone id="duplicate-collection-zone" onAdd={() => addBadgeCollection(viewAsUser)} />
-                        </div>
-                        <div className="flex items-center gap-1">
-                            <CompactSearchInput
-                              searchTerm={mainSearchTerm}
-                              setSearchTerm={setMainSearchTerm}
-                              placeholder="Search collections..."
-                              autoFocus={isActive}
-                              showColorFilter={true}
-                              onColorSelect={setColorFilter}
-                              activeColorFilter={colorFilter}
-                            />
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="icon" onClick={() => setIsSharedPanelOpen(!isSharedPanelOpen)}>
-                                            <GoogleSymbol name="dynamic_feed" weight={100} opticalSize={20} />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>Show Shared Collections</p></TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        </div>
-                    </div>
-                    <ScrollArea className="flex-1 min-h-0">
-                        <DraggableGrid
-                            items={displayedCollections}
-                            setItems={reorderBadgeCollections}
-                            onDragEnd={onDragEnd}
-                            renderItem={(item, isDragging) => renderCollectionCard(item as BadgeCollection, isDragging)}
-                            renderDragOverlay={(item) => renderDragOverlay({type: 'collection-card', data: {collection: item}})}
-                        />
-                    </ScrollArea>
-                </div>
-
-                <SharedItemsPanel
-                    isOpen={isSharedPanelOpen}
-                    type="collections"
-                    title="Shared Collections"
-                    description="Drag a collection you own here to share it. Drag a collection to your board to link it."
-                    items={sharedCollections}
-                    searchTerm={sharedSearchTerm}
-                    setSearchTerm={setSharedSearchTerm}
-                    colorFilter={colorFilter}
-                    onColorFilterChange={setColorFilter}
-                    renderItem={renderSharedCollectionCard}
-                    renderDragOverlay={(item) => renderDragOverlay({type: 'collection-card', data: {collection: item}})}
-                    emptyMessage="No other collections are currently shared."
-                />
-            </div>
-             <DragOverlay>
-                {activeDragItem ? renderDragOverlay(activeDragItem) : null}
-            </DragOverlay>
-        </DndContext>
-    );
-}
-
-    
+    const { viewAsUser, users, updateUser, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, setAllBadgeCollections, reorderBadgeCollections, updatePage }
