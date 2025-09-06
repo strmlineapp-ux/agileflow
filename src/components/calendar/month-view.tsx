@@ -9,6 +9,7 @@ import { Button } from '../ui/button';
 import { useUser } from '@/context/user-context';
 import { GoogleSymbol } from '../icons/google-symbol';
 import { type Event, type Badge as BadgeType } from '@/types';
+import { format, isSameDay, isToday, startOfMonth, endOfMonth, eachDayOfInterval, addDays, startOfWeek, isSameMonth } from 'date-fns';
 
 const isHoliday = (day: Date, holidays: Date[]) => {
     return holidays.some(holiday => {
@@ -17,28 +18,6 @@ const isHoliday = (day: Date, holidays: Date[]) => {
                day.getFullYear() === holiday.getFullYear();
     });
 }
-
-function isToday(day: Date) {
-    const today = new Date();
-    return day.getDate() === today.getDate() &&
-           day.getMonth() === today.getMonth() &&
-           day.getFullYear() === today.getFullYear();
-}
-
-function getDaysInMonth(year: number, month: number) {
-    const date = new Date(year, month, 1);
-    const days = [];
-    while (date.getMonth() === month) {
-        days.push(new Date(date));
-        date.setDate(date.getDate() + 1);
-    }
-    return days;
-}
-
-function getFirstDayOfMonth(year: number, month: number): number {
-    return new Date(year, month, 1).getDay();
-}
-
 
 export const MonthView = React.memo(({ date, events, containerRef, onEventClick }: { date: Date; events: Event[], containerRef: React.RefObject<HTMLDivElement>; onEventClick: (event: Event) => void; }) => {
     const todayRef = useRef<HTMLDivElement>(null);
@@ -50,8 +29,13 @@ export const MonthView = React.memo(({ date, events, containerRef, onEventClick 
       if (badge) return { label: badge.name, description: badge.description, color: badge.color, icon: badge.icon };
       return undefined;
     }, [allBadges]);
-
-    const daysInMonth = getDaysInMonth(date.getFullYear(), date.getMonth());
+    
+    const weekStartsOn = 1; // Monday
+    const monthStart = startOfMonth(date);
+    const monthEnd = endOfMonth(date);
+    const startDate = startOfWeek(monthStart, { weekStartsOn });
+    const endDate = startOfWeek(addDays(monthEnd, 6), { weekStartsOn }); // Ensure we get 6 weeks
+    const days = eachDayOfInterval({ start: startDate, end: endDate });
 
     const calendarColorMap = useMemo(() => {
         const map: Record<string, { bg: string, text: string }> = {};
@@ -62,7 +46,7 @@ export const MonthView = React.memo(({ date, events, containerRef, onEventClick 
     }, [calendars]);
 
     useEffect(() => {
-        if (date.getMonth() === new Date().getMonth() && date.getFullYear() === new Date().getFullYear() && todayRef.current && containerRef.current) {
+        if (isSameMonth(date, new Date()) && todayRef.current && containerRef.current) {
             const container = containerRef.current;
             const todayElement = todayRef.current;
             
@@ -76,14 +60,14 @@ export const MonthView = React.memo(({ date, events, containerRef, onEventClick 
     }, [date, containerRef]);
 
     const getEventsForDay = useCallback((day: Date) => {
-        return events.filter(event => new Date(event.startTime).toDateString() === day.toDateString());
+        return events.filter(event => isSameDay(event.startTime, day));
     }, [events]);
 
-    const hasWeekendEvents = useMemo(() => daysInMonth.some(day => {
+    const hasWeekendEvents = useMemo(() => days.some(day => {
         const dayOfWeek = day.getDay();
         const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
         return isWeekend && getEventsForDay(day).length > 0;
-    }), [daysInMonth, getEventsForDay]);
+    }), [days, getEventsForDay]);
 
     const [showWeekends, setShowWeekends] = useState(hasWeekendEvents);
     
@@ -95,17 +79,15 @@ export const MonthView = React.memo(({ date, events, containerRef, onEventClick 
     const displayedWeekdays = showWeekends ? weekdays : weekdays.slice(0, 5);
     const gridColsClass = showWeekends ? 'grid-cols-7' : 'grid-cols-5';
     
-    const firstDay = getFirstDayOfMonth(date.getFullYear(), date.getMonth());
-    const startingDayIndex = (firstDay === 0) ? 6 : firstDay - 1;
+    const displayedDays = showWeekends ? days : days.filter(d => d.getDay() !== 0 && d.getDay() !== 6);
 
-    const renderDayCell = useCallback((day: Date, key: React.Key, dayIndex: number) => {
+    const renderDayCell = useCallback((day: Date, key: React.Key) => {
         const dayEvents = getEventsForDay(day);
         const dayOfWeek = day.getDay();
         const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
         const isDayHoliday = isHoliday(day, holidays);
         const isDayToday = isToday(day);
-        const colIndex = (startingDayIndex + dayIndex) % 7;
-
+        const isCurrentMonth = isSameMonth(day, date);
 
         return (
             <div 
@@ -113,17 +95,17 @@ export const MonthView = React.memo(({ date, events, containerRef, onEventClick 
                 ref={isDayToday ? todayRef : null}
                 className={cn(
                 "border-r border-b p-2 flex flex-col min-h-[150px]",
-                { "bg-muted/10": colIndex % 2 !== 0 },
-                { "bg-accent/10": isDayToday },
-                { "bg-muted/50": !isDayToday && (isWeekend || isDayHoliday) && day.getMonth() === date.getMonth() }
+                !isCurrentMonth && "bg-muted/30",
+                isDayToday && "bg-accent/10",
+                !isDayToday && (isWeekend || isDayHoliday) && isCurrentMonth && "bg-muted/50"
             )}>
                 <span className={cn(
                     "h-6 w-6 flex items-center justify-center rounded-full text-sm text-foreground",
                     isDayToday && "font-emphasized",
-                    { "text-foreground/50": day.getMonth() !== date.getMonth() },
-                    { "text-foreground/50": (isWeekend || isDayHoliday) }
+                    !isCurrentMonth && "text-foreground/50",
+                    (isWeekend || isDayHoliday) && "text-foreground/50"
                 )}>
-                    {day.getDate()}
+                    {format(day, 'd')}
                 </span>
                 <div className="mt-1 space-y-1 overflow-y-auto flex-1">
                     {dayEvents.map(event => {
@@ -151,36 +133,12 @@ export const MonthView = React.memo(({ date, events, containerRef, onEventClick 
                 </div>
             </div>
         )
-    }, [getEventsForDay, onEventClick, calendarColorMap, getPriorityDisplay, startingDayIndex, date, holidays]);
-
-    let dayCells: React.ReactNode[] = [];
-    if (showWeekends) {
-        dayCells = [
-            ...Array.from({ length: startingDayIndex }).map((_, index) => (
-                <div key={`empty-${index}`} className="border-r border-b" />
-            )),
-            ...daysInMonth.map((day, index) => renderDayCell(day, `day-${index}`, index))
-        ];
-    } else {
-        let emptyCells = [];
-        for (let i = 0; i < startingDayIndex; i++) {
-            if (i < 5) {
-                emptyCells.push(<div key={`empty-${i}`} className="border-r border-b" />);
-            }
-        }
-        dayCells = [
-            ...emptyCells,
-            ...daysInMonth
-                .map((day, index) => ({ day, index }))
-                .filter(({ day }) => day.getDay() !== 0 && day.getDay() !== 6)
-                .map(({ day, index }) => renderDayCell(day, `day-${index}`, index))
-        ];
-    }
-
+    }, [getEventsForDay, onEventClick, calendarColorMap, getPriorityDisplay, date, holidays]);
+    
     return (
         <Card className="flex flex-col h-full flex-1">
             <div className={cn("grid border-b border-t sticky top-0 bg-card z-10", gridColsClass)}>
-                {displayedWeekdays.map((day, index) => (
+                {displayedWeekdays.map((day) => (
                     <div key={day} className={cn("text-center p-2 text-sm border-r last:border-r-0 relative text-foreground", 
                         { "bg-card": (day === 'Sat' || day === 'Sun') },
                         { "text-foreground": !(day === 'Sat' || day === 'Sun') }
@@ -200,8 +158,8 @@ export const MonthView = React.memo(({ date, events, containerRef, onEventClick 
                 ))}
             </div>
             <CardContent className="p-0 flex-1 flex flex-col min-h-0">
-                <div className={cn("grid flex-1", gridColsClass, `grid-rows-6`)}>
-                    {dayCells}
+                <div className={cn("grid flex-1", gridColsClass)} style={{ gridTemplateRows: `repeat(${displayedDays.length / displayedWeekdays.length}, minmax(150px, 1fr))` }}>
+                    {displayedDays.map((day) => renderDayCell(day, day.toISOString()))}
                 </div>
             </CardContent>
         </Card>
