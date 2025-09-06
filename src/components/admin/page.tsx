@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -799,7 +800,7 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
         return results;
     }, [appSettings.tabs, searchTerm, colorFilter]);
 
-    const renderTabCard = useCallback((tab: AppTab) => (
+    const renderTabCard = useCallback((tab: AppTab, isDragging: boolean) => (
         <SortableItem key={tab.id} id={tab.id}>
          {(isDragging) => (
             <SortableTabCard
@@ -832,9 +833,11 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
             <DraggableGrid
                 items={filteredTabs}
                 setItems={reorderTabs}
-                renderItem={(item) => renderTabCard(item as AppTab)}
+                renderItem={(item, isDragging) => renderTabCard(item as AppTab, isDragging)}
                 className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4"
-            />
+            >
+              {filteredTabs.map(tab => renderTabCard(tab, false))}
+            </DraggableGrid>
         </div>
     );
 };
