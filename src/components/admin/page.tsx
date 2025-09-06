@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -606,7 +604,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
     );
 }
 
-export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelOpen, isDragging }: { isActive: boolean; isSharedPanelOpen: boolean; setIsSharedPanelOpen: (isOpen: boolean) => void; isDragging: boolean; }) => {
+export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelOpen, isDragging }: { isActive: boolean; isSharedPanelOpen?: boolean; setIsSharedPanelOpen?: (isOpen: boolean) => void; isDragging?: boolean; }) => {
     const { viewAsUser, appSettings, addPage, updatePage, deletePage, reorderPages, updateUser } = useUser();
     const { toast } = useToast();
     const [expandedPages, setExpandedPages] = useState<Set<string>>(new Set());
@@ -709,9 +707,9 @@ export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelO
                 renderItem={(item, isDragging) => renderPageCard(item as AppPage)}
                 renderDragOverlay={(item) => <GoogleSymbol name={item.icon} style={{ color: item.color, fontSize: '48px' }} />}
                 isActive={isActive}
-                isSharedPanelOpen={isSharedPanelOpen}
-                setIsSharedPanelOpen={setIsSharedPanelOpen}
-                isDragging={isDragging}
+                isSharedPanelOpen={isSharedPanelOpen || false}
+                setIsSharedPanelOpen={setIsSharedPanelOpen || (() => {})}
+                isDragging={isDragging || false}
             />
         </div>
     );

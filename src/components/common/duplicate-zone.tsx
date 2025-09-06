@@ -29,14 +29,14 @@ export function DuplicateZone({ id, onAdd, tooltipText = 'Add New', isOverToolti
         dropZoneActive && "ring-1 ring-border ring-inset"
       )}
     >
-      <div className={cn(isDragging ? "hidden" : "block")}>
+      <div className={cn(isDragging ? 'block' : 'block')}>
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button 
                   variant="default" 
                   size="icon" 
-                  className="rounded-full p-0" 
+                  className={cn("rounded-full p-0", isDragging && 'opacity-0')}
                   onClick={onAdd} 
                   onPointerDown={(e) => e.stopPropagation()}
               >
