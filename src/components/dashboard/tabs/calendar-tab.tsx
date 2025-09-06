@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
@@ -277,7 +278,7 @@ export function CalendarPageContent({ tab }: { tab: AppTab }) {
             </div>
             <p className="text-muted-foreground text-sm font-normal">{dateRange}</p>
           </div>
-          <div className="flex items-center justify-end gap-2 flex-1">
+          <div className="flex items-center justify-center sm:justify-end gap-2 flex-1">
               <TooltipProvider>
                 {(view === 'production-schedule' || view === 'day' || view === 'week') && (
                   <Tooltip>
