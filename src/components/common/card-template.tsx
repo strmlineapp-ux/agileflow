@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -41,6 +42,7 @@ interface CardTemplateProps {
   headerControls?: React.ReactNode;
   dragHandleProps?: any;
   canChangeOwnership?: boolean;
+  hideOwnershipBadge?: boolean; // New prop
 }
 
 export function CardTemplate({
@@ -58,7 +60,8 @@ export function CardTemplate({
   footer,
   headerControls,
   dragHandleProps,
-  canChangeOwnership = false
+  canChangeOwnership = false,
+  hideOwnershipBadge = false, // Default to false
 }: CardTemplateProps) {
     const { viewAsUser, users } = useUser();
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -66,7 +69,7 @@ export function CardTemplate({
     const { toast } = useToast();
     const readableColor = getReadableColor(entity.color || '', theme);
     
-    const { shareIcon, shareIconTitle, shareIconColor } = useMemo(() => {
+    let { shareIcon, shareIconTitle, shareIconColor } = useMemo(() => {
         const ownerUser = users.find(u => u.userId === entity.owner?.id);
         const isOwned = entity.owner?.id === viewAsUser.userId;
 
@@ -101,6 +104,10 @@ export function CardTemplate({
         }
         return { shareIcon: null, shareIconTitle: null, shareIconColor: null };
     }, [entity, viewAsUser, users, isSharedPreview]);
+    
+    if (hideOwnershipBadge) {
+        shareIcon = null;
+    }
 
     const handleOwnershipReset = (e: React.MouseEvent) => {
         if (!canChangeOwnership) return;
