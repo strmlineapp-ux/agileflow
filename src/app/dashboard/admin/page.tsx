@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 export default function AdminPage() {
   const { appSettings } = useUser();
   const [activeTabKey, setActiveTabKey] = useState('admins');
+  const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
 
   // Statically define the admin tabs to ensure they are always present.
   const adminTabs = [
@@ -41,13 +42,17 @@ export default function AdminPage() {
             <div className="flex-1 pt-6 min-h-0">
                 {adminTabs.map(tab => {
                   const Component = tab.component;
+                  const props = tab.key === 'pages' 
+                    ? { isActive: activeTabKey === tab.key, isSharedPanelOpen, setIsSharedPanelOpen }
+                    : { isActive: activeTabKey === tab.key };
+
                   return (
                     <TabsContent 
                         key={tab.key} 
                         value={tab.key} 
                         className="mt-0 h-full"
                     >
-                      <Component isActive={activeTabKey === tab.key} />
+                      <Component {...props} />
                     </TabsContent>
                   )
                 })}
