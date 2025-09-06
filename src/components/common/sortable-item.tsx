@@ -41,7 +41,7 @@ export function SortableItem({ id, children, data, disabled = false }: SortableI
         style={style} 
         {...listeners} 
         {...attributes} 
-        className="p-2 break-inside-avoid"
+        className="p-2 flex-grow-0 flex-shrink-0 basis-full sm:basis-[calc(50%-1rem)] md:basis-[calc(33.333%-1rem)] lg:basis-[calc(25%-1rem)] xl:basis-[calc(20%-1rem)] 2xl:basis-[calc(16.666%-1rem)]"
     >
       {children(isDragging)}
     </div>
