@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -417,7 +418,16 @@ function BadgeCollectionCard({
                 <TooltipProvider key={mode}>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={() => { onUpdateCollection(collection.id, { viewMode: mode }); setIsViewModePopoverOpen(false); }} className={cn("h-8 w-8 font-emphasis", collection.viewMode === mode && "text-primary")}>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onPointerDown={(e) => e.stopPropagation()}
+                                onClick={() => { onUpdateCollection(collection.id, { viewMode: mode }); setIsViewModePopoverOpen(false); }}
+                                className={cn(
+                                    "h-8 w-8 font-emphasis",
+                                    collection.viewMode === mode && "font-emphasized"
+                                )}
+                            >
                                 <GoogleSymbol name={icon} weight={100} opticalSize={20} />
                             </Button>
                         </TooltipTrigger>
@@ -477,10 +487,7 @@ function BadgeCollectionCard({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={cn(
-                        "h-6 w-6 text-muted-foreground",
-                        isActive ? 'font-emphasized' : 'font-emphasis'
-                      )}
+                      className={cn("h-6 w-6 text-muted-foreground", isActive ? "font-emphasized" : "font-emphasis")}
                       onClick={() => handleToggleApplication(app.key)}
                       onPointerDown={(e) => e.stopPropagation()}
                       disabled={!isOwner}
@@ -514,33 +521,138 @@ function BadgeCollectionCard({
     );
 }
 
-function DuplicateZone({ id, onAdd }: { id: string; onAdd: () => void; }) {
-  const { setNodeRef, isOver } = useDroppable({ id });
-  
-  return (
-    <div
-      ref={setNodeRef}
-      className={cn(
-        "rounded-full transition-all p-0.5",
-        isOver && "ring-1 ring-border ring-inset"
-      )}
-    >
-      <TooltipProvider>
-          <Tooltip>
-              <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full p-0 font-emphasis" onClick={onAdd} onPointerDown={(e) => e.stopPropagation()}>
-                    <GoogleSymbol name="add_circle" className="text-4xl" weight={100} opticalSize={20} />
-                    <span className="sr-only">New Collection or Drop to Duplicate</span>
-                  </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                  <p>{isOver ? 'Drop to Duplicate' : 'Add New Collection'}</p>
-              </TooltipContent>
-          </Tooltip>
-      </TooltipProvider>
-    </div>
-  );
-}
-
 export function BadgeManagement({ tab, page, isActive }: { tab: AppTab; page: AppPage; isActive: boolean }) {
-    const { viewAsUser, users, updateUser, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, setAllBadgeCollections, reorderBadgeCollections, updatePage }
+    const { viewAsUser, users, updateUser, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, setAllBadgeCollections, reorderBadgeCollections, updatePage } = useUser();
+    const { toast } = useToast();
+    const [expandedCollections, setExpandedCollections] = useState<Set<string>>(new Set());
+
+    const onToggleExpand = useCallback((collectionId: string) => {
+        setExpandedCollections(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(collectionId)) newSet.delete(collectionId);
+            else newSet.add(collectionId);
+            return newSet;
+        });
+    }, []);
+
+    const handleUpdate = (collectionId: string, data: Partial<BadgeCollection>) => {
+        updateBadgeCollection(collectionId, data);
+    };
+    
+    const handleDelete = (collection: BadgeCollection) => {
+        if (collection.owner.id === viewAsUser.userId) {
+            deleteBadgeCollection(collection.id);
+        } else {
+            const updatedLinkedIds = (viewAsUser.linkedBadgeCollectionIds || []).filter(id => id !== collection.id);
+            updateUser(viewAsUser.userId, { linkedBadgeCollectionIds: updatedLinkedIds });
+            toast({ title: "Collection unlinked", description: `"${collection.name}" has been removed from your board.`});
+        }
+    };
+    
+    const handleLink = (collectionId: string) => {
+        const updatedLinkedIds = [...(viewAsUser.linkedBadgeCollectionIds || []), collectionId];
+        updateUser(viewAsUser.userId, { linkedBadgeCollectionIds: Array.from(new Set(updatedLinkedIds))});
+    };
+
+    const handleAddCollection = (sourceCollection?: BadgeCollection) => {
+        addBadgeCollection(viewAsUser, sourceCollection);
+    };
+
+    const displayedCollections = useMemo(() => {
+        return allBadgeCollections
+            .filter(c => (c.owner && c.owner.id === viewAsUser.userId) || (viewAsUser.linkedBadgeCollectionIds || []).includes(c.id));
+    }, [allBadgeCollections, viewAsUser]);
+
+    const sharedCollections = useMemo(() => {
+        const displayedIds = new Set(displayedCollections.map(c => c.id));
+        return allBadgeCollections.filter(c => c.isShared && c.owner?.id !== viewAsUser.userId && !displayedIds.has(c.id));
+    }, [allBadgeCollections, displayedCollections, viewAsUser.userId]);
+
+    const renderCollectionCard = useCallback((collection: BadgeCollection, isDragging: boolean) => {
+        const userBadgeIds = new Set(allBadges.filter(b => b.owner.id === viewAsUser.userId).map(b => b.id));
+
+        return (
+            <SortableItem key={collection.id} id={collection.id} data={{ type: 'collection-card', collection, isSharedPreview: false }}>
+              {(isDragging) => (
+                <BadgeCollectionCard
+                    collection={collection}
+                    allBadges={allBadges}
+                    onUpdateCollection={handleUpdate}
+                    onDeleteCollection={handleDelete}
+                    onAddBadge={addBadge}
+                    onUpdateBadge={updateBadge}
+                    onDeleteBadge={deleteBadge}
+                    isViewer={!viewAsUser}
+                    isExpanded={expandedCollections.has(collection.id)}
+                    onToggleExpand={() => onToggleExpand(collection.id)}
+                    currentUserBadgeIds={userBadgeIds}
+                    allCollections={allBadgeCollections}
+                />
+              )}
+            </SortableItem>
+        );
+    }, [handleUpdate, handleDelete, addBadge, updateBadge, deleteBadge, viewAsUser, expandedCollections, onToggleExpand, allBadges, allBadgeCollections]);
+    
+    const renderSharedCollectionCard = useCallback((collection: BadgeCollection, isDragging: boolean) => {
+        const userBadgeIds = new Set(allBadges.filter(b => b.owner.id === viewAsUser.userId).map(b => b.id));
+        return (
+            <SortableItem key={collection.id} id={collection.id} data={{ type: 'collection-card', collection, isSharedPreview: true }}>
+              {(isDragging) => (
+                <BadgeCollectionCard
+                    collection={collection}
+                    allBadges={allBadges}
+                    onUpdateCollection={handleUpdate}
+                    onDeleteCollection={handleDelete}
+                    onAddBadge={addBadge}
+                    onUpdateBadge={updateBadge}
+                    onDeleteBadge={deleteBadge}
+                    isSharedPreview={true}
+                    isViewer={!viewAsUser}
+                    isExpanded={expandedCollections.has(collection.id)}
+                    onToggleExpand={() => onToggleExpand(collection.id)}
+                    currentUserBadgeIds={userBadgeIds}
+                    allCollections={allBadgeCollections}
+                />
+              )}
+            </SortableItem>
+        );
+    }, [handleUpdate, handleDelete, addBadge, updateBadge, deleteBadge, viewAsUser, expandedCollections, onToggleExpand, allBadges, allBadgeCollections]);
+
+    const renderDragOverlay = useCallback((item: BadgeCollection | Badge) => {
+        if ('badgeIds' in item) { // It's a BadgeCollection
+            return <GoogleSymbol name={item.icon} style={{color: item.color, fontSize: '48px'}} />;
+        }
+        // It's a Badge
+        return (
+            <div className="h-9 w-9 rounded-full border-2 flex items-center justify-center bg-card shadow-lg" style={{ borderColor: item.color }}>
+                <GoogleSymbol name={item.icon} style={{ fontSize: '28px', color: item.color }} weight={100} />
+            </div>
+        );
+    }, []);
+
+    return (
+        <ManagementPageLayout
+            pageTitle={page.displayTitle ?? tab.name}
+            onPageTitleSave={(newTitle) => updatePage(page.id, { displayTitle: newTitle })}
+            onPageTitleReset={(e) => {
+                if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
+                    e.preventDefault();
+                    updatePage(page.id, { displayTitle: null });
+                    toast({ title: "Title Reset" });
+                }
+            }}
+            canManagePage={viewAsUser.isAdmin}
+            entityType="collection"
+            allItems={displayedCollections}
+            allSharedItems={sharedCollections}
+            onAddItem={handleAddCollection}
+            onUpdateItem={handleUpdate}
+            onDeleteItem={handleDelete}
+            onReorderItems={reorderBadgeCollections}
+            onLinkItem={handleLink}
+            renderItem={renderCollectionCard}
+            renderDragOverlay={renderDragOverlay}
+            isActive={isActive}
+        />
+    );
+}
