@@ -160,7 +160,7 @@ export function ManagementPageLayout<T extends TEntity>({
             </TooltipProvider>
           </div>
         </div>
-        <div className="flex-1 min-h-0 overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
           <DraggableGrid
               id={`${entityType}-list`}
               items={displayedItems}
