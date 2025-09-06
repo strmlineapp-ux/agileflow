@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useCallback, useMemo } from 'react';
@@ -47,7 +46,7 @@ interface ManagementPageLayoutProps<T extends TEntity> {
   renderItem: (item: T, isDragging: boolean) => React.ReactNode;
   renderDragOverlay: (item: T) => React.ReactNode;
   
-  isActive: boolean; // For auto-focusing search
+  isActive: boolean;
   isDragging: boolean;
 }
 
@@ -64,7 +63,7 @@ export function ManagementPageLayout<T extends TEntity>({
   onDeleteItem,
   onReorderItems,
   onLinkItem,
-  onDragEnd: onCustomDragEnd,
+  onDragEnd,
   renderItem,
   renderDragOverlay,
   isActive,
@@ -116,56 +115,7 @@ export function ManagementPageLayout<T extends TEntity>({
     return filtered;
   }, [allSharedItems, sharedSearchTerm, sharedColorFilter]);
   
-  const handleDragEnd = (event: DragEndEvent) => {
-    if (onCustomDragEnd) {
-      onCustomDragEnd(event);
-      return;
-    }
-
-    const { active, over } = event;
-
-    if (!over) return;
-    
-    const activeItem = [...allItems, ...allSharedItems].find(i => i.id === active.id) as T | undefined;
-    if (!activeItem) return;
-
-    // Handle dropping on duplicate zone
-    if (over.id === `duplicate-${entityType}-zone`) {
-      onAddItem(activeItem);
-      return;
-    }
-    
-    // Handle dropping on shared panel
-    if (over.id === `shared-${entityType}-panel`) {
-      if (activeItem.owner?.id === viewAsUser?.userId) {
-        onUpdateItem(activeItem.id, { isShared: !activeItem.isShared } as Partial<T>);
-        toast({ title: activeItem.isShared ? `${entityType.charAt(0).toUpperCase() + entityType.slice(1)} Unshared` : `${entityType.charAt(0).toUpperCase() + entityType.slice(1)} Shared` });
-      } else {
-        onDeleteItem(activeItem);
-      }
-      return;
-    }
-    
-    // Handle linking from shared panel to main board
-    const isFromShared = active.data.current?.isSharedPreview;
-    const isOverMainBoard = over.id === 'collections-list' || over.data.current?.type === `${entityType}-card`;
-    if (isFromShared && isOverMainBoard) {
-        onLinkItem(active.id as string);
-        return;
-    }
-
-    // Handle reordering within the main grid
-    if (over.id && active.id !== over.id && !isFromShared) {
-        const oldIndex = displayedItems.findIndex(item => item.id === active.id);
-        const newIndex = displayedItems.findIndex(item => item.id === over.id);
-
-        if (oldIndex > -1 && newIndex > -1) {
-            onReorderItems(arrayMove(displayedItems, oldIndex, newIndex));
-        }
-    }
-  };
-  
-  const entityTitle = (entityType || '').charAt(0).toUpperCase() + (entityType || '').slice(1) + 's';
+  const entityTitle = entityType ? entityType.charAt(0).toUpperCase() + entityType.slice(1) + 's' : '';
   
   const gridClassName = cn(
     "gap-4",
@@ -214,10 +164,8 @@ export function ManagementPageLayout<T extends TEntity>({
               id="collections-list"
               items={displayedItems}
               setItems={onReorderItems}
-              onDragEnd={handleDragEnd}
               className={gridClassName}
           >
-            {displayedItems.length === 0 && <p className="text-center text-sm text-muted-foreground p-4">No {entityType}s to display.</p>}
             {displayedItems.map(item => renderItem(item, isDragging))}
           </DraggableGrid>
         </div>
@@ -237,7 +185,7 @@ export function ManagementPageLayout<T extends TEntity>({
             colorFilter={sharedColorFilter}
             onColorFilterChange={setSharedColorFilter}
             renderItem={(item) => renderItem(item, isDragging)}
-            onDrop={handleDragEnd}
+            onDrop={onDragEnd}
           />
       </div>
     </div>

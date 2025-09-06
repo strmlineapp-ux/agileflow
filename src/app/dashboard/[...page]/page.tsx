@@ -8,9 +8,10 @@ import { useUser } from '@/context/user-context';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { hasAccess } from '@/lib/permissions';
 import { type AppTab, type Team, type AppPage, type BadgeCollection, type SharedCalendar, type Badge, type User } from '@/types';
-import { DndContext, DragOverlay, KeyboardSensor, PointerSensor, useSensor, useSensors, pointerWithin, type DragStartEvent, type DragEndEvent } from '@dnd-kit/core';
-import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { DndContext, DragOverlay, KeyboardSensor, PointerSensor, useSensor, useSensors, pointerWithin, type DragStartEvent, type DragEndEvent, type Active, type Over } from '@dnd-kit/core';
+import { arrayMove } from '@dnd-kit/sortable';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
+import { useToast } from '@/hooks/use-toast';
 
 // Import all possible tab content components
 import { AdminsManagement, PagesManagement, TabsManagement } from '@/components/admin/page';
@@ -31,11 +32,8 @@ import { EventsContent } from '@/components/dashboard/tabs/events-tab';
 import { Tabs, TabsTrigger, TabsContent, SortableTabsList } from '@/components/ui/tabs';
 import { CenteredTabList } from '@/components/common/centered-tab-list';
 import { PageTitle } from '@/components/common/page-title';
-import { cn } from '@/lib/utils';
-import { Avatar } from '@/components/ui/avatar';
-import { AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
 import { ManagementPageLayout } from '@/components/common/management-page-layout';
-
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const componentMap = {
   admins: AdminsManagement,
@@ -64,8 +62,9 @@ const managementComponentKeys = new Set(['calendars', 'teams', 'badges', 'pages'
 
 export default function DynamicPage() {
   const params = useParams();
-  const { appSettings, viewAsUser, loading, teams, updatePage, allBadgeCollections, allBadges, users, reorderPages, addPage, deletePage, updateUser } = useUser();
+  const { viewAsUser, loading, appSettings, teams, reorderPages, addPage, updatePage, deletePage, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, reorderBadgeCollections, allBadges, addBadge, updateBadge, deleteBadge, reorderBadges, users, updateUser, reorderTeams, addTeam, updateTeam, deleteTeam, reorderCalendars, addCalendar, updateCalendar, deleteCalendar } = useUser();
   const { page: pagePath } = params;
+  const { toast } = useToast();
   
   const [activeTabValue, setActiveTabValue] = useState<string | undefined>();
   const [activeDragItem, setActiveDragItem] = useState<DraggableItem | null>(null);
@@ -103,24 +102,122 @@ export default function DynamicPage() {
   }, [page, appSettings.tabs]);
   
   const onDragStart = (event: DragStartEvent) => {
-    const { active } = event;
-    const item = active.data.current?.page || 
-                 active.data.current?.team || 
-                 active.data.current?.collection || 
-                 active.data.current?.calendar ||
-                 active.data.current?.badge ||
-                 active.data.current?.user;
-    
+    const item = event.active.data.current?.collection || event.active.data.current?.team || event.active.data.current?.calendar || event.active.data.current?.page || event.active.data.current?.badge || event.active.data.current?.user;
     if(item) setActiveDragItem(item);
   };
 
-  const onDragEnd = () => {
+  const onDragEnd = (event: DragEndEvent) => {
     setActiveDragItem(null);
+    const { active, over } = event;
+    if (!over) return;
+    
+    const activeItemData = active.data.current;
+    if (!activeItemData) return;
+
+    // --- Badge Drag Logic ---
+    if (activeItemData.type === 'badge') {
+        const badge = activeItemData.badge as Badge;
+        const sourceCollectionId = activeItemData.collectionId;
+        const targetCollectionId = over.data.current?.type === 'collection'
+            ? over.data.current.collection.id
+            : over.data.current?.collectionId;
+
+        if (targetCollectionId) {
+            const targetCollection = allBadgeCollections.find(c => c.id === targetCollectionId);
+            if(targetCollection && targetCollection.owner.id === viewAsUser.userId) {
+                deleteBadge(badge.id, sourceCollectionId);
+                updateBadgeCollection(targetCollection.id, {
+                    badgeIds: [badge.id, ...targetCollection.badgeIds]
+                });
+            }
+        } else if (over.id === `duplicate-badge-zone-${sourceCollectionId}`) {
+            addBadge(sourceCollectionId, badge);
+        }
+        return;
+    }
+
+    // --- Card Drag Logic ---
+    const allItems = [...appSettings.pages, ...teams, ...allBadgeCollections, ...calendars];
+    const activeItem = allItems.find(i => i.id === active.id);
+    if (!activeItem) return;
+
+    const entityType = 
+        'path' in activeItem ? 'page' : 
+        'members' in activeItem ? 'team' :
+        'badgeIds' in activeItem ? 'collection' :
+        'googleCalendarId' in activeItem ? 'calendar' :
+        null;
+        
+    if (!entityType) return;
+    
+    // Handle duplication
+    if (over.id === `duplicate-${entityType}-zone`) {
+        if (entityType === 'page') addPage(activeItem);
+        if (entityType === 'team') addTeam(activeItem);
+        if (entityType === 'collection') addBadgeCollection(viewAsUser, activeItem);
+        if (entityType === 'calendar') addCalendar(activeItem);
+        toast({ title: `${entityType.charAt(0).toUpperCase() + entityType.slice(1)} Duplicated` });
+        return;
+    }
+    
+    // Handle sharing/unlinking
+    if (over.id === `shared-${entityType}-panel`) {
+        if (activeItem.owner?.id === viewAsUser.userId) {
+            const isNowShared = !activeItem.isShared;
+            if (entityType === 'page') updatePage(activeItem.id, { isShared: isNowShared });
+            if (entityType === 'team') updateTeam(activeItem.id, { isShared: isNowShared });
+            if (entityType === 'collection') updateBadgeCollection(activeItem.id, { isShared: isNowShared });
+            if (entityType === 'calendar') updateCalendar(activeItem.id, { isShared: isNowShared });
+            toast({ title: isNowShared ? 'Item Shared' : 'Item Unshared' });
+        } else {
+            // Unlink from personal board
+             if (entityType === 'page') updateUser(viewAsUser.userId, { linkedPageIds: (viewAsUser.linkedPageIds || []).filter(id => id !== activeItem.id) });
+             if (entityType === 'team') updateUser(viewAsUser.userId, { linkedTeamIds: (viewAsUser.linkedTeamIds || []).filter(id => id !== activeItem.id) });
+             if (entityType === 'collection') updateUser(viewAsUser.userId, { linkedBadgeCollectionIds: (viewAsUser.linkedBadgeCollectionIds || []).filter(id => id !== activeItem.id) });
+             if (entityType === 'calendar') updateUser(viewAsUser.userId, { linkedCalendarIds: (viewAsUser.linkedCalendarIds || []).filter(id => id !== activeItem.id) });
+            toast({ title: 'Item Unlinked' });
+        }
+        return;
+    }
+    
+    // Handle linking from shared panel
+    if (activeItemData.isSharedPreview) {
+        if (over.id === 'collections-list' || over.data.current?.type === `${entityType}-card`) {
+             if (entityType === 'page') updateUser(viewAsUser.userId, { linkedPageIds: [...(viewAsUser.linkedPageIds || []), activeItem.id] });
+             if (entityType === 'team') updateUser(viewAsUser.userId, { linkedTeamIds: [...(viewAsUser.linkedTeamIds || []), activeItem.id] });
+             if (entityType === 'collection') updateUser(viewAsUser.userId, { linkedBadgeCollectionIds: [...(viewAsUser.linkedBadgeCollectionIds || []), activeItem.id] });
+             if (entityType === 'calendar') updateUser(viewAsUser.userId, { linkedCalendarIds: [...(viewAsUser.linkedCalendarIds || []), activeItem.id] });
+            toast({ title: 'Item Linked' });
+        }
+        return;
+    }
+    
+    // Handle reordering
+    if (over.id && active.id !== over.id && !activeItemData.isSharedPreview) {
+        const itemSet = 
+            entityType === 'page' ? appSettings.pages :
+            entityType === 'team' ? teams :
+            entityType === 'collection' ? allBadgeCollections :
+            calendars;
+            
+        const reorderFn = 
+            entityType === 'page' ? reorderPages :
+            entityType === 'team' ? reorderTeams :
+            entityType === 'collection' ? reorderBadgeCollections :
+            reorderCalendars;
+
+        const oldIndex = itemSet.findIndex(item => item.id === active.id);
+        const newIndex = itemSet.findIndex(item => item.id === over.id);
+
+        if (oldIndex !== -1 && newIndex !== -1) {
+            reorderFn(arrayMove(itemSet, oldIndex, newIndex));
+        }
+    }
   };
   
   const renderDragOverlay = () => {
     if (!activeDragItem) return null;
-
+    
     if ('badgeIds' in activeDragItem) { // BadgeCollection
         return <GoogleSymbol name={activeDragItem.icon} style={{color: activeDragItem.color, fontSize: '48px'}} />;
     }
@@ -193,7 +290,6 @@ export default function DynamicPage() {
         );
     }
     
-    // Check if the current active tab is a management page
     const activeComponentKey = pageTabs.find(t => t.id === activeTabValue)?.componentKey;
     const isManagementPage = activeComponentKey && managementComponentKeys.has(activeComponentKey);
     
@@ -203,17 +299,23 @@ export default function DynamicPage() {
     };
 
     const renderTabContent = (tab: AppTab) => {
-        const Component = componentMap[tab.componentKey as keyof typeof componentMap];
-        if (!Component) return null;
-        
-        return <Component 
-          tab={tab} 
-          page={page} 
-          team={teamContext} 
-          isSingleTabPage={pageTabs.length === 1} 
-          isActive={activeTabValue === tab.id}
-          isDragging={!!activeDragItem}
-        />;
+      const Component = componentMap[tab.componentKey as keyof typeof componentMap];
+      if (!Component) return null;
+      
+      const props = {
+        tab: tab,
+        page: page,
+        team: teamContext,
+        isSingleTabPage: pageTabs.length === 1,
+        isActive: activeTabValue === tab.id,
+        isDragging: !!activeDragItem
+      };
+
+      if (isManagementPage && (Component === CalendarManagement || Component === TeamManagement || Component === BadgeManagement || Component === PagesManagement)) {
+        return <Component {...props} />;
+      }
+      
+      return <Component {...props} />;
     };
     
     return (
