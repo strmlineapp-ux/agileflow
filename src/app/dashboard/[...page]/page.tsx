@@ -118,6 +118,19 @@ export default function DynamicPage() {
     const activeItemData = active.data.current;
     if (!activeItemData) return;
 
+    // Handle user being dropped on a team card
+    if (activeItemData.type === 'user' && over.data.current?.type === 'team-card-droppable') {
+        const user = activeItemData.user as User;
+        const targetTeam = over.data.current.team as Team;
+
+        if (user && targetTeam && !targetTeam.members.includes(user.userId)) {
+            const updatedMembers = [...targetTeam.members, user.userId];
+            updateTeam(targetTeam.id, { members: updatedMembers });
+            toast({ title: 'User Added', description: `${user.displayName} added to ${targetTeam.name}.` });
+        }
+        return;
+    }
+    
     const allItems = [...appSettings.pages, ...teams, ...allBadgeCollections, ...calendars];
     const activeItem = allItems.find(i => i.id === active.id) as DraggableItem | undefined;
 
