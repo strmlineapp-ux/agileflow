@@ -88,7 +88,7 @@ export function DraggableGrid<T extends { id: string }>({
         onDragStart={handleDragStart} 
         onDragEnd={handleDragEnd}
     >
-      <div className={cn("gap-4 [column-fill:_balance]", className, "columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6")}>
+      <div className={cn("flex flex-wrap -m-2", className)}>
         {children}
         <SortableContext items={itemIds}>
             {items.map(item => renderItem(item, activeItem?.id === item.id))}
