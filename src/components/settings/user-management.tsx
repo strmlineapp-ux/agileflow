@@ -123,8 +123,7 @@ const CustomColorPicker = ({ colorValue, onUpdate, onClose }: { colorValue: stri
 };
 
 function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }: { user: User, isCurrentUser: boolean, canEditPreferences: boolean, className?: string }) {
-    const { updateUser, linkGoogleCalendar } = useUser();
-    const router = useRouter();
+    const { updateUser } = useUser();
     const [isPrimaryColorPopoverOpen, setIsPrimaryColorPopoverOpen] = useState(false);
     const [isFontWeightPopoverOpen, setIsFontWeightPopoverOpen] = useState(false);
     const [isIconGradePopoverOpen, setIsIconGradePopoverOpen] = useState(false);
@@ -194,29 +193,20 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <div
-                                        className="relative"
-                                        onClick={(e) => {
-                                            if (isCurrentUser && !user.googleCalendarLinked) {
-                                              e.stopPropagation();
-                                              linkGoogleCalendar();
-                                            }
-                                        }}
-                                    >
+                                    <div className="relative">
                                         <Avatar className="h-12 w-12">
                                             <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
                                             <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
                                         </Avatar>
                                         <span className={cn(
                                             "absolute bottom-0 right-0 block h-3.5 w-3.5 rounded-full ring-2 ring-card",
-                                            user.googleCalendarLinked ? "bg-green-500" : "bg-gray-400",
-                                            isCurrentUser && !user.googleCalendarLinked && "cursor-pointer"
+                                            user.googleCalendarLinked ? "bg-green-500" : "bg-gray-400"
                                         )} 
                                         />
                                     </div>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                    <p>Google Calendar: {user.googleCalendarLinked ? 'Connected' : isCurrentUser ? 'Click to connect' : 'Not Connected'}</p>
+                                    <p>Google Calendar: {user.googleCalendarLinked ? 'Connected' : 'Not Connected'}</p>
                                 </TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
