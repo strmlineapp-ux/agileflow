@@ -100,8 +100,7 @@ function BadgeDisplayItem({
             onSave={(newValue) => handleUpdate({ name: newValue })}
             disabled={!isOwner}
             className={cn(
-                "break-words font-emphasis font-normal",
-                viewMode === 'compact' && "text-sm"
+                "break-words font-emphasis font-normal"
             )}
         />
     );
@@ -120,32 +119,38 @@ function BadgeDisplayItem({
     
     if (viewMode === 'grid' || viewMode === 'list') {
       return (
-        <div className="flex items-start gap-2 p-2 relative" {...dragHandleProps}>
-            <div className="relative">
-                <IconColorPicker
-                    icon={badge.icon}
-                    color={badge.color}
-                    onUpdateIcon={(newIcon) => handleUpdate({ icon: newIcon })}
-                    onUpdateColor={(newColor) => handleUpdate({ color: newColor })}
-                    disabled={!isOwner}
-                />
-                 {shouldShowLinkIcon && (
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <div className="absolute -top-1 -left-1 h-4 w-4 rounded-full ring-2 ring-card flex items-center justify-center text-white" style={{ backgroundColor: '#64748B' }}>
-                                    <GoogleSymbol name="link" style={{fontSize: '16px'}} weight={100} opticalSize={20}/>
-                                </div>
-                            </TooltipTrigger>
-                            <TooltipContent><p>Owned by {ownerUser?.displayName}</p></TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                )}
+        <div className="flex flex-col gap-2 p-2 relative" {...dragHandleProps}>
+            <div className="flex items-start gap-2">
+                <div className="relative">
+                    <IconColorPicker
+                        icon={badge.icon}
+                        color={badge.color}
+                        onUpdateIcon={(newIcon) => handleUpdate({ icon: newIcon })}
+                        onUpdateColor={(newColor) => handleUpdate({ color: newColor })}
+                        disabled={!isOwner}
+                    />
+                    {shouldShowLinkIcon && (
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <div className="absolute -top-1 -left-1 h-4 w-4 rounded-full ring-2 ring-card flex items-center justify-center text-white" style={{ backgroundColor: '#64748B' }}>
+                                        <GoogleSymbol name="link" style={{fontSize: '16px'}} weight={100} opticalSize={20}/>
+                                    </div>
+                                </TooltipTrigger>
+                                <TooltipContent><p>Owned by {ownerUser?.displayName}</p></TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    )}
+                </div>
+                <div className="flex-1">
+                    {nameEditorElement}
+                </div>
             </div>
-            <div className="flex-1 space-y-1">
-                {nameEditorElement}
-                {isExpanded && descriptionEditorElement}
-            </div>
+            {isExpanded && (
+                <div>
+                  {descriptionEditorElement}
+                </div>
+            )}
             <div className="absolute -bottom-1 right-0">
               <Button variant="ghost" size="icon" onClick={onToggleExpand} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
                 <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
@@ -157,37 +162,31 @@ function BadgeDisplayItem({
     
     // Compact View
     return (
-        <div className="p-1.5" {...dragHandleProps}>
-             <UiBadge
-                variant={'outline'}
-                style={{ borderColor: badge.color }}
-                className="flex items-center gap-1.5 p-1 pl-2 rounded-full h-8"
-            >
-                <div className="relative">
-                     <IconColorPicker
-                        icon={badge.icon}
-                        color={badge.color}
-                        onUpdateIcon={(newIcon) => handleUpdate({ icon: newIcon })}
-                        onUpdateColor={(newColor) => handleUpdate({ color: newColor })}
-                        disabled={!isOwner}
-                        buttonClassName="h-auto p-0 hover:bg-transparent"
-                        iconClassName='text-3xl'
-                     />
-                     {shouldShowLinkIcon && (
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <div className="absolute -top-0.5 -left-1 h-4 w-4 rounded-full ring-2 ring-card flex items-center justify-center text-white" style={{ backgroundColor: '#64748B' }}>
-                                        <GoogleSymbol name="link" style={{fontSize: '16px'}} weight={100} opticalSize={20} />
-                                    </div>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Owned by {ownerUser?.displayName}</p></TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    )}
-                </div>
-                {nameEditorElement}
-            </UiBadge>
+        <div className="p-1.5 flex flex-col items-center gap-1" {...dragHandleProps}>
+             <div className="relative">
+                 <IconColorPicker
+                    icon={badge.icon}
+                    color={badge.color}
+                    onUpdateIcon={(newIcon) => handleUpdate({ icon: newIcon })}
+                    onUpdateColor={(newColor) => handleUpdate({ color: newColor })}
+                    disabled={!isOwner}
+                    buttonClassName="h-auto p-0 hover:bg-transparent"
+                    iconClassName='text-3xl'
+                 />
+                 {shouldShowLinkIcon && (
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div className="absolute -top-0.5 -left-1 h-4 w-4 rounded-full ring-2 ring-card flex items-center justify-center text-white" style={{ backgroundColor: '#64748B' }}>
+                                    <GoogleSymbol name="link" style={{fontSize: '16px'}} weight={100} opticalSize={20} />
+                                </div>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Owned by {ownerUser?.displayName}</p></TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                )}
+            </div>
+            {nameEditorElement}
         </div>
     );
 }
