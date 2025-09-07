@@ -34,16 +34,19 @@ export function SettingSelect({
   const [isOpen, setIsOpen] = useState(false);
   const currentOption = options.find(opt => opt.value === value);
 
+  // Check if any option has both an icon and a label.
+  const hasIconAndText = options.some(opt => opt.icon && opt.label);
+
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
         <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger asChild>
                     <PopoverTrigger asChild>
-                        <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-9 w-9 text-foreground font-emphasis" 
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 text-foreground font-emphasis"
                             disabled={disabled}
                             enableReset={true}
                             onReset={() => onSave(options[0].value)}
@@ -57,19 +60,21 @@ export function SettingSelect({
                 </TooltipContent>
             </Tooltip>
         </TooltipProvider>
-        <PopoverContent 
-            className="w-auto p-1" 
+        <PopoverContent
+            className="w-auto p-1"
             align="start"
             onOpenAutoFocus={(e) => e.preventDefault()}
         >
-            <div className="flex flex-col">
+            <div className={cn("flex", hasIconAndText ? "flex-col" : "flex-row")}>
               {options.map(option => (
               <Button
                   key={option.value}
                   variant="ghost"
                   className={cn(
                       "font-emphasis h-auto",
-                      option.icon ? "flex-col p-2" : "justify-start px-2 h-8",
+                      hasIconAndText ? "flex-row justify-start gap-2 p-2" : "flex-col p-2",
+                      !option.icon && !hasIconAndText && "px-2 h-8", // Text-only items in a row
+                      option.icon && !hasIconAndText && "w-10 h-10", // Icon-only items in a row
                       option.value === value && "font-emphasized"
                   )}
                   onClick={() => {
@@ -77,8 +82,8 @@ export function SettingSelect({
                     setIsOpen(false);
                   }}
               >
-                  {option.icon && <GoogleSymbol name={option.icon} className="mb-1 text-lg" />}
-                  {option.label}
+                  {option.icon && <GoogleSymbol name={option.icon} className="text-lg" />}
+                  {(!hasIconAndText || option.label) && <span>{option.label}</span>}
               </Button>
               ))}
             </div>
