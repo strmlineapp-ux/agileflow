@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -23,36 +22,21 @@ import { googleSymbolNames } from '@/lib/google-symbols';
 import { CardTemplate } from '@/components/common/card-template';
 
 import {
-  DndContext,
-  closestCenter,
-  PointerSensor,
-  KeyboardSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
   useDroppable,
-  DragOverlay,
-  type DragStartEvent,
-  pointerWithin,
 } from '@dnd-kit/core';
 import {
   SortableContext,
-  sortableKeyboardCoordinates,
   useSortable,
   rectSortingStrategy,
   verticalListSortingStrategy,
-  arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { DraggableGrid } from '../common/draggable-grid';
 import { InlineEditor } from '../common/inline-editor';
 import { SortableItem } from '../common/sortable-item';
-import { SharedItemsPanel } from '../common/shared-items-panel';
-import { PageTitle } from '../common/page-title';
+import { ManagementPageLayout } from '../common/management-page-layout';
 import { predefinedColors } from '@/lib/colors';
 import { IconColorPicker } from '../common/icon-color-picker';
-import { ManagementPageLayout } from '../common/management-page-layout';
 
 
 function BadgeDisplayItem({ 
@@ -688,3 +672,5 @@ export function BadgeManagement({ tab, page, isActive, isSharedPanelOpen, setIsS
         />
     );
 }
+
+    
