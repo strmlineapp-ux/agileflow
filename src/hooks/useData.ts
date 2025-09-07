@@ -516,13 +516,15 @@ export function useData(realUser: User | null, authLoading: boolean) {
         };
     } else {
         const newBadgeId = crypto.randomUUID();
+        const collectionColor = predefinedColors[Math.floor(Math.random() * predefinedColors.length)];
+        const badgeColor = adjustHslColor(collectionColor);
         const newBadge: Badge = {
             id: newBadgeId,
             owner: ownerContext,
             ownerCollectionId: newCollectionId,
             name: `New Badge`,
             icon: googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
-            color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
+            color: badgeColor,
             workspaceId,
         };
         newBadges.push(newBadge);
@@ -532,7 +534,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
             name: `New Collection`,
             owner: ownerContext,
             icon: googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
-            color: adjustHslColor(predefinedColors[Math.floor(Math.random() * predefinedColors.length)]),
+            color: collectionColor,
             viewMode: 'compact',
             badgeIds: [newBadgeId],
             applications: [],
@@ -621,7 +623,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
             ownerCollectionId: collectionId,
             name: `New Badge`,
             icon: googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
-            color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
+            color: adjustHslColor(collection.color),
             workspaceId,
         };
     }
