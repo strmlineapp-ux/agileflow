@@ -7,9 +7,9 @@
  * - LinkAndWatchCalendarInput - The input type for the function.
  */
 
-import { ai } from '../genkit';
+import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, doc, getDoc, updateDoc } from 'firebase-admin/firestore';
 import { watchGoogleCalendar, WatchGoogleCalendarOutput } from './watch-google-calendar-flow';
 
 const LinkAndWatchCalendarInputSchema = z.object({
@@ -34,11 +34,23 @@ const linkAndWatchCalendarFlow = ai.defineFlow(
   async (input) => {
     console.log(`Starting link and watch process for internal calendar ${input.calendarId}`);
 
-    // 1. Update the Firestore document with the Google Calendar ID.
     const db = getFirestore();
-    const calendarDocRef = db.collection('calendars').doc(input.calendarId);
-    
-    await calendarDocRef.update({
+    const calendarDocRef = doc(db, 'calendars', input.calendarId);
+    const calendarDoc = await getDoc(calendarDocRef);
+
+    if (!calendarDoc.exists()) {
+        throw new Error(`Internal calendar with ID ${input.calendarId} not found.`);
+    }
+
+    const calendarData = calendarDoc.data();
+    const ownerId = calendarData?.owner?.id;
+
+    if (!ownerId) {
+        throw new Error(`Calendar ${input.calendarId} does not have an owner.`);
+    }
+
+    // 1. Update the Firestore document with the Google Calendar ID.
+    await updateDoc(calendarDocRef, {
       googleCalendarId: input.googleCalendarId,
     });
     
@@ -51,6 +63,7 @@ const linkAndWatchCalendarFlow = ai.defineFlow(
     const watchResult = await watchGoogleCalendar({
       googleCalendarId: input.googleCalendarId,
       webhookUrl: webhookUrl,
+      userId: ownerId, // Pass the owner's ID for authorization
     });
 
     console.log('Successfully set up watch channel.');
