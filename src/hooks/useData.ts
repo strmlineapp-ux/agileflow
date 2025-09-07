@@ -532,7 +532,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
             name: `New Collection`,
             owner: ownerContext,
             icon: googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
-            color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
+            color: adjustHslColor(predefinedColors[Math.floor(Math.random() * predefinedColors.length)]),
             viewMode: 'compact',
             badgeIds: [newBadgeId],
             applications: [],

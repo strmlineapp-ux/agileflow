@@ -12,6 +12,7 @@ import { useTheme } from 'next-themes';
 import { arrayMove } from '@dnd-kit/sortable';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { predefinedColors } from '@/lib/colors';
+import { adjustHslColor } from '@/lib/utils';
 
 // --- Context Definition ---
 interface UserContextType {
@@ -177,6 +178,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const addProjectWithUser = (projectData: Partial<Project>) => dataHook.addProject(projectData, realUser!);
     const deleteTeamWithRouter = (teamId: string, router: AppRouterInstance, pathname: string) => dataHook.deleteTeam(teamId, router, pathname, realUser!);
     const handleApproveAccessRequestWithUser = (notificationId: string, approved: boolean) => dataHook.handleApproveAccessRequest(notificationId, approved, realUser!);
+    const addBadgeCollectionWithUser = (owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => dataHook.addBadgeCollection(owner, sourceCollection, contextTeam);
     const addBadgeWithUser = (collectionId: string, sourceBadge?: Badge) => dataHook.addBadge(collectionId, sourceBadge, realUser!);
     const deleteBadgeWithUser = (badgeId: string, collectionId: string) => dataHook.deleteBadge(badgeId, collectionId, realUser!);
     const addTaskWithUser = (currentTasks: Task[], newTaskData: Omit<Task, 'taskId' | 'createdAt' | 'lastUpdated'>) => dataHook.addTask(currentTasks, newTaskData, realUser!);
@@ -193,6 +195,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       loading,
       isFirebaseReady,
       ...dataHook,
+      addBadgeCollection: addBadgeCollectionWithUser,
       addCalendar: addCalendarWithDefaults,
       addTeam: addTeamWithUser,
       deleteUser: deleteUserWithUser,
