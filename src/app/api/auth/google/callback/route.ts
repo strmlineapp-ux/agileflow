@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const userId = state; // We encoded the userId in the state parameter
-    const oAuth2Client = getOAuth2Client();
+    const oAuth2Client = await getOAuth2Client();
     const { tokens } = await oAuth2Client.getToken(code);
     
     // Save the tokens securely against the user's ID
@@ -28,5 +28,3 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to exchange authorization code for tokens.', details: error.message }, { status: 500 });
   }
 }
-
-    
