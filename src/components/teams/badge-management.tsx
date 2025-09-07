@@ -100,7 +100,7 @@ function BadgeDisplayItem({
           value={badge.name}
           onSave={(newValue) => handleUpdate({ name: newValue })}
           disabled={!isOwner}
-          className={cn("break-words font-emphasis font-normal")}
+          className="break-words font-emphasis font-normal"
         />
       );
       
@@ -110,7 +110,7 @@ function BadgeDisplayItem({
             onSave={(newValue) => handleUpdate({ description: newValue })}
             disabled={!isOwner}
             placeholder={isLinked ? "No description" : "Click to add description."}
-            className="break-words"
+            className="text-sm"
           />
       );
       
@@ -152,7 +152,7 @@ function BadgeDisplayItem({
         value={badge.name}
         onSave={(newValue) => handleUpdate({ name: newValue })}
         disabled={!isOwner}
-        className="break-words font-emphasis font-normal"
+        className="break-words font-emphasis font-normal text-sm"
       />
     );
 
@@ -529,7 +529,6 @@ function BadgeCollectionCard({
 export function BadgeManagement({ tab, page, isActive, isSharedPanelOpen, setIsSharedPanelOpen, isDragging }: { tab: AppTab; page: AppPage; isActive: boolean; isSharedPanelOpen: boolean; setIsSharedPanelOpen: (isOpen: boolean) => void; isDragging: boolean; }) {
     const { viewAsUser, users, updateUser, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, setAllBadgeCollections, reorderBadgeCollections, updatePage } = useUser();
     const { toast } = useToast();
-    const [activeDragItem, setActiveDragItem] = useState<any>(null);
     const contextKey = `badges-${page.id}`;
     
     const onToggleExpand = useCallback((collectionId: string) => {
@@ -572,46 +571,6 @@ export function BadgeManagement({ tab, page, isActive, isSharedPanelOpen, setIsS
     const handleAddCollection = (sourceCollection?: BadgeCollection) => {
         addBadgeCollection(viewAsUser, sourceCollection);
     };
-    
-     const onDragStart = (event: DragStartEvent) => {
-        setActiveDragItem(event.active.data.current);
-    };
-
-     const onDragEnd = useCallback((event: DragEndEvent) => {
-        setActiveDragItem(null);
-        const { active, over } = event;
-
-        if (!over) return;
-        
-        const activeType = active.data.current?.type;
-
-        if (activeType === 'badge') {
-            const badge = active.data.current?.badge as Badge;
-            const sourceCollectionId = active.data.current?.collectionId as string;
-            
-            const overIsCollection = over.data.current?.type === 'collection';
-            const overIsDuplicateZone = over.data.current?.type === 'duplicate-badge-zone';
-
-            if (overIsCollection) {
-                const targetCollectionId = over.data.current?.collection?.id as string;
-                const targetCollection = allBadgeCollections.find(c => c.id === targetCollectionId);
-
-                if (targetCollection && targetCollectionId !== sourceCollectionId) {
-                    const targetIsOwner = targetCollection.owner.id === viewAsUser?.userId;
-                    if (targetIsOwner) {
-                        const updatedBadgeIds = [...targetCollection.badgeIds, badge.id];
-                        updateBadgeCollection(targetCollectionId, { badgeIds: updatedBadgeIds });
-                        toast({ title: 'Badge Linked', description: `"${badge.name}" linked to "${targetCollection.name}".` });
-                    } else {
-                        toast({ variant: 'destructive', title: 'Permission Denied', description: 'You can only add badges to collections you own.' });
-                    }
-                }
-            } else if (overIsDuplicateZone) {
-                const targetCollectionIdForDupe = over.data.current.collectionId;
-                addBadge(targetCollectionIdForDupe, badge);
-            }
-        }
-    }, [allBadgeCollections, updateBadgeCollection, addBadge, viewAsUser, toast]);
 
     const displayedCollections = useMemo(() => {
         return allBadgeCollections
@@ -665,7 +624,6 @@ export function BadgeManagement({ tab, page, isActive, isSharedPanelOpen, setIsS
     }, []);
 
     return (
-      <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
         <ManagementPageLayout
             pageTitle={page.displayTitle ?? tab.name}
             onPageTitleSave={(newTitle) => updatePage(page.id, { displayTitle: newTitle })}
@@ -687,15 +645,11 @@ export function BadgeManagement({ tab, page, isActive, isSharedPanelOpen, setIsS
             onLinkItem={handleLink}
             onCollapseAll={onCollapseAll}
             renderItem={renderCollectionCard}
-            renderDragOverlay={(item: any) => renderDragOverlay(item)}
+            renderDragOverlay={(item: any) => renderDragOverlay({type: item.type, ...item})}
             isActive={isActive}
             isSharedPanelOpen={isSharedPanelOpen}
             setIsSharedPanelOpen={setIsSharedPanelOpen}
             isDragging={isDragging}
         />
-        <DragOverlay modifiers={[snapCenterToCursor]}>
-          {activeDragItem ? renderDragOverlay(activeDragItem) : null}
-        </DragOverlay>
-      </DndContext>
     );
 }
