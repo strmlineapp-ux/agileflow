@@ -70,7 +70,7 @@ export default function DynamicPage() {
   const { toast } = useToast();
   
   const [activeTabValue, setActiveTabValue] = useState<string | undefined>();
-  const [activeDragItem, setActiveDragItem] = useState<DraggableItem | null>(null);
+  const [activeDragItem, setActiveDragItem] = useState<any>(null);
   const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
 
   const path = Array.isArray(pagePath) ? `/dashboard/${pagePath.join('/')}` : `/dashboard/${pagePath}`;
@@ -106,8 +106,8 @@ export default function DynamicPage() {
   }, [page, appSettings.tabs]);
   
   const onDragStart = (event: DragStartEvent) => {
-    const item = event.active.data.current?.collection || event.active.data.current?.team || event.active.data.current?.calendar || event.active.data.current?.page || event.active.data.current?.badge || event.active.data.current?.user;
-    if(item) setActiveDragItem(item);
+    const itemData = event.active.data.current;
+    setActiveDragItem(itemData);
   };
 
   const onDragEnd = (event: DragEndEvent) => {
@@ -116,10 +116,36 @@ export default function DynamicPage() {
     if (!over) return;
 
     const activeItemData = active.data.current;
-    if (!activeItemData) return;
+    const activeType = activeItemData?.type;
 
+    if (activeType === 'badge') {
+        const badge = activeItemData?.badge as Badge;
+        const sourceCollectionId = activeItemData?.collectionId;
+        const overIsCollection = over.data.current?.type === 'collection';
+        const overIsDuplicateZone = over.data.current?.type === 'duplicate-badge-zone';
+
+        if (overIsCollection) {
+            const targetCollectionId = over.data.current?.collection?.id as string;
+            const targetCollection = allBadgeCollections.find(c => c.id === targetCollectionId);
+            if (targetCollection && targetCollectionId !== sourceCollectionId) {
+                const targetIsOwner = targetCollection.owner.id === viewAsUser?.userId;
+                if (targetIsOwner) {
+                    const updatedBadgeIds = [...targetCollection.badgeIds, badge.id];
+                    updateBadgeCollection(targetCollectionId, { badgeIds: updatedBadgeIds });
+                    toast({ title: 'Badge Linked', description: `"${badge.name}" linked to "${targetCollection.name}".` });
+                } else {
+                    toast({ variant: 'destructive', title: 'Permission Denied', description: 'You can only add badges to collections you own.' });
+                }
+            }
+        } else if (overIsDuplicateZone) {
+            const targetCollectionIdForDupe = over.data.current.collectionId;
+            addBadge(targetCollectionIdForDupe, badge);
+        }
+        return;
+    }
+    
     // Handle user being dropped on a team card
-    if (activeItemData.type === 'user' && over.data.current?.type === 'team-card-droppable') {
+    if (activeType === 'user' && over.data.current?.type === 'team-card-droppable') {
         const user = activeItemData.user as User;
         const targetTeam = over.data.current.team as Team;
 
@@ -133,27 +159,6 @@ export default function DynamicPage() {
     
     const allItems = [...appSettings.pages, ...teams, ...allBadgeCollections, ...calendars];
     const activeItem = allItems.find(i => i.id === active.id) as DraggableItem | undefined;
-
-    if (activeItemData.type === 'badge') {
-        const badge = activeItemData.badge as Badge;
-        const sourceCollectionId = activeItemData.collectionId;
-        const targetCollectionId = over.data.current?.type === 'collection'
-            ? over.data.current.collection.id
-            : over.data.current?.collectionId;
-
-        if (targetCollectionId) {
-            const targetCollection = allBadgeCollections.find(c => c.id === targetCollectionId);
-            if(targetCollection && targetCollection.owner.id === viewAsUser?.userId) {
-                deleteBadge(badge.id, sourceCollectionId);
-                updateBadgeCollection(targetCollection.id, {
-                    badgeIds: [badge.id, ...targetCollection.badgeIds]
-                });
-            }
-        } else if (over.id === `duplicate-badge-zone-${sourceCollectionId}`) {
-            addBadge(sourceCollectionId, badge);
-        }
-        return;
-    }
         
     if (!activeItem) return;
         
@@ -232,31 +237,29 @@ export default function DynamicPage() {
 
   const renderDragOverlay = () => {
     if (!activeDragItem) return null;
+    const item = activeDragItem;
     
-    if ('badgeIds' in activeDragItem) { // BadgeCollection
-        return <GoogleSymbol name={activeDragItem.icon} style={{color: activeDragItem.color, fontSize: '48px'}} />;
-    }
-    if ('ownerCollectionId' in activeDragItem) { // Badge
+    if (item.type === 'badge') {
+        const badge = item.badge as Badge;
         return (
-            <div className="h-9 w-9 rounded-full border-2 flex items-center justify-center bg-card shadow-lg" style={{ borderColor: activeDragItem.color }}>
-                <GoogleSymbol name={activeDragItem.icon} style={{ fontSize: '28px', color: activeDragItem.color }} weight={100} />
+            <div className="h-9 w-9 rounded-full border-2 flex items-center justify-center bg-card shadow-lg" style={{ borderColor: badge.color }}>
+                <GoogleSymbol name={badge.icon} style={{ fontSize: '28px', color: badge.color }} weight={100} />
             </div>
         );
     }
-    if ('members' in activeDragItem) { // Team
-        return <GoogleSymbol name={activeDragItem.icon} style={{color: activeDragItem.color, fontSize: '48px'}} />;
+    
+    const entity = item.collection || item.team || item.calendar || item.page || item.user;
+
+    if (!entity) return null;
+
+    if ('badgeIds' in entity || 'members' in entity || 'googleCalendarId' in entity || 'path' in entity) {
+        return <GoogleSymbol name={entity.icon} style={{color: entity.color, fontSize: '48px'}} />;
     }
-    if ('googleCalendarId' in activeDragItem) { // SharedCalendar
-        return <GoogleSymbol name={activeDragItem.icon} style={{color: activeDragItem.color, fontSize: '48px'}} />;
-    }
-     if ('path' in activeDragItem) { // AppPage
-        return <GoogleSymbol name={activeDragItem.icon} style={{color: activeDragItem.color, fontSize: '48px'}} />;
-    }
-     if ('email' in activeDragItem) { // User
+     if ('email' in entity) { // User
         return (
             <Avatar className="h-12 w-12">
-                <AvatarImage src={activeDragItem.avatarUrl} alt={activeDragItem.displayName} data-ai-hint="user avatar" />
-                <AvatarFallback>{activeDragItem.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                <AvatarImage src={entity.avatarUrl} alt={entity.displayName} data-ai-hint="user avatar" />
+                <AvatarFallback>{entity.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
         )
     }
