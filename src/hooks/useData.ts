@@ -515,20 +515,18 @@ export function useData(realUser: User | null, authLoading: boolean) {
             workspaceId,
         };
     } else {
-        const newBadgeId = crypto.randomUUID();
         const collectionColor = predefinedColors[Math.floor(Math.random() * predefinedColors.length)];
-        const badgeColor = adjustHslColor(collectionColor);
         const newBadge: Badge = {
-            id: newBadgeId,
+            id: crypto.randomUUID(),
             owner: ownerContext,
             ownerCollectionId: newCollectionId,
             name: `New Badge`,
             icon: googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
-            color: badgeColor,
+            color: adjustHslColor(collectionColor),
             workspaceId,
         };
         newBadges.push(newBadge);
-        batch.set(doc(db, 'badges', newBadgeId), newBadge);
+        batch.set(doc(db, 'badges', newBadge.id), newBadge);
         newCollection = {
             id: newCollectionId,
             name: `New Collection`,
@@ -536,7 +534,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
             icon: googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
             color: collectionColor,
             viewMode: 'compact',
-            badgeIds: [newBadgeId],
+            badgeIds: [newBadge.id],
             applications: [],
             description: 'A collection of badges.',
             isShared: false,
@@ -589,7 +587,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
       setAllBadgeCollections([...reorderedCollections]);
   }, []);
 
-  const addBadge = useCallback(async (collectionId: string, sourceBadge?: Badge, realUser?: User) => {
+  const addBadge = useCallback(async (collectionId: string, sourceBadge?: Badge, realUser?: User, unlinkSource: boolean = false) => {
     if (!realUser) return;
     const db = getDb();
     const collection = allBadgeCollections.find(c => c.id === collectionId);
@@ -604,8 +602,10 @@ export function useData(realUser: User | null, authLoading: boolean) {
     let newBadge: Badge;
     const workspaceId = realUser.workspaceId;
     const isDuplicating = !!sourceBadge;
+    
+    const existingNewBadgeCount = collection.badgeIds.map(id => allBadges.find(b => b.id === id)?.name).filter(name => name?.startsWith('New Badge')).length;
 
-    if (sourceBadge) {
+    if (isDuplicating) {
         newBadge = {
             id: crypto.randomUUID(),
             owner: { type: 'user', id: realUser.userId },
@@ -621,7 +621,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
             id: crypto.randomUUID(),
             owner: collection.owner,
             ownerCollectionId: collectionId,
-            name: `New Badge`,
+            name: existingNewBadgeCount > 0 ? `New Badge ${existingNewBadgeCount + 1}` : 'New Badge',
             icon: googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
             color: adjustHslColor(collection.color),
             workspaceId,
@@ -632,15 +632,27 @@ export function useData(realUser: User | null, authLoading: boolean) {
     const newBadgeIds = [newBadge.id, ...collection.badgeIds];
     batch.update(doc(db, 'badgeCollections', collectionId), { badgeIds: newBadgeIds });
     
+    if (unlinkSource && sourceBadge) {
+      const sourceCollection = allBadgeCollections.find(c => c.badgeIds.includes(sourceBadge.id));
+      if (sourceCollection) {
+        const updatedSourceBadgeIds = sourceCollection.badgeIds.filter(id => id !== sourceBadge.id);
+        batch.update(doc(db, 'badgeCollections', sourceCollection.id), {badgeIds: updatedSourceBadgeIds});
+      }
+    }
+
     await batch.commit();
 
     setAllBadges(prev => [...prev, newBadge]);
     setAllBadgeCollections(prevCollections =>
-        prevCollections.map(c =>
-            c.id === collectionId ? { ...c, badgeIds: newBadgeIds } : c
-        )
+        prevCollections.map(c => {
+          if (c.id === collectionId) return { ...c, badgeIds: newBadgeIds };
+          if (unlinkSource && sourceBadge && c.badgeIds.includes(sourceBadge.id)) {
+            return { ...c, badgeIds: c.badgeIds.filter(id => id !== sourceBadge.id) };
+          }
+          return c;
+        })
     );
-  }, [allBadgeCollections, toast]);
+  }, [allBadgeCollections, allBadges, toast]);
 
   const updateBadge = useCallback(async (badgeId: string, badgeData: Partial<Badge>) => {
     const db = getDb();
@@ -654,6 +666,19 @@ export function useData(realUser: User | null, authLoading: boolean) {
     const badge = allBadges.find(b => b.id === badgeId);
     if (!badge) return;
 
+    const collection = allBadgeCollections.find(c => c.id === collectionId);
+    if (!collection) return;
+    
+    // Unlink logic
+    if (badge.ownerCollectionId !== collectionId) {
+        const updatedBadgeIds = collection.badgeIds.filter(id => id !== badgeId);
+        await updateDoc(doc(db, 'badgeCollections', collectionId), { badgeIds: updatedBadgeIds });
+        setAllBadgeCollections(current => current.map(c => c.id === collectionId ? { ...c, badgeIds: updatedBadgeIds } : c));
+        toast({ title: 'Badge Unlinked' });
+        return;
+    }
+
+    // Delete logic (only owner can delete)
     if (badge.owner.id === realUser.userId) {
         await deleteDoc(doc(db, 'badges', badgeId));
         const batch = writeBatch(db);
@@ -668,14 +693,10 @@ export function useData(realUser: User | null, authLoading: boolean) {
 
         setAllBadges(current => current.filter(b => b.id !== badgeId));
         setAllBadgeCollections(current => current.map(c => ({...c, badgeIds: c.badgeIds.filter(id => id !== badgeId)})));
+        toast({ title: 'Badge Deleted' });
     } else {
-        const collectionRef = doc(db, 'badgeCollections', collectionId);
-        await updateDoc(collectionRef, {
-            badgeIds: allBadgeCollections.find(c => c.id === collectionId)!.badgeIds.filter(id => id !== badgeId)
-        });
-        setAllBadgeCollections(current => current.map(c => c.id === collectionId ? { ...c, badgeIds: c.badgeIds.filter(id => id !== badgeId) } : c));
+        toast({ variant: 'destructive', title: 'Permission Denied', description: 'You can only delete badges you own.'});
     }
-    toast({ title: 'Badge removed' });
   }, [allBadges, allBadgeCollections, toast]);
 
   const reorderBadges = useCallback(async (collectionId: string, badgeIds: string[]) => {

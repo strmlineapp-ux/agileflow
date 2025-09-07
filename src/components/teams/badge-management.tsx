@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -68,7 +69,7 @@ function BadgeDisplayItem({
     collection: BadgeCollection;
     allCollections: BadgeCollection[];
 }) {
-    const { users } = useUser();
+    const { users, viewAsUser } = useUser();
     
     const handleUpdate = useCallback((data: Partial<Badge>) => {
         onUpdateBadge(badge.id, data);
@@ -77,146 +78,82 @@ function BadgeDisplayItem({
     const ownerUser = users.find(u => u.userId === badge.owner.id);
     const ownerCollection = allCollections.find(c => c.id === badge.ownerCollectionId);
 
-    if (viewMode === 'grid' || viewMode === 'list') {
-      const nameEditorElement = (
-        <InlineEditor
-          value={badge.name}
-          onSave={(newValue) => handleUpdate({ name: newValue })}
-          disabled={!isOwner}
-          className="break-words font-emphasis font-normal"
-        />
-      );
-      
-      const descriptionElement = (
-          <InlineEditor
-            value={badge.description || ''}
-            onSave={(newValue) => handleUpdate({ description: newValue })}
-            disabled={!isOwner}
-            placeholder={isLinked ? "No description" : "Click to add description."}
-            className="text-sm text-foreground"
-          />
-      );
-      
-      return (
-        <div className="group flex flex-col gap-2 p-2 relative" {...dragHandleProps}>
-            <CardHeader className="p-0">
-                <div className="flex items-start gap-2">
-                    <div className="relative">
-                        <IconColorPicker
-                            icon={badge.icon}
-                            color={badge.color}
-                            onUpdateIcon={(newIcon) => handleUpdate({ icon: newIcon })}
-                            onUpdateColor={(newColor) => handleUpdate({ color: newColor })}
-                            disabled={!isOwner}
-                        />
-                         {isLinked && (
-                             <div 
-                                className="absolute -top-0.5 -left-1 h-4 w-4 rounded-full ring-2 ring-card flex items-center justify-center text-white"
-                                style={{ backgroundColor: ownerCollection?.color || 'hsl(var(--muted-foreground))' }}
-                            >
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <GoogleSymbol name="link" style={{fontSize: '16px'}} weight={100} opticalSize={20} />
-                                        </TooltipTrigger>
-                                        <TooltipContent><p>From {ownerCollection?.name}. Owned by {ownerUser?.displayName}.</p></TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            </div>
-                        )}
-                    </div>
-                    <div className="flex-1">
-                        {nameEditorElement}
-                    </div>
-                </div>
-            </CardHeader>
-            {isExpanded && (
-                <CardContent className="p-0">
-                    {descriptionElement}
-                </CardContent>
-            )}
-             {isOwner && (
-                <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10" onPointerDown={(e) => e.stopPropagation()}>
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    variant="default"
-                                    size="sm"
-                                    className="h-6 w-6 p-0 bg-card"
-                                    onClick={() => onDeleteBadge(badge.id, collection.id)}
-                                >
-                                    <GoogleSymbol name="cancel" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent><p>{isOwner ? "Delete Badge" : "Unlink Badge"}</p></TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                </div>
-            )}
-            <div className="absolute -bottom-1 right-0">
-              <Button variant="ghost" size="icon" onClick={onToggleExpand} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
-                <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
-              </Button>
-            </div>
-        </div>
-      );
-    }
-    
-    // Compact View
     const nameEditorElement = (
       <InlineEditor
         value={badge.name}
         onSave={(newValue) => handleUpdate({ name: newValue })}
         disabled={!isOwner}
-        className="break-words font-emphasis font-normal text-sm"
+        className="break-words font-emphasis font-normal"
       />
+    );
+      
+    const descriptionElement = (
+        <InlineEditor
+            value={badge.description || ''}
+            onSave={(newValue) => handleUpdate({ description: newValue })}
+            disabled={!isOwner}
+            placeholder={isLinked ? "No description" : "Click to add description."}
+            className="text-sm text-foreground"
+        />
+    );
+      
+    const bodyContent = (
+      <>
+        {isExpanded && descriptionElement}
+      </>
     );
 
     return (
-        <div className="p-1.5 flex flex-col items-center gap-1 group relative" {...dragHandleProps}>
-             <div className="relative">
-                 <IconColorPicker
-                    icon={badge.icon}
-                    color={badge.color}
-                    onUpdateIcon={(newIcon) => handleUpdate({ icon: newIcon })}
-                    onUpdateColor={(newColor) => handleUpdate({ color: newColor })}
-                    disabled={!isOwner}
-                    buttonClassName="h-auto p-0 hover:bg-transparent"
-                    iconClassName='text-3xl'
-                 />
-                 {isLinked && (
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                 <div 
-                                    className="absolute -top-0.5 -left-1 h-4 w-4 rounded-full ring-2 ring-card flex items-center justify-center text-white"
-                                    style={{ backgroundColor: ownerCollection?.color || 'hsl(var(--muted-foreground))' }}
-                                >
-                                    <GoogleSymbol name="link" style={{fontSize: '16px'}} weight={100} opticalSize={20} />
-                                </div>
-                            </TooltipTrigger>
-                            <TooltipContent><p>From {ownerCollection?.name}. Owned by {ownerUser?.displayName}.</p></TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                )}
+        <div className="group relative w-full" {...dragHandleProps}>
+            <div className="flex items-center gap-2 p-2">
+                <div className="relative">
+                    <IconColorPicker
+                        icon={badge.icon}
+                        color={badge.color}
+                        onUpdateIcon={(newIcon) => handleUpdate({ icon: newIcon })}
+                        onUpdateColor={(newColor) => handleUpdate({ color: newColor })}
+                        disabled={!isOwner}
+                    />
+                    {isLinked && (
+                        <div 
+                            className="absolute -top-0.5 -left-1 h-4 w-4 rounded-full ring-2 ring-card flex items-center justify-center text-white"
+                            style={{ backgroundColor: ownerCollection?.color || 'hsl(var(--muted-foreground))' }}
+                        >
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <GoogleSymbol name="link" style={{fontSize: '16px'}} weight={100} opticalSize={20} />
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>From {ownerCollection?.name}. Owned by {ownerUser?.displayName}.</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </div>
+                    )}
+                </div>
+                <div className="flex-1 min-w-0">
+                    {nameEditorElement}
+                    {isExpanded && <div className="mt-1">{bodyContent}</div>}
+                </div>
+                <Button variant="ghost" size="icon" onClick={onToggleExpand} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
+                    <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
+                </Button>
             </div>
-            {nameEditorElement}
+
             {isOwner && (
-                <div className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity z-10" onPointerDown={(e) => e.stopPropagation()}>
+                <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity z-10" onPointerDown={(e) => e.stopPropagation()}>
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-5 w-5 p-0 bg-card"
+                                    className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
                                     onClick={() => onDeleteBadge(badge.id, collection.id)}
                                 >
-                                    <GoogleSymbol name="cancel" className="text-base" />
+                                    <GoogleSymbol name="cancel" />
                                 </Button>
                             </TooltipTrigger>
-                            <TooltipContent><p>{isOwner ? "Delete Badge" : "Unlink Badge"}</p></TooltipContent>
+                            <TooltipContent><p>{isLinked ? "Unlink Badge" : "Delete Badge"}</p></TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
                 </div>
@@ -224,7 +161,6 @@ function BadgeDisplayItem({
         </div>
     );
 }
-
 
 function SortableBadgeItem({ badge, collection, onDeleteBadge, ...props }: { badge: Badge, collection: BadgeCollection, onDeleteBadge: (badgeId: string, collectionId: string) => void, [key: string]: any }) {
     
@@ -241,7 +177,7 @@ function SortableBadgeItem({ badge, collection, onDeleteBadge, ...props }: { bad
     };
     
     return (
-        <div ref={setNodeRef} style={style} className={cn(props.viewMode === 'grid' && "break-inside-avoid")}>
+        <div ref={setNodeRef} style={style} className={cn("bg-muted/30 rounded-md", props.viewMode === 'grid' && "break-inside-avoid")}>
             <div className="relative flex w-full" {...listeners} {...attributes}>
                 <div className="flex-grow">
                     <BadgeDisplayItem 
@@ -337,7 +273,7 @@ type BadgeCollectionCardProps = {
     allBadges: Badge[];
     onUpdateCollection: (collectionId: string, newValues: Partial<BadgeCollection>) => void;
     onDeleteCollection: (collection: BadgeCollection) => void;
-    onAddBadge: (collectionId: string, sourceBadge?: Badge) => void;
+    onAddBadge: (collectionId: string, sourceBadge?: Badge, unlinkSource?: boolean) => void;
     onUpdateBadge: (badgeId: string, badgeData: Partial<Badge>) => void;
     onDeleteBadge: (badgeId: string, collectionId: string) => void;
     isSharedPreview?: boolean;
@@ -472,7 +408,7 @@ function BadgeCollectionCard({
         />
         <DroppableCollectionContent collection={collection}>
           {collectionBadges.map((badge) => {
-            const isLinked = badge.ownerCollectionId !== collection.id;
+            const isBadgeLinked = badge.ownerCollectionId !== collection.id;
             return (
               <SortableBadgeItem
                 key={badge.id}
@@ -483,7 +419,7 @@ function BadgeCollectionCard({
                 onDeleteBadge={onDeleteBadge}
                 isViewer={isViewer}
                 isOwner={badge.owner.id === viewAsUser.userId}
-                isLinked={isLinked}
+                isLinked={isBadgeLinked}
                 allCollections={allCollections}
                 isSharedPreview={isSharedPreview}
                 currentUserBadgeIds={currentUserBadgeIds}
@@ -672,5 +608,3 @@ export function BadgeManagement({ tab, page, isActive, isSharedPanelOpen, setIsS
         />
     );
 }
-
-    

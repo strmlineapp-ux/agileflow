@@ -90,7 +90,7 @@ interface UserContextType {
   updateBadgeCollection: (collectionId: string, data: Partial<BadgeCollection>) => void;
   deleteBadgeCollection: (collectionId: string) => void;
   reorderBadgeCollections: (collections: BadgeCollection[]) => void;
-  addBadge: (collectionId: string, sourceBadge?: Badge) => void;
+  addBadge: (collectionId: string, sourceBadge?: Badge, unlinkSource?: boolean) => void;
   updateBadge: (badgeId: string, badgeData: Partial<Badge>) => Promise<void>;
   deleteBadge: (badgeId: string, collectionId: string) => void;
   reorderBadges: (collectionId: string, badgeIds: string[]) => void;
@@ -197,9 +197,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     
     const addBadgeCollectionWithUser = (owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => dataHook.addBadgeCollection(owner, sourceCollection, contextTeam);
     
-    const addBadgeWithUser = (collectionId: string, sourceBadge?: Badge) => {
+    const addBadgeWithUser = (collectionId: string, sourceBadge?: Badge, unlinkSource: boolean = false) => {
         if (!realUser) return;
-        dataHook.addBadge(collectionId, sourceBadge, realUser);
+        dataHook.addBadge(collectionId, sourceBadge, realUser, unlinkSource);
     };
 
     const deleteBadgeWithUser = (badgeId: string, collectionId: string) => dataHook.deleteBadge(badgeId, collectionId, realUser!);
