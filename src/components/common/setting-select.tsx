@@ -67,7 +67,8 @@ export function SettingSelect({
                 key={option.value}
                 variant="ghost"
                 className={cn(
-                    "justify-start h-8 px-2 font-emphasis",
+                    "font-emphasis h-auto",
+                    option.icon ? "flex-col p-2" : "justify-start px-2 h-8",
                     option.value === value && "font-emphasized"
                 )}
                 onClick={() => {
@@ -75,7 +76,7 @@ export function SettingSelect({
                   setIsOpen(false);
                 }}
             >
-                {option.icon && <GoogleSymbol name={option.icon} className="mr-2 text-lg" />}
+                {option.icon && <GoogleSymbol name={option.icon} className="mb-1 text-lg" />}
                 {option.label}
             </Button>
             ))}
