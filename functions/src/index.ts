@@ -6,5 +6,6 @@ admin.initializeApp();
 
 // Export functions from their individual files
 export { onNewUserCreated } from './user-management.js';
-export { onSendInvitation } from './send-invitation.js';
+export { handleSendInvitation } from './send-invitation.js';
 export { calendarWebhook } from './calendar-webhook.js';
+
