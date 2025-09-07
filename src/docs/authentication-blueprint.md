@@ -1,5 +1,4 @@
 
-
 # AgileFlow: Authentication Blueprint
 
 This document provides a clear, non-technical overview of how user authentication is handled within the AgileFlow application, incorporating a robust, administrator-controlled access model.
@@ -45,13 +44,10 @@ An existing administrator uses a dedicated "Pre-approve User" form within the ap
 A Cloud Function is automatically triggered by the new entry in the `pre-approved-emails` collection. This function sends a welcome email to the new user with a link to the AgileFlow login page.
 
 **Step 3: User Clicks "Sign in with Google"**
-The new user clicks the link and uses the "Sign in with Google" button. If they have not previously granted calendar permissions, they will be prompted by Google. They complete the secure sign-in process directly with Google.
+The new user clicks the link and uses the "Sign in with Google" button. Google will prompt them to grant the application permission to view their calendar information.
 
-**Step 4: System Verifies Invitation**
-Firebase Authentication confirms the user's identity and returns their verified email address to the application. The system checks this email against the `pre-approved-emails` list.
-
-**Step 5: Profile Creation & Access Granted**
-Upon finding a match, the system creates a new user profile in the Firestore `/users` collection, populating it with their Google account details (Name, Email, Profile Picture), setting their `accountType` to 'Full', and granting them full access immediately. The `googleCalendarLinked` flag is set to `true` after they approve the permissions.
+**Step 4: System Verifies Invitation & Creates Profile**
+Firebase Authentication confirms the user's identity. The application checks the `pre-approved-emails` list and finds a match. It then creates a new user profile in the Firestore `/users` collection, populating it with their Google account details (Name, Email, Profile Picture), setting their `accountType` to 'Full', and granting them full access immediately. The `googleCalendarLinked` flag is set to `true` after they approve the permissions.
 
 ---
 
@@ -60,10 +56,10 @@ Upon finding a match, the system creates a new user profile in the Firestore `/u
 This flow handles "walk-up" attempts, where a user who has not been invited tries to access the application.
 
 **Step 1: New User Signs In**
-A new, uninvited user navigates to the application URL and clicks "Sign in with Google." If they have not previously granted calendar permissions, they will be prompted by Google.
+A new, uninvited user navigates to the application URL and clicks "Sign in with Google." Google will prompt them for calendar permissions.
 
 **Step 2: System Creates a "Pending" Profile**
-Firebase authenticates the user. The application checks Firestore, finds no existing user and that the user is not pre-approved, and creates a new user document. **Crucially, it sets the `accountType` to `'Viewer'`, which restricts all access.** The `googleCalendarLinked` flag is set based on their response to the Google consent screen.
+Firebase authenticates the user. The application checks Firestore, finds no existing user and that the user is not pre-approved, and creates a new user document. **Crucially, it sets the `accountType` to `'Viewer'`, which restricts all access.** The `googleCalendarLinked` flag is set to `true` if they granted permissions.
 
 **Step 3: Administrator Notification**
 *   **In-App:** A notification appears in the administrator's notification list, stating that a new user has requested access.

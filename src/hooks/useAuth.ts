@@ -61,7 +61,7 @@ export function useAuth() {
             accountType,
             memberOfTeamIds: [],
             roles: [],
-            googleCalendarLinked: false, // Default to false
+            googleCalendarLinked: false, // Default to false, will be updated if credential exists
             theme: 'light',
             modifierKey: 'shift',
             createdAt: new Date(),
@@ -124,6 +124,8 @@ export function useAuth() {
     
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
         if (firebaseUser) {
+            // This now handles both sign-in and new user creation correctly.
+            // Credential handling is deferred to the explicit googleLogin call.
             await handleUserSignIn(firebaseUser);
         } else {
           setRealUser(null);
@@ -149,12 +151,12 @@ export function useAuth() {
         const result = await signInWithPopup(authInstance, provider);
         const credential = GoogleAuthProvider.credentialFromResult(result);
         if (credential) {
-            // Pass both user and credential to be handled together
+            // Pass both user and credential to be handled together.
+            // This will now correctly find or create the user BEFORE saving credentials.
             await handleUserSignIn(result.user, credential);
             return true;
         } else {
-            // This case might happen if permissions were already granted long ago.
-            // We still proceed to sign the user in.
+            // This case might happen if permissions were somehow already granted.
             await handleUserSignIn(result.user);
             return true;
         }
