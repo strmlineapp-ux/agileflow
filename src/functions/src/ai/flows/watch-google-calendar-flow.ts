@@ -12,7 +12,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { google } from 'googleapis';
 import { v4 as uuidv4 } from 'uuid';
-import { getAuthorizedClient } from '@/lib/google-auth-service';
+import { getAuthorizedClient } from '../../../../lib/google-auth-service';
 
 const WatchGoogleCalendarInputSchema = z.object({
   googleCalendarId: z.string().describe('The ID of the Google Calendar to watch.'),

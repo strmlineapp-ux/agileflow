@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/context/user-context';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { GoogleSymbol } from '../icons/google-symbol';
+import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { CompactSearchInput } from '../common/compact-search-input';
 import { HslStringColorPicker } from 'react-colorful';
@@ -123,7 +123,7 @@ const CustomColorPicker = ({ colorValue, onUpdate, onClose }: { colorValue: stri
 };
 
 function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }: { user: User, isCurrentUser: boolean, canEditPreferences: boolean, className?: string }) {
-    const { updateUser, googleApiAuthorized } = useUser();
+    const { updateUser, googleLogin } = useUser();
     const router = useRouter();
     const [isPrimaryColorPopoverOpen, setIsPrimaryColorPopoverOpen] = useState(false);
     const [isFontWeightPopoverOpen, setIsFontWeightPopoverOpen] = useState(false);
@@ -201,13 +201,13 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                         </Avatar>
                                         <span className={cn(
                                             "absolute bottom-0 right-0 block h-3.5 w-3.5 rounded-full ring-2 ring-card",
-                                            googleApiAuthorized ? "bg-green-500" : "bg-gray-400"
+                                            user.googleCalendarLinked ? "bg-green-500" : "bg-gray-400"
                                         )} 
                                         />
                                     </div>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                    <p>Google API Access: {googleApiAuthorized ? 'Authorized' : 'Not Authorized'}</p>
+                                    <p>Google Calendar: {user.googleCalendarLinked ? 'Connected' : 'Not Connected'}</p>
                                 </TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
@@ -219,23 +219,6 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                     </div>
                     {canEditPreferences && (
                         <div className="flex items-center gap-1">
-                             <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-9 w-9 text-foreground font-emphasis"
-                                            onClick={() => router.push('/dashboard/settings/google-auth')}
-                                        >
-                                            <svg role="img" viewBox="0 0 24 24" className="h-5 w-5 text-green-500"><path fill="currentColor" d="M12.48 10.92v3.28h7.84c-.24 1.84-.85 3.18-1.73 4.1-1.02 1.02-2.3 1.84-4.32 1.84-3.6 0-6.5-2.95-6.5-6.5s2.9-6.5 6.5-6.5c1.95 0 3.45.82 4.25 1.58l2.5-2.5C18.43 1.18 15.7.01 12.48.01 7.1 0 2.98 3.98 2.98 9.5s4.12 9.5 9.5 9.5c5.13 0 9.04-3.47 9.04-9.25 0-.8-.08-1.32-.19-1.84h-8.9v.01Z"></path></svg>
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>{googleApiAuthorized ? 'Re-authorize Google Account' : 'Connect Google Account'}</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
                             <Popover open={isPrimaryColorPopoverOpen} onOpenChange={setIsPrimaryColorPopoverOpen}>
                                 <TooltipProvider>
                                     <Tooltip>
@@ -502,5 +485,3 @@ export function UserManagement({ showSearch = false, isActive = false }: { showS
         </div>
     )
 }
-
-    

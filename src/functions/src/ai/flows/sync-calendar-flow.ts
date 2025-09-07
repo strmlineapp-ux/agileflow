@@ -14,7 +14,7 @@ import { google } from 'googleapis';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { startOfDay } from 'date-fns';
 import { type Event, type SharedCalendar } from '@/types';
-import { getAuthorizedClient } from '@/lib/google-auth-service';
+import { getAuthorizedClient } from '../../../../lib/google-auth-service';
 
 
 const SyncCalendarInputSchema = z.object({
@@ -100,7 +100,6 @@ const syncCalendarFlow = ai.defineFlow(
                 continue;
             }
             
-            // Use a consistent ID based on workspace and Google event ID
             const eventDocId = `${input.workspaceId}_${event.id}`;
             const eventDocRef = db.collection('events').doc(eventDocId);
             
@@ -111,19 +110,18 @@ const syncCalendarFlow = ai.defineFlow(
                 endTime: Timestamp.fromDate(new Date(event.end.dateTime)),
                 description: event.description || '',
                 location: event.location || '',
-                calendarId: internalCalendar.id, // Link to our internal calendar
+                calendarId: internalCalendar.id,
                 attendees: (event.attendees || []).map(a => ({
                     email: a.email!,
                     displayName: a.displayName || a.email!,
                     responseStatus: a.responseStatus as any,
                 })),
-                attachments: [], // Attachments need more complex handling
+                attachments: [],
                 createdBy: 'system-sync',
                 createdAt: Timestamp.fromDate(new Date(event.created!)),
                 lastUpdated: Timestamp.fromDate(new Date(event.updated!)),
-                priority: 'badge-priority-normal', // Default priority
+                priority: 'badge-priority-normal',
                 workspaceId: input.workspaceId,
-                // These fields need a mapping strategy from Google event data
                 projectId: '', 
                 roleAssignments: {},
             };
