@@ -157,7 +157,7 @@ function BadgeDisplayItem({
         <div className="p-1.5" {...dragHandleProps}>
              <UiBadge
                 variant={'outline'}
-                style={{ color: badge.color, borderColor: badge.color }}
+                style={{ borderColor: badge.color }}
                 className="flex items-center gap-1.5 p-1 pl-2 rounded-full text-sm h-8"
             >
                 <div className="relative">
@@ -523,7 +523,7 @@ function BadgeCollectionCard({
             headerControls={headerControls}
             body={bodyContent}
             footer={footerContent}
-            className="overflow-hidden"
+            className="overflow-hidden flex-shrink-0"
         />
     );
 }
