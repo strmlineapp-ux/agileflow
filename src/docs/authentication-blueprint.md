@@ -45,13 +45,13 @@ An existing administrator uses a dedicated "Pre-approve User" form within the ap
 A Cloud Function is automatically triggered by the new entry in the `pre-approved-emails` collection. This function sends a welcome email to the new user with a link to the AgileFlow login page.
 
 **Step 3: User Clicks "Sign in with Google"**
-The new user clicks the link and uses the "Sign in with Google" button. They complete the secure sign-in process directly with Google.
+The new user clicks the link and uses the "Sign in with Google" button. If they have not previously granted calendar permissions, they will be prompted by Google. They complete the secure sign-in process directly with Google.
 
 **Step 4: System Verifies Invitation**
 Firebase Authentication confirms the user's identity and returns their verified email address to the application. The system checks this email against the `pre-approved-emails` list.
 
 **Step 5: Profile Creation & Access Granted**
-Upon finding a match, the system creates a new user profile in the Firestore `/users` collection, populating it with their Google account details (Name, Email, Profile Picture), setting their `accountType` to 'Full', and granting them full access immediately.
+Upon finding a match, the system creates a new user profile in the Firestore `/users` collection, populating it with their Google account details (Name, Email, Profile Picture), setting their `accountType` to 'Full', and granting them full access immediately. The `googleCalendarLinked` flag is set to `true` after they approve the permissions.
 
 ---
 
@@ -60,10 +60,10 @@ Upon finding a match, the system creates a new user profile in the Firestore `/u
 This flow handles "walk-up" attempts, where a user who has not been invited tries to access the application.
 
 **Step 1: New User Signs In**
-A new, uninvited user navigates to the application URL and clicks "Sign in with Google."
+A new, uninvited user navigates to the application URL and clicks "Sign in with Google." If they have not previously granted calendar permissions, they will be prompted by Google.
 
 **Step 2: System Creates a "Pending" Profile**
-Firebase authenticates the user. The application checks Firestore, finds no existing user and that the user is not pre-approved, and creates a new user document. **Crucially, it sets the `accountType` to `'Viewer'`, which restricts all access.**
+Firebase authenticates the user. The application checks Firestore, finds no existing user and that the user is not pre-approved, and creates a new user document. **Crucially, it sets the `accountType` to `'Viewer'`, which restricts all access.** The `googleCalendarLinked` flag is set based on their response to the Google consent screen.
 
 **Step 3: Administrator Notification**
 *   **In-App:** A notification appears in the administrator's notification list, stating that a new user has requested access.
@@ -117,10 +117,10 @@ When a new user signs in for the first time, their profile is created from a mix
 | `displayName` | **Google:** The user's full name from their Google profile. |
 | `email` | **Google:** The user's primary email address from their Google profile. |
 | `avatarUrl` | **Google:** The URL of their Google profile picture. |
+| `googleCalendarLinked`| **Application:** Set to `true` by the `useAuth` hook only after the user successfully completes the OAuth consent flow during sign-in. Defaults to `false`.|
 | --- | --- |
 | `isAdmin` | **Application:** Defaults to `true` if the user is the first one in the database, otherwise `false`. |
 | `accountType` | **Application:** Defaults to `Viewer` for user-initiated requests, `Full` for invited users, or `Full` for the first user. |
-| `googleCalendarLinked`| **Application:** Defaults to `false`. Set to `true` after the user successfully completes the OAuth consent flow during sign-in. |
 | `title` | **Application:** This is empty by default and must be set by an admin or the user. |
 | `roles` | **Application:** This is empty by default. Roles are assigned within the app. |
 | `memberOfTeamIds` | **Application:** This is empty by default. Users are added to teams within the app. |
@@ -146,8 +146,3 @@ This authentication system is significantly more secure and robust than the prev
 *   **Secure Session Management:** Firebase's `onAuthStateChanged` listener securely manages the user's session. It uses industry-standard tokens, which are automatically refreshed and secured, protecting against unauthorized access.
 *   **Centralized Authentication Logic:** All authentication logic is now centralized within the `user-context.tsx` file and uses the official Firebase SDK. This reduces complexity and eliminates the risk of inconsistent or insecure implementations elsewhere in the app.
 *   **Single Source of Truth:** Using Firebase Auth as the single source of truth for a user's identity prevents the creation of duplicate accounts, which was a key issue with the previous system.
-
-
-
-
-
