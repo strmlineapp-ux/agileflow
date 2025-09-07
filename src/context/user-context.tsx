@@ -164,17 +164,19 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     if (!realUser) return;
     const db = getDb();
     const newDocRef = doc(collection(db, 'pages'));
+    const newPageId = newDocRef.id;
 
     const isDuplicating = !!pageData.id;
     const randomIcon = googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)];
     const randomDesc = randomDescriptions[Math.floor(Math.random() * randomDescriptions.length)];
     const pageName = isDuplicating ? `${pageData.name} (Copy)` : (pageData.name || "New Page");
     const slug = pageName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const newPath = `/dashboard/${slug}-${newPageId}`;
 
     const newPage: AppPage = {
-      id: newDocRef.id,
+      id: newPageId,
+      path: newPath,
       name: pageName,
-      path: `/dashboard/${slug}`,
       icon: pageData.icon || randomIcon,
       color: pageData.color ? adjustHslColor(pageData.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
       description: pageData.description || randomDesc,
@@ -186,14 +188,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       isSystemPage: false, // User-created pages are never system pages
     };
 
-    await setDoc(newDocRef, newPage);
-
+    await setDoc(doc(db, 'pages', newPageId), newPage);
+    
     dataHook.setAllPages(current => [...current, newPage]);
-    dataHook.setAppSettings(currentSettings => ({
-      ...currentSettings,
-      pages: [...currentSettings.pages, newPage]
-    }));
-  }, [realUser, dataHook.setAllPages, dataHook.setAppSettings]);
+
+  }, [realUser, dataHook.setAllPages]);
   
   const contextValue = useMemo(() => {
     const setViewAsUserWithReset = (userId: string) => {
