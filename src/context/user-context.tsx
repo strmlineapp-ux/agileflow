@@ -104,6 +104,15 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType | null>(null);
 
+const randomDescriptions = [
+    "Manage project assets and timelines.",
+    "Track team progress and upcoming deadlines.",
+    "A space for creative collaboration.",
+    "The central hub for all client-related information.",
+    "Planning and execution of marketing campaigns.",
+    "Development and testing for the new feature.",
+];
+
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const { realUser, loading: authLoading, isFirebaseReady, googleLogin, logout } = useAuth();
   const dataHook = useData(realUser, authLoading);
