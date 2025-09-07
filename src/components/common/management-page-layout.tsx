@@ -120,7 +120,12 @@ export function ManagementPageLayout<T extends TEntity>({
   
   const entityTitle = entityType ? entityType.charAt(0).toUpperCase() + entityType.slice(1) + 's' : '';
   
-  const gridClassName = "columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4";
+  const gridClassName = cn(
+    "gap-4",
+    isSharedPanelOpen 
+      ? "columns-1 sm:columns-2 lg:columns-3" 
+      : "columns-1 sm:columns-2 lg:columns-3 xl:columns-4"
+  );
   
   return (
     <div className="flex h-full gap-4">
