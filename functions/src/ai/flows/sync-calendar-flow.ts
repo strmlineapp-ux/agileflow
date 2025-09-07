@@ -8,12 +8,13 @@
  * - SyncCalendarOutput - The return type for the syncCalendar function.
  */
 
-import { ai } from '../genkit';
+import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { google } from 'googleapis';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { startOfDay } from 'date-fns';
 import { type Event, type SharedCalendar } from '@/types';
+import { getAuthorizedClient } from '../../google-auth-service';
 
 
 const SyncCalendarInputSchema = z.object({
@@ -47,15 +48,32 @@ const syncCalendarFlow = ai.defineFlow(
   },
   async (input) => {
     console.log(`Starting REAL event sync for Google Calendar ID: ${input.googleCalendarId} in workspace ${input.workspaceId}`);
-
-    const auth = new google.auth.GoogleAuth({
-        scopes: ['https://www.googleapis.com/auth/calendar.readonly']
-    });
     
     const db = getFirestore();
 
+    const internalCalendarQuery = await db.collection('calendars')
+        .where('googleCalendarId', '==', input.googleCalendarId)
+        .where('workspaceId', '==', input.workspaceId)
+        .limit(1)
+        .get();
+    
+    if (internalCalendarQuery.empty) {
+        throw new Error(`Could not find internal calendar for Google ID ${input.googleCalendarId}`);
+    }
+    
+    const internalCalendar = internalCalendarQuery.docs[0].data() as SharedCalendar;
+    const calendarOwnerId = internalCalendar.owner?.id;
+
+    if (!calendarOwnerId) {
+      throw new Error(`Calendar ${internalCalendar.id} does not have an owner.`);
+    }
+
+    const authClient = await getAuthorizedClient(calendarOwnerId);
+    if (!authClient) {
+      throw new Error(`Could not get authorized client for user ${calendarOwnerId}. The user may need to re-authenticate.`);
+    }
+
     try {
-        const authClient = await auth.getClient();
         const calendarApi = google.calendar({version: 'v3', auth: authClient});
         const response = await calendarApi.events.list({
             calendarId: input.googleCalendarId,
@@ -74,18 +92,6 @@ const syncCalendarFlow = ai.defineFlow(
         
         console.log(`Found ${events.length} events to sync.`);
 
-        const internalCalendarQuery = await db.collection('calendars')
-            .where('googleCalendarId', '==', input.googleCalendarId)
-            .where('workspaceId', '==', input.workspaceId)
-            .limit(1)
-            .get();
-        
-        if (internalCalendarQuery.empty) {
-            throw new Error(`Could not find internal calendar for Google ID ${input.googleCalendarId}`);
-        }
-        
-        const internalCalendar = internalCalendarQuery.docs[0].data() as SharedCalendar;
-
         const batch = db.batch();
 
         for (const event of events) {
@@ -94,7 +100,6 @@ const syncCalendarFlow = ai.defineFlow(
                 continue;
             }
             
-            // Use a consistent ID based on workspace and Google event ID
             const eventDocId = `${input.workspaceId}_${event.id}`;
             const eventDocRef = db.collection('events').doc(eventDocId);
             
@@ -105,19 +110,18 @@ const syncCalendarFlow = ai.defineFlow(
                 endTime: Timestamp.fromDate(new Date(event.end.dateTime)),
                 description: event.description || '',
                 location: event.location || '',
-                calendarId: internalCalendar.id, // Link to our internal calendar
+                calendarId: internalCalendar.id,
                 attendees: (event.attendees || []).map(a => ({
                     email: a.email!,
                     displayName: a.displayName || a.email!,
                     responseStatus: a.responseStatus as any,
                 })),
-                attachments: [], // Attachments need more complex handling
+                attachments: [],
                 createdBy: 'system-sync',
                 createdAt: Timestamp.fromDate(new Date(event.created!)),
                 lastUpdated: Timestamp.fromDate(new Date(event.updated!)),
-                priority: 'badge-priority-normal', // Default priority
+                priority: 'badge-priority-normal',
                 workspaceId: input.workspaceId,
-                // These fields need a mapping strategy from Google event data
                 projectId: '', 
                 roleAssignments: {},
             };
