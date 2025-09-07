@@ -13,6 +13,8 @@ import { arrayMove } from '@dnd-kit/sortable';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { predefinedColors } from '@/lib/colors';
 import { adjustHslColor } from '@/lib/utils';
+import { collection, doc, writeBatch, getFirestore, getDocs, query, where, addDoc, updateDoc, setDoc, getDoc, deleteDoc, Timestamp } from 'firebase/firestore';
+import { getDb } from '@/lib/firebase';
 
 // --- Context Definition ---
 interface UserContextType {
@@ -159,20 +161,37 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     };
 }, [viewAsUser]);
   
-  const addCalendarWithDefaults = useCallback(async (calendarData: Partial<Omit<SharedCalendar, 'id'>>) => {
+  const addPage = useCallback(async (pageData: Partial<AppPage>) => {
     if (!realUser) return;
-    
-    const isDuplicating = !!calendarData.id;
-    const newCalendarData = {
-      name: isDuplicating ? `${calendarData.name} (Copy)` : 'New Calendar',
-      icon: calendarData.icon || 'calendar_month',
-      color: isDuplicating && calendarData.color ? adjustHslColor(calendarData.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
+    const db = getDb();
+    const pagesCollectionRef = collection(db, 'pages');
+    const newDocRef = doc(pagesCollectionRef); // Create a reference with a new ID
+
+    const isDuplicating = !!pageData.id;
+    const randomIcon = googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)];
+    const randomDesc = randomDescriptions[Math.floor(Math.random() * randomDescriptions.length)];
+    const pageName = isDuplicating ? `${pageData.name} (Copy)` : (pageData.name || "New Page");
+    const slug = pageName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
+    const newPage: AppPage = {
+      id: newDocRef.id, // Use the generated ID
+      name: pageName,
+      path: `/dashboard/${slug}-${newDocRef.id}`, // Construct path with the new ID
+      icon: pageData.icon || randomIcon,
+      color: pageData.color ? adjustHslColor(pageData.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
+      description: pageData.description || randomDesc,
+      isDynamic: pageData.isDynamic || false,
+      associatedTabs: pageData.associatedTabs || [],
+      access: pageData.access || { users: [], teams: [] },
       owner: { type: 'user', id: realUser.userId },
-      ...calendarData,
+      workspaceId: realUser.workspaceId,
     };
-    
-    await dataHook.addCalendar(newCalendarData as Omit<SharedCalendar, 'id'>);
-  }, [realUser, dataHook.addCalendar]);
+
+    await setDoc(newDocRef, newPage); // Use setDoc with the complete object
+
+    dataHook.setAllPages(current => [...current, newPage]);
+    dataHook.setAppSettings(current => ({ ...current, pages: [...current.pages, newPage] }));
+  }, [realUser, dataHook.setAllPages, dataHook.setAppSettings]);
   
   const contextValue = useMemo(() => {
     const setViewAsUserWithReset = (userId: string) => {
@@ -218,6 +237,19 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const addTaskWithUser = (currentTasks: Task[], newTaskData: Omit<Task, 'taskId' | 'createdAt' | 'lastUpdated'>) => dataHook.addTask(currentTasks, newTaskData, realUser!);
     const addPreApprovedEmailWithUser = (email: string) => dataHook.addPreApprovedEmail(email, realUser!);
 
+    const addCalendarWithDefaults = (calendarData: Partial<Omit<SharedCalendar, 'id'>>) => {
+        if (!realUser) return;
+        const isDuplicating = !!calendarData.id;
+        const newCalendarData = {
+          name: isDuplicating && calendarData.name ? `${calendarData.name} (Copy)` : 'New Calendar',
+          icon: calendarData.icon || 'calendar_month',
+          color: isDuplicating && calendarData.color ? adjustHslColor(calendarData.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
+          owner: { type: 'user', id: realUser.userId },
+          ...calendarData,
+        };
+        dataHook.addCalendar(newCalendarData as Omit<SharedCalendar, 'id'>);
+    };
+
     const enrichedViewAsUser = viewAsUser ? { ...viewAsUser, isDragModifierPressed } : null;
 
     return {
@@ -232,6 +264,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       addBadgeCollection: addBadgeCollectionWithUser,
       addCalendar: addCalendarWithDefaults,
       addTeam: addTeamWithUser,
+      addPage: addPage,
       deleteUser: deleteUserWithUser,
       addProject: addProjectWithUser,
       deleteTeam: deleteTeamWithRouter,
@@ -242,7 +275,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       addPreApprovedEmail: addPreApprovedEmailWithUser,
     };
   }, [
-    realUser, viewAsUser, googleLogin, logout, loading, isFirebaseReady, dataHook, addCalendarWithDefaults, isDragModifierPressed
+    realUser, viewAsUser, googleLogin, logout, loading, isFirebaseReady, dataHook, isDragModifierPressed, addPage
   ]);
 
   return (
@@ -257,3 +290,4 @@ export function useUser() {
   if (!context) throw new Error('useUser must be used within a UserProvider');
   return context;
 }
+
