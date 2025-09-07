@@ -17,7 +17,6 @@
   },
   "main": "lib/index.js",
   "dependencies": {
-    "@genkit-ai/google": "^1.17.0",
     "@genkit-ai/googleai": "^1.17.0",
     "date-fns": "^3.6.0",
     "firebase-admin": "^12.2.0",
