@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -37,6 +36,7 @@ import { predefinedColors } from '@/lib/colors';
 import { IconColorPicker } from '../common/icon-color-picker';
 import { InlineEditor } from '../common/inline-editor';
 import { SortableItem } from '../common/sortable-item';
+import { SettingSelect } from '../common/setting-select';
 
 
 function BadgeDisplayItem({ 
@@ -76,18 +76,6 @@ function BadgeDisplayItem({
 
     const ownerUser = users.find(u => u.userId === badge.owner.id);
     const ownerCollection = allCollections.find(c => c.id === badge.ownerCollectionId);
-
-    const nameEditorElement = (
-      <InlineEditor
-        value={badge.name}
-        onSave={(newValue) => handleUpdate({ name: newValue })}
-        disabled={!isOwner}
-        className={cn(
-            "break-words font-emphasis",
-             viewMode === 'compact' ? "text-center" : "font-normal"
-        )}
-      />
-    );
       
     const descriptionElement = (
         <InlineEditor
@@ -328,7 +316,6 @@ function BadgeCollectionCard({
     ...props
 }: BadgeCollectionCardProps) {
     const { viewAsUser, users } = useUser();
-    const [isViewModePopoverOpen, setIsViewModePopoverOpen] = useState(false);
     const [expandedBadges, setExpandedBadges] = useState<Set<string>>(new Set());
     const buttonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
@@ -356,10 +343,10 @@ function BadgeCollectionCard({
         { key: 'badges', icon: 'style', label: 'Badges' },
     ];
 
-    const viewModeOptions: {mode: BadgeCollection['viewMode'], icon: string, label: string}[] = [
-        { mode: 'compact', icon: 'view_module', label: 'Compact View' },
-        { mode: 'grid', icon: 'view_comfy_alt', label: 'Grid View' },
-        { mode: 'list', icon: 'view_list', label: 'List View' }
+    const viewModeOptions = [
+        { value: 'compact', label: 'Compact View', icon: 'view_module' },
+        { value: 'grid', label: 'Grid View', icon: 'view_comfy_alt' },
+        { value: 'list', label: 'List View', icon: 'view_list' }
     ];
 
     const associationsToRender = isOwner
@@ -382,43 +369,14 @@ function BadgeCollectionCard({
         {!isSharedPreview && isOwner && (
           <DuplicateBadgeZone collectionId={collection.id} onAdd={() => onAddBadge(collection.id)} isOwner={isOwner} />
         )}
-        <Popover open={isViewModePopoverOpen} onOpenChange={setIsViewModePopoverOpen}>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <PopoverTrigger asChild onPointerDown={(e) => e.stopPropagation()}>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground font-emphasis">
-                    <GoogleSymbol name={viewModeOptions.find(o => o.mode === collection.viewMode)?.icon || 'view_module'} weight={100} opticalSize={20} />
-                  </Button>
-                </PopoverTrigger>
-              </TooltipTrigger>
-              <TooltipContent><p>Change View Mode</p></TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <PopoverContent className="w-auto p-1 flex items-center gap-1" onPointerDown={(e) => e.stopPropagation()} onOpenAutoFocus={(e) => e.preventDefault()}>
-            {viewModeOptions.map(({mode, icon, label}) => (
-                <TooltipProvider key={mode}>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onPointerDown={(e) => e.stopPropagation()}
-                                onClick={() => { onUpdateCollection(collection.id, { viewMode: mode }); setIsViewModePopoverOpen(false); }}
-                                className={cn(
-                                    "h-8 w-8 font-emphasis",
-                                    collection.viewMode === mode && "font-emphasized"
-                                )}
-                            >
-                                <GoogleSymbol name={icon} weight={100} opticalSize={20} />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent><p>{label}</p></TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            ))}
-          </PopoverContent>
-        </Popover>
+         <SettingSelect
+            value={collection.viewMode}
+            onSave={(newValue) => onUpdateCollection(collection.id, { viewMode: newValue as any })}
+            options={viewModeOptions}
+            triggerIcon={viewModeOptions.find(o => o.value === collection.viewMode)?.icon || 'view_module'}
+            tooltip="Change View Mode"
+            disabled={!isOwner}
+          />
       </>
     );
 
