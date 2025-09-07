@@ -66,7 +66,7 @@ export function useAuth() {
             accountType,
             memberOfTeamIds: [],
             roles: [],
-            googleCalendarLinked: false,
+            googleCalendarLinked: false, // Default to false, will be updated if credential is provided
             theme: 'light',
             modifierKey: 'shift',
             createdAt: new Date(),
@@ -105,8 +105,10 @@ export function useAuth() {
         await batch.commit();
     }
     
+    // Always check for credential and update tokens, regardless if user is new or existing
     if (credential?.accessToken) {
         await saveCredentials(firebaseUser.uid, credential);
+        // Only update Firestore if the state is changing
         if (!userData.googleCalendarLinked) {
             userData.googleCalendarLinked = true;
             await updateDoc(userDocRef, { googleCalendarLinked: true });
@@ -143,7 +145,7 @@ export function useAuth() {
     const provider = new GoogleAuthProvider();
     provider.addScope('https://www.googleapis.com/auth/calendar.readonly');
     provider.setCustomParameters({
-      prompt: 'select_account'
+      prompt: 'select_account' // This forces the account chooser and re-consent if scopes changed.
     });
 
     try {
@@ -155,9 +157,15 @@ export function useAuth() {
         return false;
       }
 
+      // handleUserSignIn will be called by the onAuthStateChanged listener, but we call it here
+      // explicitly with the credential to ensure tokens are saved immediately.
       await handleUserSignIn(result.user, credential);
       return true;
-    } catch (error) {
+    } catch (error: any) {
+      // Avoid showing an error if the user closes the popup
+      if (error.code === 'auth/popup-closed-by-user') {
+        return false;
+      }
       console.error("Google Sign-In failed:", error);
       toast({ variant: 'destructive', title: 'Sign-in Error', description: 'Could not sign in with Google. Please try again.' });
       return false;
