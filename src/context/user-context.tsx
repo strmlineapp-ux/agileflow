@@ -206,6 +206,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         }
         const newBadgeData = {
             color: adjustHslColor(collection.color),
+            icon: sourceBadge?.icon || googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
         };
         dataHook.addBadge(collectionId, { ...sourceBadge, ...newBadgeData }, realUser);
     };
