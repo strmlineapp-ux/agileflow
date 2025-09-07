@@ -221,7 +221,7 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
       case 'compact':
       default:
         strategy = rectSortingStrategy;
-        gridLayoutClass = "grid grid-cols-3 gap-2 items-start";
+        gridLayoutClass = "flex flex-wrap gap-2 items-start";
         break;
     }
     
@@ -476,7 +476,7 @@ function BadgeCollectionCard({
     );
 
     return (
-        <div className={cn('overflow-hidden', collection.viewMode === 'compact' && 'max-w-[400px]')}>
+        <div className={cn('overflow-hidden', collection.viewMode === 'compact' && 'max-w-xs')}>
             <CardTemplate
                 entity={collection}
                 onUpdate={onUpdateCollection}
@@ -540,7 +540,7 @@ export function BadgeManagement({ tab, page, isActive, isSharedPanelOpen, setIsS
         addBadgeCollection(viewAsUser, sourceCollection);
     };
 
-    const handleAddBadge = (collectionId: string, sourceBadge?: Badge, unlinkSource?: boolean) => {
+    const handleAddBadge = (collectionId: string, sourceBadge?: Badge, unlinkSource: boolean = false) => {
         addBadge(collectionId, sourceBadge, realUser, unlinkSource);
     };
 
