@@ -99,7 +99,7 @@ function BadgeDisplayItem({
             value={badge.name}
             onSave={(newValue) => handleUpdate({ name: newValue })}
             disabled={!isOwner}
-            className={cn("break-words font-emphasis text-sm", isOwner)}
+            className={cn("break-words font-emphasis", isOwner && "cursor-text")}
         />
     );
 
@@ -109,7 +109,7 @@ function BadgeDisplayItem({
             onSave={(newValue) => handleUpdate({ description: newValue })}
             disabled={!isOwner}
             placeholder={isLinked ? "No description" : "Click to add description."}
-            className={cn("break-words", !badge.description)}
+            className={cn("break-words", !badge.description && "italic")}
         />
    );
    
@@ -264,7 +264,7 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
         <div 
             ref={setNodeRef}
             className={cn(
-                "min-h-[60px] rounded-md p-2 transition-all",
+                "min-h-[60px] rounded-md p-2 transition-all w-full",
                 isOver && "ring-1 ring-border ring-inset",
                 gridLayoutClass
             )}
@@ -428,8 +428,8 @@ function BadgeCollectionCard({
                                 onPointerDown={(e) => e.stopPropagation()}
                                 onClick={() => { onUpdateCollection(collection.id, { viewMode: mode }); setIsViewModePopoverOpen(false); }}
                                 className={cn(
-                                    "h-8 w-8",
-                                    collection.viewMode === mode ? 'font-emphasized' : 'font-emphasis'
+                                    "h-8 w-8 font-emphasis",
+                                    collection.viewMode === mode && "font-emphasized"
                                 )}
                             >
                                 <GoogleSymbol name={icon} weight={100} opticalSize={20} />
