@@ -8,8 +8,8 @@ import { type User, type Workspace } from '@/types';
 import { getAuthInstance, getDb, getCurrentWorkspaceId } from '@/lib/firebase';
 import { useToast } from './use-toast';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import { systemPages, coreTabs } from '../lib/core-data';
-import { saveCredentials } from '../lib/google-auth-service';
+import { systemPages, coreTabs } from '@/lib/core-data';
+import { saveCredentials } from '@/lib/google-auth-service';
 
 const COMMON_EMAIL_DOMAINS = new Set([
     'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com', 'icloud.com', 'msn.com'
@@ -31,23 +31,28 @@ export function useAuth() {
   }, []);
 
   const handleRedirectResult = useCallback(async () => {
-    if (!isFirebaseReady) return;
+    if (!isFirebaseReady || !realUser) return;
     try {
         const auth = getAuthInstance();
         const result = await getRedirectResult(auth);
-        if (result && result.user) {
-            const credential = OAuthProvider.credentialFromResult(result);
+        
+        if (result) {
+            // This is a result from a linkWithRedirect operation.
+            const credential = GoogleAuthProvider.credentialFromResult(result);
             if (credential?.accessToken) {
                 await saveCredentials(result.user.uid, credential);
                 await updateDoc(doc(getDb(), 'users', result.user.uid), { googleCalendarLinked: true });
                 toast({ title: 'Success!', description: 'Your Google Calendar has been successfully connected.' });
             }
         }
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error handling redirect result:", error);
-        toast({ variant: 'destructive', title: 'Authorization Failed', description: 'Could not complete Google Calendar connection.' });
+        // This can happen if the user cancels the linking process.
+        if (error.code !== 'auth/cancelled-popup-request') {
+           toast({ variant: 'destructive', title: 'Authorization Failed', description: 'Could not complete Google Calendar connection.' });
+        }
     }
-  }, [isFirebaseReady, toast]);
+  }, [isFirebaseReady, realUser, toast]);
 
   useEffect(() => {
       handleRedirectResult();
@@ -158,16 +163,10 @@ export function useAuth() {
     
     const authInstance = getAuthInstance();
     const provider = new GoogleAuthProvider();
-    provider.addScope('https://www.googleapis.com/auth/calendar');
     
     try {
-      const result = await signInWithPopup(authInstance, provider);
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      if (credential?.accessToken) {
-        await saveCredentials(result.user.uid, credential);
-        await updateDoc(doc(getDb(), 'users', result.user.uid), { googleCalendarLinked: true });
-        toast({ title: 'Success!', description: 'Your Google Calendar has been successfully connected.' });
-      }
+      await signInWithPopup(authInstance, provider);
+      // The onAuthStateChanged listener will handle the user creation/update.
       return true;
     } catch (error) {
       console.error("Google Sign-In failed:", error);
@@ -175,6 +174,27 @@ export function useAuth() {
       return false;
     }
   }, [isFirebaseReady, toast]);
+
+  const linkGoogleCalendar = useCallback(async () => {
+    if (!realUser) {
+        toast({ variant: 'destructive', title: 'Not Signed In', description: 'You must be signed in to connect your calendar.' });
+        return;
+    }
+    const auth = getAuthInstance();
+    if (!auth.currentUser) return;
+    
+    const provider = new GoogleAuthProvider();
+    provider.addScope('https://www.googleapis.com/auth/calendar.readonly');
+    provider.addScope('https://www.googleapis.com/auth/calendar.events');
+
+    try {
+        await linkWithRedirect(auth.currentUser, provider);
+        // The result is handled by the getRedirectResult effect
+    } catch (error) {
+        console.error("Failed to initiate calendar linking:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not start the Google Calendar connection process.' });
+    }
+  }, [realUser, toast]);
 
   const logout = useCallback(async (router: AppRouterInstance) => {
     if (!isFirebaseReady) return;
@@ -189,5 +209,5 @@ export function useAuth() {
     }
   }, [isFirebaseReady, toast]);
 
-  return { realUser, loading, isFirebaseReady, googleLogin, logout, setRealUser };
+  return { realUser, loading, isFirebaseReady, googleLogin, logout, setRealUser, linkGoogleCalendar };
 }
