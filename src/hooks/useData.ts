@@ -210,7 +210,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
     const db = getDb();
     const isDuplicating = !!teamData.id;
     const newTeamData = {
-      name: isDuplicating ? `${teamData.name} (Copy)` : 'New Team',
+      name: isDuplicating && teamData.name ? `${teamData.name} (Copy)` : 'New Team',
       icon: teamData.icon || googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
       color: isDuplicating && teamData.color ? adjustHslColor(teamData.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
       owner: { type: 'user', id: realUser.userId },
@@ -299,7 +299,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
     if (!realUser) return;
     const isDuplicating = !!calendarData.id;
     const newCalendarData = {
-      name: isDuplicating ? `${calendarData.name} (Copy)` : 'New Calendar',
+      name: isDuplicating && calendarData.name ? `${calendarData.name} (Copy)` : 'New Calendar',
       icon: calendarData.icon || 'calendar_month',
       color: isDuplicating && calendarData.color ? adjustHslColor(calendarData.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
       owner: { type: 'user', id: realUser.userId },
@@ -394,21 +394,21 @@ export function useData(realUser: User | null, authLoading: boolean) {
     setAppSettings(current => ({ ...current, ...settings }));
   }, [realUser]);
   
-  const addPage = useCallback(async (pageData: Partial<AppPage>) => {
+  const addPage = useCallback(async (pageData: Partial<AppPage> = {}) => {
     if (!realUser) return;
     const db = getDb();
-    
-    const isDuplicating = !!pageData.id;
+    const newDocRef = doc(collection(db, 'pages'));
 
+    const isDuplicating = !!pageData.id;
     const randomIcon = googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)];
     const randomDesc = randomDescriptions[Math.floor(Math.random() * randomDescriptions.length)];
     const pageName = isDuplicating ? `${pageData.name} (Copy)` : (pageData.name || "New Page");
-
-    // Create a slug from the name
     const slug = pageName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 
-    const newPageData: Omit<AppPage, 'id' | 'path'> = {
+    const newPage: AppPage = {
+      id: newDocRef.id,
       name: pageName,
+      path: `/dashboard/${slug}-${newDocRef.id}`,
       icon: pageData.icon || randomIcon,
       color: pageData.color ? adjustHslColor(pageData.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
       description: pageData.description || randomDesc,
@@ -417,18 +417,12 @@ export function useData(realUser: User | null, authLoading: boolean) {
       access: pageData.access || { users: [], teams: [] },
       owner: { type: 'user', id: realUser.userId },
       workspaceId: realUser.workspaceId,
+      isSystemPage: false, // User-created pages are never system pages
     };
-    
-    const docRef = await addDoc(collection(db, 'pages'), newPageData);
-    
-    // Now update path with real ID
-    const finalPageData: Partial<AppPage> = { path: `/dashboard/${slug}-${docRef.id}` };
-    await updateDoc(docRef, finalPageData);
 
-    const newPage: AppPage = { ...newPageData, ...finalPageData, id: docRef.id, path: finalPageData.path! };
+    await setDoc(newDocRef, newPage);
 
     setAllPages(current => [...current, newPage]);
-    setAppSettings(current => ({ ...current, pages: [...current.pages, newPage] }));
   }, [realUser]);
 
   const updatePage = useCallback(async (pageId: string, pageData: Partial<AppPage>) => {
@@ -441,17 +435,13 @@ export function useData(realUser: User | null, authLoading: boolean) {
         await updateDoc(doc(db, 'pages', pageId), pageData);
     }
     
-    const updatedPages = allPages.map(p => p.id === pageId ? { ...p, ...pageData } : p);
-    setAllPages(updatedPages);
-    setAppSettings(current => ({ ...current, pages: updatedPages }));
+    setAllPages(current => current.map(p => p.id === pageId ? { ...p, ...pageData } : p));
   }, [allPages]);
 
   const deletePage = useCallback(async (pageId: string) => {
     const db = getDb();
     await deleteDoc(doc(db, 'pages', pageId));
-    const updatedPages = allPages.filter(p => p.id !== pageId);
-    setAllPages(updatedPages);
-    setAppSettings(current => ({ ...current, pages: updatedPages }));
+    setAllPages(current => current.filter(p => p.id !== pageId));
   }, [allPages]);
   
   const reorderPages = useCallback(async (reorderedPages: AppPage[]) => {
@@ -463,7 +453,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
     const newPageOrder = [...systemPages, ...userPages];
     setAllPages(newPageOrder);
     setAppSettings(current => ({ ...current, pages: newPageOrder }));
-  }, []);
+  }, [systemPages]);
 
   const updateAppTab = useCallback(async (tabId: string, tabData: Partial<AppTab>) => {
     const newTabs = appSettings.tabs.map(t => t.id === tabId ? { ...t, ...tabData } : t);
@@ -800,7 +790,8 @@ export function useData(realUser: User | null, authLoading: boolean) {
   }, []);
   
   return {
-    loading, users, teams, projects, appSettings: {...appSettings, pages: allPages}, calendars, locations, notifications, userStatusAssignments, allBadges, allBadgeCollections, holidays, allBookableLocations,
+    loading, users, teams, projects, appSettings, calendars, locations, notifications, userStatusAssignments, allBadges, allBadgeCollections, holidays, allBookableLocations,
+    allPages, setAllPages,
     preApprovedEmails, addPreApprovedEmail, removePreApprovedEmail,
     setUsers, setTeams, setAllBadgeCollections, setAppSettings, setCalendars, setLocations, setNotifications, setUserStatusAssignments, setAllBadges,
     handleApproveAccessRequest, updateUser, addUser, deleteUser, reorderUsers, addTeam, updateTeam, deleteTeam, reorderTeams,
@@ -809,7 +800,8 @@ export function useData(realUser: User | null, authLoading: boolean) {
     fetchEvents, addEvent, updateEvent, deleteEvent,
     fetchTasks, addTask, updateTask, deleteTask, addLocation, deleteLocation,
     updateAppSettings: (settings: Partial<Omit<AppSettings, 'preApprovedEmails'>>) => updateAppSettings(settings),
-    addPage, updatePage, deletePage, reorderPages,
+    addPage: (pageData: Partial<AppPage> = {}) => {}, // Placeholder, will be managed in UserContext
+    updatePage, deletePage, reorderPages,
     updateAppTab, reorderTabs,
     addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, reorderBadgeCollections, addBadge, updateBadge, deleteBadge,
     reorderBadges, handleBadgeAssignment, handleBadgeUnassignment,
