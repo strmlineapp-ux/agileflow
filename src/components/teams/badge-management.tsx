@@ -91,32 +91,19 @@ function BadgeDisplayItem({
     }, [badge.id, onUpdateBadge]);
 
     const ownerUser = users.find(u => u.userId === badge.owner.id);
-        
-    const headerContent = (
-         <div className="flex items-start gap-2">
-            <div className="relative">
-                <IconColorPicker
-                    icon={badge.icon}
-                    color={badge.color}
-                    onUpdateIcon={(newIcon) => handleUpdate({ icon: newIcon })}
-                    onUpdateColor={(newColor) => handleUpdate({ color: newColor })}
-                    disabled={!isOwner}
-                />
-            </div>
-            <div className="flex-1">
-                <InlineEditor
-                    value={badge.name}
-                    onSave={(newValue) => handleUpdate({ name: newValue })}
-                    disabled={!isOwner}
-                    className={cn(
-                        "break-words font-emphasis font-normal"
-                    )}
-                />
-            </div>
-        </div>
+    
+    const nameEditorElement = (
+      <InlineEditor
+        value={badge.name}
+        onSave={(newValue) => handleUpdate({ name: newValue })}
+        disabled={!isOwner}
+        className={cn(
+            "break-words font-emphasis",
+        )}
+      />
     );
     
-    const bodyContent = isExpanded ? (
+    const descriptionElement = isExpanded ? (
       <div className="mt-2">
         <InlineEditor
           value={badge.description || ''}
@@ -133,8 +120,21 @@ function BadgeDisplayItem({
     if (viewMode === 'grid' || viewMode === 'list') {
       return (
         <div className="flex flex-col gap-2 p-2 relative" {...dragHandleProps}>
-            {headerContent}
-            {bodyContent}
+            <div className="flex items-start gap-2">
+                <div className="relative">
+                    <IconColorPicker
+                        icon={badge.icon}
+                        color={badge.color}
+                        onUpdateIcon={(newIcon) => handleUpdate({ icon: newIcon })}
+                        onUpdateColor={(newColor) => handleUpdate({ color: newColor })}
+                        disabled={!isOwner}
+                    />
+                </div>
+                <div className="flex-1">
+                    {nameEditorElement}
+                </div>
+            </div>
+            {descriptionElement}
             <div className="absolute -bottom-1 right-0">
               <Button variant="ghost" size="icon" onClick={onToggleExpand} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
                 <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
@@ -170,15 +170,11 @@ function BadgeDisplayItem({
                     </TooltipProvider>
                 )}
             </div>
-            <InlineEditor
-                value={badge.name}
-                onSave={(newValue) => handleUpdate({ name: newValue })}
-                disabled={!isOwner}
-                className={cn("break-words font-emphasis font-normal")}
-            />
+            {nameEditorElement}
         </div>
     );
 }
+
 
 function SortableBadgeItem({ badge, collection, onDelete, ...props }: { badge: Badge, collection: BadgeCollection, onDelete: (badgeId: string, collectionId: string) => void, [key: string]: any }) {
     
@@ -620,24 +616,26 @@ export function BadgeManagement({ tab, page, isActive, isSharedPanelOpen, setIsS
         const userBadgeIds = new Set(allBadges.filter(b => b.owner.id === viewAsUser.userId).map(b => b.id));
         const expandedCardIds = viewAsUser?.expandedCardState?.[contextKey] || [];
         return (
-            <SortableItem key={collection.id} id={collection.id} data={{ type: 'collection-card', collection, isSharedPreview: false }}>
-              {(isDragging: boolean) => (
-                <BadgeCollectionCard
-                    collection={collection}
-                    allBadges={allBadges}
-                    onUpdateCollection={handleUpdate}
-                    onDeleteCollection={handleDelete}
-                    onAddBadge={addBadge}
-                    onUpdateBadge={updateBadge}
-                    onDeleteBadge={deleteBadge}
-                    isViewer={!viewAsUser}
-                    isExpanded={expandedCardIds.includes(collection.id)}
-                    onToggleExpand={() => onToggleExpand(collection.id)}
-                    currentUserBadgeIds={userBadgeIds}
-                    allCollections={allBadgeCollections}
-                />
-              )}
-            </SortableItem>
+            <div className="p-2 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5 flex-grow-0 flex-shrink-0">
+                <SortableItem key={collection.id} id={collection.id} data={{ type: 'collection-card', collection, isSharedPreview: false }}>
+                  {(isDragging: boolean) => (
+                    <BadgeCollectionCard
+                        collection={collection}
+                        allBadges={allBadges}
+                        onUpdateCollection={handleUpdate}
+                        onDeleteCollection={handleDelete}
+                        onAddBadge={addBadge}
+                        onUpdateBadge={updateBadge}
+                        onDeleteBadge={deleteBadge}
+                        isViewer={!viewAsUser}
+                        isExpanded={expandedCardIds.includes(collection.id)}
+                        onToggleExpand={() => onToggleExpand(collection.id)}
+                        currentUserBadgeIds={userBadgeIds}
+                        allCollections={allBadgeCollections}
+                    />
+                  )}
+                </SortableItem>
+            </div>
         );
     }, [handleUpdate, handleDelete, addBadge, updateBadge, deleteBadge, viewAsUser, onToggleExpand, allBadges, allBadgeCollections, contextKey]);
 
