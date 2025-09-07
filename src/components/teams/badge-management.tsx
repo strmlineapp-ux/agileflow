@@ -264,7 +264,7 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
         <div 
             ref={setNodeRef}
             className={cn(
-                "min-h-[60px] rounded-md p-2 transition-all",
+                "min-h-[60px] rounded-md p-2 transition-all w-full",
                 isOver && "ring-1 ring-border ring-inset",
                 gridLayoutClass
             )}
