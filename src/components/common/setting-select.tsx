@@ -62,24 +62,26 @@ export function SettingSelect({
             align="start"
             onOpenAutoFocus={(e) => e.preventDefault()}
         >
-            {options.map(option => (
-            <Button
-                key={option.value}
-                variant="ghost"
-                className={cn(
-                    "font-emphasis h-auto",
-                    option.icon ? "flex-col p-2" : "justify-start px-2 h-8",
-                    option.value === value && "font-emphasized"
-                )}
-                onClick={() => {
-                  onSave(option.value);
-                  setIsOpen(false);
-                }}
-            >
-                {option.icon && <GoogleSymbol name={option.icon} className="mb-1 text-lg" />}
-                {option.label}
-            </Button>
-            ))}
+            <div className="flex flex-col">
+              {options.map(option => (
+              <Button
+                  key={option.value}
+                  variant="ghost"
+                  className={cn(
+                      "font-emphasis h-auto",
+                      option.icon ? "flex-col p-2" : "justify-start px-2 h-8",
+                      option.value === value && "font-emphasized"
+                  )}
+                  onClick={() => {
+                    onSave(option.value);
+                    setIsOpen(false);
+                  }}
+              >
+                  {option.icon && <GoogleSymbol name={option.icon} className="mb-1 text-lg" />}
+                  {option.label}
+              </Button>
+              ))}
+            </div>
       </PopoverContent>
     </Popover>
   );
