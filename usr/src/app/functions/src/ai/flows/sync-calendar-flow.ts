@@ -8,16 +8,12 @@
  * - SyncCalendarOutput - The return type for the syncCalendar function.
  */
 
-import { genkit, z } from 'genkit';
-import { google } from '@genkit-ai/google';
-import { google as googleapis } from 'googleapis';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
+import { google } from 'googleapis';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { startOfDay } from 'date-fns';
 import { type Event, type SharedCalendar } from '@/types';
-
-export const ai = genkit({
-  plugins: [google()],
-});
 
 
 const SyncCalendarInputSchema = z.object({
@@ -52,16 +48,15 @@ const syncCalendarFlow = ai.defineFlow(
   async (input) => {
     console.log(`Starting REAL event sync for Google Calendar ID: ${input.googleCalendarId} in workspace ${input.workspaceId}`);
 
-    const auth = new googleapis.auth.GoogleAuth({
+    const auth = new google.auth.GoogleAuth({
         scopes: ['https://www.googleapis.com/auth/calendar.readonly']
     });
-
-    const authClient = await auth.getClient();
-    const calendarApi = googleapis.calendar({version: 'v3', auth: authClient});
     
     const db = getFirestore();
 
     try {
+        const authClient = await auth.getClient();
+        const calendarApi = google.calendar({version: 'v3', auth: authClient});
         const response = await calendarApi.events.list({
             calendarId: input.googleCalendarId,
             timeMin: (startOfDay(new Date())).toISOString(),

@@ -8,14 +8,10 @@
  * - WatchGoogleCalendarOutput - The return type for the watchGoogleCalendar function.
  */
 
-import { genkit, z } from 'genkit';
-import { google } from '@genkit-ai/google';
-import { google as googleapis } from 'googleapis';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
+import { google } from 'googleapis';
 import { v4 as uuidv4 } from 'uuid';
-
-export const ai = genkit({
-  plugins: [google()],
-});
 
 const WatchGoogleCalendarInputSchema = z.object({
   googleCalendarId: z.string().describe('The ID of the Google Calendar to watch.'),
@@ -46,12 +42,12 @@ const watchGoogleCalendarFlow = ai.defineFlow(
   async (input) => {
     console.log(`Setting up a REAL watch on calendar: ${input.googleCalendarId}`);
     
-    const auth = new googleapis.auth.GoogleAuth({
+    const auth = new google.auth.GoogleAuth({
         scopes: ['https://www.googleapis.com/auth/calendar']
     });
 
     const authClient = await auth.getClient();
-    const calendarApi = googleapis.calendar({version: 'v3', auth: authClient});
+    const calendarApi = google.calendar({version: 'v3', auth: authClient});
 
     try {
       const response = await calendarApi.events.watch({
