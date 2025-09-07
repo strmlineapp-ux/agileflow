@@ -12,10 +12,12 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { google } from 'googleapis';
 import { v4 as uuidv4 } from 'uuid';
+import { getAuthorizedClient } from '@/lib/google-auth-service';
 
 const WatchGoogleCalendarInputSchema = z.object({
   googleCalendarId: z.string().describe('The ID of the Google Calendar to watch.'),
   webhookUrl: z.string().url().describe('The URL of the webhook to send notifications to.'),
+  userId: z.string().describe('The ID of the user initiating the watch request.'),
 });
 export type WatchGoogleCalendarInput = z.infer<typeof WatchGoogleCalendarInputSchema>;
 
@@ -40,14 +42,13 @@ const watchGoogleCalendarFlow = ai.defineFlow(
     outputSchema: WatchGoogleCalendarOutputSchema,
   },
   async (input) => {
-    console.log(`Setting up a REAL watch on calendar: ${input.googleCalendarId}`);
+    console.log(`Setting up a REAL watch on calendar: ${input.googleCalendarId} for user ${input.userId}`);
     
-    // Use Application Default Credentials
-    const auth = new google.auth.GoogleAuth({
-        scopes: ['https://www.googleapis.com/auth/calendar']
-    });
+    const authClient = await getAuthorizedClient(input.userId);
+    if (!authClient) {
+      throw new Error(`User ${input.userId} is not authorized. Please connect your Google Account in settings.`);
+    }
 
-    const authClient = await auth.getClient();
     const calendarApi = google.calendar({version: 'v3', auth: authClient});
 
     try {
@@ -75,7 +76,13 @@ const watchGoogleCalendarFlow = ai.defineFlow(
 
     } catch (err: any) {
       console.error('The API returned an error: ' + err);
+      // Check for specific OAuth-related errors which might indicate expired tokens
+      if (err.message.includes('invalid_grant') || err.message.includes('Token has been expired or revoked')) {
+         throw new Error(`Authorization for user ${input.userId} has expired. Please re-authorize.`);
+      }
       throw new Error(`Failed to set up watch for calendar ${input.googleCalendarId}. Error: ${err.message}`);
     }
   }
 );
+
+    

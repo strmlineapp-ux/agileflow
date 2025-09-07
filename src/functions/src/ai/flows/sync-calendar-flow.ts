@@ -14,6 +14,8 @@ import { google } from 'googleapis';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { startOfDay } from 'date-fns';
 import { type Event, type SharedCalendar } from '@/types';
+import { getAuthorizedClient } from '@/lib/google-auth-service';
+import { doc, getDoc } from 'firebase/firestore';
 
 
 const SyncCalendarInputSchema = z.object({
@@ -48,15 +50,30 @@ const syncCalendarFlow = ai.defineFlow(
   async (input) => {
     console.log(`Starting REAL event sync for Google Calendar ID: ${input.googleCalendarId} in workspace ${input.workspaceId}`);
 
-    // Use Application Default Credentials
-    const auth = new google.auth.GoogleAuth({
-        scopes: ['https://www.googleapis.com/auth/calendar.readonly']
-    });
-    
     const db = getFirestore();
+    const internalCalendarQuery = await db.collection('calendars')
+        .where('googleCalendarId', '==', input.googleCalendarId)
+        .where('workspaceId', '==', input.workspaceId)
+        .limit(1)
+        .get();
+    
+    if (internalCalendarQuery.empty) {
+        throw new Error(`Could not find internal calendar for Google ID ${input.googleCalendarId}`);
+    }
+    
+    const internalCalendar = internalCalendarQuery.docs[0].data() as SharedCalendar;
+    const calendarOwnerId = internalCalendar.owner?.id;
+
+    if (!calendarOwnerId) {
+      throw new Error(`Calendar ${internalCalendar.id} does not have an owner.`);
+    }
+
+    const authClient = await getAuthorizedClient(calendarOwnerId);
+    if (!authClient) {
+      throw new Error(`Could not get authorized client for user ${calendarOwnerId}. The user may need to re-authenticate.`);
+    }
 
     try {
-        const authClient = await auth.getClient();
         const calendarApi = google.calendar({version: 'v3', auth: authClient});
         const response = await calendarApi.events.list({
             calendarId: input.googleCalendarId,
@@ -74,18 +91,6 @@ const syncCalendarFlow = ai.defineFlow(
         }
         
         console.log(`Found ${events.length} events to sync.`);
-
-        const internalCalendarQuery = await db.collection('calendars')
-            .where('googleCalendarId', '==', input.googleCalendarId)
-            .where('workspaceId', '==', input.workspaceId)
-            .limit(1)
-            .get();
-        
-        if (internalCalendarQuery.empty) {
-            throw new Error(`Could not find internal calendar for Google ID ${input.googleCalendarId}`);
-        }
-        
-        const internalCalendar = internalCalendarQuery.docs[0].data() as SharedCalendar;
 
         const batch = db.batch();
 
@@ -140,3 +145,5 @@ const syncCalendarFlow = ai.defineFlow(
     }
   }
 );
+
+    

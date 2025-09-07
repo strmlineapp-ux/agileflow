@@ -11,6 +11,7 @@ type FirebaseConfig = {
   storageBucket: string;
   messagingSenderId: string;
   appId: string;
+  measurementId: string;
 };
 
 // A mock database of Firebase configurations for different workspaces.
@@ -23,6 +24,7 @@ const workspaceConfigs: Record<string, FirebaseConfig> = {
     storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
     messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
+    measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID!,
   },
   // Example for a premium workspace with a dedicated project
   // 'acme-corp': { ... new firebase config ... }
@@ -127,3 +129,5 @@ export function getAuthInstance(): Auth {
   authInstances.set(workspaceId, auth);
   return auth;
 }
+
+    
