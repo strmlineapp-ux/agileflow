@@ -92,18 +92,28 @@ function BadgeDisplayItem({
 
     const ownerUser = users.find(u => u.userId === badge.owner.id);
     
-    const nameEditorElement = (
-      <InlineEditor
-        value={badge.name}
-        onSave={(newValue) => handleUpdate({ name: newValue })}
-        disabled={!isOwner}
-        className={cn("break-words font-emphasis font-normal")}
-      />
-    );
-    
     const shouldShowLinkIcon = isLinked && (!isSharedPreview || (currentUserBadgeIds && currentUserBadgeIds.has(badge.id)));
     
     if (viewMode === 'grid' || viewMode === 'list') {
+      const nameEditorElement = (
+        <InlineEditor
+          value={badge.name}
+          onSave={(newValue) => handleUpdate({ name: newValue })}
+          disabled={!isOwner}
+          className={cn("break-words font-emphasis font-normal")}
+        />
+      );
+      
+      const descriptionElement = (
+          <InlineEditor
+            value={badge.description || ''}
+            onSave={(newValue) => handleUpdate({ description: newValue })}
+            disabled={!isOwner}
+            placeholder={isLinked ? "No description" : "Click to add description."}
+            className="break-words"
+          />
+      );
+      
       return (
         <div className="flex flex-col gap-2 p-2 relative" {...dragHandleProps}>
             <CardHeader className="p-0">
@@ -124,13 +134,7 @@ function BadgeDisplayItem({
             </CardHeader>
             {isExpanded && (
                 <CardContent className="p-0">
-                    <InlineEditor
-                      value={badge.description || ''}
-                      onSave={(newValue) => handleUpdate({ description: newValue })}
-                      disabled={!isOwner}
-                      placeholder={isLinked ? "No description" : "Click to add description."}
-                      className="break-words"
-                    />
+                    {descriptionElement}
                 </CardContent>
             )}
             <div className="absolute -bottom-1 right-0">
@@ -143,6 +147,15 @@ function BadgeDisplayItem({
     }
     
     // Compact View
+    const nameEditorElement = (
+      <InlineEditor
+        value={badge.name}
+        onSave={(newValue) => handleUpdate({ name: newValue })}
+        disabled={!isOwner}
+        className="break-words font-emphasis font-normal"
+      />
+    );
+
     return (
         <div className="p-1.5 flex flex-col items-center gap-1" {...dragHandleProps}>
              <div className="relative">
@@ -236,7 +249,7 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
         break;
       case 'grid':
         strategy = rectSortingStrategy;
-        gridLayoutClass = "gap-4 [column-fill:_balance] columns-1 sm:columns-2";
+        gridLayoutClass = "w-full gap-4 [column-fill:_balance] columns-1 sm:columns-2";
         break;
       case 'compact':
       default:
