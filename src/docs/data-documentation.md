@@ -121,9 +121,9 @@ The `Project` is a top-level container for organizing work. It holds its own sub
 ---
 
 ## Event Entity
-**Firestore Collection**: `/events/{eventId}`
+**Firestore Collection**: `/events`
 
-Events are stored in a global `/events` collection to allow for efficient cross-calendar and cross-project querying, which is essential for the main calendar views.
+Events are globally stored and linked back to calendars and projects via IDs.
 
 | Data Point | Description |
 | :--- | :--- |
@@ -262,3 +262,5 @@ This represents a specific, functional role or skill.
 | `icon: string` | The Google Symbol name for the badge's icon. |
 | `color: string` | The hex color code for the badge's icon and outline. |
 | `description?: string` | An optional description shown in tooltips. |
+
+    
