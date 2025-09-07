@@ -20,6 +20,7 @@ import { UserCard } from '@/components/common/user-card';
 import { TransparentCard, TransparentCardContent } from '../ui/transparent-card';
 import { SettingSelect } from '../common/setting-select';
 import { useRouter } from 'next/navigation';
+import { getAuth } from 'firebase/auth';
 
 const predefinedColors = [
     'hsl(0, 84%, 60%)', 'hsl(25, 95%, 53%)', 'hsl(45, 93%, 47%)', 'hsl(88, 62%, 53%)', 'hsl(142, 71%, 45%)', 'hsl(160, 100%, 37%)',
@@ -123,7 +124,7 @@ const CustomColorPicker = ({ colorValue, onUpdate, onClose }: { colorValue: stri
 };
 
 function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }: { user: User, isCurrentUser: boolean, canEditPreferences: boolean, className?: string }) {
-    const { updateUser } = useUser();
+    const { updateUser, linkGoogleCalendar } = useUser();
     const [isPrimaryColorPopoverOpen, setIsPrimaryColorPopoverOpen] = useState(false);
     const [isFontWeightPopoverOpen, setIsFontWeightPopoverOpen] = useState(false);
     const [isIconGradePopoverOpen, setIsIconGradePopoverOpen] = useState(false);
@@ -193,7 +194,18 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <div className="relative">
+                                    <div 
+                                        className={cn("relative", isCurrentUser && !user.googleCalendarLinked && "cursor-pointer")}
+                                        onClick={(e) => {
+                                            if (isCurrentUser && !user.googleCalendarLinked) {
+                                                const auth = getAuth();
+                                                if (auth.currentUser) {
+                                                    e.stopPropagation();
+                                                    linkGoogleCalendar(auth.currentUser);
+                                                }
+                                            }
+                                        }}
+                                    >
                                         <Avatar className="h-12 w-12">
                                             <AvatarImage src={user.avatarUrl} alt={user.displayName} data-ai-hint="user avatar" />
                                             <AvatarFallback>{user.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
@@ -206,7 +218,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                     </div>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                    <p>Google Calendar: {user.googleCalendarLinked ? 'Connected' : 'Not Connected'}</p>
+                                    <p>Google Calendar: {user.googleCalendarLinked ? 'Connected' : isCurrentUser ? 'Click to connect' : 'Not Connected'}</p>
                                 </TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
