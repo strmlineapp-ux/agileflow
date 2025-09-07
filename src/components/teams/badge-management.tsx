@@ -84,7 +84,7 @@ function BadgeDisplayItem({
         disabled={!isOwner}
         className={cn(
             "break-words font-emphasis",
-            viewMode === 'compact' ? "text-xs text-center" : "font-normal"
+             viewMode === 'compact' ? "text-center" : "font-normal"
         )}
       />
     );
