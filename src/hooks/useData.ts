@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -295,7 +294,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
     toast({ title: 'Project Deleted' });
   }, [toast]);
 
-  const addCalendar = useCallback(async (calendarData: Partial<Omit<SharedCalendar, 'id'>>) => {
+  const addCalendar = useCallback(async (calendarData: Partial<Omit<SharedCalendar, 'id'>>, realUser: User) => {
     if (!realUser) return;
     const isDuplicating = !!calendarData.id;
     const newCalendarData = {
@@ -394,7 +393,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
     setAppSettings(current => ({ ...current, ...settings }));
   }, [realUser]);
   
-  const addPage = useCallback(async (pageData: Partial<AppPage> = {}) => {
+  const addPage = useCallback(async (pageData: Partial<AppPage>, realUser: User) => {
     if (!realUser) return;
     const db = getDb();
     const newDocRef = doc(collection(db, 'pages'));
@@ -423,7 +422,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
     await setDoc(newDocRef, newPage);
 
     setAllPages(current => [...current, newPage]);
-  }, [realUser]);
+  }, []);
 
   const updatePage = useCallback(async (pageId: string, pageData: Partial<AppPage>) => {
     const page = allPages.find(p => p.id === pageId);
@@ -800,7 +799,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
     fetchEvents, addEvent, updateEvent, deleteEvent,
     fetchTasks, addTask, updateTask, deleteTask, addLocation, deleteLocation,
     updateAppSettings: (settings: Partial<Omit<AppSettings, 'preApprovedEmails'>>) => updateAppSettings(settings),
-    addPage: (pageData: Partial<AppPage> = {}) => {}, // Placeholder, will be managed in UserContext
+    addPage,
     updatePage, deletePage, reorderPages,
     updateAppTab, reorderTabs,
     addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, reorderBadgeCollections, addBadge, updateBadge, deleteBadge,
