@@ -161,11 +161,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     };
 }, [viewAsUser]);
   
-  const addPage = useCallback(async (pageData: Partial<AppPage>) => {
+  const addPage = useCallback(async (pageData: Partial<AppPage> = {}) => {
     if (!realUser) return;
     const db = getDb();
-    const pagesCollectionRef = collection(db, 'pages');
-    const newDocRef = doc(pagesCollectionRef); // Create a reference with a new ID
+    const newDocRef = doc(collection(db, 'pages'));
 
     const isDuplicating = !!pageData.id;
     const randomIcon = googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)];
@@ -174,9 +173,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const slug = pageName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 
     const newPage: AppPage = {
-      id: newDocRef.id, // Use the generated ID
+      id: newDocRef.id,
       name: pageName,
-      path: `/dashboard/${slug}-${newDocRef.id}`, // Construct path with the new ID
+      path: `/dashboard/${slug}-${newDocRef.id}`,
       icon: pageData.icon || randomIcon,
       color: pageData.color ? adjustHslColor(pageData.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
       description: pageData.description || randomDesc,
@@ -185,13 +184,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       access: pageData.access || { users: [], teams: [] },
       owner: { type: 'user', id: realUser.userId },
       workspaceId: realUser.workspaceId,
+      isSystemPage: false, // User-created pages are never system pages
     };
 
-    await setDoc(newDocRef, newPage); // Use setDoc with the complete object
+    await setDoc(newDocRef, newPage);
 
     dataHook.setAllPages(current => [...current, newPage]);
-    dataHook.setAppSettings(current => ({ ...current, pages: [...current.pages, newPage] }));
-  }, [realUser, dataHook.setAllPages, dataHook.setAppSettings]);
+  }, [realUser, dataHook.setAllPages]);
   
   const contextValue = useMemo(() => {
     const setViewAsUserWithReset = (userId: string) => {
@@ -278,6 +277,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     realUser, viewAsUser, googleLogin, logout, loading, isFirebaseReady, dataHook, isDragModifierPressed, addPage
   ]);
 
+  useEffect(() => {
+    if (dataHook.allPages && dataHook.appSettings.tabs) {
+        dataHook.setAppSettings(current => ({...current, pages: dataHook.allPages }));
+    }
+  }, [dataHook.allPages, dataHook.setAppSettings]);
+
   return (
     <UserContext.Provider value={contextValue}>
         {children}
@@ -290,4 +295,3 @@ export function useUser() {
   if (!context) throw new Error('useUser must be used within a UserProvider');
   return context;
 }
-
