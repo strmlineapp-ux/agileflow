@@ -69,6 +69,7 @@ export interface User {
   isAdmin: boolean;
   accountType: 'Full' | 'Viewer';
   googleCalendarLinked: boolean;
+  googleApiAuthorized?: boolean;
   googleCalendarId?: string;
   avatarUrl?: string;
   location?: string;
@@ -265,3 +266,5 @@ export interface Tenant {
     ownerId: string;
     createdAt: Date;
 }
+
+    
