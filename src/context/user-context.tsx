@@ -160,40 +160,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     };
 }, [viewAsUser]);
   
-  const addPage = useCallback(async (pageData: Partial<AppPage> = {}) => {
-    if (!realUser) return;
-    const db = getDb();
-    const newDocRef = doc(collection(db, 'pages'));
-    const newPageId = newDocRef.id;
-
-    const isDuplicating = !!pageData.id;
-    const randomIcon = googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)];
-    const randomDesc = randomDescriptions[Math.floor(Math.random() * randomDescriptions.length)];
-    const pageName = isDuplicating ? `${pageData.name} (Copy)` : (pageData.name || "New Page");
-    const slug = pageName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-    const newPath = `/dashboard/${slug}-${newPageId}`;
-
-    const newPage: AppPage = {
-      id: newPageId,
-      path: newPath,
-      name: pageName,
-      icon: pageData.icon || randomIcon,
-      color: pageData.color ? adjustHslColor(pageData.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
-      description: pageData.description || randomDesc,
-      isDynamic: pageData.isDynamic || false,
-      associatedTabs: pageData.associatedTabs || [],
-      access: pageData.access || { users: [], teams: [] },
-      owner: { type: 'user', id: realUser.userId },
-      workspaceId: realUser.workspaceId,
-      isSystemPage: false, // User-created pages are never system pages
-    };
-
-    await setDoc(doc(db, 'pages', newPageId), newPage);
-    
-    dataHook.setAllPages(current => [...current, newPage]);
-
-  }, [realUser, dataHook.setAllPages]);
-  
   const contextValue = useMemo(() => {
     const setViewAsUserWithReset = (userId: string) => {
       if (userId === realUser?.userId) {
@@ -205,19 +171,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     const addTeamWithUser = (teamData: Partial<Omit<Team, 'id'>>) => {
         if (!realUser) return;
-        const isDuplicating = !!teamData.id;
-        const newTeamData = {
-            name: isDuplicating && teamData.name ? `${teamData.name} (Copy)` : 'New Team',
-            icon: teamData.icon || googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
-            color: isDuplicating && teamData.color ? adjustHslColor(teamData.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
-            owner: { type: 'user', id: realUser.userId },
-            members: [realUser.userId],
-            isShared: false,
-            description: teamData.description || randomDescriptions[Math.floor(Math.random() * randomDescriptions.length)],
-            workspaceId: realUser.workspaceId,
-            ...teamData,
-        };
-        dataHook.addTeam(newTeamData, realUser);
+        dataHook.addTeam(teamData, realUser);
+    };
+
+    const addCalendarWithUser = (calendarData: Partial<Omit<SharedCalendar, 'id'>>) => {
+        if (!realUser) return;
+        dataHook.addCalendar(calendarData, realUser);
     };
 
     const deleteUserWithUser = (userId: string) => dataHook.deleteUser(userId, realUser!);
@@ -238,20 +197,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const addTaskWithUser = (currentTasks: Task[], newTaskData: Omit<Task, 'taskId' | 'createdAt' | 'lastUpdated'>) => dataHook.addTask(currentTasks, newTaskData, realUser!);
     const addPreApprovedEmailWithUser = (email: string) => dataHook.addPreApprovedEmail(email, realUser!);
 
-    const addCalendarWithDefaults = (calendarData: Partial<Omit<SharedCalendar, 'id'>>) => {
-        if (!realUser) return;
-        const isDuplicating = !!calendarData.id;
-        const newCalendarData = {
-          name: isDuplicating && calendarData.name ? `${calendarData.name} (Copy)` : 'New Calendar',
-          icon: calendarData.icon || 'calendar_month',
-          color: isDuplicating && calendarData.color ? adjustHslColor(calendarData.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
-          owner: { type: 'user', id: realUser.userId },
-          ...calendarData,
-          workspaceId: realUser.workspaceId,
-        };
-        dataHook.addCalendar(newCalendarData as Omit<SharedCalendar, 'id'>);
-    };
-
     const enrichedViewAsUser = viewAsUser ? { ...viewAsUser, isDragModifierPressed } : null;
 
     return {
@@ -264,9 +209,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       isFirebaseReady,
       ...dataHook,
       addBadgeCollection: addBadgeCollectionWithUser,
-      addCalendar: addCalendarWithDefaults,
+      addCalendar: addCalendarWithUser,
       addTeam: addTeamWithUser,
-      addPage: addPage,
+      addPage: (pageData: Partial<AppPage> = {}) => {
+        if (!realUser) return;
+        dataHook.addPage(pageData, realUser);
+      },
       deleteUser: deleteUserWithUser,
       addProject: addProjectWithUser,
       deleteTeam: deleteTeamWithRouter,
@@ -277,7 +225,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       addPreApprovedEmail: addPreApprovedEmailWithUser,
     };
   }, [
-    realUser, viewAsUser, googleLogin, logout, loading, isFirebaseReady, dataHook, isDragModifierPressed, addPage
+    realUser, viewAsUser, googleLogin, logout, loading, isFirebaseReady, dataHook, isDragModifierPressed
   ]);
 
   useEffect(() => {
