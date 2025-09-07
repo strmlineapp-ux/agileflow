@@ -55,4 +55,3 @@ export const handleSendInvitation = onDocumentCreated('pre-approved-emails/{docI
     
     return null;
 });
-
