@@ -99,7 +99,10 @@ function BadgeDisplayItem({
             value={badge.name}
             onSave={(newValue) => handleUpdate({ name: newValue })}
             disabled={!isOwner}
-            className={cn("break-words font-emphasis", isOwner && "cursor-text")}
+            className={cn(
+                "break-words font-emphasis",
+                viewMode === 'compact' && "text-sm font-normal"
+            )}
         />
     );
 
@@ -109,7 +112,7 @@ function BadgeDisplayItem({
             onSave={(newValue) => handleUpdate({ description: newValue })}
             disabled={!isOwner}
             placeholder={isLinked ? "No description" : "Click to add description."}
-            className={cn("break-words", !badge.description && "italic")}
+            className={cn("break-words")}
         />
    );
    
@@ -523,7 +526,7 @@ function BadgeCollectionCard({
             headerControls={headerControls}
             body={bodyContent}
             footer={footerContent}
-            className="overflow-hidden"
+            className="overflow-hidden flex-shrink-0"
         />
     );
 }
