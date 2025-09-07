@@ -62,7 +62,7 @@ export async function sendEmail(to: string[], subject: string, htmlBody: string)
 /**
  * Firestore trigger that sends an email to admins when a new user signs up.
  */
-export const onNewUserCreated = onDocumentCreated('users/{userId}', async (event) => {
+export const handleNewUserCreated = onDocumentCreated('users/{userId}', async (event) => {
   const newUser = event.data?.data();
 
   // If user is 'Full' (pre-approved or first user), no notification needed.
