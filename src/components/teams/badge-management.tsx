@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useUser } from '@/context/user-context';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -98,7 +99,7 @@ function BadgeDisplayItem({
             value={badge.name}
             onSave={(newValue) => handleUpdate({ name: newValue })}
             disabled={!isOwner}
-            className={cn("break-words font-emphasis", isOwner)}
+            className={cn("break-words font-emphasis text-sm", isOwner)}
         />
     );
 
@@ -263,7 +264,7 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
         <div 
             ref={setNodeRef}
             className={cn(
-                "min-h-[60px] rounded-md p-2 transition-all w-full",
+                "min-h-[60px] rounded-md p-2 transition-all",
                 isOver && "ring-1 ring-border ring-inset",
                 gridLayoutClass
             )}
@@ -450,7 +451,7 @@ function BadgeCollectionCard({
             onSave={(newDesc) => onUpdateCollection(collection.id, { description: newDesc })}
             disabled={!isOwner}
             placeholder="Click to add a description..."
-            className="text-sm text-foreground"
+            className="text-sm"
         />
         <DroppableCollectionContent collection={collection}>
           {collectionBadges.map((badge) => {
@@ -522,7 +523,7 @@ function BadgeCollectionCard({
             headerControls={headerControls}
             body={bodyContent}
             footer={footerContent}
-            className="overflow-hidden flex-shrink-0"
+            className="overflow-hidden"
         />
     );
 }
@@ -590,20 +591,24 @@ export function BadgeManagement({ tab, page, isActive, isSharedPanelOpen, setIsS
             const badge = active.data.current?.badge as Badge;
             const sourceCollectionId = active.data.current?.collectionId as string;
             
-            const targetCollectionId = over.data.current?.collection?.id as string;
-            const targetCollection = allBadgeCollections.find(c => c.id === targetCollectionId);
-            
-            if (targetCollection && targetCollectionId !== sourceCollectionId) {
-                // Link badge to new collection
-                const targetIsOwner = targetCollection.owner.id === viewAsUser?.userId;
-                if (targetIsOwner) {
-                  const updatedBadgeIds = [...targetCollection.badgeIds, badge.id];
-                  updateBadgeCollection(targetCollectionId, { badgeIds: updatedBadgeIds });
-                  toast({ title: 'Badge Linked', description: `"${badge.name}" linked to "${targetCollection.name}".`});
-                } else {
-                  toast({ variant: 'destructive', title: 'Permission Denied', description: 'You can only add badges to collections you own.'});
+            const overIsCollection = over.data.current?.type === 'collection';
+            const overIsDuplicateZone = over.data.current?.type === 'duplicate-badge-zone';
+
+            if (overIsCollection) {
+                const targetCollectionId = over.data.current?.collection?.id as string;
+                const targetCollection = allBadgeCollections.find(c => c.id === targetCollectionId);
+
+                if (targetCollection && targetCollectionId !== sourceCollectionId) {
+                    const targetIsOwner = targetCollection.owner.id === viewAsUser?.userId;
+                    if (targetIsOwner) {
+                        const updatedBadgeIds = [...targetCollection.badgeIds, badge.id];
+                        updateBadgeCollection(targetCollectionId, { badgeIds: updatedBadgeIds });
+                        toast({ title: 'Badge Linked', description: `"${badge.name}" linked to "${targetCollection.name}".` });
+                    } else {
+                        toast({ variant: 'destructive', title: 'Permission Denied', description: 'You can only add badges to collections you own.' });
+                    }
                 }
-            } else if (over.data.current?.type === 'duplicate-badge-zone') {
+            } else if (overIsDuplicateZone) {
                 const targetCollectionIdForDupe = over.data.current.collectionId;
                 addBadge(targetCollectionIdForDupe, badge);
             }
