@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
@@ -175,7 +174,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const newPage: AppPage = {
       id: newDocRef.id,
       name: pageName,
-      path: `/dashboard/${slug}-${newDocRef.id}`,
+      path: `/dashboard/${slug}`,
       icon: pageData.icon || randomIcon,
       color: pageData.color ? adjustHslColor(pageData.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
       description: pageData.description || randomDesc,
@@ -190,7 +189,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     await setDoc(newDocRef, newPage);
 
     dataHook.setAllPages(current => [...current, newPage]);
-  }, [realUser, dataHook.setAllPages]);
+    dataHook.setAppSettings(currentSettings => ({
+      ...currentSettings,
+      pages: [...currentSettings.pages, newPage]
+    }));
+  }, [realUser, dataHook.setAllPages, dataHook.setAppSettings]);
   
   const contextValue = useMemo(() => {
     const setViewAsUserWithReset = (userId: string) => {
@@ -205,7 +208,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         if (!realUser) return;
         const isDuplicating = !!teamData.id;
         const newTeamData = {
-            name: isDuplicating ? `${teamData.name} (Copy)` : 'New Team',
+            name: isDuplicating && teamData.name ? `${teamData.name} (Copy)` : 'New Team',
             icon: teamData.icon || googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
             color: isDuplicating && teamData.color ? adjustHslColor(teamData.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
             owner: { type: 'user', id: realUser.userId },

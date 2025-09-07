@@ -11,6 +11,7 @@ import { CompactSearchInput } from './compact-search-input';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useUser } from '@/context/user-context';
+import { ScrollArea } from '../ui/scroll-area';
 
 type Item = {
   id: string;
@@ -151,22 +152,26 @@ export function ItemSelectionPopover({
             />
           </div>
           
-           {filteredItems.length > 0 && (
-            <div className="overflow-y-auto hide-scrollbar p-1 pt-0">
-                <div className="space-y-1">
-                    {filteredItems.map(item => {
-                        const currentTab = tabs.find(t => t.value === activeTab);
-                        const isSelected = currentTab ? currentTab.selectedIds.includes(item.id) : false;
-                        
-                        return (
-                          <div key={item.id} onClick={() => {onSelectionChange(activeTab, item.id); setIsOpen(false)}}>
-                              <ItemDisplay item={item} isSelected={isSelected} />
-                          </div>
-                        );
-                    })}
-                </div>
+           <ScrollArea className="pr-1">
+             <div className="p-1 pt-0">
+                 {filteredItems.length > 0 ? (
+                    <div className="space-y-1">
+                        {filteredItems.map(item => {
+                            const currentTab = tabs.find(t => t.value === activeTab);
+                            const isSelected = currentTab ? currentTab.selectedIds.includes(item.id) : false;
+                            
+                            return (
+                              <div key={item.id} onClick={() => {onSelectionChange(activeTab, item.id); setIsOpen(false)}}>
+                                  <ItemDisplay item={item} isSelected={isSelected} />
+                              </div>
+                            );
+                        })}
+                    </div>
+                ) : (
+                    <p className="text-center text-sm text-muted-foreground py-4">No items found.</p>
+                )}
             </div>
-           )}
+          </ScrollArea>
         </Tabs>
       </PopoverContent>
     </Popover>
