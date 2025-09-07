@@ -24,6 +24,7 @@
     --destructive-foreground: 0 0% 100%;
     --border: 210 20% 85%;
     --input: 210 7% 40%;
+    --ring: 210 70% 50%;
     --radius: 0.5rem;
 
     --font-weight-thin: 100;
@@ -48,6 +49,7 @@
     --destructive-foreground: 0 0% 100%;
     --border: 210 40% 15%;
     --input: 210 7% 60%;
+    --ring: 25 88% 55%;
     --emphasis-color: hsl(var(--foreground));
   }
 
@@ -109,6 +111,27 @@
     
     body.icon-fill-emphasis {
         --emphasis-icon-fill: 0;
+    }
+
+    .bold-emphasis .font-emphasis:hover,
+    .bold-emphasis .font-emphasis:focus,
+    .bold-emphasis .font-emphasis[data-state=open],
+    .bold-emphasis .font-emphasis[data-state=active] {
+      color: hsl(var(--primary));
+    }
+
+    .bold-emphasis .font-emphasis:hover .material-symbols-outlined,
+    .bold-emphasis .font-emphasis:focus .material-symbols-outlined,
+    .bold-emphasis .font-emphasis[data-state=open] .material-symbols-outlined,
+    .bold-emphasis .font-emphasis[data-state=active] .material-symbols-outlined {
+        color: hsl(var(--primary));
+    }
+
+    .bold-emphasis .font-emphasis:hover .material-symbols-outlined,
+    .bold-emphasis .font-emphasis:focus .material-symbols-outlined,
+    .bold-emphasis .font-emphasis[data-state=open] .material-symbols-outlined,
+    .bold-emphasis .font-emphasis[data-state=active] .material-symbols-outlined {
+        font-variation-settings: 'FILL' var(--global-icon-fill, 0), 'wght' var(--font-weight-emphasis, 500), 'GRAD' var(--global-icon-grade, 0), 'opsz' var(--global-icon-optical-size, 24) !important;
     }
 }
 
