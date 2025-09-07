@@ -101,18 +101,6 @@ function BadgeDisplayItem({
       />
     );
     
-    const descriptionElement = isExpanded ? (
-      <div className="mt-2">
-        <InlineEditor
-          value={badge.description || ''}
-          onSave={(newValue) => handleUpdate({ description: newValue })}
-          disabled={!isOwner}
-          placeholder={isLinked ? "No description" : "Click to add description."}
-          className={cn("break-words")}
-        />
-      </div>
-    ) : null;
-        
     const shouldShowLinkIcon = isLinked && (!isSharedPreview || (currentUserBadgeIds && currentUserBadgeIds.has(badge.id)));
     
     if (viewMode === 'grid' || viewMode === 'list') {
@@ -134,9 +122,17 @@ function BadgeDisplayItem({
                     </div>
                 </div>
             </CardHeader>
-            <CardContent className="p-0">
-                {descriptionElement}
-            </CardContent>
+            {isExpanded && (
+                <CardContent className="p-0">
+                    <InlineEditor
+                      value={badge.description || ''}
+                      onSave={(newValue) => handleUpdate({ description: newValue })}
+                      disabled={!isOwner}
+                      placeholder={isLinked ? "No description" : "Click to add description."}
+                      className="break-words"
+                    />
+                </CardContent>
+            )}
             <div className="absolute -bottom-1 right-0">
               <Button variant="ghost" size="icon" onClick={onToggleExpand} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
                 <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
@@ -245,7 +241,7 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
       case 'compact':
       default:
         strategy = rectSortingStrategy;
-        gridLayoutClass = "flex flex-wrap gap-2 items-start";
+        gridLayoutClass = "grid grid-cols-3 gap-2 items-start";
         break;
     }
     
@@ -690,4 +686,3 @@ export function BadgeManagement({ tab, page, isActive, isSharedPanelOpen, setIsS
       </DndContext>
     );
 }
-
