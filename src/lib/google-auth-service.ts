@@ -11,19 +11,27 @@ const GOOGLE_CLIENT_SECRET = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET;
 
 /**
  * Creates and configures a Google OAuth2 client.
- * NOTE: The redirect URI must be one of the authorized redirect URIs for the client ID.
- * You can find this in your Google Cloud Console. For local development, it's often
- * `http://localhost:3000/api/auth/google/callback`. For production, it will be your app's domain.
+ * The redirect URI is now dynamically determined based on the environment.
  */
 export async function getOAuth2Client(): Promise<OAuth2Client> {
   if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
     throw new Error('Google OAuth client environment variables are not set.');
   }
 
-  // Determine the redirect URI based on the environment
-  const redirectUri = process.env.NODE_ENV === 'production' 
-    ? 'https://agileflow-mlf18.web.app/api/auth/google/callback'
-    : 'http://localhost:3000/api/auth/google/callback';
+  // Dynamically determine the redirect URI.
+  // VERCEL_URL is provided by Vercel deployments.
+  // NEXT_PUBLIC_URL is for local development via .env.
+  const vercelUrl = process.env.VERCEL_URL;
+  const ngrokUrl = process.env.NGROK_URL; // Studio uses ngrok
+  const baseUrl = ngrokUrl ? `https://${ngrokUrl}` : (vercelUrl ? `https://${vercelUrl}` : process.env.NEXT_PUBLIC_URL);
+  
+  if (!baseUrl) {
+    throw new Error("Could not determine base URL for OAuth redirect URI.");
+  }
+  
+  const redirectUri = `${baseUrl}/api/auth/google/callback`;
+  
+  console.log(`Using Google OAuth Redirect URI: ${redirectUri}`);
 
   return new google.auth.OAuth2(
     GOOGLE_CLIENT_ID,
@@ -79,4 +87,3 @@ export async function getAuthorizedClient(userId: string): Promise<OAuth2Client>
   
   return oAuth2Client;
 }
-
