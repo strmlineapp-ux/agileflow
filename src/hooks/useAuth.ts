@@ -9,7 +9,7 @@ import { getAuthInstance, getDb, getCurrentWorkspaceId } from '@/lib/firebase';
 import { useToast } from './use-toast';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { systemPages, coreTabs } from '@/lib/core-data';
-import { saveCredentials } from '@/lib/google-auth-service';
+import { getOAuth2Client } from '@/lib/google-auth-service';
 
 
 const COMMON_EMAIL_DOMAINS = new Set([
@@ -31,7 +31,7 @@ export function useAuth() {
     }
   }, []);
 
-  const handleUserSignIn = useCallback(async (firebaseUser: FirebaseUser, credential?: OAuthCredential) => {
+  const handleUserSignIn = useCallback(async (firebaseUser: FirebaseUser) => {
     const db = getDb();
     const userDocRef = doc(db, 'users', firebaseUser.uid);
     let userDoc = await getDoc(userDocRef);
@@ -96,7 +96,7 @@ export function useAuth() {
             batch.set(appSettingsRef, newAppSettings);
             await batch.commit();
         }
-        userDoc = await getDoc(userDocRef); // Re-fetch the doc to have the created data
+        userDoc = await getDoc(userDocRef);
     }
 
     userData = {
@@ -104,15 +104,6 @@ export function useAuth() {
         userId: userDoc.id,
         createdAt: userDoc.data()!.createdAt?.toDate ? userDoc.data()!.createdAt.toDate() : new Date(),
     } as User;
-
-    // If a credential was provided (meaning calendar access was granted), save it and update the user doc.
-    if (credential) {
-        await saveCredentials(firebaseUser.uid, credential);
-        if (!userData.googleCalendarLinked) {
-            await updateDoc(userDocRef, { googleCalendarLinked: true });
-            userData.googleCalendarLinked = true;
-        }
-    }
     
     setRealUser(userData);
   }, []);
@@ -124,8 +115,6 @@ export function useAuth() {
     
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
         if (firebaseUser) {
-            // This now handles both sign-in and new user creation correctly.
-            // Credential handling is deferred to the explicit googleLogin call.
             await handleUserSignIn(firebaseUser);
         } else {
           setRealUser(null);
@@ -144,22 +133,11 @@ export function useAuth() {
     const authInstance = getAuthInstance();
     const provider = new GoogleAuthProvider();
     provider.addScope('https://www.googleapis.com/auth/calendar.readonly');
-    // This is the key change: always prompt for consent to ensure we get the necessary permissions.
-    provider.setCustomParameters({ prompt: 'consent' });
-
+    
     try {
-        const result = await signInWithPopup(authInstance, provider);
-        const credential = GoogleAuthProvider.credentialFromResult(result);
-        if (credential) {
-            // Pass both user and credential to be handled together.
-            // This will now correctly find or create the user BEFORE saving credentials.
-            await handleUserSignIn(result.user, credential);
-            return true;
-        } else {
-            // This case might happen if permissions were somehow already granted.
-            await handleUserSignIn(result.user);
-            return true;
-        }
+        await signInWithPopup(authInstance, provider);
+        // The onAuthStateChanged listener will handle the user creation and state update.
+        return true;
     } catch (error: any) {
         if (error.code !== 'auth/popup-closed-by-user') {
             console.error("Google Sign-In failed:", error);
@@ -167,7 +145,27 @@ export function useAuth() {
         }
         return false;
     }
-  }, [isFirebaseReady, toast, handleUserSignIn]);
+  }, [isFirebaseReady, toast]);
+
+  const linkGoogleCalendar = useCallback(async (user: FirebaseUser) => {
+    try {
+      const oAuth2Client = await getOAuth2Client();
+      const authUrl = oAuth2Client.generateAuthUrl({
+        access_type: 'offline',
+        scope: ['https://www.googleapis.com/auth/calendar.readonly'],
+        state: user.uid, // Pass the user's ID to identify them in the callback
+      });
+      // Redirect the user to the Google authorization page.
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error('Error generating Google auth URL:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Could not initiate Google Calendar connection. Please try again.',
+      });
+    }
+  }, [toast]);
 
 
   const logout = useCallback(async (router: AppRouterInstance) => {
@@ -183,5 +181,5 @@ export function useAuth() {
     }
   }, [isFirebaseReady, toast]);
 
-  return { realUser, loading, isFirebaseReady, googleLogin, logout, setRealUser };
+  return { realUser, loading, isFirebaseReady, googleLogin, logout, setRealUser, linkGoogleCalendar };
 }

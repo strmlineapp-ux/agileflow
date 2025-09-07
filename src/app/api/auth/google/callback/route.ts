@@ -1,6 +1,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getOAuth2Client, saveCredentials } from '@/lib/google-auth-service';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { getDb } from '@/lib/firebase';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -18,6 +20,11 @@ export async function GET(request: NextRequest) {
     
     // Save the tokens securely against the user's ID
     await saveCredentials(userId, tokens);
+    
+    // Also update the user's profile to mark the calendar as linked
+    const db = getDb();
+    const userDocRef = doc(db, 'users', userId);
+    await updateDoc(userDocRef, { googleCalendarLinked: true });
 
     // Redirect user back to the settings page after successful authorization
     const redirectUrl = new URL('/dashboard/settings', request.nextUrl.origin);
