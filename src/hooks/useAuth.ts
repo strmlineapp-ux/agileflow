@@ -11,7 +11,6 @@ import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.
 import { systemPages, coreTabs } from '@/lib/core-data';
 import { getOAuth2Client } from '@/lib/google-auth-service';
 
-
 const COMMON_EMAIL_DOMAINS = new Set([
     'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com', 'icloud.com', 'msn.com'
 ]);
