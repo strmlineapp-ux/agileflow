@@ -120,12 +120,7 @@ export function ManagementPageLayout<T extends TEntity>({
   
   const entityTitle = entityType ? entityType.charAt(0).toUpperCase() + entityType.slice(1) + 's' : '';
   
-  const gridClassName = cn(
-    "gap-4",
-    isSharedPanelOpen
-      ? "columns-1 sm:columns-2 lg:columns-3 xl:columns-4"
-      : "columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6"
-  );
+  const gridClassName = "flex flex-wrap -m-2";
   
   return (
     <div className="flex h-full gap-4">
@@ -154,7 +149,7 @@ export function ManagementPageLayout<T extends TEntity>({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="default" size="icon" onClick={onCollapseAll}>
-                    <GoogleSymbol name="unfold_less" />
+                    <GoogleSymbol name="collapse_content" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent><p>Collapse All</p></TooltipContent>
