@@ -209,15 +209,15 @@ export function useData(realUser: User | null, authLoading: boolean) {
     const db = getDb();
     const isDuplicating = !!teamData.id;
     const newTeamData = {
+      ...teamData,
       name: isDuplicating && teamData.name ? `${teamData.name} (Copy)` : 'New Team',
       icon: teamData.icon || googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
       color: isDuplicating && teamData.color ? adjustHslColor(teamData.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
       owner: { type: 'user', id: realUser.userId },
-      members: [realUser.userId],
+      members: teamData.members && teamData.members.length > 0 ? teamData.members : [realUser.userId],
       isShared: false,
       description: teamData.description || randomDescriptions[Math.floor(Math.random() * randomDescriptions.length)],
       workspaceId: realUser.workspaceId,
-      ...teamData,
     };
     const docRef = await addDoc(collection(db, 'teams'), newTeamData);
     const newTeam = { ...newTeamData, id: docRef.id };
@@ -298,11 +298,11 @@ export function useData(realUser: User | null, authLoading: boolean) {
     if (!realUser) return;
     const isDuplicating = !!calendarData.id;
     const newCalendarData = {
+      ...calendarData,
       name: isDuplicating && calendarData.name ? `${calendarData.name} (Copy)` : 'New Calendar',
       icon: calendarData.icon || 'calendar_month',
       color: isDuplicating && calendarData.color ? adjustHslColor(calendarData.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
       owner: { type: 'user', id: realUser.userId },
-      ...calendarData,
       workspaceId: realUser.workspaceId,
     };
     
@@ -416,11 +416,10 @@ export function useData(realUser: User | null, authLoading: boolean) {
       access: pageData.access || { users: [], teams: [] },
       owner: { type: 'user', id: realUser.userId },
       workspaceId: realUser.workspaceId,
-      isSystemPage: false, // User-created pages are never system pages
+      isSystemPage: false,
     };
 
     await setDoc(newDocRef, newPage);
-
     setAllPages(current => [...current, newPage]);
   }, []);
 
@@ -428,7 +427,6 @@ export function useData(realUser: User | null, authLoading: boolean) {
     const page = allPages.find(p => p.id === pageId);
     if (!page) return;
 
-    // Only write to Firestore for non-system pages
     if (!page.isSystemPage) {
         const db = getDb();
         await updateDoc(doc(db, 'pages', pageId), pageData);
@@ -441,18 +439,16 @@ export function useData(realUser: User | null, authLoading: boolean) {
     const db = getDb();
     await deleteDoc(doc(db, 'pages', pageId));
     setAllPages(current => current.filter(p => p.id !== pageId));
-  }, [allPages]);
+  }, []);
   
   const reorderPages = useCallback(async (reorderedPages: AppPage[]) => {
-    // In a real app, this might update a 'sortOrder' field in Firestore
-    // For now, we only update the local state.
     await simulateApi();
     const systemPageIds = new Set(systemPages.map(p => p.id));
     const userPages = reorderedPages.filter(p => !systemPageIds.has(p.id));
     const newPageOrder = [...systemPages, ...userPages];
     setAllPages(newPageOrder);
     setAppSettings(current => ({ ...current, pages: newPageOrder }));
-  }, [systemPages]);
+  }, []);
 
   const updateAppTab = useCallback(async (tabId: string, tabData: Partial<AppTab>) => {
     const newTabs = appSettings.tabs.map(t => t.id === tabId ? { ...t, ...tabData } : t);

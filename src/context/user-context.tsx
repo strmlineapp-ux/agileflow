@@ -169,34 +169,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    const addTeamWithUser = (teamData: Partial<Omit<Team, 'id'>>) => {
-        if (!realUser) return;
-        dataHook.addTeam(teamData, realUser);
-    };
-
-    const addCalendarWithUser = (calendarData: Partial<Omit<SharedCalendar, 'id'>>) => {
-        if (!realUser) return;
-        dataHook.addCalendar(calendarData, realUser);
-    };
-
-    const deleteUserWithUser = (userId: string) => dataHook.deleteUser(userId, realUser!);
-    const addProjectWithUser = (projectData: Partial<Project>) => dataHook.addProject(projectData, realUser!);
-    const deleteTeamWithRouter = (teamId: string, router: AppRouterInstance, pathname: string) => dataHook.deleteTeam(teamId, router, pathname, realUser!);
-    const handleApproveAccessRequestWithUser = (notificationId: string, approved: boolean) => dataHook.handleApproveAccessRequest(notificationId, approved, realUser!);
-    
-    const addBadgeCollectionWithUser = (owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => {
-        dataHook.addBadgeCollection(owner, sourceCollection, contextTeam);
-    };
-    
-    const addBadgeWithUser = (collectionId: string, sourceBadge?: Badge, unlinkSource: boolean = false) => {
-        if (!realUser) return;
-        dataHook.addBadge(collectionId, sourceBadge, realUser, unlinkSource);
-    };
-
-    const deleteBadgeWithUser = (badgeId: string, collectionId: string) => dataHook.deleteBadge(badgeId, collectionId, realUser!);
-    const addTaskWithUser = (currentTasks: Task[], newTaskData: Omit<Task, 'taskId' | 'createdAt' | 'lastUpdated'>) => dataHook.addTask(currentTasks, newTaskData, realUser!);
-    const addPreApprovedEmailWithUser = (email: string) => dataHook.addPreApprovedEmail(email, realUser!);
-
     const enrichedViewAsUser = viewAsUser ? { ...viewAsUser, isDragModifierPressed } : null;
 
     return {
@@ -208,21 +180,32 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       loading,
       isFirebaseReady,
       ...dataHook,
-      addBadgeCollection: addBadgeCollectionWithUser,
-      addCalendar: addCalendarWithUser,
-      addTeam: addTeamWithUser,
+      addTeam: (teamData: Partial<Omit<Team, 'id'>>) => {
+        if (!realUser) return;
+        dataHook.addTeam(teamData, realUser);
+      },
+      addCalendar: (calendarData: Partial<Omit<SharedCalendar, 'id'>>) => {
+        if (!realUser) return;
+        dataHook.addCalendar(calendarData, realUser);
+      },
+      addBadgeCollection: (owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => {
+        dataHook.addBadgeCollection(owner, sourceCollection, contextTeam);
+      },
       addPage: (pageData: Partial<AppPage> = {}) => {
         if (!realUser) return;
         dataHook.addPage(pageData, realUser);
       },
-      deleteUser: deleteUserWithUser,
-      addProject: addProjectWithUser,
-      deleteTeam: deleteTeamWithRouter,
-      handleApproveAccessRequest: handleApproveAccessRequestWithUser,
-      addBadge: addBadgeWithUser,
-      deleteBadge: deleteBadgeWithUser,
-      addTask: addTaskWithUser,
-      addPreApprovedEmail: addPreApprovedEmailWithUser,
+      deleteUser: (userId: string) => dataHook.deleteUser(userId, realUser!),
+      addProject: (projectData: Partial<Project>) => dataHook.addProject(projectData, realUser!),
+      deleteTeam: (teamId: string, router: AppRouterInstance, pathname: string) => dataHook.deleteTeam(teamId, router, pathname, realUser!),
+      handleApproveAccessRequest: (notificationId: string, approved: boolean) => dataHook.handleApproveAccessRequest(notificationId, approved, realUser!),
+      addBadge: (collectionId: string, sourceBadge?: Badge, unlinkSource: boolean = false) => {
+        if (!realUser) return;
+        dataHook.addBadge(collectionId, sourceBadge, realUser, unlinkSource);
+      },
+      deleteBadge: (badgeId: string, collectionId: string) => dataHook.deleteBadge(badgeId, collectionId, realUser!),
+      addTask: (currentTasks: Task[], newTaskData: Omit<Task, 'taskId' | 'createdAt' | 'lastUpdated'>) => dataHook.addTask(currentTasks, newTaskData, realUser!),
+      addPreApprovedEmail: (email: string) => dataHook.addPreApprovedEmail(email, realUser!),
     };
   }, [
     realUser, viewAsUser, googleLogin, logout, loading, isFirebaseReady, dataHook, isDragModifierPressed
