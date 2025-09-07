@@ -13,7 +13,7 @@ const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
 /**
  * Creates and configures a Google OAuth2 client.
  */
-export function getOAuth2Client() {
+export async function getOAuth2Client() {
   if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !GOOGLE_REDIRECT_URI) {
     throw new Error('Google OAuth environment variables are not set.');
   }
@@ -30,7 +30,7 @@ export function getOAuth2Client() {
  * @returns The authorization URL.
  */
 export async function getAuthServiceUrl(userId: string): Promise<string> {
-  const oAuth2Client = getOAuth2Client();
+  const oAuth2Client = await getOAuth2Client();
   const scopes = [
     'https://www.googleapis.com/auth/calendar' // Read/write access
   ];
@@ -78,12 +78,10 @@ export async function getAuthorizedClient(userId: string): Promise<any | null> {
   }
 
   const tokens = tokenDoc.data() as Credentials;
-  const oAuth2Client = getOAuth2Client();
+  const oAuth2Client = await getOAuth2Client();
   oAuth2Client.setCredentials(tokens);
 
   // The googleapis library handles token refreshing automatically if a refresh_token is present.
   
   return oAuth2Client;
 }
-
-    
