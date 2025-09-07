@@ -198,17 +198,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const addBadgeCollectionWithUser = (owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => dataHook.addBadgeCollection(owner, sourceCollection, contextTeam);
     
     const addBadgeWithUser = (collectionId: string, sourceBadge?: Badge) => {
-        const collection = dataHook.allBadgeCollections.find(c => c.id === collectionId);
-        if (!collection || !realUser) return;
-        if (collection.owner.id !== realUser.userId) {
-            dataHook.toast({ variant: 'destructive', title: 'Permission Denied', description: "You can only add badges to collections you own."});
-            return;
-        }
-        const newBadgeData = {
-            color: adjustHslColor(collection.color),
-            icon: sourceBadge?.icon || googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
-        };
-        dataHook.addBadge(collectionId, { ...sourceBadge, ...newBadgeData }, realUser);
+        if (!realUser) return;
+        dataHook.addBadge(collectionId, sourceBadge, realUser);
     };
 
     const deleteBadgeWithUser = (badgeId: string, collectionId: string) => dataHook.deleteBadge(badgeId, collectionId, realUser!);
