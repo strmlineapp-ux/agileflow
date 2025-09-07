@@ -1,7 +1,7 @@
 
 'use client';
 
-import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider, type User as FirebaseUser, OAuthProvider, getRedirectResult, linkWithRedirect, type OAuthCredential } from 'firebase/auth';
+import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider, type User as FirebaseUser, type OAuthCredential } from 'firebase/auth';
 import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where, limit, updateDoc, writeBatch } from 'firebase/firestore';
 import { useState, useEffect, useCallback } from 'react';
 import { type User, type Workspace } from '@/types';
@@ -35,7 +35,6 @@ export function useAuth() {
     const userDocRef = doc(db, 'users', firebaseUser.uid);
     let userDoc = await getDoc(userDocRef);
     let userData: User | null = null;
-    let isNewUser = false;
 
     if (userDoc.exists()) {
         userData = {
@@ -44,7 +43,6 @@ export function useAuth() {
             createdAt: userDoc.data().createdAt?.toDate ? userDoc.data().createdAt.toDate() : new Date(),
         } as User;
     } else {
-        isNewUser = true;
         const workspaceId = getCurrentWorkspaceId();
         const preApprovedQuery = query(collection(db, 'pre-approved-emails'), where('email', '==', firebaseUser.email!), where('workspaceId', '==', workspaceId));
         const preApprovedSnapshot = await getDocs(preApprovedQuery);
@@ -68,7 +66,7 @@ export function useAuth() {
             accountType,
             memberOfTeamIds: [],
             roles: [],
-            googleCalendarLinked: false, // Initially false, will be updated if creds exist
+            googleCalendarLinked: false,
             theme: 'light',
             modifierKey: 'shift',
             createdAt: new Date(),
@@ -107,7 +105,6 @@ export function useAuth() {
         await batch.commit();
     }
     
-    // Check for credentials and update user doc if necessary
     if (credential?.accessToken) {
         await saveCredentials(firebaseUser.uid, credential);
         if (!userData.googleCalendarLinked) {
@@ -144,13 +141,20 @@ export function useAuth() {
     
     const authInstance = getAuthInstance();
     const provider = new GoogleAuthProvider();
-    provider.addScope('https://www.googleapis.com/auth/calendar');
+    provider.addScope('https://www.googleapis.com/auth/calendar.readonly');
+    provider.setCustomParameters({
+      prompt: 'select_account'
+    });
 
     try {
       const result = await signInWithPopup(authInstance, provider);
       const credential = GoogleAuthProvider.credentialFromResult(result);
-      // handleUserSignIn will be called by the onAuthStateChanged listener, 
-      // but we call it here with the credential to ensure tokens are saved immediately.
+      
+      if (!credential) {
+        toast({ variant: 'destructive', title: 'Sign-in Error', description: 'Could not get authentication credentials from Google. Please try again.' });
+        return false;
+      }
+
       await handleUserSignIn(result.user, credential);
       return true;
     } catch (error) {
