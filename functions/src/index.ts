@@ -5,6 +5,6 @@ import admin from 'firebase-admin';
 admin.initializeApp();
 
 // Export functions from their individual files
-export { handleNewUserCreated as onNewUserCreated } from './user-management.js';
+export { handleNewUserCreated } from './user-management.js';
 export { handleSendInvitation } from './send-invitation.js';
 export { calendarWebhook } from './calendar-webhook.js';
