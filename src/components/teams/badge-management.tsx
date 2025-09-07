@@ -100,8 +100,8 @@ function BadgeDisplayItem({
             onSave={(newValue) => handleUpdate({ name: newValue })}
             disabled={!isOwner}
             className={cn(
-                "break-words font-emphasis",
-                viewMode === 'compact' && "text-sm font-normal"
+                "break-words font-emphasis font-normal",
+                viewMode === 'compact' && "text-sm"
             )}
         />
     );
@@ -704,3 +704,4 @@ export function BadgeManagement({ tab, page, isActive, isSharedPanelOpen, setIsS
       </DndContext>
     );
 }
+
