@@ -242,7 +242,7 @@ function BadgeDisplayItem({
 }
 
 
-function SortableBadgeItem({ badge, collection, onDelete, ...props }: { badge: Badge, collection: BadgeCollection, onDelete: (badgeId: string, collectionId: string) => void, [key: string]: any }) {
+function SortableBadgeItem({ badge, collection, onDeleteBadge, ...props }: { badge: Badge, collection: BadgeCollection, onDeleteBadge: (badgeId: string, collectionId: string) => void, [key: string]: any }) {
     
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: `badge::${badge.id}::${collection.id}`,
@@ -263,6 +263,7 @@ function SortableBadgeItem({ badge, collection, onDelete, ...props }: { badge: B
                     <BadgeDisplayItem 
                         badge={badge}
                         collection={collection}
+                        onDeleteBadge={onDeleteBadge}
                         {...props} 
                     />
                 </div>
@@ -495,7 +496,7 @@ function BadgeCollectionCard({
                 collection={collection}
                 viewMode={collection.viewMode}
                 onUpdateBadge={onUpdateBadge}
-                onDelete={onDeleteBadge}
+                onDeleteBadge={onDeleteBadge}
                 isViewer={isViewer}
                 isOwner={badge.owner.id === viewAsUser.userId}
                 isLinked={isLinked}
