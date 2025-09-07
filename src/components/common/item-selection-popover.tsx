@@ -152,8 +152,8 @@ export function ItemSelectionPopover({
             />
           </div>
           
-           <div className="overflow-y-auto hide-scrollbar">
-              <div className="p-1 space-y-1">
+           <div className="overflow-y-auto hide-scrollbar pt-0 p-1">
+              <div className="space-y-1">
                 {filteredItems.length > 0 ? (
                   filteredItems.map(item => {
                     const currentTab = tabs.find(t => t.value === activeTab);
