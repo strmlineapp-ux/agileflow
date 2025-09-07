@@ -137,11 +137,13 @@ function BadgeDisplayItem({
             </div>
             <div className="flex-1 min-w-0">
                 {nameEditorElement}
-                {isExpanded && <div className="mt-1">{bodyContent}</div>}
+                {isExpanded && viewMode !== 'compact' && <div className="mt-1">{bodyContent}</div>}
             </div>
-            <Button variant="ghost" size="icon" onClick={onToggleExpand} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
-                <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
-            </Button>
+            {viewMode !== 'compact' && (
+                <Button variant="ghost" size="icon" onClick={onToggleExpand} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
+                    <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
+                </Button>
+            )}
         </div>
 
         {isOwner && (
