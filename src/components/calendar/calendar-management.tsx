@@ -16,7 +16,6 @@ import { SortableItem } from '../common/sortable-item';
 import { InlineEditor } from '../common/inline-editor';
 import { PageTitle } from '../common/page-title';
 import { linkAndWatchCalendar } from '@/ai/flows/link-and-watch-calendar-flow';
-import { useRouter } from 'next/navigation';
 
 function CalendarCard({
     calendar,
@@ -33,11 +32,10 @@ function CalendarCard({
     onToggleExpand: () => void;
     isSharedPreview?: boolean;
 }) {
-  const { viewAsUser, googleApiAuthorized } = useUser();
+  const { viewAsUser, googleLogin } = useUser();
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
   const [googleCalendarIdInput, setGoogleCalendarIdInput] = useState('');
   const linkDialogInputRef = React.useRef<HTMLInputElement>(null);
-  const router = useRouter();
   
   const {toast} = useToast();
   
@@ -49,14 +47,14 @@ function CalendarCard({
     }
   }, [isLinkDialogOpen]);
 
-  const handleLinkClick = () => {
-    if (!googleApiAuthorized) {
+  const handleLinkClick = async () => {
+    if (!viewAsUser.googleCalendarLinked) {
         toast({
             variant: 'destructive',
             title: 'Google Account Not Connected',
-            description: 'Please connect your Google account in settings before linking calendars.',
+            description: 'Please connect your Google account before linking calendars.',
         });
-        router.push('/dashboard/settings/google-auth');
+        await googleLogin();
     } else {
         setIsLinkDialogOpen(true);
     }
