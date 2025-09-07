@@ -162,10 +162,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const addCalendarWithDefaults = useCallback(async (calendarData: Partial<Omit<SharedCalendar, 'id'>>) => {
     if (!realUser) return;
     
+    const isDuplicating = !!calendarData.id;
     const newCalendarData = {
-      name: 'New Calendar',
-      icon: 'calendar_month',
-      color: predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
+      name: isDuplicating ? `${calendarData.name} (Copy)` : 'New Calendar',
+      icon: calendarData.icon || 'calendar_month',
+      color: isDuplicating && calendarData.color ? adjustHslColor(calendarData.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
       owner: { type: 'user', id: realUser.userId },
       ...calendarData,
     };
