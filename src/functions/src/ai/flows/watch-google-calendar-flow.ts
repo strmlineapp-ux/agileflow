@@ -8,7 +8,7 @@
  * - WatchGoogleCalendarOutput - The return type for the watchGoogleCalendar function.
  */
 
-import { ai } from '../genkit';
+import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { google } from 'googleapis';
 import { v4 as uuidv4 } from 'uuid';
@@ -42,6 +42,7 @@ const watchGoogleCalendarFlow = ai.defineFlow(
   async (input) => {
     console.log(`Setting up a REAL watch on calendar: ${input.googleCalendarId}`);
     
+    // Use Application Default Credentials
     const auth = new google.auth.GoogleAuth({
         scopes: ['https://www.googleapis.com/auth/calendar']
     });

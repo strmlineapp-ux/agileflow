@@ -8,7 +8,7 @@
  * - SyncCalendarOutput - The return type for the syncCalendar function.
  */
 
-import { ai } from '../genkit';
+import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { google } from 'googleapis';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
@@ -48,6 +48,7 @@ const syncCalendarFlow = ai.defineFlow(
   async (input) => {
     console.log(`Starting REAL event sync for Google Calendar ID: ${input.googleCalendarId} in workspace ${input.workspaceId}`);
 
+    // Use Application Default Credentials
     const auth = new google.auth.GoogleAuth({
         scopes: ['https://www.googleapis.com/auth/calendar.readonly']
     });
