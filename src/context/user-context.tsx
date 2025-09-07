@@ -173,13 +173,43 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    const addTeamWithUser = (teamData: Partial<Omit<Team, 'id'>>) => dataHook.addTeam(teamData, realUser!);
+    const addTeamWithUser = (teamData: Partial<Omit<Team, 'id'>>) => {
+        if (!realUser) return;
+        const isDuplicating = !!teamData.id;
+        const newTeamData = {
+            name: isDuplicating ? `${teamData.name} (Copy)` : 'New Team',
+            icon: teamData.icon || googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
+            color: isDuplicating && teamData.color ? adjustHslColor(teamData.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
+            owner: { type: 'user', id: realUser.userId },
+            members: [realUser.userId],
+            isShared: false,
+            description: teamData.description || randomDescriptions[Math.floor(Math.random() * randomDescriptions.length)],
+            workspaceId: realUser.workspaceId,
+            ...teamData,
+        };
+        dataHook.addTeam(newTeamData, realUser);
+    };
+
     const deleteUserWithUser = (userId: string) => dataHook.deleteUser(userId, realUser!);
     const addProjectWithUser = (projectData: Partial<Project>) => dataHook.addProject(projectData, realUser!);
     const deleteTeamWithRouter = (teamId: string, router: AppRouterInstance, pathname: string) => dataHook.deleteTeam(teamId, router, pathname, realUser!);
     const handleApproveAccessRequestWithUser = (notificationId: string, approved: boolean) => dataHook.handleApproveAccessRequest(notificationId, approved, realUser!);
+    
     const addBadgeCollectionWithUser = (owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => dataHook.addBadgeCollection(owner, sourceCollection, contextTeam);
-    const addBadgeWithUser = (collectionId: string, sourceBadge?: Badge) => dataHook.addBadge(collectionId, sourceBadge, realUser!);
+    
+    const addBadgeWithUser = (collectionId: string, sourceBadge?: Badge) => {
+        const collection = dataHook.allBadgeCollections.find(c => c.id === collectionId);
+        if (!collection || !realUser) return;
+        if (collection.owner.id !== realUser.userId) {
+            dataHook.toast({ variant: 'destructive', title: 'Permission Denied', description: "You can only add badges to collections you own."});
+            return;
+        }
+        const newBadgeData = {
+            color: adjustHslColor(collection.color),
+        };
+        dataHook.addBadge(collectionId, { ...sourceBadge, ...newBadgeData }, realUser);
+    };
+
     const deleteBadgeWithUser = (badgeId: string, collectionId: string) => dataHook.deleteBadge(badgeId, collectionId, realUser!);
     const addTaskWithUser = (currentTasks: Task[], newTaskData: Omit<Task, 'taskId' | 'createdAt' | 'lastUpdated'>) => dataHook.addTask(currentTasks, newTaskData, realUser!);
     const addPreApprovedEmailWithUser = (email: string) => dataHook.addPreApprovedEmail(email, realUser!);
