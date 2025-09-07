@@ -123,7 +123,7 @@ export function ManagementPageLayout<T extends TEntity>({
   const gridClassName = cn(
     "gap-4",
     isSharedPanelOpen
-      ? "columns-1 sm:columns-2 lg:columns-3"
+      ? "columns-1 sm:columns-2 xl:columns-3"
       : "columns-1 sm:columns-2 lg:columns-3 xl:columns-4"
   );
   
