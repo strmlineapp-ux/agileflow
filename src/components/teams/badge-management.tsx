@@ -58,31 +58,27 @@ import { ManagementPageLayout } from '../common/management-page-layout';
 function BadgeDisplayItem({ 
     badge, 
     viewMode, 
-    onUpdateBadge, 
-    onDelete,
-    isViewer = false, 
+    onUpdateBadge,
     isOwner,
     isLinked,
     isSharedPreview,
-    allCollections,
     dragHandleProps,
     currentUserBadgeIds,
     isExpanded,
-    onToggleExpand
+    onToggleExpand,
+    collection,
 }: { 
     badge: Badge;
     viewMode: BadgeCollection['viewMode'];
     onUpdateBadge: (badgeId: string, badgeData: Partial<Badge>) => void;
-    onDelete: (badgeId: string) => void;
-    isViewer?: boolean;
     isOwner: boolean;
     isLinked: boolean;
     isSharedPreview?: boolean;
-    allCollections: BadgeCollection[];
     dragHandleProps?: any;
     currentUserBadgeIds?: Set<string>;
     isExpanded: boolean;
     onToggleExpand: () => void;
+    collection: BadgeCollection;
 }) {
     const { users } = useUser();
 
@@ -92,7 +88,7 @@ function BadgeDisplayItem({
 
     const ownerUser = users.find(u => u.userId === badge.owner.id);
     
-    const shouldShowLinkIcon = isLinked && (!isSharedPreview || (currentUserBadgeIds && currentUserBadgeIds.has(badge.id)));
+    const shouldShowLinkIcon = isLinked;
     
     if (viewMode === 'grid' || viewMode === 'list') {
       const nameEditorElement = (
@@ -110,7 +106,7 @@ function BadgeDisplayItem({
             onSave={(newValue) => handleUpdate({ description: newValue })}
             disabled={!isOwner}
             placeholder={isLinked ? "No description" : "Click to add description."}
-            className="text-sm"
+            className="text-sm text-foreground"
           />
       );
       
@@ -126,6 +122,21 @@ function BadgeDisplayItem({
                             onUpdateColor={(newColor) => handleUpdate({ color: newColor })}
                             disabled={!isOwner}
                         />
+                         {shouldShowLinkIcon && (
+                             <div 
+                                className="absolute -top-0.5 -left-1 h-4 w-4 rounded-full ring-2 ring-card flex items-center justify-center text-white"
+                                style={{ backgroundColor: ownerUser?.primaryColor || 'hsl(var(--muted-foreground))' }}
+                            >
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <GoogleSymbol name="link" style={{fontSize: '16px'}} weight={100} opticalSize={20} />
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Linked from another collection. Owned by {ownerUser?.displayName}.</p></TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </div>
+                        )}
                     </div>
                     <div className="flex-1">
                         {nameEditorElement}
@@ -172,11 +183,14 @@ function BadgeDisplayItem({
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <div className="absolute -top-0.5 -left-1 h-4 w-4 rounded-full ring-2 ring-card flex items-center justify-center text-white" style={{ backgroundColor: '#64748B' }}>
+                                 <div 
+                                    className="absolute -top-0.5 -left-1 h-4 w-4 rounded-full ring-2 ring-card flex items-center justify-center text-white"
+                                    style={{ backgroundColor: ownerUser?.primaryColor || 'hsl(var(--muted-foreground))' }}
+                                >
                                     <GoogleSymbol name="link" style={{fontSize: '16px'}} weight={100} opticalSize={20} />
                                 </div>
                             </TooltipTrigger>
-                            <TooltipContent><p>Owned by {ownerUser?.displayName}</p></TooltipContent>
+                            <TooltipContent><p>Linked from another collection. Owned by {ownerUser?.displayName}.</p></TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
                 )}
@@ -202,6 +216,7 @@ function SortableBadgeItem({ badge, collection, onDelete, ...props }: { badge: B
     };
     
     const canManage = !props.isViewer;
+    const isOwner = badge.owner.id === useUser().viewAsUser!.userId;
 
     return (
         <div ref={setNodeRef} style={style} className={cn(props.viewMode === 'grid' && "break-inside-avoid")}>
@@ -209,7 +224,8 @@ function SortableBadgeItem({ badge, collection, onDelete, ...props }: { badge: B
                 <div className="flex-grow">
                     <BadgeDisplayItem 
                         badge={badge}
-                        onDelete={onDelete}
+                        collection={collection}
+                        isOwner={isOwner}
                         {...props} 
                     />
                 </div>
@@ -227,7 +243,7 @@ function SortableBadgeItem({ badge, collection, onDelete, ...props }: { badge: B
                                         <GoogleSymbol name="cancel" className="text-lg" weight={100} opticalSize={20} />
                                     </Button>
                                 </TooltipTrigger>
-                                <TooltipContent><p>{props.isOwner ? "Delete Badge" : "Unlink Badge"}</p></TooltipContent>
+                                <TooltipContent><p>{isOwner ? "Delete Badge" : "Unlink Badge"}</p></TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
                     </div>
@@ -454,6 +470,7 @@ function BadgeCollectionCard({
         <DroppableCollectionContent collection={collection}>
           {collectionBadges.map((badge) => {
             const badgeIsOwned = badge.owner.id === viewAsUser.userId;
+            const isLinked = badge.ownerCollectionId !== collection.id;
             return (
               <SortableBadgeItem
                 key={badge.id}
@@ -464,7 +481,7 @@ function BadgeCollectionCard({
                 onDelete={onDeleteBadge}
                 isViewer={isViewer}
                 isOwner={badgeIsOwned}
-                isLinked={!badgeIsOwned}
+                isLinked={isLinked}
                 allCollections={allCollections}
                 isSharedPreview={isSharedPreview}
                 currentUserBadgeIds={currentUserBadgeIds}
