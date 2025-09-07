@@ -120,7 +120,7 @@ When a new user signs in for the first time, their profile is created from a mix
 | --- | --- |
 | `isAdmin` | **Application:** Defaults to `true` if the user is the first one in the database, otherwise `false`. |
 | `accountType` | **Application:** Defaults to `Viewer` for user-initiated requests, `Full` for invited users, or `Full` for the first user. |
-| `googleCalendarLinked`| **Application:** Defaults to `false`. Set to `true` after the user successfully completes the OAuth consent flow. |
+| `googleCalendarLinked`| **Application:** Defaults to `false`. Set to `true` after the user successfully completes the OAuth consent flow during sign-in. |
 | `title` | **Application:** This is empty by default and must be set by an admin or the user. |
 | `roles` | **Application:** This is empty by default. Roles are assigned within the app. |
 | `memberOfTeamIds` | **Application:** This is empty by default. Users are added to teams within the app. |
@@ -146,6 +146,7 @@ This authentication system is significantly more secure and robust than the prev
 *   **Secure Session Management:** Firebase's `onAuthStateChanged` listener securely manages the user's session. It uses industry-standard tokens, which are automatically refreshed and secured, protecting against unauthorized access.
 *   **Centralized Authentication Logic:** All authentication logic is now centralized within the `user-context.tsx` file and uses the official Firebase SDK. This reduces complexity and eliminates the risk of inconsistent or insecure implementations elsewhere in the app.
 *   **Single Source of Truth:** Using Firebase Auth as the single source of truth for a user's identity prevents the creation of duplicate accounts, which was a key issue with the previous system.
+
 
 
 

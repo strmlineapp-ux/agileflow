@@ -68,8 +68,7 @@ export interface User {
   displayName:string;
   isAdmin: boolean;
   accountType: 'Full' | 'Viewer';
-  googleApiAuthorized?: boolean;
-  googleCalendarId?: string;
+  googleCalendarLinked: boolean;
   avatarUrl?: string;
   location?: string;
   title?: string;

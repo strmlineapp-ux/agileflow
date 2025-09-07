@@ -77,7 +77,7 @@ This table details the information stored directly within each `User` object.
 | `title?: string` | **Google Service.** The user's professional title. This is designed to be populated from the user's **Google Account profile** (from their organization details) **after the user grants the necessary permissions**. |
 | `avatarUrl?: string` | **Google Service.** A URL to the user's profile picture. This is part of the basic profile information obtained during a standard "Sign in with Google" action and **does not require separate permissions**. |
 | `location?: string` | **Google Service.** The user's primary work location. This is designed to be populated from the user's **Google Account profile** (from their address information) **after the user grants the necessary permissions**. |
-| `googleCalendarLinked: boolean` | **Application.** A flag that is set to `true` only after the user successfully completes an OAuth consent flow via **Firebase Authentication** to grant the app permission to access their Google Calendar. |
+| `googleCalendarLinked: boolean` | **Application.** A flag that is set to `true` only after the user successfully completes an OAuth consent flow during sign-in to grant the app permission to access their Google Calendar. |
 | `roles?: string[]` | **Internal.** An array of `badgeId`s assigned to the user. |
 | `directReports?: string[]` | **Internal.** An array of `userId`s for users who report directly to this user. This is currently informational. |
 | `memberOfTeamIds?: string[]` | **Internal.** An array of `teamId`s for all teams the user is a member of. This is a crucial de-normalization for efficient permission checking. |
