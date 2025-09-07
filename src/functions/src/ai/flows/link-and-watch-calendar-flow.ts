@@ -5,15 +5,12 @@
  *
  * - linkAndWatchCalendar - The primary function to handle the linking and watching process.
  * - LinkAndWatchCalendarInput - The input type for the function.
- * - LinkAndWatchCalendarOutput - The return type for the function.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, doc, getDoc } from 'firebase-admin/firestore';
 import { watchGoogleCalendar, WatchGoogleCalendarOutput } from './watch-google-calendar-flow';
-import { getAuth } from 'firebase-admin/auth';
-import { doc, getDoc } from 'firebase/firestore';
 
 const LinkAndWatchCalendarInputSchema = z.object({
   calendarId: z.string().describe('The internal Firestore ID of the calendar document.'),
@@ -36,19 +33,20 @@ const linkAndWatchCalendarFlow = ai.defineFlow(
   },
   async (input) => {
     console.log(`Starting link and watch process for internal calendar ${input.calendarId}`);
-    
+
     const db = getFirestore();
     const calendarDocRef = doc(db, 'calendars', input.calendarId);
     const calendarDoc = await getDoc(calendarDocRef);
+
     if (!calendarDoc.exists()) {
-      throw new Error(`Internal calendar with ID ${input.calendarId} not found.`);
+        throw new Error(`Internal calendar with ID ${input.calendarId} not found.`);
     }
 
     const calendarData = calendarDoc.data();
     const ownerId = calendarData?.owner?.id;
 
     if (!ownerId) {
-      throw new Error(`Calendar ${input.calendarId} does not have an owner.`);
+        throw new Error(`Calendar ${input.calendarId} does not have an owner.`);
     }
 
     // 1. Update the Firestore document with the Google Calendar ID.
@@ -65,7 +63,7 @@ const linkAndWatchCalendarFlow = ai.defineFlow(
     const watchResult = await watchGoogleCalendar({
       googleCalendarId: input.googleCalendarId,
       webhookUrl: webhookUrl,
-      userId: ownerId,
+      userId: ownerId, // Pass the owner's ID for authorization
     });
 
     console.log('Successfully set up watch channel.');
@@ -73,5 +71,3 @@ const linkAndWatchCalendarFlow = ai.defineFlow(
     return watchResult;
   }
 );
-
-    

@@ -35,7 +35,7 @@ export interface AppPage {
     users: string[]; // User IDs
     teams: string[]; // Team IDs
   };
-  owner?: { type: 'user', id: string };
+  owner?: { type: 'user' | 'system', id: string };
   isSystemPage?: boolean; // Indicates if the page is a core, non-deletable page
   workspaceId: string;
 }
@@ -68,7 +68,6 @@ export interface User {
   displayName:string;
   isAdmin: boolean;
   accountType: 'Full' | 'Viewer';
-  googleCalendarLinked: boolean;
   googleApiAuthorized?: boolean;
   googleCalendarId?: string;
   avatarUrl?: string;
@@ -266,5 +265,3 @@ export interface Tenant {
     ownerId: string;
     createdAt: Date;
 }
-
-    

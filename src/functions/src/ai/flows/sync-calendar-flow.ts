@@ -15,7 +15,6 @@ import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { startOfDay } from 'date-fns';
 import { type Event, type SharedCalendar } from '@/types';
 import { getAuthorizedClient } from '@/lib/google-auth-service';
-import { doc, getDoc } from 'firebase/firestore';
 
 
 const SyncCalendarInputSchema = z.object({
@@ -49,8 +48,9 @@ const syncCalendarFlow = ai.defineFlow(
   },
   async (input) => {
     console.log(`Starting REAL event sync for Google Calendar ID: ${input.googleCalendarId} in workspace ${input.workspaceId}`);
-
+    
     const db = getFirestore();
+
     const internalCalendarQuery = await db.collection('calendars')
         .where('googleCalendarId', '==', input.googleCalendarId)
         .where('workspaceId', '==', input.workspaceId)
@@ -145,5 +145,3 @@ const syncCalendarFlow = ai.defineFlow(
     }
   }
 );
-
-    
