@@ -79,6 +79,10 @@
     .font-emphasized {
         font-weight: var(--font-weight-emphasis) !important;
     }
+
+    .font-emphasized .material-symbols-outlined {
+        font-variation-settings: 'FILL' var(--emphasis-icon-fill), 'wght' var(--font-weight-emphasis, 500), 'GRAD' var(--global-icon-grade, 0), 'opsz' var(--global-icon-optical-size, 24) !important;
+    }
     
     body.bold-emphasis .font-emphasized {
         color: hsl(var(--primary)) !important;
@@ -94,7 +98,8 @@
     body.bold-emphasis .font-emphasis:hover .material-symbols-outlined,
     body.bold-emphasis .font-emphasis:focus .material-symbols-outlined,
     body.bold-emphasis .font-emphasis[data-state=open] .material-symbols-outlined,
-    body.bold-emphasis .font-emphasis[data-state=active] .material-symbols-outlined {
+    body.bold-emphasis .font-emphasis[data-state=active] .material-symbols-outlined,
+    body.bold-emphasis .font-emphasized .material-symbols-outlined {
         color: hsl(var(--primary)) !important;
     }
 
