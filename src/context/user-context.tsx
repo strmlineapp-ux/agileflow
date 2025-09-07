@@ -247,6 +247,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           color: isDuplicating && calendarData.color ? adjustHslColor(calendarData.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
           owner: { type: 'user', id: realUser.userId },
           ...calendarData,
+          workspaceId: realUser.workspaceId,
         };
         dataHook.addCalendar(newCalendarData as Omit<SharedCalendar, 'id'>);
     };
