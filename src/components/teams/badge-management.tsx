@@ -530,6 +530,7 @@ function BadgeCollectionCard({
 export function BadgeManagement({ tab, page, isActive, isSharedPanelOpen, setIsSharedPanelOpen, isDragging }: { tab: AppTab; page: AppPage; isActive: boolean; isSharedPanelOpen: boolean; setIsSharedPanelOpen: (isOpen: boolean) => void; isDragging: boolean; }) {
     const { viewAsUser, users, updateUser, allBadges, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, addBadge, updateBadge, deleteBadge, reorderBadges, setAllBadgeCollections, reorderBadgeCollections, updatePage } = useUser();
     const { toast } = useToast();
+    const [activeDragItem, setActiveDragItem] = useState<any>(null);
     const contextKey = `badges-${page.id}`;
     
     const onToggleExpand = useCallback((collectionId: string) => {
@@ -573,7 +574,12 @@ export function BadgeManagement({ tab, page, isActive, isSharedPanelOpen, setIsS
         addBadgeCollection(viewAsUser, sourceCollection);
     };
     
+     const onDragStart = (event: DragStartEvent) => {
+        setActiveDragItem(event.active.data.current);
+    };
+
      const onDragEnd = useCallback((event: DragEndEvent) => {
+        setActiveDragItem(null);
         const { active, over } = event;
 
         if (!over) return;
@@ -639,20 +645,24 @@ export function BadgeManagement({ tab, page, isActive, isSharedPanelOpen, setIsS
         );
     }, [handleUpdate, handleDelete, addBadge, updateBadge, deleteBadge, viewAsUser, onToggleExpand, allBadges, allBadgeCollections, contextKey]);
 
-    const renderDragOverlay = useCallback((item: BadgeCollection | Badge) => {
-        if ('badgeIds' in item) { // It's a BadgeCollection
-            return <GoogleSymbol name={item.icon} style={{color: item.color, fontSize: '48px'}} />;
+    const renderDragOverlay = useCallback((item: any) => {
+        if (item?.type === 'badge') {
+            const badge = item.badge as Badge;
+            return (
+                <div className="h-9 w-9 rounded-full border-2 flex items-center justify-center bg-card shadow-lg" style={{ borderColor: badge.color }}>
+                    <GoogleSymbol name={badge.icon} style={{ fontSize: '28px', color: badge.color }} weight={100} />
+                </div>
+            );
         }
-        // It's a Badge
-        return (
-            <div className="h-9 w-9 rounded-full border-2 flex items-center justify-center bg-card shadow-lg" style={{ borderColor: item.color }}>
-                <GoogleSymbol name={item.icon} style={{ fontSize: '28px', color: item.color }} weight={100} />
-            </div>
-        );
+        if (item?.type === 'collection-card') {
+            const collection = item.collection as BadgeCollection;
+            return <GoogleSymbol name={collection.icon} style={{color: collection.color, fontSize: '48px'}} />;
+        }
+        return null;
     }, []);
 
     return (
-      <DndContext onDragEnd={onDragEnd}>
+      <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
         <ManagementPageLayout
             pageTitle={page.displayTitle ?? tab.name}
             onPageTitleSave={(newTitle) => updatePage(page.id, { displayTitle: newTitle })}
@@ -674,12 +684,15 @@ export function BadgeManagement({ tab, page, isActive, isSharedPanelOpen, setIsS
             onLinkItem={handleLink}
             onCollapseAll={onCollapseAll}
             renderItem={renderCollectionCard}
-            renderDragOverlay={renderDragOverlay}
+            renderDragOverlay={(item: any) => renderDragOverlay(item)}
             isActive={isActive}
             isSharedPanelOpen={isSharedPanelOpen}
             setIsSharedPanelOpen={setIsSharedPanelOpen}
             isDragging={isDragging}
         />
+        <DragOverlay modifiers={[snapCenterToCursor]}>
+          {activeDragItem ? renderDragOverlay(activeDragItem) : null}
+        </DragOverlay>
       </DndContext>
     );
 }
