@@ -854,7 +854,7 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button variant="default" size="icon" onClick={onCollapseAll}>
-                            <GoogleSymbol name="unfold_less" />
+                            <GoogleSymbol name="collapse_content" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent><p>Collapse All</p></TooltipContent>
