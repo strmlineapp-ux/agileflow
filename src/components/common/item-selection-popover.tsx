@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -129,7 +130,7 @@ export function ItemSelectionPopover({
           <TooltipContent><p>{tooltip}</p></TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <PopoverContent className="w-80 p-0 flex flex-col max-h-96" onPointerDownCapture={(e) => e.stopPropagation()}>
+      <PopoverContent className="w-80 p-0 flex flex-col" onPointerDownCapture={(e) => e.stopPropagation()} onOpenAutoFocus={(e) => e.preventDefault()}>
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full flex flex-col flex-1 min-h-0">
           {tabs.length > 1 && (
             <div className="flex justify-center p-1">
@@ -152,7 +153,7 @@ export function ItemSelectionPopover({
             />
           </div>
           
-           <ScrollArea className="pr-1">
+           <ScrollArea className="pr-1 flex-1">
              <div className="p-1 pt-0">
                  {filteredItems.length > 0 ? (
                     <div className="space-y-1">

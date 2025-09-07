@@ -83,7 +83,7 @@ export function IconColorPicker({ icon, color, onUpdateIcon, onUpdateColor, disa
                 <TooltipContent><p>Change Icon</p></TooltipContent>
             </Tooltip>
         </TooltipProvider>
-        <PopoverContent className="w-auto p-0 flex" onPointerDown={(e) => e.stopPropagation()}>
+        <PopoverContent className="w-auto p-0 flex" onPointerDown={(e) => e.stopPropagation()} onOpenAutoFocus={(e) => e.preventDefault()}>
             <div className="w-80 flex-1 p-1 flex flex-col">
                 <div className="flex items-center justify-between p-1">
                     <CompactSearchInput

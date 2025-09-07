@@ -136,7 +136,12 @@ function BadgeDisplayItem({
                 )}
             </div>
             <div className="flex-1 min-w-0">
-                {nameEditorElement}
+                <InlineEditor
+                  value={badge.name}
+                  onSave={(newValue) => handleUpdate({ name: newValue })}
+                  disabled={!isOwner}
+                  className="font-normal break-words font-emphasis"
+                />
                 {isExpanded && viewMode !== 'compact' && <div className="mt-1">{bodyContent}</div>}
             </div>
             {viewMode !== 'compact' && (
@@ -224,7 +229,7 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
         break;
       case 'grid':
         strategy = rectSortingStrategy;
-        gridLayoutClass = "w-full gap-4 [column-fill:_balance] columns-1 sm:columns-2";
+        gridLayoutClass = "grid grid-cols-2 w-full gap-4";
         break;
       case 'compact':
       default:
@@ -390,7 +395,7 @@ function BadgeCollectionCard({
               <TooltipContent><p>Change View Mode</p></TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          <PopoverContent className="w-auto p-1 flex items-center gap-1" onPointerDown={(e) => e.stopPropagation()}>
+          <PopoverContent className="w-auto p-1 flex items-center gap-1" onPointerDown={(e) => e.stopPropagation()} onOpenAutoFocus={(e) => e.preventDefault()}>
             {viewModeOptions.map(({mode, icon, label}) => (
                 <TooltipProvider key={mode}>
                     <Tooltip>
