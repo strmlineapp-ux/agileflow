@@ -99,7 +99,7 @@ function BadgeDisplayItem({
             value={badge.name}
             onSave={(newValue) => handleUpdate({ name: newValue })}
             disabled={!isOwner}
-            className={cn("break-words font-emphasis", viewMode === 'grid' ? "text-base" : "text-sm", isOwner && "cursor-text")}
+            className={cn("break-words font-emphasis", isOwner && "cursor-text")}
         />
     );
 
@@ -109,7 +109,7 @@ function BadgeDisplayItem({
             onSave={(newValue) => handleUpdate({ description: newValue })}
             disabled={!isOwner}
             placeholder={isLinked ? "No description" : "Click to add description."}
-            className={cn("text-sm text-muted-foreground min-h-[20px] break-words", !badge.description && "italic")}
+            className={cn("break-words", !badge.description)}
         />
    );
    
