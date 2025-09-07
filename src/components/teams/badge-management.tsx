@@ -523,6 +523,7 @@ function BadgeCollectionCard({
             headerControls={headerControls}
             body={bodyContent}
             footer={footerContent}
+            className="overflow-hidden"
         />
     );
 }
@@ -590,7 +591,7 @@ export function BadgeManagement({ tab, page, isActive, isSharedPanelOpen, setIsS
             const badge = active.data.current?.badge as Badge;
             const sourceCollectionId = active.data.current?.collectionId as string;
             
-            const targetCollectionId = over.id as string;
+            const targetCollectionId = over.data.current?.collection?.id as string;
             const targetCollection = allBadgeCollections.find(c => c.id === targetCollectionId);
             
             if (targetCollection && targetCollectionId !== sourceCollectionId) {
