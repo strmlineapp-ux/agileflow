@@ -237,31 +237,38 @@ export default function DynamicPage() {
 
   const renderDragOverlay = () => {
     if (!activeDragItem) return null;
-    const item = activeDragItem;
     
-    if (item.type === 'badge') {
-        const badge = item.badge as Badge;
+    const itemType = activeDragItem.type;
+    let entity: any = null;
+
+    if (itemType === 'badge') entity = activeDragItem.badge;
+    else if (itemType === 'user') entity = activeDragItem.user;
+    else if (itemType === 'page-card') entity = activeDragItem.page;
+    else if (itemType === 'team-card') entity = activeDragItem.team;
+    else if (itemType === 'collection-card') entity = activeDragItem.collection;
+    else if (itemType === 'calendar-card') entity = activeDragItem.calendar;
+    
+    if (!entity) return null;
+
+    if (itemType === 'badge') {
         return (
-            <div className="h-9 w-9 rounded-full border-2 flex items-center justify-center bg-card shadow-lg" style={{ borderColor: badge.color }}>
-                <GoogleSymbol name={badge.icon} style={{ fontSize: '28px', color: badge.color }} weight={100} />
+            <div className="h-9 w-9 rounded-full border-2 flex items-center justify-center bg-card shadow-lg" style={{ borderColor: entity.color }}>
+                <GoogleSymbol name={entity.icon} style={{ fontSize: '28px', color: entity.color }} weight={100} />
             </div>
         );
     }
     
-    const entity = item.collection || item.team || item.calendar || item.page || item.user;
-
-    if (!entity) return null;
-
-    if ('badgeIds' in entity || 'members' in entity || 'googleCalendarId' in entity || 'path' in entity) {
-        return <GoogleSymbol name={entity.icon} style={{color: entity.color, fontSize: '48px'}} />;
-    }
-     if ('email' in entity) { // User
+    if (itemType === 'user') {
         return (
             <Avatar className="h-12 w-12">
                 <AvatarImage src={entity.avatarUrl} alt={entity.displayName} data-ai-hint="user avatar" />
                 <AvatarFallback>{entity.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
         )
+    }
+
+    if (entity.icon) {
+        return <GoogleSymbol name={entity.icon} style={{color: entity.color, fontSize: '48px'}} />;
     }
 
     return null;
@@ -388,5 +395,3 @@ export default function DynamicPage() {
     </DndContext>
   )
 }
-
-    
