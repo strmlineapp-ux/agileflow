@@ -18,6 +18,7 @@ import { HslStringColorPicker } from 'react-colorful';
 import { Slider } from '../ui/slider';
 import { UserCard } from '@/components/common/user-card';
 import { TransparentCard, TransparentCardContent } from '../ui/transparent-card';
+import { SettingSelect } from '../common/setting-select';
 
 const predefinedColors = [
     'hsl(0, 84%, 60%)', 'hsl(25, 95%, 53%)', 'hsl(45, 93%, 47%)', 'hsl(88, 62%, 53%)', 'hsl(142, 71%, 45%)', 'hsl(160, 100%, 37%)',
@@ -127,8 +128,6 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
     const [isIconGradePopoverOpen, setIsIconGradePopoverOpen] = useState(false);
     const [isIconOpticalSizePopoverOpen, setIsIconOpticalSizePopoverOpen] = useState(false);
     const [isRadiusPopoverOpen, setIsRadiusPopoverOpen] = useState(false);
-    const [isCalendarViewPopoverOpen, setIsCalendarViewPopoverOpen] = useState(false);
-    const [isTimeFormatPopoverOpen, setIsTimeFormatPopoverOpen] = useState(false);
     
     const handleFontWeightChange = (value: number[]) => {
         const index = value[0];
@@ -179,13 +178,11 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
         { value: "day", label: "Day" },
         { value: "production-schedule", label: "Production Schedule" },
     ];
-    const currentCalendarViewLabel = calendarViewOptions.find(opt => opt.value === (user.defaultCalendarView || 'day'))?.label || 'Day';
 
     const timeFormatOptions = [
         { value: "12h", label: "12-Hour" },
         { value: "24h", label: "24-Hour" },
     ];
-    const currentTimeFormatLabel = timeFormatOptions.find(opt => opt.value === (user.timeFormat || '12h'))?.label || '12-Hour';
 
     return (
         <Card className={cn("bg-transparent", className)}>
@@ -404,63 +401,21 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                 </PopoverContent>
                             </Popover>
 
-                            <Popover open={isCalendarViewPopoverOpen} onOpenChange={setIsCalendarViewPopoverOpen}>
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground font-emphasis" onReset={() => updateUser(user.userId, { defaultCalendarView: 'production-schedule' })} enableReset>
-                                                    <GoogleSymbol name="edit_calendar" />
-                                                </Button>
-                                            </PopoverTrigger>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            <p>Default Calendar View: <span className="font-semibold">{currentCalendarViewLabel}</span>. Modifier+Click to reset.</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                                <PopoverContent className="w-auto p-1" align="start">
-                                    {calendarViewOptions.map(option => (
-                                    <Button
-                                        key={option.value}
-                                        variant="ghost"
-                                        className="justify-start h-8 px-2 font-emphasis"
-                                        onClick={() => { updateUser(user.userId, { defaultCalendarView: option.value as any }); setIsCalendarViewPopoverOpen(false); }}
-                                    >
-                                        {option.label}
-                                    </Button>
-                                    ))}
-                              </PopoverContent>
-                            </Popover>
+                             <SettingSelect
+                                value={user.defaultCalendarView || 'production-schedule'}
+                                onSave={(newValue) => updateUser(user.userId, { defaultCalendarView: newValue as any})}
+                                options={calendarViewOptions}
+                                tooltip="Default Calendar View"
+                                triggerIcon="edit_calendar"
+                            />
 
-                            <Popover open={isTimeFormatPopoverOpen} onOpenChange={setIsTimeFormatPopoverOpen}>
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground font-emphasis" onReset={() => updateUser(user.userId, { timeFormat: '12h' })} enableReset>
-                                                    <GoogleSymbol name="schedule" />
-                                                </Button>
-                                            </PopoverTrigger>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            <p>Time Format: <span className="font-semibold">{currentTimeFormatLabel}</span>. Modifier+Click to reset.</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                                <PopoverContent className="w-auto p-1" align="start">
-                                    {timeFormatOptions.map(option => (
-                                    <Button
-                                        key={option.value}
-                                        variant="ghost"
-                                        className="justify-start h-8 px-2 font-emphasis"
-                                        onClick={() => { updateUser(user.userId, { timeFormat: option.value as any }); setIsTimeFormatPopoverOpen(false); }}
-                                    >
-                                        {option.label}
-                                    </Button>
-                                    ))}
-                                </PopoverContent>
-                            </Popover>
+                            <SettingSelect
+                                value={user.timeFormat || '12h'}
+                                onSave={(newValue) => updateUser(user.userId, { timeFormat: newValue as any})}
+                                options={timeFormatOptions}
+                                tooltip="Time Format"
+                                triggerIcon="schedule"
+                            />
 
                             <TooltipProvider>
                                 <Tooltip>
@@ -528,5 +483,3 @@ export function UserManagement({ showSearch = false, isActive = false }: { showS
         </div>
     )
 }
-
-    
