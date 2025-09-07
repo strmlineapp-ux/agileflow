@@ -1,49 +1,58 @@
 
 'use server';
 import { google } from 'googleapis';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { getDb } from '@/lib/firebase';
-import { OAuth2Client } from 'google-auth-library';
-import type { OAuthCredential } from 'firebase/auth';
+import { OAuth2Client, type Credentials } from 'google-auth-library';
+import type { OAuthCredential, User as FirebaseUser } from 'firebase/auth';
 
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-// The redirect URI is now handled internally by Firebase SDK, but we keep it for the client setup.
-const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_SECRET = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET;
 
 /**
  * Creates and configures a Google OAuth2 client.
+ * NOTE: The redirect URI must be one of the authorized redirect URIs for the client ID.
+ * You can find this in your Google Cloud Console. For local development, it's often
+ * `http://localhost:3000/api/auth/google/callback`. For production, it will be your app's domain.
  */
 export async function getOAuth2Client(): Promise<OAuth2Client> {
   if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
     throw new Error('Google OAuth client environment variables are not set.');
   }
+
+  // Determine the redirect URI based on the environment
+  const redirectUri = process.env.NODE_ENV === 'production' 
+    ? 'https://agileflow-mlf18.web.app/api/auth/google/callback'
+    : 'http://localhost:3000/api/auth/google/callback';
+
   return new google.auth.OAuth2(
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
-    GOOGLE_REDIRECT_URI
+    redirectUri
   );
 }
 
 /**
  * Saves the user's API credentials securely in Firestore.
+ * This should be called after a successful OAuth2 callback.
  * @param userId The user's unique ID.
- * @param credential The OAuth2 credential from Google Sign-In.
+ * @param tokens The OAuth2 tokens from Google.
  */
-export async function saveCredentials(userId: string, credential: OAuthCredential): Promise<void> {
+export async function saveCredentials(userId: string, tokens: Credentials): Promise<void> {
   const db = getDb();
   const tokenDocRef = doc(db, 'google-auth-tokens', userId);
   
-  if (!credential.accessToken) {
+  if (!tokens.access_token) {
     console.warn('Attempted to save credentials without an access token.');
     return;
   }
   
   await setDoc(tokenDocRef, {
     userId,
-    accessToken: credential.accessToken,
+    ...tokens
   }, { merge: true });
 }
+
 
 /**
  * Retrieves an authorized OAuth2 client for making API calls on behalf of a user.
@@ -61,14 +70,13 @@ export async function getAuthorizedClient(userId: string): Promise<OAuth2Client>
   }
 
   const tokens = tokenDoc.data();
-  if (!tokens.accessToken) {
+  if (!tokens.access_token) {
     throw new Error(`Stored tokens for user ${userId} are missing an access token. User needs to sign in again.`);
   }
 
   const oAuth2Client = await getOAuth2Client();
-  oAuth2Client.setCredentials({
-    access_token: tokens.accessToken,
-  });
+  oAuth2Client.setCredentials(tokens as Credentials);
   
   return oAuth2Client;
 }
+

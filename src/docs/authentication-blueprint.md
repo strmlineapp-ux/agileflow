@@ -44,10 +44,10 @@ An existing administrator uses a dedicated "Pre-approve User" form within the ap
 A Cloud Function is automatically triggered by the new entry in the `pre-approved-emails` collection. This function sends a welcome email to the new user with a link to the AgileFlow login page.
 
 **Step 3: User Clicks "Sign in with Google"**
-The new user clicks the link and uses the "Sign in with Google" button. Google will prompt them to grant the application permission to view their calendar information.
+The new user clicks the link and uses the "Sign in with Google" button. Google will prompt them to grant the application permission to view their calendar information if they have not done so before.
 
 **Step 4: System Verifies Invitation & Creates Profile**
-Firebase Authentication confirms the user's identity. The application checks the `pre-approved-emails` list and finds a match. It then creates a new user profile in the Firestore `/users` collection, populating it with their Google account details (Name, Email, Profile Picture), setting their `accountType` to 'Full', and granting them full access immediately. The `googleCalendarLinked` flag is set to `true` after they approve the permissions.
+Firebase Authentication confirms the user's identity. The application checks the `pre-approved-emails` list and finds a match. It then creates a new user profile in the Firestore `/users` collection, populating it with their Google account details (Name, Email, Profile Picture), setting their `accountType` to 'Full', and granting them full access immediately. The `googleCalendarLinked` flag is set to `true` after they approve the permissions via the separate redirect flow.
 
 ---
 
@@ -56,10 +56,10 @@ Firebase Authentication confirms the user's identity. The application checks the
 This flow handles "walk-up" attempts, where a user who has not been invited tries to access the application.
 
 **Step 1: New User Signs In**
-A new, uninvited user navigates to the application URL and clicks "Sign in with Google." Google will prompt them for calendar permissions.
+A new, uninvited user navigates to the application URL and clicks "Sign in with Google."
 
 **Step 2: System Creates a "Pending" Profile**
-Firebase authenticates the user. The application checks Firestore, finds no existing user and that the user is not pre-approved, and creates a new user document. **Crucially, it sets the `accountType` to `'Viewer'`, which restricts all access.** The `googleCalendarLinked` flag is set to `true` if they granted permissions.
+Firebase authenticates the user. The application checks Firestore, finds no existing user and that the user is not pre-approved, and creates a new user document. **Crucially, it sets the `accountType` to `'Viewer'`, which restricts all access.** The `googleCalendarLinked` flag will initially be `false`.
 
 **Step 3: Administrator Notification**
 *   **In-App:** A notification appears in the administrator's notification list, stating that a new user has requested access.
@@ -71,7 +71,7 @@ The administrator reviews the request in the in-app notification list. They have
 *   **Reject:** The administrator clicks "Reject." The system deletes the user's document from Firestore and revokes their authentication token.
 
 **Step 5: Access Granted or Denied**
-The user will be granted full access the next time they refresh the application (if approved) or will be unable to log in (if rejected).
+The user will be granted full access the next time they refresh the application (if approved) or will be unable to log in (if rejected). They may then be prompted to link their Google Calendar separately if they haven't already.
 
 ---
 
@@ -113,7 +113,7 @@ When a new user signs in for the first time, their profile is created from a mix
 | `displayName` | **Google:** The user's full name from their Google profile. |
 | `email` | **Google:** The user's primary email address from their Google profile. |
 | `avatarUrl` | **Google:** The URL of their Google profile picture. |
-| `googleCalendarLinked`| **Application:** Set to `true` by the `useAuth` hook only after the user successfully completes the OAuth consent flow during sign-in. Defaults to `false`.|
+| `googleCalendarLinked`| **Application:** Defaults to `false`. Set to `true` by the application only after the user successfully completes the separate OAuth consent flow for calendar access. |
 | --- | --- |
 | `isAdmin` | **Application:** Defaults to `true` if the user is the first one in the database, otherwise `false`. |
 | `accountType` | **Application:** Defaults to `Viewer` for user-initiated requests, `Full` for invited users, or `Full` for the first user. |
