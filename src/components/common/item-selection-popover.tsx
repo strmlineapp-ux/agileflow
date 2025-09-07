@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -152,24 +151,22 @@ export function ItemSelectionPopover({
             />
           </div>
           
-           <div className="overflow-y-auto hide-scrollbar pt-0 p-1">
-              <div className="space-y-1">
-                {filteredItems.length > 0 ? (
-                  filteredItems.map(item => {
-                    const currentTab = tabs.find(t => t.value === activeTab);
-                    const isSelected = currentTab ? currentTab.selectedIds.includes(item.id) : false;
-                    
-                    return (
-                      <div key={item.id} onClick={() => {onSelectionChange(activeTab, item.id); setIsOpen(false)}}>
-                          <ItemDisplay item={item} isSelected={isSelected} />
-                      </div>
-                    );
-                  })
-                ) : (
-                  <p className="text-center text-sm text-foreground p-4">No {tabs.find(t => t.value === activeTab)?.label.toLowerCase() || 'items'} found.</p>
-                )}
-              </div>
-          </div>
+           {filteredItems.length > 0 && (
+            <div className="overflow-y-auto hide-scrollbar p-1 pt-0">
+                <div className="space-y-1">
+                    {filteredItems.map(item => {
+                        const currentTab = tabs.find(t => t.value === activeTab);
+                        const isSelected = currentTab ? currentTab.selectedIds.includes(item.id) : false;
+                        
+                        return (
+                          <div key={item.id} onClick={() => {onSelectionChange(activeTab, item.id); setIsOpen(false)}}>
+                              <ItemDisplay item={item} isSelected={isSelected} />
+                          </div>
+                        );
+                    })}
+                </div>
+            </div>
+           )}
         </Tabs>
       </PopoverContent>
     </Popover>
