@@ -82,7 +82,10 @@ function BadgeDisplayItem({
         value={badge.name}
         onSave={(newValue) => handleUpdate({ name: newValue })}
         disabled={!isOwner}
-        className="break-words font-emphasis font-normal"
+        className={cn(
+            "break-words font-emphasis",
+            viewMode === 'compact' ? "text-xs text-center" : "font-normal"
+        )}
       />
     );
       
@@ -104,7 +107,10 @@ function BadgeDisplayItem({
 
     const badgeContent = (
       <div className="group relative w-full" {...dragHandleProps}>
-        <div className="flex items-center gap-2 p-2">
+        <div className={cn(
+          "flex items-center gap-2 p-2",
+          viewMode === 'compact' && "flex-col items-center justify-center text-center"
+        )}>
             <div className="relative">
                 <IconColorPicker
                     icon={badge.icon}
@@ -189,7 +195,7 @@ function SortableBadgeItem({ badge, collection, onDeleteBadge, ...props }: { bad
     };
     
     return (
-        <div ref={setNodeRef} style={style} className={cn("bg-muted/30 rounded-md", props.viewMode === 'grid' && "break-inside-avoid")}>
+        <div ref={setNodeRef} style={style} className={cn("bg-muted/30 rounded-md", props.viewMode !== 'list' && "break-inside-avoid")}>
             <div className="relative flex w-full" {...listeners} {...attributes}>
                 <div className="flex-grow">
                     <BadgeDisplayItem 
@@ -221,7 +227,7 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
       case 'compact':
       default:
         strategy = rectSortingStrategy;
-        gridLayoutClass = "flex flex-wrap gap-2 items-start";
+        gridLayoutClass = "w-full gap-2 [column-fill:_balance] columns-2 sm:columns-3";
         break;
     }
     
@@ -476,21 +482,19 @@ function BadgeCollectionCard({
     );
 
     return (
-        <div className={cn('overflow-hidden', collection.viewMode === 'compact' && 'max-w-xs')}>
-            <CardTemplate
-                entity={collection}
-                onUpdate={onUpdateCollection}
-                onDelete={onDeleteCollection}
-                canManage={isOwner}
-                isExpanded={isExpanded}
-                onToggleExpand={onToggleExpand}
-                dragHandleProps={dragHandleProps}
-                isSharedPreview={isSharedPreview}
-                headerControls={headerControls}
-                body={bodyContent}
-                footer={footerContent}
-            />
-        </div>
+        <CardTemplate
+            entity={collection}
+            onUpdate={onUpdateCollection}
+            onDelete={onDeleteCollection}
+            canManage={isOwner}
+            isExpanded={isExpanded}
+            onToggleExpand={onToggleExpand}
+            dragHandleProps={dragHandleProps}
+            isSharedPreview={isSharedPreview}
+            headerControls={headerControls}
+            body={bodyContent}
+            footer={footerContent}
+        />
     );
 }
 
