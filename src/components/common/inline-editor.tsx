@@ -58,6 +58,8 @@ export function InlineEditor({
   }, [isEditing, handleSave]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Stop propagation to prevent dnd-kit's keyboard sensors from firing
+    e.stopPropagation(); 
     if (e.key === 'Enter') {
       e.preventDefault();
       handleSave();
@@ -71,6 +73,7 @@ export function InlineEditor({
   const handleDisplayClick = (e: React.MouseEvent) => {
     if (onClick) onClick(e);
     if (!disabled) {
+      e.stopPropagation(); // Prevent card drag from starting
       setIsEditing(true);
     }
   };
@@ -88,6 +91,7 @@ export function InlineEditor({
           className
         )}
         placeholder={placeholder}
+        onPointerDown={(e) => e.stopPropagation()}
       />
     );
   }
