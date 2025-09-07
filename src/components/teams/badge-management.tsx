@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -99,7 +98,7 @@ function BadgeDisplayItem({
             value={badge.name}
             onSave={(newValue) => handleUpdate({ name: newValue })}
             disabled={!isOwner}
-            className={cn("break-words font-emphasis", isOwner && "cursor-text")}
+            className={cn("break-words font-emphasis", isOwner)}
         />
     );
 
@@ -158,7 +157,7 @@ function BadgeDisplayItem({
              <UiBadge
                 variant={'outline'}
                 style={{ borderColor: badge.color }}
-                className="flex items-center gap-1.5 p-1 pl-2 rounded-full text-sm h-8"
+                className="flex items-center gap-1.5 p-1 pl-2 rounded-full h-8"
             >
                 <div className="relative">
                      <IconColorPicker
