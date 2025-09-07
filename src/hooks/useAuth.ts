@@ -1,7 +1,7 @@
 
 'use client';
 
-import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider, type User as FirebaseUser, OAuthProvider, getRedirectResult, linkWithRedirect } from 'firebase/auth';
+import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider, type User as FirebaseUser, OAuthProvider, getRedirectResult, linkWithRedirect, type OAuthCredential } from 'firebase/auth';
 import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where, limit, updateDoc, writeBatch } from 'firebase/firestore';
 import { useState, useEffect, useCallback } from 'react';
 import { type User, type Workspace } from '@/types';
@@ -29,36 +29,7 @@ export function useAuth() {
       console.error("Firebase initialization error in useAuth:", error);
     }
   }, []);
-
-  const handleRedirectResult = useCallback(async () => {
-    if (!isFirebaseReady || !realUser) return;
-    try {
-        const auth = getAuthInstance();
-        const result = await getRedirectResult(auth);
-        
-        if (result) {
-            // This is a result from a linkWithRedirect operation.
-            const credential = GoogleAuthProvider.credentialFromResult(result);
-            if (credential?.accessToken) {
-                await saveCredentials(result.user.uid, credential);
-                await updateDoc(doc(getDb(), 'users', result.user.uid), { googleCalendarLinked: true });
-                toast({ title: 'Success!', description: 'Your Google Calendar has been successfully connected.' });
-            }
-        }
-    } catch (error: any) {
-        console.error("Error handling redirect result:", error);
-        // This can happen if the user cancels the linking process.
-        if (error.code !== 'auth/cancelled-popup-request') {
-           toast({ variant: 'destructive', title: 'Authorization Failed', description: 'Could not complete Google Calendar connection.' });
-        }
-    }
-  }, [isFirebaseReady, realUser, toast]);
-
-  useEffect(() => {
-      handleRedirectResult();
-  }, [handleRedirectResult]);
-
-
+  
   useEffect(() => {
     if (!isFirebaseReady) return;
 
@@ -103,7 +74,7 @@ export function useAuth() {
                     roles: [],
                     googleCalendarLinked: false,
                     theme: 'light',
-                    dragActivationKey: 'shift',
+                    modifierKey: 'shift',
                     createdAt: new Date(),
                     workspaceId,
                 };
@@ -157,16 +128,36 @@ export function useAuth() {
 
   const googleLogin = useCallback(async () => {
     if (!isFirebaseReady) {
-      toast({ variant: "destructive", title: "Authentication service not ready. Please try again in a moment."});
+      toast({ variant: "destructive", title: "Authentication service not ready."});
       return false;
     }
     
     const authInstance = getAuthInstance();
     const provider = new GoogleAuthProvider();
-    
+    provider.addScope('https://www.googleapis.com/auth/calendar');
+
     try {
-      await signInWithPopup(authInstance, provider);
-      // The onAuthStateChanged listener will handle the user creation/update.
+      const result = await signInWithPopup(authInstance, provider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      
+      if (credential?.accessToken) {
+        await saveCredentials(result.user.uid, credential);
+        // Ensure the user's profile reflects the linked status
+        await updateDoc(doc(getDb(), 'users', result.user.uid), { googleCalendarLinked: true });
+        
+        // Optimistically update local user state
+        setRealUser(prevUser => prevUser ? { ...prevUser, googleCalendarLinked: true } : null);
+        toast({ title: 'Success!', description: 'Your Google Account is connected.' });
+      } else {
+        // This case can happen for returning users where Firebase doesn't re-issue the credential in the popup result.
+        // The onAuthStateChanged listener handles loading the user, so we just need to ensure their state is correct.
+        // We can check if they were already linked, and if not, try a redirect flow.
+        const userDoc = await getDoc(doc(getDb(), 'users', result.user.uid));
+        if (userDoc.exists() && !userDoc.data().googleCalendarLinked) {
+           await updateDoc(doc(getDb(), 'users', result.user.uid), { googleCalendarLinked: true });
+           setRealUser(prevUser => prevUser ? { ...prevUser, googleCalendarLinked: true } : null);
+        }
+      }
       return true;
     } catch (error) {
       console.error("Google Sign-In failed:", error);
@@ -174,27 +165,6 @@ export function useAuth() {
       return false;
     }
   }, [isFirebaseReady, toast]);
-
-  const linkGoogleCalendar = useCallback(async () => {
-    if (!realUser) {
-        toast({ variant: 'destructive', title: 'Not Signed In', description: 'You must be signed in to connect your calendar.' });
-        return;
-    }
-    const auth = getAuthInstance();
-    if (!auth.currentUser) return;
-    
-    const provider = new GoogleAuthProvider();
-    provider.addScope('https://www.googleapis.com/auth/calendar.readonly');
-    provider.addScope('https://www.googleapis.com/auth/calendar.events');
-
-    try {
-        await linkWithRedirect(auth.currentUser, provider);
-        // The result is handled by the getRedirectResult effect
-    } catch (error) {
-        console.error("Failed to initiate calendar linking:", error);
-        toast({ variant: 'destructive', title: 'Error', description: 'Could not start the Google Calendar connection process.' });
-    }
-  }, [realUser, toast]);
 
   const logout = useCallback(async (router: AppRouterInstance) => {
     if (!isFirebaseReady) return;
@@ -209,5 +179,5 @@ export function useAuth() {
     }
   }, [isFirebaseReady, toast]);
 
-  return { realUser, loading, isFirebaseReady, googleLogin, logout, setRealUser, linkGoogleCalendar };
+  return { realUser, loading, isFirebaseReady, googleLogin, logout, setRealUser };
 }
