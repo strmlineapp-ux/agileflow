@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
@@ -217,7 +218,7 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
         break;
       case 'grid':
         strategy = rectSortingStrategy;
-        gridLayoutClass = "grid grid-cols-2 w-full gap-4";
+        gridLayoutClass = "flex flex-wrap -m-1"; // Use flex-wrap instead of grid
         break;
       case 'compact':
       default:
@@ -230,8 +231,9 @@ function DroppableCollectionContent({ collection, children }: { collection: Badg
         <div 
             ref={setNodeRef}
             className={cn(
-                "min-h-[60px] rounded-md p-2 transition-all w-full",
+                "min-h-[60px] rounded-md transition-all w-full",
                 isOver && "ring-1 ring-border ring-inset",
+                collection.viewMode !== 'grid' && 'p-2', // Remove padding for grid view to use item padding
                 gridLayoutClass
             )}
         >
@@ -392,23 +394,26 @@ function BadgeCollectionCard({
         <DroppableCollectionContent collection={collection}>
           {collectionBadges.map((badge) => {
             const isBadgeLinked = badge.ownerCollectionId !== collection.id;
+            const sortableItemWrapperClass = collection.viewMode === 'grid' ? "p-1 basis-1/2" : "";
+
             return (
-              <SortableBadgeItem
-                key={badge.id}
-                badge={badge}
-                collection={collection}
-                viewMode={collection.viewMode}
-                onUpdateBadge={onUpdateBadge}
-                onDeleteBadge={onDeleteBadge}
-                isViewer={isViewer}
-                isOwner={badge.owner.id === viewAsUser.userId}
-                isLinked={isBadgeLinked}
-                allCollections={allCollections}
-                isSharedPreview={isSharedPreview}
-                currentUserBadgeIds={currentUserBadgeIds}
-                isExpanded={expandedBadges.has(badge.id)}
-                onToggleExpand={() => onToggleBadgeExpand(badge.id)}
-              />
+              <div key={badge.id} className={sortableItemWrapperClass}>
+                <SortableBadgeItem
+                    badge={badge}
+                    collection={collection}
+                    viewMode={collection.viewMode}
+                    onUpdateBadge={onUpdateBadge}
+                    onDeleteBadge={onDeleteBadge}
+                    isViewer={isViewer}
+                    isOwner={badge.owner.id === viewAsUser.userId}
+                    isLinked={isBadgeLinked}
+                    allCollections={allCollections}
+                    isSharedPreview={isSharedPreview}
+                    currentUserBadgeIds={currentUserBadgeIds}
+                    isExpanded={expandedBadges.has(badge.id)}
+                    onToggleExpand={() => onToggleBadgeExpand(badge.id)}
+                />
+              </div>
             );
           })}
         </DroppableCollectionContent>
