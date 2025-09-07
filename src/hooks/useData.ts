@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -586,10 +587,11 @@ export function useData(realUser: User | null, authLoading: boolean) {
       setAllBadgeCollections([...reorderedCollections]);
   }, []);
 
-  const addBadge = useCallback(async (collectionId: string, sourceBadge?: Badge) => {
+  const addBadge = useCallback(async (collectionId: string, sourceBadge?: Badge, realUser?: User) => {
+    if (!realUser) return;
     const db = getDb();
     const collection = allBadgeCollections.find(c => c.id === collectionId);
-    if (!collection || !realUser) return;
+    if (!collection) return;
 
     if (collection.owner.id !== realUser.userId) {
         toast({ variant: 'destructive', title: 'Permission Denied', description: "You can only add badges to collections you own."});
@@ -609,7 +611,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
             name: `${sourceBadge.name} (Copy)`,
             icon: sourceBadge.icon,
             color: adjustHslColor(sourceBadge.color),
-            description: sourceBadge.description,
+            description: sourceBadge.description || '',
             workspaceId,
         };
     } else {
@@ -636,7 +638,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
             c.id === collectionId ? { ...c, badgeIds: newBadgeIds } : c
         )
     );
-  }, [allBadgeCollections, toast, realUser]);
+  }, [allBadgeCollections, toast]);
 
   const updateBadge = useCallback(async (badgeId: string, badgeData: Partial<Badge>) => {
     const db = getDb();
