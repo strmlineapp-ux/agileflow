@@ -32,12 +32,11 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { DraggableGrid } from '../common/draggable-grid';
-import { InlineEditor } from '../common/inline-editor';
-import { SortableItem } from '../common/sortable-item';
 import { ManagementPageLayout } from '../common/management-page-layout';
 import { predefinedColors } from '@/lib/colors';
 import { IconColorPicker } from '../common/icon-color-picker';
+import { InlineEditor } from '../common/inline-editor';
+import { SortableItem } from '../common/sortable-item';
 
 
 function BadgeDisplayItem({ 
@@ -103,63 +102,76 @@ function BadgeDisplayItem({
       </>
     );
 
-    return (
-        <div className="group relative w-full" {...dragHandleProps}>
-            <div className="flex items-center gap-2 p-2">
-                <div className="relative">
-                    <IconColorPicker
-                        icon={badge.icon}
-                        color={badge.color}
-                        onUpdateIcon={(newIcon) => handleUpdate({ icon: newIcon })}
-                        onUpdateColor={(newColor) => handleUpdate({ color: newColor })}
-                        disabled={!isOwner}
-                    />
-                    {isLinked && (
-                        <div 
-                            className="absolute -top-0.5 -left-1 h-4 w-4 rounded-full ring-2 ring-card flex items-center justify-center text-white"
-                            style={{ backgroundColor: ownerCollection?.color || 'hsl(var(--muted-foreground))' }}
-                        >
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <GoogleSymbol name="link" style={{fontSize: '16px'}} weight={100} opticalSize={20} />
-                                    </TooltipTrigger>
-                                    <TooltipContent><p>From {ownerCollection?.name}. Owned by {ownerUser?.displayName}.</p></TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        </div>
-                    )}
-                </div>
-                <div className="flex-1 min-w-0">
-                    {nameEditorElement}
-                    {isExpanded && <div className="mt-1">{bodyContent}</div>}
-                </div>
-                <Button variant="ghost" size="icon" onClick={onToggleExpand} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
-                    <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
-                </Button>
+    const badgeContent = (
+      <div className="group relative w-full" {...dragHandleProps}>
+        <div className="flex items-center gap-2 p-2">
+            <div className="relative">
+                <IconColorPicker
+                    icon={badge.icon}
+                    color={badge.color}
+                    onUpdateIcon={(newIcon) => handleUpdate({ icon: newIcon })}
+                    onUpdateColor={(newColor) => handleUpdate({ color: newColor })}
+                    disabled={!isOwner}
+                />
+                {isLinked && (
+                    <div 
+                        className="absolute -top-0.5 -left-1 h-4 w-4 rounded-full ring-2 ring-card flex items-center justify-center text-white"
+                        style={{ backgroundColor: ownerCollection?.color || 'hsl(var(--muted-foreground))' }}
+                    >
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <GoogleSymbol name="link" style={{fontSize: '16px'}} weight={100} opticalSize={20} />
+                                </TooltipTrigger>
+                                <TooltipContent><p>From {ownerCollection?.name}. Owned by {ownerUser?.displayName}.</p></TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    </div>
+                )}
             </div>
-
-            {isOwner && (
-                <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity z-10" onPointerDown={(e) => e.stopPropagation()}>
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                                    onClick={() => onDeleteBadge(badge.id, collection.id)}
-                                >
-                                    <GoogleSymbol name="cancel" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent><p>{isLinked ? "Unlink Badge" : "Delete Badge"}</p></TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                </div>
-            )}
+            <div className="flex-1 min-w-0">
+                {nameEditorElement}
+                {isExpanded && <div className="mt-1">{bodyContent}</div>}
+            </div>
+            <Button variant="ghost" size="icon" onClick={onToggleExpand} onPointerDown={(e) => e.stopPropagation()} className="text-muted-foreground h-6 w-6">
+                <GoogleSymbol name="expand_more" className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
+            </Button>
         </div>
+
+        {isOwner && (
+            <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10" onPointerDown={(e) => e.stopPropagation()}>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="default"
+                                size="sm"
+                                className="h-6 w-6 p-0 bg-card font-emphasis"
+                                onClick={() => onDeleteBadge(badge.id, collection.id)}
+                            >
+                                <GoogleSymbol name="cancel" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>{isLinked ? "Unlink Badge" : "Delete Badge"}</p></TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            </div>
+        )}
+      </div>
     );
+    
+    if(viewMode === 'compact' && badge.description) {
+        return (
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>{badgeContent}</TooltipTrigger>
+                    <TooltipContent><p>{badge.description}</p></TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+        )
+    }
+
+    return badgeContent;
 }
 
 function SortableBadgeItem({ badge, collection, onDeleteBadge, ...props }: { badge: Badge, collection: BadgeCollection, onDeleteBadge: (badgeId: string, collectionId: string) => void, [key: string]: any }) {
@@ -464,20 +476,21 @@ function BadgeCollectionCard({
     );
 
     return (
-        <CardTemplate
-            entity={collection}
-            onUpdate={onUpdateCollection}
-            onDelete={onDeleteCollection}
-            canManage={isOwner}
-            isExpanded={isExpanded}
-            onToggleExpand={onToggleExpand}
-            dragHandleProps={dragHandleProps}
-            isSharedPreview={isSharedPreview}
-            headerControls={headerControls}
-            body={bodyContent}
-            footer={footerContent}
-            className="overflow-hidden"
-        />
+        <div className={cn('overflow-hidden', collection.viewMode === 'compact' && 'max-w-[400px]')}>
+            <CardTemplate
+                entity={collection}
+                onUpdate={onUpdateCollection}
+                onDelete={onDeleteCollection}
+                canManage={isOwner}
+                isExpanded={isExpanded}
+                onToggleExpand={onToggleExpand}
+                dragHandleProps={dragHandleProps}
+                isSharedPreview={isSharedPreview}
+                headerControls={headerControls}
+                body={bodyContent}
+                footer={footerContent}
+            />
+        </div>
     );
 }
 
@@ -527,6 +540,10 @@ export function BadgeManagement({ tab, page, isActive, isSharedPanelOpen, setIsS
         addBadgeCollection(viewAsUser, sourceCollection);
     };
 
+    const handleAddBadge = (collectionId: string, sourceBadge?: Badge, unlinkSource?: boolean) => {
+        addBadge(collectionId, sourceBadge, realUser, unlinkSource);
+    };
+
     const displayedCollections = useMemo(() => {
         return allBadgeCollections
             .filter(c => (c.owner && c.owner.id === viewAsUser.userId) || (viewAsUser.linkedBadgeCollectionIds || []).includes(c.id));
@@ -548,7 +565,10 @@ export function BadgeManagement({ tab, page, isActive, isSharedPanelOpen, setIsS
                     allBadges={allBadges}
                     onUpdateCollection={handleUpdate}
                     onDeleteCollection={handleDelete}
-                    onAddBadge={addBadge}
+                    onAddBadge={(collectionId, sourceBadge) => {
+                        const isLinked = sourceBadge ? sourceBadge.ownerCollectionId !== collectionId : false;
+                        addBadge(collectionId, sourceBadge, isLinked)
+                    }}
                     onUpdateBadge={updateBadge}
                     onDeleteBadge={deleteBadge}
                     isViewer={!viewAsUser}
@@ -577,6 +597,8 @@ export function BadgeManagement({ tab, page, isActive, isSharedPanelOpen, setIsS
         }
         return null;
     }, []);
+
+    const { realUser } = useUser();
 
     return (
         <ManagementPageLayout

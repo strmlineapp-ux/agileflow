@@ -3,7 +3,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, writeBatch, query, where, limit } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, writeBatch, query, where, limit, Timestamp } from 'firebase/firestore';
 import { getDb } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeOwner, type Task, type Holiday, type Project, type AppPage, type PreApprovedEmail } from '@/types';
@@ -485,7 +485,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
     const ownerContext: BadgeOwner = { type: 'user', id: owner.userId };
     const isDuplicating = !!sourceCollection;
 
-    if (sourceCollection) {
+    if (isDuplicating) {
         newBadges = sourceCollection.badgeIds.map(bId => {
             const originalBadge = allBadges.find(b => b.id === bId);
             if (!originalBadge) return null;
@@ -603,7 +603,8 @@ export function useData(realUser: User | null, authLoading: boolean) {
     const workspaceId = realUser.workspaceId;
     const isDuplicating = !!sourceBadge;
     
-    const existingNewBadgeCount = collection.badgeIds.map(id => allBadges.find(b => b.id === id)?.name).filter(name => name?.startsWith('New Badge')).length;
+    const existingBadgesInCollection = collection.badgeIds.map(id => allBadges.find(b => b.id === id)?.name);
+    const newBadgeCount = existingBadgesInCollection.filter(name => name?.startsWith('New Badge')).length;
 
     if (isDuplicating) {
         newBadge = {
@@ -621,7 +622,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
             id: crypto.randomUUID(),
             owner: collection.owner,
             ownerCollectionId: collectionId,
-            name: existingNewBadgeCount > 0 ? `New Badge ${existingNewBadgeCount + 1}` : 'New Badge',
+            name: newBadgeCount > 0 ? `New Badge ${newBadgeCount + 1}` : 'New Badge',
             icon: googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
             color: adjustHslColor(collection.color),
             workspaceId,
@@ -634,7 +635,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
     
     if (unlinkSource && sourceBadge) {
       const sourceCollection = allBadgeCollections.find(c => c.badgeIds.includes(sourceBadge.id));
-      if (sourceCollection) {
+      if (sourceCollection && sourceBadge.ownerCollectionId !== sourceCollection.id) { // Only unlink if it's a linked badge
         const updatedSourceBadgeIds = sourceCollection.badgeIds.filter(id => id !== sourceBadge.id);
         batch.update(doc(db, 'badgeCollections', sourceCollection.id), {badgeIds: updatedSourceBadgeIds});
       }
@@ -646,7 +647,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
     setAllBadgeCollections(prevCollections =>
         prevCollections.map(c => {
           if (c.id === collectionId) return { ...c, badgeIds: newBadgeIds };
-          if (unlinkSource && sourceBadge && c.badgeIds.includes(sourceBadge.id)) {
+          if (unlinkSource && sourceBadge && c.badgeIds.includes(sourceBadge.id) && sourceBadge.ownerCollectionId !== c.id) {
             return { ...c, badgeIds: c.badgeIds.filter(id => id !== sourceBadge.id) };
           }
           return c;

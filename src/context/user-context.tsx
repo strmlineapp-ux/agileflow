@@ -195,7 +195,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const deleteTeamWithRouter = (teamId: string, router: AppRouterInstance, pathname: string) => dataHook.deleteTeam(teamId, router, pathname, realUser!);
     const handleApproveAccessRequestWithUser = (notificationId: string, approved: boolean) => dataHook.handleApproveAccessRequest(notificationId, approved, realUser!);
     
-    const addBadgeCollectionWithUser = (owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => dataHook.addBadgeCollection(owner, sourceCollection, contextTeam);
+    const addBadgeCollectionWithUser = (owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => {
+        dataHook.addBadgeCollection(owner, sourceCollection, contextTeam);
+    };
     
     const addBadgeWithUser = (collectionId: string, sourceBadge?: Badge, unlinkSource: boolean = false) => {
         if (!realUser) return;
