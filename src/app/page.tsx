@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardDescription } from '@/components/ui/
 import { useUser } from '@/context/user-context';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { GoogleSymbol } from '@/components/icons/google-symbol';
 
 export default function LoginPage() {
   const { realUser, loading } = useUser();
@@ -18,9 +19,12 @@ export default function LoginPage() {
     }
   }, [loading, realUser, router]);
   
-  // While loading, or if user is found and redirecting, don't show the form
   if (loading || realUser) {
-    return null; 
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <GoogleSymbol name="progress_activity" className="h-16 w-16 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
@@ -32,7 +36,7 @@ export default function LoginPage() {
               className="mb-2 text-muted-foreground"
               iconClassName="text-primary"
             />
-            <CardDescription>Sign in to your AgileFlow workspace</CardDescription>
+            <CardDescription>Sign in to your Strm_ workspace</CardDescription>
           </CardHeader>
           <CardContent className="p-4">
             <LoginForm />

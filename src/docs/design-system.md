@@ -1,8 +1,8 @@
 
 
-# AgileFlow: Design System & UI Patterns
+# Strm_: Design System & UI Patterns
 
-This document outlines the established UI patterns and design choices that ensure a consistent and intuitive user experience across the AgileFlow application. These patterns serve as a guide for both current and future development.
+This document outlines the established UI patterns and design choices that ensure a consistent and intuitive user experience across the Strm_ application. These patterns serve as a guide for both current and future development.
 
 ## Core UI Patterns
 
@@ -334,3 +334,4 @@ The application uses a sophisticated, user-configurable emphasis system for inte
       - **Ownership Status**: `absolute -top-0 -right-3`.
     - **Icon Size (Ownership Status)**: The `GoogleSymbol` inside an ownership status badge should have its size set via `style={{fontSize: '16px'}}`.
 -   **Badges in Compact View & Team Badges**: Badges in these specific views use a light font weight (`font-thin`) for their text and icons to create a cleaner, more stylized look.
+
