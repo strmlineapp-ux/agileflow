@@ -11,7 +11,6 @@ import { useToast } from '@/hooks/use-toast';
 import { canManageEventOnCalendar } from '@/lib/permissions';
 import { cn, getContrastColor } from '@/lib/utils';
 import { googleSymbolNames } from '@/lib/google-symbols';
-import { createMeetLink } from '@/ai/flows/create-meet-link-flow';
 import { type User, type SharedCalendar, type Attachment, type AttachmentType, type Attendee, type Event, type Badge } from '@/types';
 
 import { Button } from '@/components/ui/button';
@@ -135,7 +134,6 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
   const isEditing = !!event;
 
   const [isLoading, setIsLoading] = React.useState(false);
-  const [isCreatingMeetLink, setIsCreatingMeetLink] = React.useState(false);
   const [guestSearch, setGuestSearch] = React.useState('');
   const [isGuestPopoverOpen, setIsGuestPopoverOpen] = React.useState(false);
   const [isLinkDialogOpen, setIsLinkDialogOpen] = React.useState(false);
@@ -793,28 +791,10 @@ export function EventForm({ event, onFinished, initialData, onAdd, onUpdate, onD
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
-                              disabled={isCreatingMeetLink || !selectedCalendar?.googleCalendarId}
-                              onSelect={async () => {
-                                if (!selectedCalendar?.googleCalendarId) return;
-                                setIsCreatingMeetLink(true);
-                                try {
-                                  const eventTitle = form.getValues('title') || 'New Event';
-                                  const result = await createMeetLink({ title: eventTitle });
-                                  handleAddAttachment('meet', 'Meet link', result.meetLink);
-                                } catch (error) {
-                                  console.error('Failed to create Meet link:', error);
-                                  toast({
-                                    variant: 'destructive',
-                                    title: 'Error',
-                                    description: 'Could not generate a Meet link.',
-                                  });
-                                } finally {
-                                  setIsCreatingMeetLink(false);
-                                }
-                              }}
+                              disabled={!selectedCalendar?.googleCalendarId}
                             >
                               <GoogleMeetIcon className="mr-2 h-4 w-4" />
-                              <span>{isCreatingMeetLink ? 'Generating...' : 'Meet link'}</span>
+                              <span>Meet link</span>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
