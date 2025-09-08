@@ -1,7 +1,7 @@
 
 import { cn } from '@/lib/utils';
 
-const Logo = ({ className, iconClassName }: { className?: string; iconClassName?: string; }) => {
+const Logo = ({ className, iconClassName, iconOnly }: { className?: string; iconClassName?: string; iconOnly?: boolean; }) => {
   return (
     <div className={cn("flex items-center gap-2 text-lg", className)}>
       <svg
@@ -34,7 +34,7 @@ const Logo = ({ className, iconClassName }: { className?: string; iconClassName?
           strokeLinejoin="round"
         />
       </svg>
-      <span className="font-bold">Strm_</span>
+      {!iconOnly && <span className="font-bold">Strm_</span>}
     </div>
   );
 };
