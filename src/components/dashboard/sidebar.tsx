@@ -13,13 +13,40 @@ import { GoogleSymbol } from '../icons/google-symbol';
 import { ScrollArea } from '../ui/scroll-area';
 import { hasAccess } from '@/lib/permissions';
 import Logo from '../icons/logo';
+import { useQuery } from '@tanstack/react-query';
+import { getFirestore, collection, query, where, orderBy, getDocs, Timestamp } from 'firebase/firestore';
+import { getDb } from '@/lib/firebase';
+import { type Notification } from '@/types';
+
+
+async function fetchNotifications(workspaceId: string): Promise<Notification[]> {
+    if (!workspaceId) return [];
+    const db = getDb();
+    const q = query(
+        collection(db, 'notifications'),
+        where('workspaceId', '==', workspaceId),
+        orderBy('time', 'desc')
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        time: (doc.data().time as Timestamp).toDate(),
+    } as Notification));
+}
 
 
 export function Sidebar() {
-  const { realUser, viewAsUser, users, loading, notifications, teams, setViewAsUser: setContextViewAsUser, appSettings, logout } = useUser();
+  const { realUser, viewAsUser, users, loading, setViewAsUser: setContextViewAsUser, appSettings, logout } = useUser();
   const router = useRouter();
   const pathname = usePathname();
   
+  const { data: notifications = [] } = useQuery<Notification[]>({
+      queryKey: ['notifications', viewAsUser.workspaceId],
+      queryFn: () => fetchNotifications(viewAsUser.workspaceId),
+      enabled: !!viewAsUser.workspaceId,
+  });
+
   const setViewAsUser = (userId: string) => {
     setContextViewAsUser(userId);
   };
@@ -28,7 +55,7 @@ export function Sidebar() {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const { adminPage, notificationsPage, otherPages } = useMemo(() => {
-    if (!viewAsUser) return { adminPage: null, notificationsPage: null, otherPages: [] };
+    if (!viewAsUser || !appSettings.pages) return { adminPage: null, notificationsPage: null, otherPages: [] };
     
     const adminPage = appSettings.pages.find(p => p.id === 'page-admin-management');
     const notificationsPage = appSettings.pages.find(p => p.id === 'page-notifications');
@@ -55,7 +82,7 @@ export function Sidebar() {
               className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg md:h-8 md:w-8 md:text-base"
             >
               <Logo iconOnly className="text-primary-foreground" />
-              <span className="sr-only">Strm_</span>
+              <span className="sr-only">Strm</span>
             </Link>
             {adminPage && hasAccess(viewAsUser, adminPage) && adminPage.path && (
               <TooltipProvider>
