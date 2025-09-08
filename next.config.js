@@ -22,7 +22,8 @@ const nextConfig = {
         '@genkit-ai/googleai',
         '@opentelemetry/instrumentation',
         'handlebars',
-        'require-in-the-middle'
+        'require-in-the-middle',
+        'google-auth-library'
     ],
   },
    webpack: (
