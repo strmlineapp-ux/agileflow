@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React from 'react';
@@ -30,7 +29,7 @@ export function UserCard({ user, isDeletable, onDelete, className }: UserCardPro
                     </Avatar>
                     <div>
                         <CardTitle className="text-muted-foreground">{user.displayName}</CardTitle>
-                        <CardDescription>{user.title || 'No title provided'}</CardDescription>
+                        <CardDescription className="text-foreground">{user.title || <span className="italic">No title provided</span>}</CardDescription>
                     </div>
                 </div>
                 {isDeletable && onDelete && (
@@ -55,7 +54,3 @@ export function UserCard({ user, isDeletable, onDelete, className }: UserCardPro
         </Card>
     );
 }
-
-// We need to import useUser here, since it's used in the component.
-// In a real project, this might be handled differently to avoid circular deps if needed.
-import { useUser } from '@/context/user-context';
