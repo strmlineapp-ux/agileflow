@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useEffect } from 'react';
@@ -16,20 +15,15 @@ export default function DashboardLayout({
 }) {
   const { loading, realUser } = useUser();
   const router = useRouter();
-  const pathname = usePathname();
 
   useEffect(() => {
+    // If loading is finished and there's no real user,
+    // they are not authenticated. Redirect to the login page.
     if (!loading && !realUser) {
       router.push('/');
     }
   }, [loading, realUser, router]);
   
-  useEffect(() => {
-    if (!loading && realUser && pathname === '/dashboard') {
-      router.push('/dashboard/overview');
-    }
-  }, [loading, realUser, pathname, router]);
-
   if (loading || !realUser) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">

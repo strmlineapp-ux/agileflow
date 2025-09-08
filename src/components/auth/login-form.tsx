@@ -14,16 +14,10 @@ export function LoginForm() {
   const [isSigningIn, setIsSigningIn] = React.useState(false);
 
   React.useEffect(() => {
-    // If loading is finished and we have a user, redirect them.
+    // If the real user is loaded and exists, redirect to the dashboard.
+    // This handles the case where a logged-in user visits the login page.
     if (!loading && realUser) {
-      if (realUser.accountType === 'Full') {
         router.push('/dashboard/overview');
-      }
-      // If user is 'Viewer', we let the layout handle the "Awaiting Approval" message,
-      // so we push them to a safe dashboard page which will show the message.
-      else if (realUser.accountType === 'Viewer') {
-        router.push('/dashboard');
-      }
     }
   }, [realUser, loading, router]);
 
@@ -32,8 +26,13 @@ export function LoginForm() {
     if (!isFirebaseReady) return; 
     setIsSigningIn(true);
     try {
-      await googleLogin();
+      const success = await googleLogin();
       // The useEffect will now handle the redirect after state updates.
+      if (success) {
+          router.push('/dashboard/overview');
+      } else {
+          setIsSigningIn(false);
+      }
     } catch (error) {
       console.error("Sign-in failed:", error);
       setIsSigningIn(false);
@@ -45,7 +44,7 @@ export function LoginForm() {
   return (
     <div className="space-y-4">
         <Button variant="outline" type="button" disabled={isButtonDisabled} className="w-full justify-center text-foreground hover:text-primary hover:bg-transparent" onClick={handleGoogleSignIn}>
-            {isSigningIn || loading ? (
+            {isButtonDisabled ? (
                 <GoogleSymbol name="progress_activity" className="animate-spin mr-2" />
             ) : (
                 <svg role="img" viewBox="0 0 24 24" className="mr-2 h-4 w-4">
