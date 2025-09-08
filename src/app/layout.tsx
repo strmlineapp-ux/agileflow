@@ -8,6 +8,7 @@ import { Roboto } from 'next/font/google';
 import { ThemeProvider, useTheme } from 'next-themes';
 import React, { useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import QueryProvider from '@/components/common/query-provider';
 
 const roboto = Roboto({
   subsets: ['latin'],
@@ -122,12 +123,14 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
         >
-          <UserProvider>
-            <AppThemeManager>
-              {children}
-            </AppThemeManager>
-            <Toaster />
-          </UserProvider>
+          <QueryProvider>
+            <UserProvider>
+              <AppThemeManager>
+                {children}
+              </AppThemeManager>
+              <Toaster />
+            </UserProvider>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>

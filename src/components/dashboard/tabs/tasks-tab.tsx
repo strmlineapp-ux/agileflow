@@ -1,8 +1,7 @@
 
-
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { TaskList } from '@/components/tasks/task-list';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
@@ -16,40 +15,87 @@ import { CenteredTabList } from '@/components/common/centered-tab-list';
 import { PageTitle } from '@/components/common/page-title';
 import { useToast } from '@/hooks/use-toast';
 import { getDb } from '@/lib/firebase';
-import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, Timestamp, getDocs } from 'firebase/firestore';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
 // A new form component will be needed for adding/editing tasks. Let's assume its creation.
 // For now, we'll imagine a placeholder. A real implementation would require a TaskForm component.
+
+
+async function fetchTasks(workspaceId: string): Promise<Task[]> {
+  const db = getDb();
+  const q = query(collection(db, 'tasks'), where('workspaceId', '==', workspaceId));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({
+    taskId: doc.id,
+    ...doc.data(),
+    dueDate: (doc.data().dueDate as Timestamp).toDate(),
+  } as Task));
+}
+
+async function addTask(taskData: Omit<Task, 'taskId' | 'createdAt' | 'lastUpdated'>): Promise<Task> {
+    const db = getDb();
+    const docRef = await addDoc(collection(db, 'tasks'), {
+        ...taskData,
+        createdAt: new Date(),
+        lastUpdated: new Date(),
+    });
+    return { ...taskData, taskId: docRef.id, createdAt: new Date(), lastUpdated: new Date() };
+}
+
+async function updateTask({ taskId, updatedData }: { taskId: string, updatedData: Partial<Task> }) {
+    const db = getDb();
+    await updateDoc(doc(db, 'tasks', taskId), {
+        ...updatedData,
+        lastUpdated: new Date(),
+    });
+}
+
+async function deleteTask(taskId: string) {
+    const db = getDb();
+    await deleteDoc(doc(db, 'tasks', taskId));
+}
 
 export function TasksContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
   const [activeTab, setActiveTab] = useState<'my-tasks' | 'all'>('my-tasks');
   const { viewAsUser, updateUser } = useUser();
   const { toast } = useToast();
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
-  useEffect(() => {
-    if (!viewAsUser?.workspaceId) return;
-    setLoading(true);
-    const db = getDb();
-    const q = query(collection(db, 'tasks'), where('workspaceId', '==', viewAsUser.workspaceId));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-        const tasksData = snapshot.docs.map(doc => ({
-            taskId: doc.id,
-            ...doc.data(),
-            dueDate: (doc.data().dueDate as Timestamp).toDate(),
-        } as Task));
-        setTasks(tasksData);
-        setLoading(false);
-    }, (error) => {
-        console.error("Error fetching tasks:", error);
-        toast({ variant: "destructive", title: "Error", description: "Could not load tasks." });
-        setLoading(false);
-    });
+  const { data: tasks = [], isLoading } = useQuery<Task[]>({
+    queryKey: ['tasks', viewAsUser.workspaceId],
+    queryFn: () => fetchTasks(viewAsUser.workspaceId),
+    enabled: !!viewAsUser.workspaceId,
+  });
+  
+  const mutationOptions = {
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', viewAsUser.workspaceId] });
+      toast({ title: "Success", description: "Your changes have been saved." });
+      setIsFormOpen(false);
+      setEditingTask(null);
+    },
+    onError: (error: Error) => {
+      toast({ variant: "destructive", title: "Error", description: error.message });
+    },
+  };
 
-    return () => unsubscribe();
-  }, [viewAsUser?.workspaceId, toast]);
+  const addTaskMutation = useMutation({
+    mutationFn: addTask,
+    ...mutationOptions
+  });
+  const updateTaskMutation = useMutation({
+    mutationFn: updateTask,
+    ...mutationOptions
+  });
+  const deleteTaskMutation = useMutation({
+    mutationFn: deleteTask,
+    ...mutationOptions
+  });
+  
 
   const title = page?.displayTitle ?? tab?.name ?? 'Tasks';
   const canManagePage = viewAsUser.isAdmin;
@@ -68,32 +114,21 @@ export function TasksContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
     }
   };
 
-  const handleTaskAdded = async (newTaskData: Omit<Task, 'taskId' | 'createdAt' | 'lastUpdated'>) => {
-    if (!viewAsUser) return;
-    const db = getDb();
-    await addDoc(collection(db, 'tasks'), {
-        ...newTaskData,
-        workspaceId: viewAsUser.workspaceId,
-        createdBy: viewAsUser.userId,
-        createdAt: new Date(),
-        lastUpdated: new Date(),
-    });
-    setIsFormOpen(false);
+  const handleTaskAdded = async (taskData: Omit<Task, 'taskId' | 'createdAt' | 'lastUpdated'>) => {
+    const dataWithContext = {
+      ...taskData,
+      workspaceId: viewAsUser.workspaceId,
+      createdBy: viewAsUser.userId,
+    };
+    addTaskMutation.mutate(dataWithContext as any);
   };
   
   const handleTaskUpdated = async (taskId: string, updatedData: Partial<Task>) => {
-    const db = getDb();
-    await updateDoc(doc(db, 'tasks', taskId), {
-        ...updatedData,
-        lastUpdated: new Date(),
-    });
-    setEditingTask(null);
-    setIsFormOpen(false);
+    updateTaskMutation.mutate({ taskId, updatedData });
   };
   
   const handleTaskDeleted = async (taskId: string) => {
-    const db = getDb();
-    await deleteDoc(doc(db, 'tasks', taskId));
+    deleteTaskMutation.mutate(taskId);
   };
   
   const openNewTaskForm = () => {
@@ -105,7 +140,6 @@ export function TasksContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
     setEditingTask(task);
     setIsFormOpen(true);
   };
-
 
   const filteredTasks = activeTab === 'my-tasks'
     ? tasks.filter(task => task.assignedTo.some(user => user.userId === viewAsUser.userId))
@@ -153,7 +187,7 @@ export function TasksContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
           </CenteredTabList>
           <div className="flex-1 overflow-y-auto pt-6 hide-scrollbar">
             <TabsContent value="my-tasks" className="mt-0">
-              {loading ? (
+              {isLoading ? (
                 <div className="space-y-4">
                     <Skeleton className="h-10 w-1/3" />
                     <Skeleton className="h-8 w-24" />
@@ -172,7 +206,7 @@ export function TasksContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
               )}
             </TabsContent>
             <TabsContent value="all" className="mt-0">
-              {loading ? (
+              {isLoading ? (
                 <div className="space-y-4">
                     <Skeleton className="h-10 w-1/3" />
                     <Skeleton className="h-8 w-24" />
