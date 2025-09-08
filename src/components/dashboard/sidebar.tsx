@@ -55,7 +55,7 @@ export function Sidebar() {
               className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg md:h-8 md:w-8 md:text-base"
             >
               <Logo className="text-primary-foreground" />
-              <span className="sr-only">Strm</span>
+              <span className="sr-only">Strm_</span>
             </Link>
             {adminPage && hasAccess(viewAsUser, adminPage) && adminPage.path && (
               <TooltipProvider>

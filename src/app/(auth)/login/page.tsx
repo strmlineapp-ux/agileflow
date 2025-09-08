@@ -1,3 +1,4 @@
+
 import { LoginForm } from '@/components/auth/login-form';
 import Logo from '@/components/icons/logo';
 import { Card, CardContent, CardHeader, CardDescription } from '@/components/ui/card';
@@ -12,7 +13,7 @@ export default function LoginPage() {
               className="mb-2 text-muted-foreground"
               iconClassName="text-primary"
             />
-            <CardDescription>Sign in to your Strm workspace</CardDescription>
+            <CardDescription>Sign in to your Strm_ workspace</CardDescription>
           </CardHeader>
           <CardContent className="p-4">
             <LoginForm />

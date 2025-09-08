@@ -1,8 +1,8 @@
 
 
-# Strm: Authentication Blueprint
+# Strm_: Authentication Blueprint
 
-This document provides a clear, non-technical overview of how user authentication is handled within the Strm application, incorporating a robust, administrator-controlled access model.
+This document provides a clear, non-technical overview of how user authentication is handled within the Strm_ application, incorporating a robust, administrator-controlled access model.
 
 ---
 
@@ -18,7 +18,7 @@ The application uses Google Sign-In as its sole method of authentication. Access
 
 ### Method A: First User Auto-Approval (Bootstrap Flow)
 
-This method ensures the very first person to sign into a new, empty Strm instance automatically becomes the system administrator.
+This method ensures the very first person to sign into a new, empty Strm_ instance automatically becomes the system administrator.
 
 **Step 1: New User Signs In to an Empty System**
 A new user navigates to the application URL and is the first person ever to click "Sign in with Google."
@@ -42,7 +42,7 @@ This is the most secure and user-friendly method for adding new team members onc
 An existing administrator uses a dedicated "Pre-approve User" form within the application to enter the email address of the new user. This action securely adds the email to a `pre-approved-emails` collection in the database.
 
 **Step 2: User Receives an Email**
-A Cloud Function is automatically triggered by the new entry in the `pre-approved-emails` collection. This function sends a welcome email to the new user with a link to the Strm login page.
+A Cloud Function is automatically triggered by the new entry in the `pre-approved-emails` collection. This function sends a welcome email to the new user with a link to the Strm_ login page.
 
 **Step 3: User Clicks "Sign in with Google"**
 The new user clicks the link and uses the "Sign in with Google" button. They complete the secure sign-in process directly with Google.
@@ -146,6 +146,7 @@ This authentication system is significantly more secure and robust than the prev
 *   **Secure Session Management:** Firebase's `onAuthStateChanged` listener securely manages the user's session. It uses industry-standard tokens, which are automatically refreshed and secured, protecting against unauthorized access.
 *   **Centralized Authentication Logic:** All authentication logic is now centralized within the `user-context.tsx` file and uses the official Firebase SDK. This reduces complexity and eliminates the risk of inconsistent or insecure implementations elsewhere in the app.
 *   **Single Source of Truth:** Using Firebase Auth as the single source of truth for a user's identity prevents the creation of duplicate accounts, which was a key issue with the previous system.
+
 
 
 

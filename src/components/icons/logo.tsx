@@ -1,3 +1,4 @@
+
 import { cn } from '@/lib/utils';
 
 const Logo = ({ className, iconClassName }: { className?: string; iconClassName?: string; }) => {
@@ -33,7 +34,7 @@ const Logo = ({ className, iconClassName }: { className?: string; iconClassName?
           strokeLinejoin="round"
         />
       </svg>
-      <span className="sr-only">Strm</span>
+      <span className="font-bold">Strm_</span>
     </div>
   );
 };

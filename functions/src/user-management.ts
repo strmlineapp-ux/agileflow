@@ -44,7 +44,7 @@ async function getAdminEmails(workspaceId: string): Promise<string[]> {
  */
 export async function sendEmail(to: string[], subject: string, htmlBody: string): Promise<void> {
     const mailOptions = {
-        from: 'Strm Notifications <noreply@firebase.com>',
+        from: 'Strm_ Notifications <noreply@firebase.com>',
         to: to.join(','),
         subject: subject,
         html: htmlBody,
@@ -84,14 +84,14 @@ export const handleNewUserCreated = onDocumentCreated('users/{userId}', async (e
     return null;
   }
 
-  const subject = `Strm: New User Awaiting Approval - ${newUserName}`;
+  const subject = `Strm_: New User Awaiting Approval - ${newUserName}`;
   const htmlBody = `
       <p>A new user has signed up and is awaiting your approval:</p>
       <ul>
           <li><strong>Name:</strong> ${newUserName}</li>
           <li><strong>Email:</strong> ${newUserEmail}</li>
       </ul>
-      <p>Please log in to the Strm admin dashboard ` +
+      <p>Please log in to the Strm_ admin dashboard ` +
       `to approve or reject this user.</p>
       <p><a href="https://your-strm-app.com/dashboard/notifications">` +
       `View Pending Users</a></p>

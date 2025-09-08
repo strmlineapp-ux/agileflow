@@ -1,8 +1,8 @@
 
 
-# Strm: Design System & UI Patterns
+# Strm_: Design System & UI Patterns
 
-This document outlines the established UI patterns and design choices that ensure a consistent and intuitive user experience across the Strm application. These patterns serve as a guide for both current and future development.
+This document outlines the established UI patterns and design choices that ensure a consistent and intuitive user experience across the Strm_ application. These patterns serve as a guide for both current and future development.
 
 ## Core UI Patterns
 

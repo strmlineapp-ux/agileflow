@@ -37,12 +37,12 @@ export const handleSendInvitation = onDocumentCreated('pre-approved-emails/{docI
         console.error(`Failed to fetch inviter's name for userId: ${invitedBy}`, error);
     }
     
-    const subject = `You're invited by ${inviterName} to join Strm!`;
+    const subject = `You're invited by ${inviterName} to join Strm_!`;
     const htmlBody = `
       <p>Hi there,</p>
-      <p>${inviterName} has invited you to join your team on Strm.</p>
+      <p>${inviterName} has invited you to join your team on Strm_.</p>
       <p>Please click the link below to sign up and get started:</p>
-      <p><a href="https://agileflow-mlf18.web.app/login">Sign Up for Strm</a></p>
+      <p><a href="https://agileflow-mlf18.web.app/login">Sign Up for Strm_</a></p>
       <p>If you have any questions, please contact your workspace administrator.</p>
     `;
 
