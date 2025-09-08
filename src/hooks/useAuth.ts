@@ -1,9 +1,8 @@
 
-
 'use client';
 
 import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider, type User as FirebaseUser, type OAuthCredential } from 'firebase/auth';
-import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where, limit, updateDoc, writeBatch } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where, limit, updateDoc, writeBatch, onSnapshot } from 'firebase/firestore';
 import { useState, useEffect, useCallback } from 'react';
 import { type User, type Workspace } from '@/types';
 import { getAuthInstance, getDb, getCurrentWorkspaceId } from '@/lib/firebase';
@@ -15,6 +14,7 @@ import { useRouter } from 'next/navigation';
 
 export function useAuth() {
   const [realUser, setRealUser] = useState<User | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFirebaseReady, setIsFirebaseReady] = useState(false);
   const { toast } = useToast();
@@ -37,12 +37,17 @@ export function useAuth() {
         if (firebaseUser) {
             const db = getDb();
             const userRef = doc(db, 'users', firebaseUser.uid);
+            
+            const userDocUnsubscribe = onSnapshot(userRef, (doc) => {
+              if (doc.exists()) {
+                setRealUser({ userId: doc.id, ...doc.data() } as User);
+              }
+            });
+
             let userDoc = await getDoc(userRef);
             const workspaceId = getCurrentWorkspaceId();
 
-            if (userDoc.exists()) {
-              setRealUser({ userId: userDoc.id, ...userDoc.data() } as User);
-            } else {
+            if (!userDoc.exists()) {
               const usersInWorkspaceQuery = query(collection(db, 'users'), where('workspaceId', '==', workspaceId), limit(1));
               const isFirstUser = (await getDocs(usersInWorkspaceQuery)).empty;
 
@@ -71,11 +76,26 @@ export function useAuth() {
                 await batch.commit();
               }
             }
+
+            const usersQuery = query(collection(db, 'users'), where('workspaceId', '==', workspaceId));
+            const usersUnsubscribe = onSnapshot(usersQuery, (snapshot) => {
+              setUsers(snapshot.docs.map(d => ({...d.data(), userId: d.id} as User)));
+            });
+
+            setLoading(false);
+            
+            return () => {
+              userDocUnsubscribe();
+              usersUnsubscribe();
+            };
+
         } else {
           setRealUser(null);
+          setUsers([]);
+          setLoading(false);
         }
-        setLoading(false);
     });
+
     return () => unsubscribe();
   }, [isFirebaseReady, toast]);
 
@@ -131,5 +151,5 @@ export function useAuth() {
     }
   }, [isFirebaseReady, toast]);
 
-  return { realUser, loading, isFirebaseReady, googleLogin, logout, setRealUser, linkGoogleCalendar };
+  return { realUser, users, loading, isFirebaseReady, googleLogin, logout, setRealUser, linkGoogleCalendar };
 }

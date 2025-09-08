@@ -14,6 +14,7 @@ interface UserContextType {
   // Session
   realUser: User;
   viewAsUser: User & { isDragModifierPressed?: boolean };
+  users: User[];
   updateUser: (userId: string, data: Partial<User>) => Promise<void>;
   setViewAsUser: (userId: string) => void;
   googleLogin: () => Promise<boolean>;
@@ -26,7 +27,7 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | null>(null);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  const { realUser, loading: authLoading, isFirebaseReady, googleLogin, logout, linkGoogleCalendar, setRealUser } = useAuth();
+  const { realUser, users, loading: authLoading, isFirebaseReady, googleLogin, logout, linkGoogleCalendar, setRealUser } = useAuth();
   const [viewAsUserId, setViewAsUserId] = useState<string | null>(null);
   const [isDragModifierPressed, setIsDragModifierPressed] = useState(false);
   
@@ -39,13 +40,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, [realUser, viewAsUserId]);
 
   const viewAsUser = useMemo(() => {
-    // This is simplified. In a real scenario, you'd fetch the full user object
-    // from a list of all users if you had one.
     if (viewAsUserId === realUser?.userId) return realUser;
-    // Placeholder for "view as" functionality.
-    // In this stripped-down context, it just returns the real user.
-    return realUser;
-  }, [viewAsUserId, realUser]);
+    return users.find(u => u.userId === viewAsUserId) || realUser;
+  }, [viewAsUserId, realUser, users]);
   
   const updateUser = useCallback(async (userId: string, userData: Partial<User>) => {
     const db = getDb();
@@ -102,6 +99,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     return {
       realUser,
       viewAsUser: enrichedViewAsUser,
+      users,
       updateUser,
       setViewAsUser: setViewAsUserWithReset,
       googleLogin,
@@ -111,7 +109,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       isFirebaseReady,
     };
   }, [
-    realUser, viewAsUser, googleLogin, logout, loading, isFirebaseReady, isDragModifierPressed, updateUser, linkGoogleCalendar
+    realUser, viewAsUser, users, googleLogin, logout, loading, isFirebaseReady, isDragModifierPressed, updateUser, linkGoogleCalendar
   ]);
   
   if (loading || !contextValue) {
