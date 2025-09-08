@@ -9,7 +9,7 @@ import { sendEmail } from './user-management.js';
  * Firestore trigger that sends an invitation email when a new email is added
  * to the pre-approved-emails collection for a specific workspace.
  */
-export const sendInvitation = onDocumentCreated('pre-approved-emails/{docId}', async (event) => {
+export const handleSendInvitation = onDocumentCreated('pre-approved-emails/{docId}', async (event) => {
     const db = getFirestore();
     const newInvitation = event.data?.data();
 
@@ -37,12 +37,12 @@ export const sendInvitation = onDocumentCreated('pre-approved-emails/{docId}', a
         console.error(`Failed to fetch inviter's name for userId: ${invitedBy}`, error);
     }
     
-    const subject = `You're invited by ${inviterName} to join AgileFlow!`;
+    const subject = `You're invited by ${inviterName} to join Strm!`;
     const htmlBody = `
       <p>Hi there,</p>
-      <p>${inviterName} has invited you to join your team on AgileFlow.</p>
+      <p>${inviterName} has invited you to join your team on Strm.</p>
       <p>Please click the link below to sign up and get started:</p>
-      <p><a href="https://agileflow-mlf18.web.app/login">Sign Up for AgileFlow</a></p>
+      <p><a href="https://agileflow-mlf18.web.app/login">Sign Up for Strm</a></p>
       <p>If you have any questions, please contact your workspace administrator.</p>
     `;
 

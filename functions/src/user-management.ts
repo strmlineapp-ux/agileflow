@@ -44,7 +44,7 @@ async function getAdminEmails(workspaceId: string): Promise<string[]> {
  */
 export async function sendEmail(to: string[], subject: string, htmlBody: string): Promise<void> {
     const mailOptions = {
-        from: 'AgileFlow Notifications <noreply@firebase.com>',
+        from: 'Strm Notifications <noreply@firebase.com>',
         to: to.join(','),
         subject: subject,
         html: htmlBody,
@@ -62,7 +62,7 @@ export async function sendEmail(to: string[], subject: string, htmlBody: string)
 /**
  * Firestore trigger that sends an email to admins when a new user signs up.
  */
-export const onNewUserCreated = onDocumentCreated('users/{userId}', async (event) => {
+export const handleNewUserCreated = onDocumentCreated('users/{userId}', async (event) => {
   const newUser = event.data?.data();
 
   // If user is 'Full' (pre-approved or first user), no notification needed.
@@ -84,16 +84,16 @@ export const onNewUserCreated = onDocumentCreated('users/{userId}', async (event
     return null;
   }
 
-  const subject = `AgileFlow: New User Awaiting Approval - ${newUserName}`;
+  const subject = `Strm: New User Awaiting Approval - ${newUserName}`;
   const htmlBody = `
       <p>A new user has signed up and is awaiting your approval:</p>
       <ul>
           <li><strong>Name:</strong> ${newUserName}</li>
           <li><strong>Email:</strong> ${newUserEmail}</li>
       </ul>
-      <p>Please log in to the AgileFlow admin dashboard ` +
+      <p>Please log in to the Strm admin dashboard ` +
       `to approve or reject this user.</p>
-      <p><a href="https://your-agileflow-app.com/dashboard/notifications">` +
+      <p><a href="https://your-strm-app.com/dashboard/notifications">` +
       `View Pending Users</a></p>
     `;
 

@@ -1,4 +1,4 @@
-# AgileFlow
+# Strm
 
 This is a Next.js application built in Firebase Studio.
 

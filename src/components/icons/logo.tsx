@@ -33,7 +33,7 @@ const Logo = ({ className, iconClassName }: { className?: string; iconClassName?
           strokeLinejoin="round"
         />
       </svg>
-      <span className="sr-only">AgileFlow</span>
+      <span className="sr-only">Strm</span>
     </div>
   );
 };

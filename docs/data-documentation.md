@@ -1,12 +1,12 @@
 
 
-# AgileFlow: Data Documentation
+# Strm: Data Documentation
 
-This document provides a detailed breakdown of the data structures, entities, and their relationships within the AgileFlow application. It serves as a technical reference for understanding how data flows through the system and interacts with internal and external services.
+This document provides a detailed breakdown of the data structures, entities, and their relationships within the Strm application. It serves as a technical reference for understanding how data flows through the system and interacts with internal and external services.
 
 ## Data Fetching Strategy: Scalable On-Demand Model
 
-AgileFlow employs a highly scalable, on-demand data-fetching strategy that is optimized for a NoSQL database environment and a context-aware user experience. This approach ensures the application remains fast and responsive, regardless of the amount of data in the system.
+Strm employs a highly scalable, on-demand data-fetching strategy that is optimized for a NoSQL database environment and a context-aware user experience. This approach ensures the application remains fast and responsive, regardless of the amount of data in the system.
 
 1.  **Minimal Initial Load**: When the application starts, it loads only the absolute minimum data required for the user to operate:
     *   The current `User` object, which contains their profile, preferences, and a list of Team IDs they belong to (`memberOfTeamIds`).
@@ -24,7 +24,7 @@ AgileFlow employs a highly scalable, on-demand data-fetching strategy that is op
 
 ## Multi-Workspace Architecture: A Flexible Hybrid Model
 
-AgileFlow is designed with a flexible, hybrid multi-workspace architecture. This approach allows the application to scale efficiently by supporting two distinct models for workspace data isolation, which can be chosen based on a customer's needs or tier.
+Strm is designed with a flexible, hybrid multi-workspace architecture. This approach allows the application to scale efficiently by supporting two distinct models for workspace data isolation, which can be chosen based on a customer's needs or tier.
 
 ### Model 1: Shared Database with Logical Isolation (Default)
 
@@ -47,10 +47,10 @@ This model is ideal for enterprise clients or those with stringent data residenc
 
 The application uses a dynamic lookup mechanism to seamlessly support both models.
 
-1.  **Workspace Identification**: The application identifies the current workspace based on the hostname (e.g., `workspace-a.agileflow.app`).
+1.  **Workspace Identification**: The application identifies the current workspace based on the hostname (e.g., `workspace-a.strm.app`).
 2.  **Dynamic Configuration**: The system looks up the workspace's configuration from a secure, central store.
     *   A standard workspace might resolve to the configuration for the **shared** Firebase project.
-    *   An enterprise workspace (`megacorp.agileflow.app`) would resolve to the unique configuration for **their own dedicated** Firebase project.
+    *   An enterprise workspace (`megacorp.strm.app`) would resolve to the unique configuration for **their own dedicated** Firebase project.
 3.  **Data Access**: The application's data hooks and services use the retrieved configuration to connect to the correct database and apply the appropriate querying strategy (with or without `workspaceId` filtering).
 
 This hybrid approach provides the flexibility to offer different service tiers without being locked into a single architectural pattern, ensuring the application can adapt to a wide range of customer needs.
@@ -61,7 +61,7 @@ This hybrid approach provides the flexibility to offer different service tiers w
 ## User Entity
 **Firestore Collection**: `/users/{userId}`
 
-The `User` is the central entity in the AgileFlow application. A user's identity, roles, and preferences dictate their experience and permissions throughout the system.
+The `User` is the central entity in the Strm application. A user's identity, roles, and preferences dictate their experience and permissions throughout the system.
 
 ### User Profile Data
 
@@ -170,7 +170,7 @@ Tasks are always associated with a parent `Project`.
 ## Shared Calendar Entity
 **Firestore Collection**: `/calendars/{calendarId}`
 
-This entity represents an internal AgileFlow calendar. These are managed on a dynamically configured page by an administrator (e.g., a page with a "Calendars" tab).
+This entity represents an internal Strm calendar. These are managed on a dynamically configured page by an administrator (e.g., a page with a "Calendars" tab).
 
 ### Synchronization Strategy: Google Calendar Push Notifications (Best Practice)
 
@@ -187,7 +187,7 @@ This event-driven architecture is superior to a scheduled (cron job) approach as
 
 | Data Point | Description & Link to Services |
 | :--- | :--- |
-| `id: string` | **Internal.** A unique identifier for the AgileFlow calendar. |
+| `id: string` | **Internal.** A unique identifier for the Strm calendar. |
 | `name: string` | **Internal.** The display name for the calendar within the application. |
 | `icon: string` | **Internal.** The Google Symbol name for the calendar's icon. |
 | `color: string` | **Internal.** The hex color code used for this calendar's events in the UI. |

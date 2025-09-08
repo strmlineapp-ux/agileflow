@@ -1,5 +1,5 @@
 
-# AgileFlow: Backup and Restore Guide
+# Strm: Backup and Restore Guide
 
 This guide provides the standard developer process for creating a complete backup of your application's codebase using Git and a remote repository service like GitHub. This ensures you always have a safe, restorable version of your project.
 
@@ -23,7 +23,7 @@ If you don't have Git installed on your local machine, you'll need to download i
 
 1.  Sign up for a free account at [GitHub.com](https://github.com/).
 2.  Once logged in, create a new repository by clicking the "+" icon in the top-right corner and selecting "New repository".
-3.  Give your repository a name (e.g., `agileflow-app-backup`).
+3.  Give your repository a name (e.g., `strm-app-backup`).
 4.  You can choose to make it "Public" or "Private". For a project backup, "Private" is recommended.
 5.  **Do not** initialize the repository with a README, .gitignore, or license file. We will add the files from your existing project.
 6.  Click "Create repository".
@@ -36,7 +36,7 @@ For security, GitHub requires you to use a Personal Access Token (PAT) instead o
 
 1.  Go to your GitHub **Settings** > **Developer settings** > **Personal access tokens** > **Tokens (classic)**.
 2.  Click **"Generate new token"**.
-3.  Give the token a descriptive name (e.g., "AgileFlow Backup").
+3.  Give the token a descriptive name (e.g., "Strm Backup").
 4.  Set an expiration date for the token.
 5.  Under **"Select scopes,"** check the `repo` box. This will grant the token permission to access and push to your repositories.
 6.  Click **"Generate token"**.
@@ -45,7 +45,7 @@ For security, GitHub requires you to use a Personal Access Token (PAT) instead o
 ### Step 4: Initialize Git in Your Project & Push
 
 1.  Open a terminal or command prompt on your computer.
-2.  Navigate to the root directory of your AgileFlow project.
+2.  Navigate to the root directory of your Strm project.
 3.  Run the following commands one by one:
 
 ```bash

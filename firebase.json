@@ -7,7 +7,7 @@
       {
         "source": "**",
         "app": {
-          "backendId": "agileflow-mlf18-backend",
+          "backendId": "strm-backend",
           "region": "us-central1"
         }
       }
@@ -16,7 +16,7 @@
   "apphosting": {
     "backends": [
       {
-        "id": "agileflow-mlf18-backend",
+        "id": "strm-backend",
         "region": "us-central1",
         "source": ".",
         "codebase": "default",

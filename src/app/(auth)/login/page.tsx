@@ -12,7 +12,7 @@ export default function LoginPage() {
               className="mb-2 text-muted-foreground"
               iconClassName="text-primary"
             />
-            <CardDescription>Sign in to your AgileFlow workspace</CardDescription>
+            <CardDescription>Sign in to your Strm workspace</CardDescription>
           </CardHeader>
           <CardContent className="p-4">
             <LoginForm />

@@ -1,14 +1,14 @@
 
 
-# AgileFlow User Manual
+# Strm User Manual
 
-Welcome to AgileFlow, your team's central hub for managing tasks, scheduling events, and coordinating production workflows. This guide will walk you through the key features of the app.
+Welcome to Strm, your team's central hub for managing tasks, scheduling events, and coordinating production workflows. This guide will walk you through the key features of the app.
 
 ## 1. Getting Started
 
 ### 1.1 Requesting Access
-To begin using AgileFlow, you must first be invited or request access to your company's specific workspace from an administrator.
-1.  Navigate to your company's unique AgileFlow URL (e.g., `your-company.agileflow.app`).
+To begin using Strm, you must first be invited or request access to your company's specific workspace from an administrator.
+1.  Navigate to your company's unique Strm URL (e.g., `your-company.strm.app`).
 2.  Click the "Sign up with Google" button. This will also request permission to view your Google Calendar.
 3.  If you have not been pre-approved by an administrator, your account will be created in a "pending" state.
 4.  An administrator for your company will review your request and grant you access. You will receive an email notification when this happens.
@@ -119,5 +119,6 @@ Administrators can view the application from another user's perspective.
 2.  Select "View as" from the dropdown menu.
 3.  Choose a user from the list.
 4.  A banner will appear at the top of the screen indicating whose view you are using. To return to your own view, repeat the process and select "Return to your view".
+
 
 

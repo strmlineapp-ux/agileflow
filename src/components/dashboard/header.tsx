@@ -60,7 +60,7 @@ export function Header() {
               className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg md:text-base"
             >
               <Logo className="text-primary-foreground" />
-              <span className="sr-only">AgileFlow</span>
+              <span className="sr-only">Strm</span>
             </Link>
 
             {orderedNavItems.map(item => (
