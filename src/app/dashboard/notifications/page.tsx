@@ -1,31 +1,43 @@
 
+
 import { NotificationsContent } from '@/components/dashboard/tabs/notifications-tab';
 import { getDb } from '@/lib/firebase';
 import { auth } from '@/lib/firebase-admin';
-import { collection, query, where, getDocs, doc, getDoc, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, orderBy, Timestamp } from 'firebase/firestore';
 import { type Notification, type AppPage, type AppSettings } from '@/types';
 
 async function getNotificationData(userId: string) {
     const db = getDb();
-    const userDoc = await getDoc(doc(db, 'users', userId));
-    if (!userDoc.exists()) return { notifications: [], page: null };
+    const userDocRef = doc(db, 'users', userId);
+    const userDoc = await getDoc(userDocRef);
+
+    if (!userDoc.exists()) {
+        console.error(`No user document found for userId: ${userId}`);
+        return { notifications: [], page: null };
+    }
     
     const workspaceId = userDoc.data().workspaceId;
-    if (!workspaceId) return { notifications: [], page: null };
+    if (!workspaceId) {
+        console.error(`User ${userId} does not have a workspaceId.`);
+        return { notifications: [], page: null };
+    }
 
-    // This is simplified. A real app would have more complex logic to fetch relevant notifications.
     const notificationsQuery = query(
       collection(db, 'notifications'), 
       where("workspaceId", "==", workspaceId),
       orderBy('time', 'desc')
     );
-    const appSettingsDoc = await getDoc(doc(db, 'app-settings', workspaceId));
+    const appSettingsDocRef = doc(db, 'app-settings', workspaceId);
 
-    const notificationsSnapshot = await getDocs(notificationsQuery);
+    const [notificationsSnapshot, appSettingsDoc] = await Promise.all([
+        getDocs(notificationsQuery),
+        getDoc(appSettingsDocRef)
+    ]);
+
     const notifications = notificationsSnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
-      time: (doc.data().time as any).toDate(),
+      time: (doc.data().time as Timestamp).toDate(),
     } as Notification));
     
     const appSettings = appSettingsDoc.exists() ? appSettingsDoc.data() as AppSettings : null;
@@ -35,8 +47,21 @@ async function getNotificationData(userId: string) {
 }
 
 export default async function NotificationsPage() {
-  const session = await auth().getUserByEmail('demo@strm.com'); // This should be replaced by actual auth
+  let session;
+  try {
+    session = await auth().getUserByEmail('demo@strm.com');
+  } catch (error) {
+     return (
+        <div className="flex h-full w-full items-center justify-center">
+            <div className="text-center">
+                <h2 className="text-2xl mb-2">Authentication Error</h2>
+                <p className="text-muted-foreground">Could not authenticate user. Please ensure the demo user exists.</p>
+            </div>
+        </div>
+      )
+  }
+
   const { notifications, page } = await getNotificationData(session.uid);
   
-  return <NotificationsContent notifications={notifications} page={page || undefined} />;
+  return <NotificationsContent initialNotifications={notifications} page={page || undefined} />;
 }

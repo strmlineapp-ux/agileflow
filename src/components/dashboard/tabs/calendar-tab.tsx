@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
@@ -90,7 +91,7 @@ async function deleteEvent(eventId: string): Promise<void> {
     await deleteDoc(doc(db, 'events', eventId));
 }
 
-export function CalendarPageContent({ tab, calendars }: { tab: AppTab, calendars: SharedCalendar[] }) {
+export function CalendarPageContent({ tab, initialCalendars }: { tab: AppTab, initialCalendars: SharedCalendar[] }) {
   const { viewAsUser } = useUser();
   const queryClient = useQueryClient();
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -104,7 +105,7 @@ export function CalendarPageContent({ tab, calendars }: { tab: AppTab, calendars
 
   const viewContainerRef = useRef<HTMLDivElement>(null);
   
-  const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
+  const userCanCreateEvent = canCreateAnyEvent(viewAsUser, initialCalendars);
 
   const { data: viewEvents = [], isLoading: isDataLoading } = useQuery({
     queryKey: ['events', viewAsUser.workspaceId, view, currentDate.toISOString().split('T')[0]],

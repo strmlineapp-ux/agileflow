@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TaskList } from '@/components/tasks/task-list';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
@@ -38,13 +38,14 @@ async function fetchTasks(workspaceId: string): Promise<Task[]> {
   } as Task));
 }
 
-export function OverviewContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
+export function OverviewContent({ initialTasks, page, tab }: { initialTasks: Task[], page?: AppPage, tab?: AppTab }) {
   const { viewAsUser, updateUser } = useUser();
   const { toast } = useToast();
   
-  const { data: tasks = [], isLoading } = useQuery({
+  const { data: tasks = initialTasks, isLoading } = useQuery({
     queryKey: ['tasks_overview', viewAsUser.workspaceId],
     queryFn: () => fetchTasks(viewAsUser.workspaceId),
+    initialData: initialTasks,
     enabled: !!viewAsUser.workspaceId,
   });
   

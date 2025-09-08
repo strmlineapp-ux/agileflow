@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useCallback } from 'react';
@@ -56,7 +57,7 @@ async function deleteTask(taskId: string) {
     await deleteDoc(doc(db, 'tasks', taskId));
 }
 
-export function TasksContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
+export function TasksContent({ initialTasks, page, tab }: { initialTasks: Task[], page?: AppPage, tab?: AppTab }) {
   const [activeTab, setActiveTab] = useState<'my-tasks' | 'all'>('my-tasks');
   const { viewAsUser, updateUser } = useUser();
   const { toast } = useToast();
@@ -65,9 +66,10 @@ export function TasksContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
-  const { data: tasks = [], isLoading } = useQuery<Task[]>({
+  const { data: tasks = initialTasks, isLoading } = useQuery<Task[]>({
     queryKey: ['tasks', viewAsUser.workspaceId],
     queryFn: () => fetchTasks(viewAsUser.workspaceId),
+    initialData: initialTasks,
     enabled: !!viewAsUser.workspaceId,
   });
   

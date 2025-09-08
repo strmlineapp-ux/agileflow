@@ -27,14 +27,15 @@ async function fetchNotifications(workspaceId: string): Promise<Notification[]> 
   } as Notification));
 }
 
-export function NotificationsContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
+export function NotificationsContent({ initialNotifications, page, tab }: { initialNotifications: Notification[], page?: AppPage, tab?: AppTab }) {
   const { viewAsUser, updateUser } = useUser();
   const { toast } = useToast();
   
-  const { data: notifications = [] } = useQuery({
+  const { data: notifications = initialNotifications } = useQuery({
     queryKey: ['notifications', viewAsUser.workspaceId],
     queryFn: () => fetchNotifications(viewAsUser.workspaceId),
     enabled: !!viewAsUser.workspaceId,
+    initialData: initialNotifications,
     refetchOnWindowFocus: true,
   });
   
