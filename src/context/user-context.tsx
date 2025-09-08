@@ -13,7 +13,7 @@ import { googleSymbolNames } from '@/lib/google-symbols';
 import { predefinedColors } from '@/lib/colors';
 import { adjustHslColor } from '@/lib/utils';
 import { collection, doc, writeBatch, getFirestore, getDocs, query, where, addDoc, updateDoc, setDoc, getDoc, deleteDoc, Timestamp } from 'firebase/firestore';
-import { getDb } from '@/lib/firebase';
+import { getAuthInstance, getDb } from '@/lib/firebase';
 
 // --- Context Definition ---
 interface UserContextType {
@@ -25,7 +25,6 @@ interface UserContextType {
   logout: (router: AppRouterInstance) => Promise<void>;
   loading: boolean;
   isFirebaseReady: boolean;
-  linkGoogleCalendar: (user: User) => Promise<void>;
 
   // Data & Actions
   holidays: Holiday[];
@@ -48,7 +47,6 @@ interface UserContextType {
   // CRUD functions
   seedDatabase: () => Promise<void>;
   updateUser: (userId: string, userData: Partial<User>) => Promise<void>;
-  addUser: (newUser: User) => Promise<void>;
   deleteUser: (userId: string) => Promise<void>;
   reorderUsers: (reorderedUsers: User[]) => Promise<void>;
   addTeam: (teamData: Partial<Omit<Team, 'id'>>) => Promise<Team | null>;
@@ -107,8 +105,8 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | null>(null);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  const { realUser, loading: authLoading, isFirebaseReady, googleLogin, logout } = useAuth();
-  const dataHook = useData(realUser, authLoading);
+  const { realUser, loading: authLoading, isFirebaseReady, googleLogin, logout, setRealUser } = useAuth();
+  const dataHook = useData(realUser, authLoading, setRealUser);
   
   const [viewAsUserId, setViewAsUserId] = useState<string | null>(null);
   const [isDragModifierPressed, setIsDragModifierPressed] = useState(false);
@@ -152,18 +150,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     };
 }, [viewAsUser]);
   
-  const linkGoogleCalendar = useCallback(async (user: User) => {
-      try {
-        const result = await googleLogin();
-        if(result) {
-            dataHook.updateUser(user.userId, { googleCalendarLinked: true });
-            toast({ title: "Success!", description: "Your Google Calendar has been successfully connected." });
-        }
-      } catch (error) {
-          console.error("Error linking Google Calendar:", error);
-          toast({ variant: 'destructive', title: 'Error', description: 'Could not connect Google Calendar.' });
-      }
-  }, [googleLogin, dataHook.updateUser, toast]);
   
   const contextValue = useMemo(() => {
     const setViewAsUserWithReset = (userId: string) => {
@@ -184,11 +170,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       logout,
       loading,
       isFirebaseReady,
-      linkGoogleCalendar,
       ...dataHook,
     };
   }, [
-    realUser, viewAsUser, googleLogin, logout, loading, isFirebaseReady, dataHook, isDragModifierPressed, linkGoogleCalendar
+    realUser, viewAsUser, googleLogin, logout, loading, isFirebaseReady, dataHook, isDragModifierPressed
   ]);
 
   return (
@@ -203,5 +188,3 @@ export function useUser() {
   if (!context) throw new Error('useUser must be used within a UserProvider');
   return context;
 }
-
-    
