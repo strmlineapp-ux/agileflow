@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { UserManagement } from '@/components/settings/user-management';
@@ -26,7 +25,7 @@ export function SettingsContent({ isActive }: { isActive: boolean }) {
 
   return (
     <div className="flex flex-col h-full gap-6 overflow-y-auto hide-scrollbar">
-      <UserManagement allUsers={allUsers} showSearch={true} />
+      <UserManagement showSearch={true} />
     </div>
   );
 }

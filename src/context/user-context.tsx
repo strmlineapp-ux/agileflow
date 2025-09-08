@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
@@ -19,6 +18,7 @@ interface UserContextType {
   setViewAsUser: (userId: string) => void;
   googleLogin: () => Promise<boolean>;
   logout: (router: AppRouterInstance) => Promise<void>;
+  linkGoogleCalendar: (user: User) => Promise<void>;
   loading: boolean;
   isFirebaseReady: boolean;
 }
@@ -106,11 +106,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       setViewAsUser: setViewAsUserWithReset,
       googleLogin,
       logout,
+      linkGoogleCalendar,
       loading,
       isFirebaseReady,
     };
   }, [
-    realUser, viewAsUser, googleLogin, logout, loading, isFirebaseReady, isDragModifierPressed, updateUser
+    realUser, viewAsUser, googleLogin, logout, loading, isFirebaseReady, isDragModifierPressed, updateUser, linkGoogleCalendar
   ]);
   
   if (loading || !contextValue) {

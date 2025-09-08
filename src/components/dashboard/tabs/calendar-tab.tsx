@@ -24,7 +24,7 @@ import { getDb } from '@/lib/firebase';
 import { collection, query, where, onSnapshot, addDoc, doc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
 
 function CalendarLinkPrompt() {
-  const { googleLogin, realUser } = useUser();
+  const { linkGoogleCalendar, realUser } = useUser();
   if (!realUser) return null;
 
   return (
@@ -37,7 +37,7 @@ function CalendarLinkPrompt() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button onClick={googleLogin}>
+          <Button onClick={() => linkGoogleCalendar(realUser)}>
             <GoogleSymbol name="link" className="mr-2" />
             Connect Google Calendar
           </Button>
@@ -48,7 +48,7 @@ function CalendarLinkPrompt() {
 }
 
 export function CalendarPageContent({ tab, calendars }: { tab: AppTab, calendars: SharedCalendar[] }) {
-  const { viewAsUser, fetchEvents, addEvent, updateEvent, deleteEvent } = useUser();
+  const { viewAsUser } = useUser();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>(viewAsUser.defaultCalendarView || 'day');
   const [zoomLevel, setZoomLevel] = useState<'normal' | 'fit'>('normal');
@@ -63,6 +63,26 @@ export function CalendarPageContent({ tab, calendars }: { tab: AppTab, calendars
   const viewContainerRef = useRef<HTMLDivElement>(null);
   
   const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
+
+  const fetchEvents = useCallback(async (start: Date, end: Date) => {
+    if (!viewAsUser.workspaceId) return;
+    const db = getDb();
+    const eventsQuery = query(
+      collection(db, "events"),
+      where("workspaceId", "==", viewAsUser.workspaceId),
+      where("startTime", ">=", start),
+      where("startTime", "<=", end)
+    );
+    const snapshot = await getDocs(eventsQuery);
+    const events = snapshot.docs.map(doc => ({
+        eventId: doc.id,
+        ...doc.data(),
+        startTime: (doc.data().startTime as Timestamp).toDate(),
+        endTime: (doc.data().endTime as Timestamp).toDate(),
+    } as Event));
+    return events;
+  }, [viewAsUser.workspaceId]);
+
 
   useEffect(() => {
     if (!viewAsUser.googleCalendarLinked) {
@@ -90,7 +110,7 @@ export function CalendarPageContent({ tab, calendars }: { tab: AppTab, calendars
     
     setIsDataLoading(true);
     fetchEvents(start, end).then(events => {
-        setViewEvents(events);
+        setViewEvents(events || []);
         setIsDataLoading(false);
     });
 
@@ -169,26 +189,56 @@ export function CalendarPageContent({ tab, calendars }: { tab: AppTab, calendars
     return `Week ${weekNumber} · ${range}`;
   }, [view, currentDate]);
 
+  const addEvent = useCallback(async (eventData: Omit<Event, 'eventId'>) => {
+    const db = getDb();
+    const docRef = await addDoc(collection(db, 'events'), {
+        ...eventData,
+        startTime: Timestamp.fromDate(eventData.startTime),
+        endTime: Timestamp.fromDate(eventData.endTime),
+        workspaceId: viewAsUser.workspaceId,
+    });
+    const newEvent = { ...eventData, eventId: docRef.id };
+    setViewEvents(prev => [...prev, newEvent]);
+    return newEvent;
+  }, [viewAsUser.workspaceId]);
+
+  const updateEvent = useCallback(async (eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => {
+    const db = getDb();
+    const dataToUpdate: Record<string, any> = { ...eventData, lastUpdated: new Date() };
+    if (eventData.startTime) dataToUpdate.startTime = Timestamp.fromDate(eventData.startTime);
+    if (eventData.endTime) dataToUpdate.endTime = Timestamp.fromDate(eventData.endTime);
+
+    await updateDoc(doc(db, 'events', eventId), dataToUpdate);
+
+    setViewEvents(prev => prev.map(e => e.eventId === eventId ? { ...e, ...eventData } : e));
+    return { eventId, ...eventData };
+  }, []);
+
+  const deleteEvent = useCallback(async (eventId: string) => {
+    const db = getDb();
+    await deleteDoc(doc(db, 'events', eventId));
+    setViewEvents(prev => prev.filter(e => e.eventId !== eventId));
+  }, []);
+
   const handleEventMutation = useCallback(async (mutationType: 'add' | 'update' | 'delete', eventData: any) => {
     let updatedEvents: Event[];
 
     switch (mutationType) {
       case 'add':
-        updatedEvents = await addEvent(viewEvents, eventData);
+        await addEvent(eventData);
         setInitialEventData(null); // Reset form for next new event
         break;
       case 'update':
         const { eventId, ...updateData } = eventData;
-        updatedEvents = await updateEvent(viewEvents, eventId, updateData);
+        await updateEvent(eventId, updateData);
         break;
       case 'delete':
-        updatedEvents = await deleteEvent(viewEvents, eventData.eventId);
+        await deleteEvent(eventData.eventId);
         break;
       default:
         return;
     }
-    setViewEvents(updatedEvents);
-  }, [addEvent, updateEvent, deleteEvent, viewEvents]);
+  }, [addEvent, updateEvent, deleteEvent]);
 
   const closeDialogs = useCallback(() => {
     setIsNewEventOpen(false);
