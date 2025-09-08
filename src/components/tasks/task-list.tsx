@@ -3,7 +3,7 @@
 'use client';
 
 import * as React from 'react';
-import { type Task, type Badge } from '@/types';
+import { type Task, type Badge, type BadgeCollection } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -54,9 +54,8 @@ const formatDate = (date: Date | string): string => {
 };
 
 
-export function TaskList({ tasks, limit, onEdit, onDelete }: { tasks: Task[], limit?: number, onEdit?: (task: Task) => void, onDelete?: (taskId: string) => void }) {
-  const { allBadgeCollections, allBadges } = useUser();
-
+export function TaskList({ tasks, allBadges, allBadgeCollections, limit, onEdit, onDelete }: { tasks: Task[], allBadges: Badge[], allBadgeCollections: BadgeCollection[], limit?: number, onEdit?: (task: Task) => void, onDelete?: (taskId: string) => void }) {
+  
   const taskPriorities = React.useMemo(() => {
     const taskPriorityCollection = allBadgeCollections.find(c => c.applications?.includes('tasks'));
     if (!taskPriorityCollection) return [];

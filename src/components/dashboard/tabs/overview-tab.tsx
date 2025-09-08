@@ -22,13 +22,18 @@ const stats = [
 
 export function OverviewContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
   const { viewAsUser, updateUser } = useUser();
-  const { useFetchTasks } = useDataQueries();
+  const { useFetchTasks, useFetchAllBadges, useFetchAllBadgeCollections } = useDataQueries();
   const { toast } = useToast();
   
-  const { data: tasks = [], isLoading } = useFetchTasks(
+  const { data: tasks = [], isLoading: isLoadingTasks } = useFetchTasks(
     viewAsUser.workspaceId,
     { limit: 5 }
   );
+
+  const { data: allBadges = [], isLoading: isLoadingBadges } = useFetchAllBadges(viewAsUser.workspaceId);
+  const { data: allBadgeCollections = [], isLoading: isLoadingCollections } = useFetchAllBadgeCollections(viewAsUser.workspaceId);
+
+  const isLoading = isLoadingTasks || isLoadingBadges || isLoadingCollections;
   
   const title = page?.displayTitle ?? tab?.name ?? 'Overview';
   const canManagePage = viewAsUser.isAdmin;
@@ -71,7 +76,13 @@ export function OverviewContent({ page, tab }: { page?: AppPage, tab?: AppTab })
       </div>
       <div className="overflow-y-auto hide-scrollbar">
         <h2 className="text-2xl mb-4">Recent Tasks</h2>
-        {isLoading ? <Skeleton className="h-48 w-full" /> : <TaskList tasks={tasks} limit={5} />}
+        {isLoading ? <Skeleton className="h-48 w-full" /> : 
+          <TaskList 
+            tasks={tasks} 
+            limit={5} 
+            allBadges={allBadges}
+            allBadgeCollections={allBadgeCollections}
+          />}
       </div>
     </div>
   );

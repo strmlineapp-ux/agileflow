@@ -22,12 +22,16 @@ import { useDataQueries } from '@/hooks/use-data-queries';
 export function TasksContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
   const [activeTab, setActiveTab] = useState<'my-tasks' | 'all'>('my-tasks');
   const { viewAsUser, updateUser } = useUser();
-  const { useFetchTasks, useAddTask, useUpdateTask, useDeleteTask } = useDataQueries();
+  const { useFetchTasks, useAddTask, useUpdateTask, useDeleteTask, useFetchAllBadges, useFetchAllBadgeCollections } = useDataQueries();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
-  const { data: tasks = [], isLoading } = useFetchTasks(viewAsUser.workspaceId);
+  const { data: tasks = [], isLoading: isLoadingTasks } = useFetchTasks(viewAsUser.workspaceId);
+  const { data: allBadges = [], isLoading: isLoadingBadges } = useFetchAllBadges(viewAsUser.workspaceId);
+  const { data: allBadgeCollections = [], isLoading: isLoadingCollections } = useFetchAllBadgeCollections(viewAsUser.workspaceId);
+
+  const isLoading = isLoadingTasks || isLoadingBadges || isLoadingCollections;
   
   const addTaskMutation = useAddTask();
   const updateTaskMutation = useUpdateTask();
@@ -138,6 +142,8 @@ export function TasksContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
               ) : (
                 <TaskList 
                     tasks={filteredTasks} 
+                    allBadges={allBadges}
+                    allBadgeCollections={allBadgeCollections}
                     onEdit={openEditTaskForm}
                     onDelete={handleTaskDeleted}
                 />
@@ -156,7 +162,9 @@ export function TasksContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
                 </div>
               ) : (
                 <TaskList 
-                    tasks={filteredTasks} 
+                    tasks={filteredTasks}
+                    allBadges={allBadges}
+                    allBadgeCollections={allBadgeCollections}
                     onEdit={openEditTaskForm}
                     onDelete={handleTaskDeleted}
                 />
