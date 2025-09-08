@@ -14,6 +14,7 @@ import { predefinedColors } from '@/lib/colors';
 import { adjustHslColor } from '@/lib/utils';
 import { collection, doc, writeBatch, getFirestore, getDocs, query, where, addDoc, updateDoc, setDoc, getDoc, deleteDoc, Timestamp } from 'firebase/firestore';
 import { getDb } from '@/lib/firebase';
+import { linkAndWatchCalendar } from '@/ai/flows/link-and-watch-calendar-flow';
 
 // --- Context Definition ---
 interface UserContextType {
@@ -25,6 +26,7 @@ interface UserContextType {
   logout: (router: AppRouterInstance) => Promise<void>;
   loading: boolean;
   isFirebaseReady: boolean;
+  linkGoogleCalendar: (user: User) => Promise<void>;
 
   // Data & Actions
   holidays: Holiday[];
@@ -121,6 +123,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [viewAsUserId, setViewAsUserId] = useState<string | null>(null);
   const { setTheme, theme: currentTheme } = useTheme();
   const [isDragModifierPressed, setIsDragModifierPressed] = useState(false);
+  const { toast } = useToast();
 
   const loading = authLoading || dataHook.loading;
 
@@ -160,6 +163,19 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     };
 }, [viewAsUser]);
   
+  const linkGoogleCalendar = useCallback(async (user: User) => {
+      try {
+        const result = await googleLogin();
+        if(result) {
+            dataHook.updateUser(user.userId, { googleCalendarLinked: true });
+            toast({ title: "Success!", description: "Your Google Calendar has been successfully connected." });
+        }
+      } catch (error) {
+          console.error("Error linking Google Calendar:", error);
+          toast({ variant: 'destructive', title: 'Error', description: 'Could not connect Google Calendar.' });
+      }
+  }, [googleLogin, dataHook.updateUser, toast]);
+  
   const contextValue = useMemo(() => {
     const setViewAsUserWithReset = (userId: string) => {
       if (userId === realUser?.userId) {
@@ -179,6 +195,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       logout,
       loading,
       isFirebaseReady,
+      linkGoogleCalendar,
       ...dataHook,
       addTeam: (teamData: Partial<Omit<Team, 'id'>>) => {
         if (!realUser) return;
@@ -208,7 +225,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       addPreApprovedEmail: (email: string) => dataHook.addPreApprovedEmail(email, realUser!),
     };
   }, [
-    realUser, viewAsUser, googleLogin, logout, loading, isFirebaseReady, dataHook, isDragModifierPressed
+    realUser, viewAsUser, googleLogin, logout, loading, isFirebaseReady, dataHook, isDragModifierPressed, linkGoogleCalendar
   ]);
 
   useEffect(() => {

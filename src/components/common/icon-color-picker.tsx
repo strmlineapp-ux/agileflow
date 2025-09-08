@@ -10,7 +10,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { CompactSearchInput } from './compact-search-input';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { HslStringColorPicker } from 'react-colorful';
 import { cn, getReadableColor } from '@/lib/utils';
 import { Separator } from '../ui/separator';
 import { useTheme } from 'next-themes';
@@ -148,11 +147,7 @@ export function IconColorPicker({ icon, color, onUpdateIcon, onUpdateColor, disa
                 <>
                     <Separator orientation="vertical" />
                     <div className="w-[200px] p-2 space-y-2 flex flex-col justify-center">
-                        <HslStringColorPicker
-                            color={color}
-                            onChange={onUpdateColor}
-                            className="!w-full"
-                        />
+                        <p className="text-xs text-center text-muted-foreground">Select a color</p>
                         <div className="grid grid-cols-8 gap-1">
                             {PREDEFINED_COLORS.map((c) => (
                                 <button

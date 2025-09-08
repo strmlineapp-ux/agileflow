@@ -61,10 +61,11 @@ export function useData(realUser: User | null, authLoading: boolean) {
           const db = getDb();
           const workspaceId = realUser.workspaceId;
 
-          const collectionsToFetch = ['users', 'teams', 'calendars', 'locations', 'badges', 'badgeCollections', 'projects', 'pages', 'pre-approved-emails'];
-          const queries = collectionsToFetch.map(c => getDocs(query(collection(db, c), where("workspaceId", "==", workspaceId))));
+          // Fetch only essential collections on initial load
+          const essentialCollections = ['users', 'teams', 'projects', 'calendars', 'pre-approved-emails', 'badges', 'badgeCollections', 'pages'];
+          const queries = essentialCollections.map(c => getDocs(query(collection(db, c), where("workspaceId", "==", workspaceId))));
           
-          const [usersSnapshot, teamsSnap, calendarsSnap, locationsSnap, badgesSnap, collectionsSnap, projectsSnap, pagesSnap, preApprovedEmailsSnap] = await Promise.all(queries);
+          const [usersSnapshot, teamsSnap, projectsSnap, calendarsSnap, preApprovedEmailsSnap, badgesSnap, collectionsSnap, pagesSnap] = await Promise.all(queries);
           
           const appSettingsSnap = await getDoc(doc(db, 'app-settings', workspaceId));
           
@@ -79,7 +80,6 @@ export function useData(realUser: User | null, authLoading: boolean) {
           setTeams(teamsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Team)));
           setProjects(projectsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Project)));
           setCalendars(calendarsSnap.docs.map(d => ({ id: d.id, ...d.data() } as SharedCalendar)));
-          setLocations(locationsSnap.docs.map(d => ({ id: d.id, ...d.data() } as BookableLocation)));
           setAllBadges(badgesSnap.docs.map(d => ({ id: d.id, ...d.data() } as Badge)));
           setAllBadgeCollections(collectionsSnap.docs.map(d => ({ id: d.id, ...d.data() } as BadgeCollection)));
           setPreApprovedEmails(preApprovedEmailsSnap.docs.map(d => ({...d.data(), createdAt: d.data().createdAt.toDate()} as PreApprovedEmail)));
@@ -712,13 +712,6 @@ export function useData(realUser: User | null, authLoading: boolean) {
     toast({ title: 'Badge Un-assigned', description: `"${badge.name}" removed from ${member.displayName}.`});
   }, [users, updateUser, toast]);
 
-  const linkGoogleCalendar = useCallback(async (userId: string) => {
-    // In a real app, this would trigger the Google OAuth flow.
-    await simulateApi(1000);
-    await updateUser(userId, { googleCalendarLinked: true, accountType: 'Full' });
-    toast({ title: "Success!", description: "Your Google Calendar has been successfully connected." });
-  }, [updateUser, toast]);
-
   const searchSharedTeams = useCallback(async (searchTerm: string): Promise<Team[]> => {
     // In a real app, this might query a specific 'sharedTeams' collection or use a different logic
     await simulateApi();
@@ -801,7 +794,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
     addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, reorderBadgeCollections, addBadge, updateBadge, deleteBadge,
     reorderBadges, handleBadgeAssignment, handleBadgeUnassignment,
     searchSharedTeams,
-    linkGoogleCalendar, predefinedColors,
+    predefinedColors,
     seedDatabase, // Expose seed function
   };
 }
