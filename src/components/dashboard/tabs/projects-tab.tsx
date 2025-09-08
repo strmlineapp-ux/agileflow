@@ -1,8 +1,7 @@
 
-
 'use client';
 
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useUser } from '@/context/user-context';
 import { type Project } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -16,6 +15,7 @@ import { useRouter } from 'next/navigation';
 import { getDb } from '@/lib/firebase';
 import { collection, doc, query, where, getDocs, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Skeleton } from '@/components/ui/skeleton';
 
 async function fetchProjects(workspaceId: string): Promise<Project[]> {
     const db = getDb();
@@ -24,19 +24,19 @@ async function fetchProjects(workspaceId: string): Promise<Project[]> {
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
 }
 
-async function addProject(variables: { projectData: Partial<Project>, ownerId: string, workspaceId: string }) {
+async function addProjectMutationFn(variables: { projectData: Partial<Project>, ownerId: string, workspaceId: string }) {
     const { projectData, ownerId, workspaceId } = variables;
     const db = getDb();
     await addDoc(collection(db, 'projects'), { ...projectData, owner: { type: 'user', id: ownerId }, workspaceId, icon: 'folder', color: '#888' });
 }
 
-async function updateProject(variables: { projectId: string, projectData: Partial<Project> }) {
+async function updateProjectMutationFn(variables: { projectId: string, projectData: Partial<Project> }) {
     const { projectId, projectData } = variables;
     const db = getDb();
     await updateDoc(doc(db, 'projects', projectId), projectData);
 }
 
-async function deleteProject(projectId: string) {
+async function deleteProjectMutationFn(projectId: string) {
     const db = getDb();
     await deleteDoc(doc(db, 'projects', projectId));
 }
@@ -80,27 +80,30 @@ export function ProjectsContent() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const { data: projects = [] } = useQuery({
+  const { data: projects = [], isLoading } = useQuery({
     queryKey: ['projects', viewAsUser.workspaceId],
     queryFn: () => fetchProjects(viewAsUser.workspaceId),
     enabled: !!viewAsUser.workspaceId,
   });
   
   const mutationOptions = {
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['projects', viewAsUser.workspaceId] }),
+    onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['projects', viewAsUser.workspaceId] });
+        toast({ title: 'Success' });
+    },
     onError: (error: Error) => toast({ variant: 'destructive', title: 'Error', description: error.message }),
   };
 
-  const addMutation = useMutation({ mutationFn: addProject, ...mutationOptions });
-  const updateMutation = useMutation({ mutationFn: updateProject, ...mutationOptions });
-  const deleteMutation = useMutation({ mutationFn: deleteProject, ...mutationOptions });
+  const addMutation = useMutation({ mutationFn: addProjectMutationFn, ...mutationOptions });
+  const updateMutation = useMutation({ mutationFn: updateProjectMutationFn, ...mutationOptions });
+  const deleteMutation = useMutation({ mutationFn: deleteProjectMutationFn, ...mutationOptions });
 
   const ownedProjects = useMemo(() => {
     if (!viewAsUser) return [];
     return projects.filter(p => p.owner.id === viewAsUser.userId);
   }, [projects, viewAsUser]);
 
-  const handleSaveProject = useCallback(async (projectData: Partial<Project>) => {
+  const handleSaveProject = useCallback((projectData: Partial<Project>) => {
     if (editingProject) {
       updateMutation.mutate({ projectId: editingProject.id, projectData });
     } else {
@@ -123,6 +126,10 @@ export function ProjectsContent() {
   const handleProjectClick = (projectId: string) => {
     router.push(`/dashboard/project/${projectId}`);
   };
+  
+  if (isLoading) {
+    return <Skeleton className="h-64 w-full" />;
+  }
 
   return (
     <div className="space-y-6">
