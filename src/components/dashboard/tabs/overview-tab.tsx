@@ -12,7 +12,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { PageTitle } from '@/components/common/page-title';
 import { useToast } from '@/hooks/use-toast';
 import { getDb } from '@/lib/firebase';
-import { collection, query, where, limit, onSnapshot, Timestamp } from 'firebase/firestore';
+import { collection, query, where, limit, getDocs, Timestamp } from 'firebase/firestore';
+import { useQuery } from '@tanstack/react-query';
 
 
 const stats = [
@@ -22,38 +23,30 @@ const stats = [
   { title: 'Team Members', value: '8', icon: 'group' },
 ];
 
+async function fetchTasks(workspaceId: string): Promise<Task[]> {
+  const db = getDb();
+  const q = query(
+    collection(db, 'tasks'),
+    where('workspaceId', '==', workspaceId),
+    limit(5)
+  );
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({
+    taskId: doc.id,
+    ...doc.data(),
+    dueDate: (doc.data().dueDate as Timestamp).toDate(),
+  } as Task));
+}
+
 export function OverviewContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
   const { viewAsUser, updateUser } = useUser();
   const { toast } = useToast();
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
   
-  useEffect(() => {
-    if (!viewAsUser?.workspaceId) return;
-    setLoading(true);
-    const db = getDb();
-    const tasksQuery = query(
-      collection(db, 'tasks'),
-      where('workspaceId', '==', viewAsUser.workspaceId),
-      limit(5)
-    );
-
-    const unsubscribe = onSnapshot(tasksQuery, (snapshot) => {
-      const tasksData = snapshot.docs.map(doc => ({
-        taskId: doc.id,
-        ...doc.data(),
-        dueDate: (doc.data().dueDate as Timestamp).toDate(),
-      } as Task));
-      setTasks(tasksData);
-      setLoading(false);
-    }, (error) => {
-        console.error("Error fetching tasks:", error);
-        toast({ variant: "destructive", title: "Error", description: "Could not load tasks."});
-        setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [viewAsUser?.workspaceId, toast]);
+  const { data: tasks = [], isLoading } = useQuery({
+    queryKey: ['tasks_overview', viewAsUser.workspaceId],
+    queryFn: () => fetchTasks(viewAsUser.workspaceId),
+    enabled: !!viewAsUser.workspaceId,
+  });
   
   const title = page?.displayTitle ?? tab?.name ?? 'Overview';
   const canManagePage = viewAsUser.isAdmin;
@@ -96,7 +89,7 @@ export function OverviewContent({ page, tab }: { page?: AppPage, tab?: AppTab })
       </div>
       <div className="overflow-y-auto hide-scrollbar">
         <h2 className="text-2xl mb-4">Recent Tasks</h2>
-        <TaskList tasks={tasks} limit={5} />
+        {isLoading ? <Skeleton className="h-48 w-full" /> : <TaskList tasks={tasks} limit={5} />}
       </div>
     </div>
   );

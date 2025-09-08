@@ -10,6 +10,10 @@ import { useUser } from '@/context/user-context';
 import { cn } from '@/lib/utils';
 import { GoogleSymbol } from '../icons/google-symbol';
 import type { Notification } from '@/types';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { doc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { getDb } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
 
 // Helper function to format distance to now
 const formatDistanceToNow = (date: Date): string => {
@@ -25,22 +29,61 @@ const formatDistanceToNow = (date: Date): string => {
     return Math.floor(seconds) + " seconds ago";
 }
 
-export function NotificationList({ initialNotifications, onApprove }: { initialNotifications: Notification[], onApprove: (id: string, approved: boolean) => void }) {
+async function approveAccessRequest(variables: { workspaceId: string; notificationId: string; targetUserId: string; approvedBy: string; approved: boolean; }) {
+    const { workspaceId, notificationId, targetUserId, approvedBy, approved } = variables;
+    const db = getDb();
+    const userRef = doc(db, 'users', targetUserId);
+    const notificationRef = doc(db, 'notifications', notificationId);
+
+    const batch = writeBatch(db);
+    
+    if (approved) {
+        batch.update(userRef, { accountType: 'Full', approvedBy });
+        batch.update(notificationRef, { status: 'approved' });
+    } else {
+        batch.delete(userRef);
+        batch.update(notificationRef, { status: 'rejected' });
+    }
+    await batch.commit();
+}
+
+
+export function NotificationList({ notifications }: { notifications: Notification[] }) {
   const { realUser } = useUser();
-  const [notifications, setNotifications] = React.useState(initialNotifications);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   const isAdmin = realUser?.isAdmin;
+
+  const mutation = useMutation({
+    mutationFn: approveAccessRequest,
+    onSuccess: (data, variables) => {
+        queryClient.invalidateQueries({ queryKey: ['notifications', variables.workspaceId] });
+        queryClient.invalidateQueries({ queryKey: ['users', variables.workspaceId] });
+        toast({ title: variables.approved ? 'User Approved' : 'User Rejected' });
+    },
+    onError: (error: Error) => toast({ variant: 'destructive', title: 'Error', description: error.message }),
+  });
   
-  React.useEffect(() => {
-    setNotifications(initialNotifications);
-  }, [initialNotifications]);
+  const handleApprove = (notificationId: string, approved: boolean) => {
+    const notification = notifications.find(n => n.id === notificationId);
+    if (!notification || !notification.data?.userId || !realUser) return;
+    
+    mutation.mutate({
+      workspaceId: realUser.workspaceId,
+      notificationId: notification.id,
+      targetUserId: notification.data.userId,
+      approvedBy: realUser.userId,
+      approved
+    });
+  };
+
+  const handleMarkAsRead = async (notificationId: string) => {
+    const db = getDb();
+    await updateDoc(doc(db, 'notifications', notificationId), { read: true });
+    queryClient.invalidateQueries({ queryKey: ['notifications', realUser?.workspaceId] });
+  }
 
   const unreadCount = notifications.filter(n => !n.read).length;
-
-  const handleMarkAsRead = (notificationId: string) => {
-     setNotifications(prevNotifications => prevNotifications.map(n =>
-      n.id === notificationId ? { ...n, read: true } : n
-    ));
-  }
 
 
   return (
@@ -68,8 +111,8 @@ export function NotificationList({ initialNotifications, onApprove }: { initialN
                 </p>
                 {notification.type === 'access_request' && notification.status === 'pending' && isAdmin && (
                   <div className="flex gap-2 mt-2">
-                    <Button size="sm" onClick={() => onApprove(notification.id, true)}>Approve</Button>
-                    <Button size="sm" variant="default" className="text-destructive" onClick={() => onApprove(notification.id, false)}>Reject</Button>
+                    <Button size="sm" onClick={() => handleApprove(notification.id, true)} disabled={mutation.isPending}>Approve</Button>
+                    <Button size="sm" variant="default" className="text-destructive" onClick={() => handleApprove(notification.id, false)} disabled={mutation.isPending}>Reject</Button>
                   </div>
                 )}
                  {notification.type === 'access_request' && notification.status !== 'pending' && (
