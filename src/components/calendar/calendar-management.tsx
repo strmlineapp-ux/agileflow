@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useUser } from '@/context/user-context';
 import { type SharedCalendar, type AppTab, type AppPage } from '@/types';
 import { useToast } from '@/hooks/use-toast';
@@ -16,6 +16,9 @@ import { SortableItem } from '../common/sortable-item';
 import { InlineEditor } from '../common/inline-editor';
 import { PageTitle } from '../common/page-title';
 import { linkAndWatchCalendar } from '@/ai/flows/link-and-watch-calendar-flow';
+import { getDb } from '@/lib/firebase';
+import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
+
 
 function CalendarCard({
     calendar,
@@ -70,11 +73,15 @@ function CalendarCard({
     toast({ title: 'Linking Calendar...', description: 'Setting up real-time sync. This may take a moment.' });
     
     try {
-        await linkAndWatchCalendar({
+        const watchResult = await linkAndWatchCalendar({
             calendarId: calendar.id,
             googleCalendarId: calendarIdToLink,
         });
-        toast({ title: 'Calendar Linked!', description: `Successfully linked and started watching ${calendar.name}.` });
+
+        // The flow itself now handles updating Firestore, so we just update local state
+        onUpdate(calendar.id, { googleCalendarId: calendarIdToLink });
+        
+        toast({ title: 'Calendar Linked!', description: `Successfully linked and started watching ${calendar.name}. It expires on ${new Date(parseInt(watchResult.expiration)).toLocaleDateString()}` });
     } catch (error) {
         console.error('Failed to link and watch calendar:', error);
         toast({ variant: 'destructive', title: 'Error', description: 'Could not set up real-time sync. Please check the calendar ID and permissions.' });
@@ -155,9 +162,31 @@ function CalendarCard({
 
 
 export function CalendarManagement({ tab, page, isActive, isSharedPanelOpen, setIsSharedPanelOpen, isDragging }: { tab: AppTab; page: AppPage, isActive?: boolean, isSharedPanelOpen: boolean, setIsSharedPanelOpen: (isOpen: boolean) => void, isDragging: boolean }) {
-  const { viewAsUser, calendars, addCalendar, updateCalendar, deleteCalendar, updatePage, updateUser, reorderCalendars } = useUser();
+  const { viewAsUser, addCalendar, updateCalendar, deleteCalendar, reorderCalendars, updatePage, updateUser } = useUser();
   const { toast } = useToast();
   const contextKey = `calendars-${page.id}`;
+
+  const [allCalendars, setAllCalendars] = useState<SharedCalendar[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
+
+  useEffect(() => {
+    if (!viewAsUser?.workspaceId) return;
+    setDataLoading(true);
+    const db = getDb();
+    const q = query(collection(db, "calendars"), where("workspaceId", "==", viewAsUser.workspaceId));
+    
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const calendarsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SharedCalendar));
+        setAllCalendars(calendarsData);
+        setDataLoading(false);
+    }, (error) => {
+        console.error("Error fetching calendars:", error);
+        toast({ variant: "destructive", title: "Error", description: "Could not load calendars."});
+        setDataLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [viewAsUser?.workspaceId, toast]);
   
   const onToggleExpand = useCallback((calendarId: string) => {
     if (!viewAsUser) return;
@@ -192,9 +221,12 @@ export function CalendarManagement({ tab, page, isActive, isSharedPanelOpen, set
     }
   };
 
-  const handleAddCalendar = (sourceCalendar?: SharedCalendar) => {
-    addCalendar(sourceCalendar || {});
-    toast({ title: sourceCalendar ? 'Calendar Duplicated' : 'New Calendar Added' });
+  const handleAddCalendar = async (sourceCalendar?: SharedCalendar) => {
+    const newCalendar = await addCalendar(sourceCalendar || {});
+    if (newCalendar) {
+        setAllCalendars(prev => [...prev, newCalendar]);
+        toast({ title: sourceCalendar ? 'Calendar Duplicated' : 'New Calendar Added' });
+    }
   };
   
   const handleUpdate = (calendarId: string, data: Partial<SharedCalendar>) => {
@@ -220,14 +252,14 @@ export function CalendarManagement({ tab, page, isActive, isSharedPanelOpen, set
   }
   
   const displayedCalendars = useMemo(() => {
-    return calendars
+    return allCalendars
       .filter(c => (c.owner && c.owner.id === viewAsUser.userId) || (viewAsUser.linkedCalendarIds || []).includes(c.id));
-  }, [calendars, viewAsUser]);
+  }, [allCalendars, viewAsUser]);
 
   const sharedCalendars = useMemo(() => {
     const displayedIds = new Set(displayedCalendars.map(c => c.id));
-    return calendars.filter(c => c.isShared && c.owner?.id !== viewAsUser.userId && !displayedIds.has(c.id));
-  }, [calendars, displayedCalendars, viewAsUser.userId]);
+    return allCalendars.filter(c => c.isShared && c.owner?.id !== viewAsUser.userId && !displayedIds.has(c.id));
+  }, [allCalendars, displayedCalendars, viewAsUser.userId]);
 
   const renderCalendarCard = useCallback((calendar: SharedCalendar) => {
       const expandedCardIds = viewAsUser?.expandedCardState?.[contextKey] || [];
@@ -249,6 +281,14 @@ export function CalendarManagement({ tab, page, isActive, isSharedPanelOpen, set
       <GoogleSymbol name={item.icon} style={{color: item.color, fontSize: '48px'}} />
   ), []);
 
+  if (dataLoading) {
+    return (
+        <div className="flex items-center justify-center h-full">
+            <GoogleSymbol name="progress_activity" className="animate-spin text-4xl" />
+        </div>
+    );
+  }
+
   return (
     <ManagementPageLayout
         pageTitle={title}
@@ -261,7 +301,7 @@ export function CalendarManagement({ tab, page, isActive, isSharedPanelOpen, set
         onAddItem={handleAddCalendar}
         onUpdateItem={handleUpdate}
         onDeleteItem={handleDelete}
-        onReorderItems={reorderCalendars}
+        onReorderItems={(items) => { setAllCalendars(items); reorderCalendars(items); }}
         onLinkItem={handleLinkCalendar}
         onCollapseAll={onCollapseAll}
         renderItem={(item, isDragging) => renderCalendarCard(item as SharedCalendar)}

@@ -14,7 +14,6 @@ import { predefinedColors } from '@/lib/colors';
 import { adjustHslColor } from '@/lib/utils';
 import { collection, doc, writeBatch, getFirestore, getDocs, query, where, addDoc, updateDoc, setDoc, getDoc, deleteDoc, Timestamp } from 'firebase/firestore';
 import { getDb } from '@/lib/firebase';
-import { linkAndWatchCalendar } from '@/ai/flows/link-and-watch-calendar-flow';
 
 // --- Context Definition ---
 interface UserContextType {
@@ -52,14 +51,14 @@ interface UserContextType {
   addUser: (newUser: User) => Promise<void>;
   deleteUser: (userId: string) => Promise<void>;
   reorderUsers: (reorderedUsers: User[]) => Promise<void>;
-  addTeam: (teamData: Partial<Omit<Team, 'id'>>) => Promise<void>;
+  addTeam: (teamData: Partial<Omit<Team, 'id'>>) => Promise<Team | null>;
   updateTeam: (teamId: string, teamData: Partial<Team>) => Promise<void>;
   deleteTeam: (teamId: string, router: AppRouterInstance, pathname: string) => Promise<void>;
   reorderTeams: (teams: Team[]) => Promise<void>;
   addProject: (projectData: Partial<Project>) => Promise<void>;
   updateProject: (projectId: string, projectData: Partial<Project>) => Promise<void>;
   deleteProject: (projectId: string) => Promise<void>;
-  addCalendar: (newCalendar: Partial<Omit<SharedCalendar, 'id'>>) => Promise<void>;
+  addCalendar: (newCalendar: Partial<Omit<SharedCalendar, 'id'>>) => Promise<SharedCalendar | null>;
   updateCalendar: (calendarId: string, calendarData: Partial<SharedCalendar>) => Promise<void>;
   deleteCalendar: (calendarId: string) => Promise<void>;
   reorderCalendars: (calendars: SharedCalendar[]) => Promise<void>;
@@ -107,21 +106,11 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType | null>(null);
 
-const randomDescriptions = [
-    "Manage project assets and timelines.",
-    "Track team progress and upcoming deadlines.",
-    "A space for creative collaboration.",
-    "The central hub for all client-related information.",
-    "Planning and execution of marketing campaigns.",
-    "Development and testing for the new feature.",
-];
-
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const { realUser, loading: authLoading, isFirebaseReady, googleLogin, logout } = useAuth();
   const dataHook = useData(realUser, authLoading);
   
   const [viewAsUserId, setViewAsUserId] = useState<string | null>(null);
-  const { setTheme, theme: currentTheme } = useTheme();
   const [isDragModifierPressed, setIsDragModifierPressed] = useState(false);
   const { toast } = useToast();
 
@@ -197,42 +186,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       isFirebaseReady,
       linkGoogleCalendar,
       ...dataHook,
-      addTeam: (teamData: Partial<Omit<Team, 'id'>>) => {
-        if (!realUser) return;
-        dataHook.addTeam(teamData, realUser);
-      },
-      addCalendar: (calendarData: Partial<Omit<SharedCalendar, 'id'>>) => {
-        if (!realUser) return;
-        dataHook.addCalendar(calendarData, realUser);
-      },
-      addBadgeCollection: (owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => {
-        dataHook.addBadgeCollection(owner, sourceCollection, contextTeam);
-      },
-      addPage: (pageData: Partial<AppPage> = {}) => {
-        if (!realUser) return;
-        dataHook.addPage(pageData, realUser);
-      },
-      deleteUser: (userId: string) => dataHook.deleteUser(userId, realUser!),
-      addProject: (projectData: Partial<Project>) => dataHook.addProject(projectData, realUser!),
-      deleteTeam: (teamId: string, router: AppRouterInstance, pathname: string) => dataHook.deleteTeam(teamId, router, pathname, realUser!),
-      handleApproveAccessRequest: (notificationId: string, approved: boolean) => dataHook.handleApproveAccessRequest(notificationId, approved, realUser!),
-      addBadge: (collectionId: string, sourceBadge?: Badge, unlinkSource: boolean = false) => {
-        if (!realUser) return;
-        dataHook.addBadge(collectionId, sourceBadge, realUser, unlinkSource);
-      },
-      deleteBadge: (badgeId: string, collectionId: string) => dataHook.deleteBadge(badgeId, collectionId, realUser!),
-      addTask: (currentTasks: Task[], newTaskData: Omit<Task, 'taskId' | 'createdAt' | 'lastUpdated'>) => dataHook.addTask(currentTasks, newTaskData, realUser!),
-      addPreApprovedEmail: (email: string) => dataHook.addPreApprovedEmail(email, realUser!),
     };
   }, [
     realUser, viewAsUser, googleLogin, logout, loading, isFirebaseReady, dataHook, isDragModifierPressed, linkGoogleCalendar
   ]);
-
-  useEffect(() => {
-    if (dataHook.allPages && dataHook.appSettings.tabs) {
-        dataHook.setAppSettings(current => ({...current, pages: dataHook.allPages }));
-    }
-  }, [dataHook.allPages, dataHook.setAppSettings]);
 
   return (
     <UserContext.Provider value={contextValue}>
@@ -246,3 +203,5 @@ export function useUser() {
   if (!context) throw new Error('useUser must be used within a UserProvider');
   return context;
 }
+
+    

@@ -44,7 +44,6 @@ export function useData(realUser: User | null, authLoading: boolean) {
   const [appSettings, setAppSettings] = useState<AppSettings>({ pages: [], tabs: [], workspaceId: 'default' });
   const [allBadges, setAllBadges] = useState<Badge[]>([]);
   const [allBadgeCollections, setAllBadgeCollections] = useState<BadgeCollection[]>([]);
-  const [allPages, setAllPages] = useState<AppPage[]>([]);
   const [preApprovedEmails, setPreApprovedEmails] = useState<PreApprovedEmail[]>([]);
 
   const { toast } = useToast();
@@ -61,13 +60,15 @@ export function useData(realUser: User | null, authLoading: boolean) {
           const db = getDb();
           const workspaceId = realUser.workspaceId;
 
-          // Fetch only essential collections on initial load
-          const essentialCollections = ['users', 'teams', 'projects', 'calendars', 'pre-approved-emails', 'badges', 'badgeCollections', 'pages'];
-          const queries = essentialCollections.map(c => getDocs(query(collection(db, c), where("workspaceId", "==", workspaceId))));
+          // Fetch only data essential for application startup.
+          // Other data will be fetched on-demand by the components that need it.
+          const essentialQueries = [
+              getDocs(query(collection(db, 'users'), where("workspaceId", "==", workspaceId))),
+              getDocs(query(collection(db, 'pre-approved-emails'), where("workspaceId", "==", workspaceId))),
+              getDoc(doc(db, 'app-settings', workspaceId)),
+          ];
           
-          const [usersSnapshot, teamsSnap, projectsSnap, calendarsSnap, preApprovedEmailsSnap, badgesSnap, collectionsSnap, pagesSnap] = await Promise.all(queries);
-          
-          const appSettingsSnap = await getDoc(doc(db, 'app-settings', workspaceId));
+          const [usersSnapshot, preApprovedEmailsSnap, appSettingsSnap] = await Promise.all(essentialQueries);
           
           setUsers(usersSnapshot.docs.map(doc => {
             const data = doc.data();
@@ -77,18 +78,13 @@ export function useData(realUser: User | null, authLoading: boolean) {
                 createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(),
             } as User
           }));
-          setTeams(teamsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Team)));
-          setProjects(projectsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Project)));
-          setCalendars(calendarsSnap.docs.map(d => ({ id: d.id, ...d.data() } as SharedCalendar)));
-          setAllBadges(badgesSnap.docs.map(d => ({ id: d.id, ...d.data() } as Badge)));
-          setAllBadgeCollections(collectionsSnap.docs.map(d => ({ id: d.id, ...d.data() } as BadgeCollection)));
+
           setPreApprovedEmails(preApprovedEmailsSnap.docs.map(d => ({...d.data(), createdAt: d.data().createdAt.toDate()} as PreApprovedEmail)));
-          
-          const userCreatedPages = pagesSnap.docs.map(d => ({ id: d.id, ...d.data() } as AppPage));
-          setAllPages([...systemPages, ...userCreatedPages]);
 
           if (appSettingsSnap.exists()) {
             const settingsData = appSettingsSnap.data() as Omit<AppSettings, 'preApprovedEmails'>;
+            const pagesQuery = await getDocs(query(collection(db, 'pages'), where("workspaceId", "==", workspaceId)));
+            const userCreatedPages = pagesQuery.docs.map(d => ({ id: d.id, ...d.data() } as AppPage));
               setAppSettings({
                 ...settingsData,
                 pages: [...systemPages, ...userCreatedPages]
@@ -97,13 +93,13 @@ export function useData(realUser: User | null, authLoading: boolean) {
              const newAppSettings = {
                 tabs: coreTabs.map(t => ({...t, workspaceId})),
                 workspaceId,
-                pages: []
+                pages: systemPages, // Start with only system pages
             };
             await setDoc(doc(db, 'app-settings', workspaceId), newAppSettings);
             setAppSettings(newAppSettings);
           }
         } catch (error) {
-          console.error("Error loading data:", error);
+          console.error("Error loading essential data:", error);
           toast({ variant: 'destructive', title: "Error", description: "Failed to load application data." });
         } finally {
           setLoading(false);
@@ -141,7 +137,6 @@ export function useData(realUser: User | null, authLoading: boolean) {
   }, []);
   
   const reorderUsers = useCallback(async (reorderedUsers: User[]) => {
-      // In a real app, this might update a 'sortOrder' field in Firestore
       await simulateApi();
       setUsers([...reorderedUsers]);
   }, []);
@@ -205,7 +200,8 @@ export function useData(realUser: User | null, authLoading: boolean) {
     setUsers(currentUsers => currentUsers.filter(u => u.userId !== userId));
   }, []);
 
-  const addTeam = useCallback(async (teamData: Partial<Omit<Team, 'id'>>, realUser: User) => {
+  const addTeam = useCallback(async (teamData: Partial<Omit<Team, 'id'>>, realUser: User): Promise<Team | null> => {
+    if (!realUser) return null;
     const db = getDb();
     const isDuplicating = !!teamData.id;
     const newTeamData = {
@@ -223,6 +219,7 @@ export function useData(realUser: User | null, authLoading: boolean) {
     const newTeam = { ...newTeamData, id: docRef.id };
     setTeams(current => [...current, newTeam]);
     toast({ title: 'Success', description: `Team "${newTeam.name}" has been created.` });
+    return newTeam;
   }, [toast]);
 
   const updateTeam = useCallback(async (teamId: string, teamData: Partial<Team>) => {
@@ -258,7 +255,6 @@ export function useData(realUser: User | null, authLoading: boolean) {
   }, [appSettings, toast, teams]);
 
   const reorderTeams = useCallback(async (reorderedTeams: Team[]) => {
-      // In a real app, this might update a 'sortOrder' field in Firestore
       await simulateApi();
       setTeams([...reorderedTeams]);
   }, []);
@@ -294,8 +290,8 @@ export function useData(realUser: User | null, authLoading: boolean) {
     toast({ title: 'Project Deleted' });
   }, [toast]);
 
-  const addCalendar = useCallback(async (calendarData: Partial<Omit<SharedCalendar, 'id'>>, realUser: User) => {
-    if (!realUser) return;
+  const addCalendar = useCallback(async (calendarData: Partial<Omit<SharedCalendar, 'id'>>, realUser: User): Promise<SharedCalendar | null> => {
+    if (!realUser) return null;
     const isDuplicating = !!calendarData.id;
     const newCalendarData = {
       ...calendarData,
@@ -310,7 +306,8 @@ export function useData(realUser: User | null, authLoading: boolean) {
     const docRef = await addDoc(collection(db, 'calendars'), newCalendarData);
     const newCalendar = { ...newCalendarData, id: docRef.id };
     setCalendars(current => [...current, newCalendar]);
-  }, [realUser]);
+    return newCalendar;
+  }, []);
 
   const updateCalendar = useCallback(async (calendarId: string, calendarData: Partial<SharedCalendar>) => {
     const db = getDb();
@@ -325,21 +322,21 @@ export function useData(realUser: User | null, authLoading: boolean) {
   }, []);
   
   const reorderCalendars = useCallback(async (reorderedCalendars: SharedCalendar[]) => {
-      // In a real app, this might update a 'sortOrder' field in Firestore
       await simulateApi();
       setCalendars([...reorderedCalendars]);
   }, []);
 
   const fetchTasks = useCallback(async (): Promise<Task[]> => {
+    if (!realUser?.workspaceId) return [];
     const db = getDb();
-    const tasksQuery = query(collection(db, 'tasks'), where("workspaceId", "==", realUser!.workspaceId));
+    const tasksQuery = query(collection(db, 'tasks'), where("workspaceId", "==", realUser.workspaceId));
     const snapshot = await getDocs(tasksQuery);
     return snapshot.docs.map(doc => ({
         ...doc.data(),
         taskId: doc.id,
         dueDate: doc.data().dueDate.toDate(),
     } as Task));
-  }, [realUser]);
+  }, [realUser?.workspaceId]);
 
   const addTask = useCallback(async (currentTasks: Task[], newTaskData: Omit<Task, 'taskId' | 'createdAt' | 'lastUpdated'>, realUser: User): Promise<Task[]> => {
     if (!realUser) throw new Error("User not found or Firebase not ready");
@@ -420,11 +417,11 @@ export function useData(realUser: User | null, authLoading: boolean) {
     };
 
     await setDoc(newDocRef, newPage);
-    setAllPages(current => [...current, newPage]);
+    setAppSettings(current => ({...current, pages: [...current.pages, newPage]}));
   }, []);
 
   const updatePage = useCallback(async (pageId: string, pageData: Partial<AppPage>) => {
-    const page = allPages.find(p => p.id === pageId);
+    const page = appSettings.pages.find(p => p.id === pageId);
     if (!page) return;
 
     if (!page.isSystemPage) {
@@ -432,21 +429,19 @@ export function useData(realUser: User | null, authLoading: boolean) {
         await updateDoc(doc(db, 'pages', pageId), pageData);
     }
     
-    setAllPages(current => current.map(p => p.id === pageId ? { ...p, ...pageData } : p));
-  }, [allPages]);
+    setAppSettings(current => ({ ...current, pages: current.pages.map(p => p.id === pageId ? { ...p, ...pageData } : p)}));
+  }, [appSettings.pages]);
 
   const deletePage = useCallback(async (pageId: string) => {
     const db = getDb();
     await deleteDoc(doc(db, 'pages', pageId));
-    setAllPages(current => current.filter(p => p.id !== pageId));
+    setAppSettings(current => ({...current, pages: current.pages.filter(p => p.id !== pageId)}));
   }, []);
   
   const reorderPages = useCallback(async (reorderedPages: AppPage[]) => {
-    await simulateApi();
     const systemPageIds = new Set(systemPages.map(p => p.id));
     const userPages = reorderedPages.filter(p => !systemPageIds.has(p.id));
     const newPageOrder = [...systemPages, ...userPages];
-    setAllPages(newPageOrder);
     setAppSettings(current => ({ ...current, pages: newPageOrder }));
   }, []);
 
@@ -713,7 +708,6 @@ export function useData(realUser: User | null, authLoading: boolean) {
   }, [users, updateUser, toast]);
 
   const searchSharedTeams = useCallback(async (searchTerm: string): Promise<Team[]> => {
-    // In a real app, this might query a specific 'sharedTeams' collection or use a different logic
     await simulateApi();
     return teams.filter(team => team.isShared && team.name.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [teams]);
@@ -779,7 +773,6 @@ export function useData(realUser: User | null, authLoading: boolean) {
   
   return {
     loading, users, teams, projects, appSettings, calendars, locations, notifications, userStatusAssignments, allBadges, allBadgeCollections, holidays, allBookableLocations,
-    allPages, setAllPages,
     preApprovedEmails, addPreApprovedEmail, removePreApprovedEmail,
     setUsers, setTeams, setAllBadgeCollections, setAppSettings, setCalendars, setLocations, setNotifications, setUserStatusAssignments, setAllBadges,
     handleApproveAccessRequest, updateUser, addUser, deleteUser, reorderUsers, addTeam, updateTeam, deleteTeam, reorderTeams,
@@ -795,6 +788,8 @@ export function useData(realUser: User | null, authLoading: boolean) {
     reorderBadges, handleBadgeAssignment, handleBadgeUnassignment,
     searchSharedTeams,
     predefinedColors,
-    seedDatabase, // Expose seed function
+    seedDatabase,
   };
 }
+
+    
