@@ -17,7 +17,10 @@ import { InlineEditor } from '../common/inline-editor';
 import { PageTitle } from '../common/page-title';
 import { linkAndWatchCalendar } from '@/ai/flows/link-and-watch-calendar-flow';
 import { getDb } from '@/lib/firebase';
-import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { googleSymbolNames }from '@/lib/google-symbols';
+import { predefinedColors } from '@/lib/colors';
+import { adjustHslColor } from '@/lib/utils';
 
 
 function CalendarCard({
@@ -42,7 +45,7 @@ function CalendarCard({
   
   const {toast} = useToast();
   
-  const canManage = useMemo(() => !isSharedPreview && viewAsUser.userId === calendar.owner?.id, [isSharedPreview, viewAsUser, calendar]);
+  const canManage = useMemo(() => !isSharedPreview && viewAsUser?.userId === calendar.owner?.id, [isSharedPreview, viewAsUser, calendar]);
 
   React.useEffect(() => {
     if (isLinkDialogOpen) {
@@ -51,7 +54,7 @@ function CalendarCard({
   }, [isLinkDialogOpen]);
 
   const handleLinkClick = async () => {
-    if (!viewAsUser.googleCalendarLinked) {
+    if (!viewAsUser?.googleCalendarLinked) {
         toast({
             variant: 'destructive',
             title: 'Google Account Not Connected',
@@ -161,7 +164,7 @@ function CalendarCard({
 
 
 export function CalendarManagement({ tab, page, isActive, isSharedPanelOpen, setIsSharedPanelOpen, isDragging }: { tab: AppTab; page: AppPage, isActive?: boolean, isSharedPanelOpen: boolean, setIsSharedPanelOpen: (isOpen: boolean) => void, isDragging: boolean }) {
-  const { viewAsUser, addCalendar, updateCalendar, deleteCalendar, reorderCalendars, updatePage, updateUser } = useUser();
+  const { viewAsUser, updateUser } = useUser();
   const { toast } = useToast();
   const contextKey = `calendars-${page.id}`;
 
@@ -206,38 +209,54 @@ export function CalendarManagement({ tab, page, isActive, isSharedPanelOpen, set
   };
 
   const title = page.displayTitle ?? tab.name;
-  const canManagePage = viewAsUser.isAdmin;
+  const canManagePage = viewAsUser?.isAdmin ?? false;
   
   const handleTitleSave = (newTitle: string) => {
-    updatePage(page.id, { displayTitle: newTitle });
+    if(!viewAsUser) return;
+    const db = getDb();
+    updateDoc(doc(db, 'app-settings', viewAsUser.workspaceId, 'pages', page.id), { displayTitle: newTitle });
   };
 
   const handleTitleReset = (e: React.MouseEvent) => {
+    if(!viewAsUser) return;
     if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
         e.preventDefault();
-        updatePage(page.id, { displayTitle: null });
+        const db = getDb();
+        updateDoc(doc(db, 'app-settings', viewAsUser.workspaceId, 'pages', page.id), { displayTitle: null });
         toast({title: "Title Reset", description: "The page title has been reset to its default."});
     }
   };
 
   const handleAddCalendar = async (sourceCalendar?: SharedCalendar) => {
     if(!viewAsUser) return;
-    const newCalendar = await addCalendar(sourceCalendar || {}, viewAsUser);
-    if (newCalendar) {
-        setAllCalendars(prev => [...prev, newCalendar]);
-        toast({ title: sourceCalendar ? 'Calendar Duplicated' : 'New Calendar Added' });
-    }
+    const isDuplicating = !!sourceCalendar;
+    const newCalendarData = {
+      ...(sourceCalendar || {}),
+      name: isDuplicating && sourceCalendar?.name ? `${sourceCalendar.name} (Copy)` : 'New Calendar',
+      icon: sourceCalendar?.icon || googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
+      color: isDuplicating && sourceCalendar?.color ? adjustHslColor(sourceCalendar.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
+      owner: { type: 'user', id: viewAsUser.userId },
+      workspaceId: viewAsUser.workspaceId,
+      isShared: false,
+    };
+    delete (newCalendarData as any).id; // Remove id before adding
+    
+    const db = getDb();
+    await addDoc(collection(db, 'calendars'), newCalendarData);
+    toast({ title: sourceCalendar ? 'Calendar Duplicated' : 'New Calendar Added' });
   };
   
-  const handleUpdate = (calendarId: string, data: Partial<SharedCalendar>) => {
-    updateCalendar(calendarId, data);
+  const handleUpdate = async (calendarId: string, data: Partial<SharedCalendar>) => {
+    const db = getDb();
+    await updateDoc(doc(db, 'calendars', calendarId), data);
   };
   
   const handleDelete = (calendar: SharedCalendar) => {
     if(!viewAsUser) return;
     const isOwner = calendar.owner?.id === viewAsUser.userId;
     if (isOwner) {
-        deleteCalendar(calendar.id);
+        const db = getDb();
+        deleteDoc(doc(db, 'calendars', calendar.id));
         toast({ title: 'Calendar Deleted' });
     } else { // Unlink
         const updatedLinkedIds = (viewAsUser.linkedCalendarIds || []).filter(id => id !== calendar.id);
@@ -253,6 +272,11 @@ export function CalendarManagement({ tab, page, isActive, isSharedPanelOpen, set
     toast({ title: 'Calendar Linked' });
   }
   
+  const reorderCalendars = async (items: SharedCalendar[]) => {
+    setAllCalendars(items); // Optimistic update
+    // In a real app, you might save the order to user preferences.
+  };
+
   const displayedCalendars = useMemo(() => {
     if(!viewAsUser) return [];
     return allCalendars
@@ -305,7 +329,7 @@ export function CalendarManagement({ tab, page, isActive, isSharedPanelOpen, set
         onAddItem={handleAddCalendar}
         onUpdateItem={handleUpdate}
         onDeleteItem={handleDelete}
-        onReorderItems={(items) => { setAllCalendars(items); reorderCalendars(items); }}
+        onReorderItems={reorderCalendars}
         onLinkItem={handleLinkCalendar}
         onCollapseAll={onCollapseAll}
         renderItem={(item, isDragging) => renderCalendarCard(item as SharedCalendar)}
