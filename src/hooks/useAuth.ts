@@ -138,13 +138,12 @@ export function useAuth() {
     }
   }, [toast]);
 
-  const logout = useCallback(async (router: AppRouterInstance) => {
+  const logout = useCallback(async () => {
     if (!isFirebaseReady) return;
     const authInstance = getAuthInstance();
     try {
       await signOut(authInstance);
-      setRealUser(null);
-      router.push('/login');
+      // The onAuthStateChanged listener will handle the state update and redirection.
     } catch (error) {
       console.error("Logout failed:", error);
       toast({ variant: 'destructive', title: 'Logout Error', description: 'Could not sign out. Please try again.' });

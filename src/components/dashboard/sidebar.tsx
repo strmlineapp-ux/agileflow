@@ -17,23 +17,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getFirestore, collection, query, where, orderBy, getDocs, Timestamp, doc, getDoc } from 'firebase/firestore';
 import { getDb } from '@/lib/firebase';
 import { type Notification, type AppSettings } from '@/types';
-
-
-async function fetchNotifications(workspaceId: string): Promise<Notification[]> {
-    if (!workspaceId) return [];
-    const db = getDb();
-    const q = query(
-        collection(db, 'notifications'),
-        where('workspaceId', '==', workspaceId),
-        orderBy('time', 'desc')
-    );
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        time: (doc.data().time as Timestamp).toDate(),
-    } as Notification));
-}
+import { useDataQueries } from '@/hooks/use-data-queries';
 
 async function fetchAppSettings(workspaceId: string): Promise<AppSettings | null> {
     if (!workspaceId) return null;
@@ -48,12 +32,9 @@ export function Sidebar() {
   const { realUser, viewAsUser, users, loading, setViewAsUser: setContextViewAsUser, logout } = useUser();
   const router = useRouter();
   const pathname = usePathname();
+  const { useFetchNotifications } = useDataQueries();
   
-  const { data: notifications = [] } = useQuery<Notification[]>({
-      queryKey: ['notifications', viewAsUser.workspaceId],
-      queryFn: () => fetchNotifications(viewAsUser.workspaceId),
-      enabled: !!viewAsUser.workspaceId,
-  });
+  const { data: notifications = [] } = useFetchNotifications(viewAsUser.workspaceId);
 
   const { data: appSettings } = useQuery<AppSettings | null>({
     queryKey: ['appSettings', viewAsUser.workspaceId],
@@ -96,7 +77,7 @@ export function Sidebar() {
               className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg md:h-8 md:w-8 md:text-base"
             >
               <Logo iconOnly className="text-primary-foreground" />
-              <span className="sr-only">Strm</span>
+              <span className="sr-only">Strm_</span>
             </Link>
             {adminPage && hasAccess(viewAsUser, adminPage) && adminPage.path && (
               <TooltipProvider>
@@ -238,7 +219,7 @@ export function Sidebar() {
                   </DropdownMenuSub>
                 )}
                 
-                <DropdownMenuItem onSelect={() => logout(router)}>
+                <DropdownMenuItem onSelect={() => logout()}>
                     <GoogleSymbol name="logout" className="mr-2 text-lg" />
                     <span>Logout</span>
                 </DropdownMenuItem>
