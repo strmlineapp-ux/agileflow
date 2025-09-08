@@ -17,6 +17,7 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
   const [isFirebaseReady, setIsFirebaseReady] = useState(false);
   const { toast } = useToast();
+  const router = useRouter();
   
   useEffect(() => {
     try {
@@ -112,6 +113,7 @@ export function useAuth() {
         if (credential) {
             await linkGoogleCalendar(result.user, credential);
         }
+        router.push('/dashboard/overview'); // Redirect after successful login
         return true;
     } catch (error: any) {
         if (error.code !== 'auth/popup-closed-by-user') {
@@ -120,7 +122,7 @@ export function useAuth() {
         }
         return false;
     }
-  }, [isFirebaseReady, toast]);
+  }, [isFirebaseReady, toast, router]);
 
   const linkGoogleCalendar = useCallback(async (firebaseUser: FirebaseUser, credential?: OAuthCredential | null) => {
     if (!firebaseUser) return;
@@ -140,7 +142,6 @@ export function useAuth() {
     const authInstance = getAuthInstance();
     try {
       await signOut(authInstance);
-      // The onAuthStateChanged listener will handle the state update.
     } catch (error) {
       console.error("Logout failed:", error);
       toast({ variant: 'destructive', title: 'Logout Error', description: 'Could not sign out. Please try again.' });
