@@ -1,13 +1,14 @@
 
-
 'use client';
 
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/context/user-context';
 import { cn } from '@/lib/utils';
 import { GoogleSymbol } from '../icons/google-symbol';
+import type { Notification } from '@/types';
 
 // Helper function to format distance to now
 const formatDistanceToNow = (date: Date): string => {
@@ -25,10 +26,15 @@ const formatDistanceToNow = (date: Date): string => {
     return Math.floor(seconds) + " seconds ago";
 }
 
-export function NotificationList() {
-  const { realUser, notifications, setNotifications, handleApproveAccessRequest } = useUser();
+export function NotificationList({ initialNotifications }: { initialNotifications: Notification[] }) {
+  const { realUser, handleApproveAccessRequest } = useUser();
+  const [notifications, setNotifications] = React.useState(initialNotifications);
   const isAdmin = realUser?.isAdmin;
   
+  React.useEffect(() => {
+    setNotifications(initialNotifications);
+  }, [initialNotifications]);
+
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const handleMarkAsRead = (notificationId: string) => {

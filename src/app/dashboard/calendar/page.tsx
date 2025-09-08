@@ -1,27 +1,47 @@
 
 
-'use client';
-
 import { CalendarPageContent } from '@/components/dashboard/tabs/calendar-tab';
-import { useUser } from '@/context/user-context';
-import { GoogleSymbol } from '@/components/icons/google-symbol';
+import { getDb } from '@/lib/firebase';
+import { auth } from '@/lib/firebase-admin';
+import { type AppSettings, type SharedCalendar } from '@/types';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 
-export default function CalendarPage() {
-  const { appSettings, loading } = useUser();
+async function getCalendarData(userId: string) {
+    const db = getDb();
+    const userDoc = await getDoc(doc(db, 'users', userId));
+    if (!userDoc.exists()) return { appSettings: null, calendars: [] };
+    
+    const workspaceId = userDoc.data().workspaceId;
+    if (!workspaceId) return { appSettings: null, calendars: [] };
 
-  if (loading) {
-    return (
-      <div className="flex h-full w-full items-center justify-center">
-        <GoogleSymbol name="progress_activity" className="animate-spin text-4xl text-primary" />
-      </div>
-    );
-  }
+    const appSettingsDoc = await getDoc(doc(db, 'app-settings', workspaceId));
+    const calendarsQuery = await getDocs(query(collection(db, 'calendars'), where('workspaceId', '==', workspaceId)));
+
+    const appSettings = appSettingsDoc.exists() ? appSettingsDoc.data() as AppSettings : null;
+    const calendars = calendarsQuery.docs.map(d => ({ id: d.id, ...d.data() } as SharedCalendar));
+    
+    return { appSettings, calendars };
+}
+
+
+export default async function CalendarPage() {
+  const session = await auth().getUserByEmail('demo@strm.com'); // This should be replaced by actual auth
+  const { appSettings, calendars } = await getCalendarData(session.uid);
   
-  const calendarPageConfig = appSettings.pages.find(p => p.id === 'page-calendar');
+  if (!appSettings) {
+    return (
+        <div className="flex h-full w-full items-center justify-center">
+            <div className="text-center">
+                <h2 className="text-2xl mb-2">Configuration Error</h2>
+                <p className="text-muted-foreground">The application settings could not be found.</p>
+            </div>
+        </div>
+    )
+  }
+
   const calendarTabConfig = appSettings.tabs.find(t => t.id === 'tab-calendar');
 
-
-  if (!calendarPageConfig || !calendarTabConfig) {
+  if (!calendarTabConfig) {
     return (
         <div className="flex h-full w-full items-center justify-center">
             <div className="text-center">
@@ -32,5 +52,5 @@ export default function CalendarPage() {
     )
   }
 
-  return <CalendarPageContent tab={calendarTabConfig} />;
+  return <CalendarPageContent tab={calendarTabConfig} calendars={calendars} />;
 }

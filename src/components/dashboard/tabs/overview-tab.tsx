@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -20,25 +19,12 @@ const stats = [
   { title: 'Team Members', value: '8', icon: 'group' },
 ];
 
-export function OverviewContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
-  const { fetchTasks, loading: userLoading, viewAsUser, updatePage } = useUser();
+export function OverviewContent({ initialTasks, page, tab }: { initialTasks: Task[], page?: AppPage, tab?: AppTab }) {
+  const { viewAsUser, updatePage } = useUser();
   const { toast } = useToast();
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
   
   const title = page?.displayTitle ?? tab?.name ?? 'Overview';
   const canManagePage = viewAsUser.isAdmin;
-
-  useEffect(() => {
-    if (userLoading) return;
-    const loadTasks = async () => {
-      setLoading(true);
-      const fetchedTasks = await fetchTasks();
-      setTasks(fetchedTasks || []);
-      setLoading(false);
-    };
-    loadTasks();
-  }, [fetchTasks, userLoading]);
 
   const handleTitleSave = (newTitle: string) => {
     if (page) {
@@ -78,11 +64,7 @@ export function OverviewContent({ page, tab }: { page?: AppPage, tab?: AppTab })
       </div>
       <div className="overflow-y-auto hide-scrollbar">
         <h2 className="text-2xl mb-4">Recent Tasks</h2>
-        {loading ? (
-            <Card><CardHeader className="h-64"><Skeleton className="h-full w-full" /></CardHeader></Card>
-        ) : (
-            <TaskList tasks={tasks} limit={5} />
-        )}
+        <TaskList tasks={initialTasks} limit={5} />
       </div>
     </div>
   );

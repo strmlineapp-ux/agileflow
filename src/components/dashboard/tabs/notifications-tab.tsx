@@ -3,18 +3,14 @@
 
 import { NotificationList } from '@/components/notifications/notification-list';
 import { useUser } from '@/context/user-context';
-import { GoogleSymbol } from '@/components/icons/google-symbol';
-import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { type AppPage, type AppTab } from '@/types';
+import { type Notification, type AppPage, type AppTab } from '@/types';
 import { PageTitle } from '@/components/common/page-title';
 import { useToast } from '@/hooks/use-toast';
 
-export function NotificationsContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
-  const { notifications, viewAsUser, updatePage } = useUser();
+export function NotificationsContent({ notifications, page, tab }: { notifications: Notification[], page?: AppPage, tab?: AppTab }) {
+  const { viewAsUser, updatePage } = useUser();
   const { toast } = useToast();
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
+  
   const title = page?.displayTitle ?? tab?.name ?? 'Notifications';
   const canManagePage = viewAsUser.isAdmin;
 
@@ -40,7 +36,7 @@ export function NotificationsContent({ page, tab }: { page?: AppPage, tab?: AppT
         onReset={handleTitleReset}
         disabled={!canManagePage || !page}
       />
-      <NotificationList />
+      <NotificationList initialNotifications={notifications} />
     </div>
   );
 }

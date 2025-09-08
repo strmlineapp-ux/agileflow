@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -18,29 +17,22 @@ import { useToast } from '@/hooks/use-toast';
 // A new form component will be needed for adding/editing tasks. Let's assume its creation.
 // For now, we'll imagine a placeholder. A real implementation would require a TaskForm component.
 
-export function TasksContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
+export function TasksContent({ initialTasks, page, tab }: { initialTasks: Task[], page?: AppPage, tab?: AppTab }) {
   const [activeTab, setActiveTab] = useState<'my-tasks' | 'all'>('my-tasks');
-  const { viewAsUser, fetchTasks, addTask, updateTask, deleteTask, updatePage } = useUser();
+  const { viewAsUser, addTask, updateTask, deleteTask, updatePage } = useUser();
   const { toast } = useToast();
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const [loading, setLoading] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+
+  useEffect(() => {
+    setTasks(initialTasks);
+  }, [initialTasks]);
 
   const title = page?.displayTitle ?? tab?.name ?? 'Tasks';
   const canManagePage = viewAsUser.isAdmin;
   
-  const loadTasks = useCallback(async () => {
-    setLoading(true);
-    const allTasks = await fetchTasks();
-    setTasks(allTasks || []); // Ensure tasks is always an array
-    setLoading(false);
-  }, [fetchTasks]);
-
-  useEffect(() => {
-    loadTasks();
-  }, [loadTasks]);
-
   const handleTitleSave = (newTitle: string) => {
     if (page) {
       updatePage(page.id, { displayTitle: newTitle });

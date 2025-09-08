@@ -14,7 +14,7 @@ import { canCreateAnyEvent } from '@/lib/permissions';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { EventForm } from '@/components/calendar/new-event-form';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
-import { type Event, type AppTab } from '@/types';
+import { type Event, type AppTab, SharedCalendar } from '@/types';
 import { EventDetailsDialog } from '@/components/calendar/event-details-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { CenteredTabList } from '@/components/common/centered-tab-list';
@@ -33,7 +33,7 @@ function CalendarLinkPrompt() {
         <CardHeader>
           <CardTitle>Connect Your Google Calendar</CardTitle>
           <CardDescription>
-            To view and manage events, you need to connect your Google Calendar. This will allow AgileFlow to sync your events.
+            To view and manage events, you need to connect your Google Calendar. This will allow Strm_ to sync your events.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -47,8 +47,8 @@ function CalendarLinkPrompt() {
   )
 }
 
-export function CalendarPageContent({ tab }: { tab: AppTab }) {
-  const { viewAsUser, calendars, fetchEvents, addEvent, updateEvent, deleteEvent } = useUser();
+export function CalendarPageContent({ tab, calendars }: { tab: AppTab, calendars: SharedCalendar[] }) {
+  const { viewAsUser, fetchEvents, addEvent, updateEvent, deleteEvent } = useUser();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>(viewAsUser.defaultCalendarView || 'day');
   const [zoomLevel, setZoomLevel] = useState<'normal' | 'fit'>('normal');

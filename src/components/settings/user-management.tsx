@@ -380,13 +380,6 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                             <p>Optical Size: <span className="font-semibold">{currentIconOpticalSizeLabel}</span>. Modifier+Click to reset.</p>
                                         </TooltipContent>
                                     </Tooltip>
-                                </TooltipProvider>
-                                <PopoverContent className="w-48 p-0" asChild>
-                                  <TransparentCard>
-                                    <TransparentCardContent>
-                                      <Slider value={[currentIconOpticalSizeIndex]} onValueChange={handleIconOpticalSizeChange} min={0} max={3} step={1} />
-                                    </TransparentCardContent>
-                                  </TransparentCard>
                                 </PopoverContent>
                             </Popover>
 
@@ -456,13 +449,13 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
 }
 
 
-export function UserManagement({ showSearch = false, isActive = false }: { showSearch?: boolean, isActive?: boolean }) {
-    const { realUser, viewAsUser, users } = useUser();
+export function UserManagement({ allUsers, showSearch = false, isActive = false }: { allUsers: User[], showSearch?: boolean, isActive?: boolean }) {
+    const { realUser, viewAsUser } = useUser();
     const [searchTerm, setSearchTerm] = useState('');
     
-    const currentUser = users.find(u => u.userId === viewAsUser.userId);
+    const currentUser = allUsers.find(u => u.userId === viewAsUser.userId);
         
-    const otherUsers = users
+    const otherUsers = allUsers
         .filter(user => user.userId !== viewAsUser.userId)
         .filter(user => user.displayName.toLowerCase().includes(searchTerm.toLowerCase()));
 

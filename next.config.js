@@ -1,3 +1,4 @@
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
@@ -28,6 +29,9 @@ const nextConfig = {
     config,
     { buildId, dev, isServer, defaultLoaders, nextRuntime, webpack }
   ) => {
+    // This is the recommended fix for the Wasm build error.
+    config.experiments = { ...config.experiments, asyncWebAssembly: true };
+
     config.externals.push({
       canvas: "commonjs canvas",
     });
