@@ -11,54 +11,26 @@ import { EventsContent } from '@/components/dashboard/tabs/events-tab';
 import { TasksContent } from '@/components/dashboard/tabs/tasks-tab';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { PageTitle } from '@/components/common/page-title';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getDb } from '@/lib/firebase';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-
+import { useDataQueries } from '@/hooks/use-data-queries';
 
 const componentMap = {
   events: EventsContent,
   tasks: TasksContent,
 };
 
-async function fetchProject(projectId: string): Promise<Project | null> {
-    const db = getDb();
-    const docRef = doc(db, 'projects', projectId);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-        return { id: docSnap.id, ...docSnap.data() } as Project;
-    }
-    return null;
-}
-
-async function updateProjectMutationFn(variables: { projectId: string, data: Partial<Project> }) {
-    const { projectId, data } = variables;
-    const db = getDb();
-    await updateDoc(doc(db, 'projects', projectId), data);
-}
-
 export default function ProjectDetailsPage() {
   const params = useParams();
-  const { appSettings, viewAsUser, loading: userLoading } = useUser();
-  const queryClient = useQueryClient();
+  const { viewAsUser, loading: userLoading } = useUser();
+  const { useFetchProject, useUpdateProject, useFetchAppSettings } = useDataQueries();
+  
   const { id: projectId } = params as { id: string };
 
-  const { data: projectContext, isLoading: projectLoading } = useQuery({
-    queryKey: ['project', projectId],
-    queryFn: () => fetchProject(projectId),
-    enabled: !!projectId,
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: updateProjectMutationFn,
-    onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['project', projectId] });
-        queryClient.invalidateQueries({ queryKey: ['projects', viewAsUser.workspaceId] });
-    },
-  });
+  const { data: projectContext, isLoading: projectLoading } = useFetchProject(projectId);
+  const { data: appSettings, isLoading: settingsLoading } = useFetchAppSettings(viewAsUser?.workspaceId);
+  const updateMutation = useUpdateProject();
 
   const page = useMemo(() => {
-    if (userLoading || !appSettings.pages.length) {
+    if (userLoading || settingsLoading || !appSettings?.pages.length) {
       return null;
     }
     const foundPage = appSettings.pages.find(p => p.id === 'page-projects');
@@ -66,14 +38,15 @@ export default function ProjectDetailsPage() {
         return null;
     }
     return foundPage;
-  }, [appSettings, viewAsUser, userLoading]);
+  }, [appSettings, viewAsUser, userLoading, settingsLoading]);
 
   const handleUpdateProject = (id: string, data: Partial<Project>) => {
     updateMutation.mutate({ projectId: id, data });
   };
 
+  const loading = userLoading || projectLoading || settingsLoading;
 
-  if (userLoading || projectLoading) {
+  if (loading) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <GoogleSymbol name="progress_activity" className="animate-spin text-4xl text-primary" />

@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useCallback } from 'react';
@@ -15,89 +14,24 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { CenteredTabList } from '@/components/common/centered-tab-list';
 import { PageTitle } from '@/components/common/page-title';
 import { useToast } from '@/hooks/use-toast';
-import { getDb } from '@/lib/firebase';
-import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, Timestamp, getDocs } from 'firebase/firestore';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useDataQueries } from '@/hooks/use-data-queries';
 
 // A new form component will be needed for adding/editing tasks. Let's assume its creation.
 // For now, we'll imagine a placeholder. A real implementation would require a TaskForm component.
 
-
-async function fetchTasks(workspaceId: string): Promise<Task[]> {
-  const db = getDb();
-  const q = query(collection(db, 'tasks'), where('workspaceId', '==', workspaceId));
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({
-    taskId: doc.id,
-    ...doc.data(),
-    dueDate: (doc.data().dueDate as Timestamp).toDate(),
-  } as Task));
-}
-
-async function addTask(taskData: Omit<Task, 'taskId' | 'createdAt' | 'lastUpdated'>): Promise<Task> {
-    const db = getDb();
-    const docRef = await addDoc(collection(db, 'tasks'), {
-        ...taskData,
-        createdAt: new Date(),
-        lastUpdated: new Date(),
-    });
-    return { ...taskData, taskId: docRef.id, createdAt: new Date(), lastUpdated: new Date() };
-}
-
-async function updateTask({ taskId, updatedData }: { taskId: string, updatedData: Partial<Task> }) {
-    const db = getDb();
-    await updateDoc(doc(db, 'tasks', taskId), {
-        ...updatedData,
-        lastUpdated: new Date(),
-    });
-}
-
-async function deleteTask(taskId: string) {
-    const db = getDb();
-    await deleteDoc(doc(db, 'tasks', taskId));
-}
-
-export function TasksContent({ initialTasks, page, tab }: { initialTasks: Task[], page?: AppPage, tab?: AppTab }) {
+export function TasksContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
   const [activeTab, setActiveTab] = useState<'my-tasks' | 'all'>('my-tasks');
   const { viewAsUser, updateUser } = useUser();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { useFetchTasks, useAddTask, useUpdateTask, useDeleteTask } = useDataQueries();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
-  const { data: tasks = initialTasks, isLoading } = useQuery<Task[]>({
-    queryKey: ['tasks', viewAsUser.workspaceId],
-    queryFn: () => fetchTasks(viewAsUser.workspaceId),
-    initialData: initialTasks,
-    enabled: !!viewAsUser.workspaceId,
-  });
+  const { data: tasks = [], isLoading } = useFetchTasks(viewAsUser.workspaceId);
   
-  const mutationOptions = {
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', viewAsUser.workspaceId] });
-      toast({ title: "Success", description: "Your changes have been saved." });
-      setIsFormOpen(false);
-      setEditingTask(null);
-    },
-    onError: (error: Error) => {
-      toast({ variant: "destructive", title: "Error", description: error.message });
-    },
-  };
-
-  const addTaskMutation = useMutation({
-    mutationFn: addTask,
-    ...mutationOptions
-  });
-  const updateTaskMutation = useMutation({
-    mutationFn: updateTask,
-    ...mutationOptions
-  });
-  const deleteTaskMutation = useMutation({
-    mutationFn: deleteTask,
-    ...mutationOptions
-  });
-  
+  const addTaskMutation = useAddTask();
+  const updateTaskMutation = useUpdateTask();
+  const deleteTaskMutation = useDeleteTask();
 
   const title = page?.displayTitle ?? tab?.name ?? 'Tasks';
   const canManagePage = viewAsUser.isAdmin;
@@ -112,7 +46,7 @@ export function TasksContent({ initialTasks, page, tab }: { initialTasks: Task[]
     if (page && (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey)) {
         e.preventDefault();
         updateUser(page.id, { displayTitle: null });
-        toast({title: "Title Reset", description: "The page title has been reset to its default."});
+        // toast({title: "Title Reset", description: "The page title has been reset to its default."});
     }
   };
 
@@ -123,10 +57,12 @@ export function TasksContent({ initialTasks, page, tab }: { initialTasks: Task[]
       createdBy: viewAsUser.userId,
     };
     addTaskMutation.mutate(dataWithContext as any);
+    setIsFormOpen(false);
   };
   
   const handleTaskUpdated = async (taskId: string, updatedData: Partial<Task>) => {
     updateTaskMutation.mutate({ taskId, updatedData });
+    setIsFormOpen(false);
   };
   
   const handleTaskDeleted = async (taskId: string) => {

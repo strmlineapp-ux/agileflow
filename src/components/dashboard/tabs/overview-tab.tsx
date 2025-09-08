@@ -11,10 +11,7 @@ import { useUser } from '@/context/user-context';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PageTitle } from '@/components/common/page-title';
 import { useToast } from '@/hooks/use-toast';
-import { getDb } from '@/lib/firebase';
-import { collection, query, where, limit, getDocs, Timestamp } from 'firebase/firestore';
-import { useQuery } from '@tanstack/react-query';
-
+import { useDataQueries } from '@/hooks/use-data-queries';
 
 const stats = [
   { title: 'Active Tasks', value: '12', icon: 'checklist' },
@@ -23,31 +20,15 @@ const stats = [
   { title: 'Team Members', value: '8', icon: 'group' },
 ];
 
-async function fetchTasks(workspaceId: string): Promise<Task[]> {
-  const db = getDb();
-  const q = query(
-    collection(db, 'tasks'),
-    where('workspaceId', '==', workspaceId),
-    limit(5)
-  );
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({
-    taskId: doc.id,
-    ...doc.data(),
-    dueDate: (doc.data().dueDate as Timestamp).toDate(),
-  } as Task));
-}
-
-export function OverviewContent({ initialTasks, page, tab }: { initialTasks: Task[], page?: AppPage, tab?: AppTab }) {
+export function OverviewContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
   const { viewAsUser, updateUser } = useUser();
+  const { useFetchTasks } = useDataQueries();
   const { toast } = useToast();
   
-  const { data: tasks = initialTasks, isLoading } = useQuery({
-    queryKey: ['tasks_overview', viewAsUser.workspaceId],
-    queryFn: () => fetchTasks(viewAsUser.workspaceId),
-    initialData: initialTasks,
-    enabled: !!viewAsUser.workspaceId,
-  });
+  const { data: tasks = [], isLoading } = useFetchTasks(
+    viewAsUser.workspaceId,
+    { limit: 5 }
+  );
   
   const title = page?.displayTitle ?? tab?.name ?? 'Overview';
   const canManagePage = viewAsUser.isAdmin;

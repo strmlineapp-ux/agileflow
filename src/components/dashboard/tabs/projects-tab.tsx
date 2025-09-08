@@ -12,34 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { GoogleSymbol } from '../../icons/google-symbol';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useRouter } from 'next/navigation';
-import { getDb } from '@/lib/firebase';
-import { collection, doc, query, where, getDocs, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
-
-async function fetchProjects(workspaceId: string): Promise<Project[]> {
-    const db = getDb();
-    const q = query(collection(db, 'projects'), where('workspaceId', '==', workspaceId));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
-}
-
-async function addProjectMutationFn(variables: { projectData: Partial<Project>, ownerId: string, workspaceId: string }) {
-    const { projectData, ownerId, workspaceId } = variables;
-    const db = getDb();
-    await addDoc(collection(db, 'projects'), { ...projectData, owner: { type: 'user', id: ownerId }, workspaceId, icon: 'folder', color: '#888' });
-}
-
-async function updateProjectMutationFn(variables: { projectId: string, projectData: Partial<Project> }) {
-    const { projectId, projectData } = variables;
-    const db = getDb();
-    await updateDoc(doc(db, 'projects', projectId), projectData);
-}
-
-async function deleteProjectMutationFn(projectId: string) {
-    const db = getDb();
-    await deleteDoc(doc(db, 'projects', projectId));
-}
+import { useDataQueries } from '@/hooks/use-data-queries';
 
 function ProjectForm({ onSave, onClose, project }: { onSave: (projectData: Partial<Project>) => void, onClose: () => void, project?: Project | null }) {
   const [name, setName] = useState(project?.name || '');
@@ -74,29 +48,16 @@ function ProjectForm({ onSave, onClose, project }: { onSave: (projectData: Parti
 
 export function ProjectsContent() {
   const { viewAsUser } = useUser();
+  const { useFetchProjects, useAddProject, useUpdateProject, useDeleteProject } = useDataQueries();
+  
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const router = useRouter();
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
 
-  const { data: projects = [], isLoading } = useQuery({
-    queryKey: ['projects', viewAsUser.workspaceId],
-    queryFn: () => fetchProjects(viewAsUser.workspaceId),
-    enabled: !!viewAsUser.workspaceId,
-  });
-  
-  const mutationOptions = {
-    onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['projects', viewAsUser.workspaceId] });
-        toast({ title: 'Success' });
-    },
-    onError: (error: Error) => toast({ variant: 'destructive', title: 'Error', description: error.message }),
-  };
-
-  const addMutation = useMutation({ mutationFn: addProjectMutationFn, ...mutationOptions });
-  const updateMutation = useMutation({ mutationFn: updateProjectMutationFn, ...mutationOptions });
-  const deleteMutation = useMutation({ mutationFn: deleteProjectMutationFn, ...mutationOptions });
+  const { data: projects = [], isLoading } = useFetchProjects(viewAsUser.workspaceId);
+  const addMutation = useAddProject();
+  const updateMutation = useUpdateProject();
+  const deleteMutation = useDeleteProject();
 
   const ownedProjects = useMemo(() => {
     if (!viewAsUser) return [];
@@ -105,7 +66,7 @@ export function ProjectsContent() {
 
   const handleSaveProject = useCallback((projectData: Partial<Project>) => {
     if (editingProject) {
-      updateMutation.mutate({ projectId: editingProject.id, projectData });
+      updateMutation.mutate({ projectId: editingProject.id, data: projectData });
     } else {
       addMutation.mutate({ projectData, ownerId: viewAsUser.userId, workspaceId: viewAsUser.workspaceId });
     }
@@ -157,7 +118,7 @@ export function ProjectsContent() {
                    <TooltipProvider>
                       <Tooltip>
                           <TooltipTrigger asChild>
-                              <Button variant="default" size="icon" onClick={(e) => { e.stopPropagation(); updateMutation.mutate({ projectId: project.id, projectData: { isShared: !project.isShared } }); }}>
+                              <Button variant="default" size="icon" onClick={(e) => { e.stopPropagation(); updateMutation.mutate({ projectId: project.id, data: { isShared: !project.isShared } }); }}>
                                   <GoogleSymbol name={project.isShared ? 'share' : 'share_off'} />
                               </Button>
                           </TooltipTrigger>

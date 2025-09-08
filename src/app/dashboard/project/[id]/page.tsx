@@ -11,42 +11,40 @@ import { EventsContent } from '@/components/dashboard/tabs/events-tab';
 import { TasksContent } from '@/components/dashboard/tabs/tasks-tab';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { PageTitle } from '@/components/common/page-title';
-
+import { useDataQueries } from '@/hooks/use-data-queries';
 
 const componentMap = {
   events: EventsContent,
   tasks: TasksContent,
 };
 
-
 export default function ProjectDetailsPage() {
   const params = useParams();
-  const { appSettings, viewAsUser, loading, projects, updateProject } = useUser();
-  const { id: projectId } = params;
+  const { viewAsUser, loading: userLoading } = useUser();
+  const { useFetchProject, useUpdateProject, useFetchAppSettings } = useDataQueries();
+  
+  const { id: projectId } = params as { id: string };
 
-  const { page, projectContext } = useMemo(() => {
-    if (loading || !appSettings.pages.length) {
-      return { page: null, projectContext: null };
+  const { data: projectContext, isLoading: projectLoading } = useFetchProject(projectId);
+  const { data: appSettings, isLoading: settingsLoading } = useFetchAppSettings(viewAsUser?.workspaceId);
+  const updateMutation = useUpdateProject();
+
+  const page = useMemo(() => {
+    if (userLoading || settingsLoading || !appSettings?.pages.length) {
+      return null;
     }
-
     const foundPage = appSettings.pages.find(p => p.id === 'page-projects');
-    if (!foundPage) {
-        return { page: null, projectContext: null };
+    if (!foundPage || !hasAccess(viewAsUser!, foundPage)) {
+        return null;
     }
-    
-    let foundProject: Project | null = null;
+    return foundPage;
+  }, [appSettings, viewAsUser, userLoading, settingsLoading]);
 
-    if (projectId) {
-        foundProject = projects.find(p => p.id === projectId) || null;
-    }
-    
-    if (!hasAccess(viewAsUser!, foundPage)) {
-        return { page: null, projectContext: null };
-    }
+  const handleUpdateProject = (id: string, data: Partial<Project>) => {
+    updateMutation.mutate({ projectId: id, data });
+  };
 
-    return { page: foundPage, projectContext: foundProject };
-  }, [projectId, appSettings, viewAsUser, loading, projects]);
-
+  const loading = userLoading || projectLoading || settingsLoading;
 
   if (loading) {
     return (
@@ -112,7 +110,7 @@ export default function ProjectDetailsPage() {
             title={projectContext.name}
             icon={page.icon}
             iconColor={page.color}
-            onSave={(newName) => updateProject(projectContext.id, { name: newName })}
+            onSave={(newName) => handleUpdateProject(projectContext.id, { name: newName })}
             disabled={projectContext.owner.id !== viewAsUser.userId}
         />
        {renderContent()}

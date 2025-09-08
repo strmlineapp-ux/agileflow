@@ -46,62 +46,7 @@ import { InlineEditor } from '../common/inline-editor';
 import { ItemSelectionPopover, type ItemSelectionTab } from '../common/item-selection-popover';
 import { ManagementPageLayout } from '../common/management-page-layout';
 import { useTheme } from 'next-themes';
-import { getDb } from '@/lib/firebase';
-import { collection, doc, writeBatch, getFirestore, getDocs, query, where, addDoc, updateDoc, setDoc, getDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-
-// #region Data Fetching and Mutations
-async function fetchUsers(workspaceId: string): Promise<User[]> {
-  const db = getDb();
-  const q = query(collection(db, 'users'), where('workspaceId', '==', workspaceId));
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({ userId: doc.id, ...doc.data() } as User));
-}
-
-async function fetchPreApprovedEmails(workspaceId: string): Promise<PreApprovedEmail[]> {
-  const db = getDb();
-  const q = query(collection(db, 'pre-approved-emails'), where('workspaceId', '==', workspaceId));
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PreApprovedEmail));
-}
-
-async function fetchAppSettings(workspaceId: string): Promise<AppSettings> {
-  const db = getDb();
-  const docRef = doc(db, 'app-settings', workspaceId);
-  const docSnap = await getDoc(docRef);
-  if (docSnap.exists()) {
-    return docSnap.data() as AppSettings;
-  }
-  return { pages: [], tabs: [], workspaceId };
-}
-
-async function updateUser(variables: { userId: string; data: Partial<User> }) {
-  const { userId, data } = variables;
-  const db = getDb();
-  await updateDoc(doc(db, "users", userId), data);
-}
-
-async function deleteUser(userId: string) {
-  const db = getDb();
-  await deleteDoc(doc(db, "users", userId));
-}
-
-async function addPreApprovedEmail(variables: { email: string, invitedBy: string, workspaceId: string }) {
-  const db = getDb();
-  await addDoc(collection(db, 'pre-approved-emails'), { ...variables, createdAt: new Date() });
-}
-
-async function removePreApprovedEmail(docId: string) {
-  const db = getDb();
-  await deleteDoc(doc(db, 'pre-approved-emails', docId));
-}
-
-async function updateAppSettings(variables: { workspaceId: string, newSettings: Partial<AppSettings> }) {
-    const { workspaceId, newSettings } = variables;
-    const db = getDb();
-    await updateDoc(doc(db, 'app-settings', workspaceId), newSettings);
-}
-// #endregion
+import { useDataQueries } from '@/hooks/use-data-queries';
 
 // #region Admin Groups Management Tab
 
@@ -176,7 +121,6 @@ function UserDropZone({ id, users, children, onDeleteRequest, expandedCardState,
 
 export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
   const { viewAsUser, updateUser: updateContextUser } = useUser();
-  const queryClient = useQueryClient();
   const { toast } = useToast();
   
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
@@ -194,32 +138,16 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
   const [activeDragUser, setActiveDragUser] = useState<User | null>(null);
   const [isAddUserPopoverOpen, setIsAddUserPopoverOpen] = useState(false);
   const [newUserEmail, setNewUserEmail] = useState('');
-  
-  const { data: users = [] } = useQuery({
-    queryKey: ['users', viewAsUser.workspaceId],
-    queryFn: () => fetchUsers(viewAsUser.workspaceId),
-    enabled: !!viewAsUser.workspaceId,
-  });
 
-  const { data: preApprovedEmails = [] } = useQuery({
-    queryKey: ['preApprovedEmails', viewAsUser.workspaceId],
-    queryFn: () => fetchPreApprovedEmails(viewAsUser.workspaceId),
-    enabled: !!viewAsUser.workspaceId,
-  });
+  const { useFetchUsers, useFetchPreApprovedEmails, useUpdateUser, useDeleteUser, useAddPreApprovedEmail, useRemovePreApprovedEmail } = useDataQueries();
 
-  const mutationOptions = {
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users', viewAsUser.workspaceId] });
-      queryClient.invalidateQueries({ queryKey: ['preApprovedEmails', viewAsUser.workspaceId] });
-    },
-    onError: (error: Error) => toast({ variant: 'destructive', title: 'Error', description: error.message }),
-  };
+  const { data: users = [] } = useFetchUsers(viewAsUser.workspaceId);
+  const { data: preApprovedEmails = [] } = useFetchPreApprovedEmails(viewAsUser.workspaceId);
 
-  const updateUserMutation = useMutation({ mutationFn: updateUser, ...mutationOptions });
-  const deleteUserMutation = useMutation({ mutationFn: deleteUser, ...mutationOptions });
-  const addEmailMutation = useMutation({ mutationFn: addPreApprovedEmail, ...mutationOptions });
-  const removeEmailMutation = useMutation({ mutationFn: removePreApprovedEmail, ...mutationOptions });
-
+  const updateUserMutation = useUpdateUser();
+  const deleteUserMutation = useDeleteUser();
+  const addEmailMutation = useAddPreApprovedEmail();
+  const removeEmailMutation = useRemovePreApprovedEmail();
   
   const onToggleUserExpand = useCallback((userId: string) => {
     if (!viewAsUser) return;
@@ -510,11 +438,8 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
 // #region Pages Management Tab
 function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: Partial<AppPage>) => void }) {
     const { viewAsUser } = useUser();
-    const { data: users = [] } = useQuery({
-      queryKey: ['users', viewAsUser.workspaceId],
-      queryFn: () => fetchUsers(viewAsUser.workspaceId),
-      enabled: !!viewAsUser.workspaceId
-    });
+    const { useFetchUsers } = useDataQueries();
+    const { data: users = [] } = useFetchUsers(viewAsUser.workspaceId);
     // This part is problematic as it assumes a global `teams` state which we are removing.
     // It should be fetched if needed, or the logic re-evaluated.
     // For now, we'll pass an empty array to avoid breaking the UI.
@@ -693,24 +618,13 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
 
 export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelOpen, isDragging }: { isActive: boolean; isSharedPanelOpen?: boolean; setIsSharedPanelOpen?: (isOpen: boolean) => void; isDragging?: boolean; }) => {
     const { viewAsUser, updateUser } = useUser();
-    const queryClient = useQueryClient();
+    const { useFetchAppSettings, useUpdateAppSettings } = useDataQueries();
     const { toast } = useToast();
     const contextKey = 'pages-management';
     
-    const { data: appSettings = { pages: [], tabs: [] } } = useQuery({
-      queryKey: ['appSettings', viewAsUser.workspaceId],
-      queryFn: () => fetchAppSettings(viewAsUser.workspaceId),
-      enabled: !!viewAsUser.workspaceId,
-    });
+    const { data: appSettings = { pages: [], tabs: [] } } = useFetchAppSettings(viewAsUser.workspaceId);
     
-    const updateSettingsMutation = useMutation({
-        mutationFn: updateAppSettings,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['appSettings', viewAsUser.workspaceId] });
-            toast({ title: 'Settings Updated' });
-        },
-        onError: (error: Error) => toast({ variant: 'destructive', title: 'Error', description: error.message }),
-    });
+    const updateSettingsMutation = useUpdateAppSettings();
 
     const updateSettings = useCallback((newSettings: Partial<AppSettings>) => {
         if (!viewAsUser?.workspaceId) return;
@@ -766,7 +680,7 @@ export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelO
         id: crypto.randomUUID(),
         name: isDuplicating ? `${sourcePage!.name} (Copy)` : 'New Page',
         icon: sourcePage?.icon || googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
-        color: sourcePage?.color ? adjustHslColor(sourcePage.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
+        color: 'hsl(221, 83%, 61%)',
         path: isDuplicating ? `${sourcePage!.path}-${crypto.randomUUID().substring(0, 4)}` : `/dashboard/new-page-${crypto.randomUUID().substring(0, 4)}`,
         description: sourcePage?.description || '',
         isDynamic: sourcePage?.isDynamic || false,
@@ -909,20 +823,11 @@ function SortableTabCard({ tab, onUpdate, isExpanded, onToggleExpand }: {
 
 export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
     const { viewAsUser, updateUser } = useUser();
-    const queryClient = useQueryClient();
-    const { toast } = useToast();
+    const { useFetchAppSettings, useUpdateAppSettings } = useDataQueries();
     
-    const { data: appSettings = { pages: [], tabs: [] } } = useQuery({
-      queryKey: ['appSettings', viewAsUser.workspaceId],
-      queryFn: () => fetchAppSettings(viewAsUser.workspaceId),
-      enabled: !!viewAsUser.workspaceId,
-    });
+    const { data: appSettings = { pages: [], tabs: [] } } = useFetchAppSettings(viewAsUser.workspaceId);
     
-    const updateSettingsMutation = useMutation({
-        mutationFn: updateAppSettings,
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['appSettings', viewAsUser.workspaceId] }),
-        onError: (error: Error) => toast({ variant: 'destructive', title: 'Error', description: error.message }),
-    });
+    const updateSettingsMutation = useUpdateAppSettings();
 
     const updateSettings = useCallback((newSettings: Partial<AppSettings>) => {
         if (!viewAsUser?.workspaceId) return;
@@ -983,7 +888,7 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
         return results;
     }, [appSettings.tabs, searchTerm, colorFilter]);
 
-    const renderTabCard = useCallback((tab: AppTab, isDragging: boolean) => {
+    const renderTabCard = useCallback((tab: AppTab) => {
         const expandedCardIds = viewAsUser?.expandedCardState?.[contextKey] || [];
         return (
             <SortableItem key={tab.id} id={tab.id}>
@@ -1003,7 +908,7 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
-                <PageTitle title="Tabs" />
+                <h2 className="text-2xl">Tabs</h2>
                 <div className="flex items-center gap-1">
                     <TooltipProvider>
                       <Tooltip>
@@ -1032,7 +937,7 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
                 setItems={reorderTabs}
                 className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4"
             >
-              {filteredTabs.map(tab => renderTabCard(tab, false))}
+              {filteredTabs.map(tab => renderTabCard(tab))}
             </DraggableGrid>
         </div>
     );
