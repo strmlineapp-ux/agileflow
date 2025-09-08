@@ -20,7 +20,10 @@ export function LoginForm() {
         router.push('/dashboard/overview');
       }
       // If user is 'Viewer', we let the layout handle the "Awaiting Approval" message,
-      // so no redirect is needed here.
+      // so we push them to a safe dashboard page which will show the message.
+      else if (realUser.accountType === 'Viewer') {
+        router.push('/dashboard');
+      }
     }
   }, [realUser, loading, router]);
 

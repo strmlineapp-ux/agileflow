@@ -109,7 +109,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <title>Strm_</title>
+        <title>AgileFlow</title>
         <meta name="description" content="Task and Calendar Management for agile teams." />
         <link
           rel="stylesheet"
