@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useUser } from '@/context/user-context';
 import { type Project } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -13,6 +13,8 @@ import { useToast } from '@/hooks/use-toast';
 import { GoogleSymbol } from '../../icons/google-symbol';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useRouter } from 'next/navigation';
+import { getDb } from '@/lib/firebase';
+import { collection, doc, query, where, onSnapshot, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 function ProjectForm({ onSave, onClose, project }: { onSave: (projectData: Partial<Project>) => void, onClose: () => void, project?: Project | null }) {
   const [name, setName] = useState(project?.name || '');
@@ -46,10 +48,38 @@ function ProjectForm({ onSave, onClose, project }: { onSave: (projectData: Parti
 }
 
 export function ProjectsContent() {
-  const { viewAsUser, projects, addProject, updateProject, deleteProject } = useUser();
+  const { viewAsUser } = useUser();
+  const [projects, setProjects] = useState<Project[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    if (!viewAsUser?.workspaceId) return;
+    const db = getDb();
+    const q = query(collection(db, 'projects'), where('workspaceId', '==', viewAsUser.workspaceId));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const projectsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
+        setProjects(projectsData);
+    });
+    return () => unsubscribe();
+  }, [viewAsUser?.workspaceId]);
+  
+  const addProject = async (projectData: Partial<Project>) => {
+    if (!viewAsUser) return;
+    const db = getDb();
+    await addDoc(collection(db, 'projects'), { ...projectData, owner: { type: 'user', id: viewAsUser.userId }, workspaceId: viewAsUser.workspaceId, icon: 'folder', color: '#888' });
+  };
+  
+  const updateProject = async (projectId: string, projectData: Partial<Project>) => {
+    const db = getDb();
+    await updateDoc(doc(db, 'projects', projectId), projectData);
+  };
+  
+  const deleteProject = async (projectId: string) => {
+    const db = getDb();
+    await deleteDoc(doc(db, 'projects', projectId));
+  };
 
   const ownedProjects = useMemo(() => {
     if (!viewAsUser) return [];

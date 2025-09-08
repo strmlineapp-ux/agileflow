@@ -15,14 +15,8 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { googleSymbolNames } from '@/lib/google-symbols';
-import { systemPages, coreTabs } from '@/lib/core-data';
 import { cn, getContrastColor, isHueInRange, getHueFromHsl, getReadableColor } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { CompactSearchInput } from '@/components/common/compact-search-input';
 import { CardTemplate } from '@/components/common/card-template';
 import {
@@ -45,18 +39,15 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { HslStringColorPicker } from 'react-colorful';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
-import { DraggableGrid } from '../common/draggable-grid';
 import { SortableItem } from '../common/sortable-item';
 import { IconColorPicker } from '../common/icon-color-picker';
 import { InlineEditor } from '../common/inline-editor';
 import { ItemSelectionPopover, type ItemSelectionTab } from '../common/item-selection-popover';
-import { hasAccess } from '@/lib/permissions';
-import { TransparentCard, TransparentCardContent } from '../ui/transparent-card';
-import { PageTitle } from '../common/page-title';
 import { ManagementPageLayout } from '../common/management-page-layout';
 import { useTheme } from 'next-themes';
+import { getDb } from '@/lib/firebase';
+import { collection, doc, writeBatch, getFirestore, getDocs, query, where, addDoc, updateDoc, setDoc, getDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 
 // #region Admin Groups Management Tab
 
@@ -131,7 +122,10 @@ function UserDropZone({ id, users, children, onDeleteRequest, expandedCardState,
 
 export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
   const { toast } = useToast();
-  const { viewAsUser, users, updateUser, deleteUser, reorderUsers, appSettings, updateAppSettings, preApprovedEmails, addPreApprovedEmail, removePreApprovedEmail } = useUser();
+  const { viewAsUser, updateUser } = useUser();
+  const [users, setUsers] = useState<User[]>([]);
+  const [preApprovedEmails, setPreApprovedEmails] = useState<PreApprovedEmail[]>([]);
+  
   const [is2faDialogOpen, setIs2faDialogOpen] = useState(false);
   const [pendingUserMove, setPendingUserMove] = useState<{ user: User; fromListId: string; destListId: string } | null>(null);
   const [pendingUserDelete, setPendingUserDelete] = useState<User | null>(null);
@@ -144,11 +138,29 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
   const [adminSearch, setAdminSearch] = useState('');
   const [userSearch, setUserSearch] = useState('');
   
-  const [activeAdminSearch, setActiveAdminSearch] = useState(false);
-
   const [activeDragUser, setActiveDragUser] = useState<User | null>(null);
   const [isAddUserPopoverOpen, setIsAddUserPopoverOpen] = useState(false);
   const [newUserEmail, setNewUserEmail] = useState('');
+  
+  useEffect(() => {
+    if (!viewAsUser?.workspaceId) return;
+    const db = getDb();
+    
+    const usersUnsub = onSnapshot(
+      query(collection(db, 'users'), where('workspaceId', '==', viewAsUser.workspaceId)),
+      (snapshot) => setUsers(snapshot.docs.map(doc => ({ userId: doc.id, ...doc.data() } as User)))
+    );
+    
+    const emailsUnsub = onSnapshot(
+      query(collection(db, 'pre-approved-emails'), where('workspaceId', '==', viewAsUser.workspaceId)),
+      (snapshot) => setPreApprovedEmails(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PreApprovedEmail)))
+    );
+
+    return () => {
+      usersUnsub();
+      emailsUnsub();
+    };
+  }, [viewAsUser?.workspaceId]);
   
   const onToggleUserExpand = useCallback((userId: string) => {
     if (!viewAsUser) return;
@@ -170,14 +182,35 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
     });
   }, [viewAsUser, updateUser]);
 
-  const handleAddPreApprovedEmail = () => {
+  const handleAddPreApprovedEmail = async () => {
     if(!viewAsUser) return;
     const trimmedEmail = newUserEmail.trim();
     if (trimmedEmail) {
-      addPreApprovedEmail(trimmedEmail);
+      const db = getDb();
+      await addDoc(collection(db, 'pre-approved-emails'), {
+        email: trimmedEmail,
+        invitedBy: viewAsUser.userId,
+        workspaceId: viewAsUser.workspaceId,
+        createdAt: new Date(),
+      });
       setNewUserEmail('');
     }
   };
+  
+  const removePreApprovedEmail = async (email: string) => {
+    if (!viewAsUser) return;
+    const db = getDb();
+    const q = query(
+      collection(db, 'pre-approved-emails'),
+      where('email', '==', email),
+      where('workspaceId', '==', viewAsUser.workspaceId)
+    );
+    const snapshot = await getDocs(q);
+    if (!snapshot.empty) {
+      const docToDelete = snapshot.docs[0];
+      await deleteDoc(docToDelete.ref);
+    }
+  }
 
   const adminUsers = useMemo(() => users.filter(u => u.isAdmin), [users]);
   const nonAdminUsers = useMemo(() => users.filter(u => !u.isAdmin), [users]);
@@ -221,6 +254,17 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
     setTwoFactorActionType('deleteUser');
     setIs2faDialogOpen(true);
   };
+  
+  const handleUserUpdate = async (userId: string, data: Partial<User>) => {
+    const db = getDb();
+    await updateDoc(doc(db, "users", userId), data);
+  };
+  
+  const handleUserDelete = async (userId: string) => {
+    const db = getDb();
+    await deleteDoc(doc(db, "users", userId));
+  };
+
 
   const handleVerify2fa = () => {
     if (twoFactorCode !== '123456') {
@@ -231,10 +275,10 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
 
     if (twoFactorActionType === 'toggleAdmin' && pendingUserMove) {
         const { user } = pendingUserMove;
-        updateUser(user.userId, { isAdmin: !user.isAdmin });
+        handleUserUpdate(user.userId, { isAdmin: !user.isAdmin });
         toast({ title: 'Success', description: `${user.displayName}'s admin status has been updated.` });
     } else if (twoFactorActionType === 'deleteUser' && pendingUserDelete) {
-        deleteUser(pendingUserDelete.userId);
+        handleUserDelete(pendingUserDelete.userId);
         toast({ title: 'User Deleted', description: `${pendingUserDelete.displayName} has been removed from the system.` });
     }
     close2faDialog();
@@ -264,20 +308,6 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
 
         if (sourceListId && destListId && sourceListId !== destListId) {
             handleAdminToggleRequest(userToMove, sourceListId, destListId);
-        } else if (sourceListId && destListId && sourceListId === destListId) {
-            const list = sourceListId === 'admin-list' ? adminUsers : nonAdminUsers;
-            const oldIndex = list.findIndex(u => `user-dnd-${u.userId}-${sourceListId}` === active.id);
-            const overUser = over.data.current?.user as User;
-            const newIndex = list.findIndex(u => u.userId === overUser.userId);
-            
-            if (oldIndex !== -1 && newIndex !== -1) {
-                const reorderedSubList = arrayMove(list, oldIndex, newIndex);
-                const reorderedFullList = sourceListId === 'admin-list' 
-                    ? [...reorderedSubList, ...nonAdminUsers] 
-                    : [...adminUsers, ...reorderedSubList];
-                const finalOrder = users.map(u => reorderedFullList.find(r => r.userId === u.userId)).filter(Boolean) as User[];
-                reorderUsers(finalOrder);
-            }
         }
     }
   };
@@ -298,7 +328,7 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
     <div className="space-y-6">
         <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={closestCenter}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <TransparentCard className="flex flex-col h-full">
+                <Card className="flex flex-col h-full">
                     <CardHeader>
                         <div className="flex items-center justify-between gap-4">
                             <CardTitle className="text-foreground">Admins ({filteredAdminUsers.length})</CardTitle>
@@ -315,8 +345,8 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
                     <CardContent className="flex-grow">
                         <UserDropZone id="admin-list" users={filteredAdminUsers} expandedCardState={viewAsUser?.expandedCardState || {}} onToggleUserExpand={onToggleUserExpand} />
                     </CardContent>
-                  </TransparentCard>
-                  <TransparentCard className="flex flex-col h-full">
+                  </Card>
+                  <Card className="flex flex-col h-full">
                     <CardHeader>
                         <div className="flex items-center justify-between gap-4">
                              <div className="flex items-center gap-2">
@@ -376,7 +406,7 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
                      <CardContent className="flex-grow">
                          <UserDropZone id="user-list" users={filteredNonAdminUsers} onDeleteRequest={handleDeleteUserRequest} expandedCardState={viewAsUser?.expandedCardState || {}} onToggleUserExpand={onToggleUserExpand} />
                     </CardContent>
-                  </TransparentCard>
+                  </Card>
             </div>
             <DragOverlay modifiers={[snapCenterToCursor]}>
                 {activeDragUser ? (
@@ -441,7 +471,17 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
 
 // #region Pages Management Tab
 function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: Partial<AppPage>) => void }) {
-    const { users, teams } = useUser();
+    const { viewAsUser } = useUser();
+    const [users, setUsers] = useState<User[]>([]);
+    const [teams, setTeams] = useState<Team[]>([]);
+    
+    useEffect(() => {
+        if (!viewAsUser?.workspaceId) return;
+        const db = getDb();
+        const usersUnsub = onSnapshot(query(collection(db, 'users'), where('workspaceId', '==', viewAsUser.workspaceId)), (snapshot) => setUsers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User))));
+        const teamsUnsub = onSnapshot(query(collection(db, 'teams'), where('workspaceId', '==', viewAsUser.workspaceId)), (snapshot) => setTeams(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Team))));
+        return () => { usersUnsub(); teamsUnsub(); };
+    }, [viewAsUser?.workspaceId]);
     
     const handleToggle = (type: 'users' | 'teams', id: string) => {
         const access = page.access || { users: [], teams: [] };
@@ -495,8 +535,7 @@ function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data:
     );
 }
 
-function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: Partial<AppPage>) => void }) {
-  const { appSettings } = useUser();
+function PageTabsControl({ page, onUpdate, appSettings }: { page: AppPage; onUpdate: (data: Partial<AppPage>) => void, appSettings: AppSettings }) {
   const systemTabIds = ['tab-admins', 'tab-settings'];
 
   const handleToggle = (tabId: string) => {
@@ -541,13 +580,14 @@ function PageTabsControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: P
   );
 }
 
-function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand, isSharedPreview }: { 
+function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand, isSharedPreview, appSettings }: { 
     page: AppPage; 
     onUpdate: (id: string, data: Partial<AppPage>) => void; 
     onDelete: (page: AppPage) => void; 
     isExpanded: boolean;
     onToggleExpand: () => void;
     isSharedPreview?: boolean;
+    appSettings: AppSettings;
 }) {
     const { viewAsUser } = useUser();
     
@@ -591,7 +631,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
     const footerContent = (
       <div className="flex items-center justify-end w-full">
           {!isPinned && <PageAccessControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />}
-          {!isPinned && <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} />}
+          {!isPinned && <PageTabsControl page={page} onUpdate={(data) => onUpdate(page.id, data)} appSettings={appSettings} />}
       </div>
     );
     
@@ -615,10 +655,28 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
 }
 
 export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelOpen, isDragging }: { isActive: boolean; isSharedPanelOpen?: boolean; setIsSharedPanelOpen?: (isOpen: boolean) => void; isDragging?: boolean; }) => {
-    const { viewAsUser, appSettings, addPage, updatePage, deletePage, reorderPages, updateUser } = useUser();
+    const { viewAsUser, updateUser } = useUser();
+    const [appSettings, setAppSettings] = useState<AppSettings>({ pages: [], tabs: [] });
     const { toast } = useToast();
     const contextKey = 'pages-management';
-
+    
+    useEffect(() => {
+        if (!viewAsUser?.workspaceId) return;
+        const db = getDb();
+        const unsub = onSnapshot(doc(db, 'app-settings', viewAsUser.workspaceId), (doc) => {
+            if (doc.exists()) {
+                setAppSettings(doc.data() as AppSettings);
+            }
+        });
+        return unsub;
+    }, [viewAsUser?.workspaceId]);
+    
+    const updateAppSettings = useCallback(async (newSettings: Partial<AppSettings>) => {
+        if (!viewAsUser?.workspaceId) return;
+        const db = getDb();
+        await updateDoc(doc(db, 'app-settings', viewAsUser.workspaceId), newSettings);
+    }, [viewAsUser?.workspaceId]);
+    
     const onToggleExpand = useCallback((pageId: string) => {
         if (!viewAsUser) return;
         const currentState = viewAsUser.expandedCardState || {};
@@ -636,17 +694,19 @@ export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelO
         const currentState = viewAsUser.expandedCardState || {};
         updateUser(viewAsUser.userId, { expandedCardState: { ...currentState, [contextKey]: [] } });
     };
-    
+
     const handleUpdate = useCallback((pageId: string, data: Partial<AppPage>) => {
-        updatePage(pageId, data);
-    }, [updatePage]);
+        const newPages = appSettings.pages.map(p => p.id === pageId ? { ...p, ...data } : p);
+        updateAppSettings({ pages: newPages });
+    }, [appSettings.pages, updateAppSettings]);
     
     const handleDelete = (page: AppPage) => {
         const isOwner = page.owner?.id === viewAsUser.userId;
         const canDeleteSystemPage = viewAsUser.isAdmin && page.isSystemPage && !['page-admin-management', 'page-settings', 'page-notifications'].includes(page.id);
 
         if (isOwner || canDeleteSystemPage) {
-            deletePage(page.id);
+            const newPages = appSettings.pages.filter(p => p.id !== page.id);
+            updateAppSettings({ pages: newPages });
             toast({ title: 'Page Deleted' });
         } else if (!isOwner && !page.isSystemPage) { // Unlink non-system page
             const updatedLinkedIds = (viewAsUser.linkedPageIds || []).filter(id => id !== page.id);
@@ -654,6 +714,32 @@ export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelO
             toast({ title: 'Page Unlinked' });
         }
     };
+    
+    const reorderPages = useCallback((reorderedPages: AppPage[]) => {
+      updateAppSettings({ pages: reorderedPages });
+    }, [updateAppSettings]);
+    
+    const addPage = useCallback((sourcePage?: Partial<AppPage>) => {
+      const isDuplicating = !!sourcePage?.id;
+      const newPage: AppPage = {
+        id: crypto.randomUUID(),
+        name: isDuplicating ? `${sourcePage!.name} (Copy)` : 'New Page',
+        icon: sourcePage?.icon || googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
+        color: sourcePage?.color ? adjustHslColor(sourcePage.color) : predefinedColors[Math.floor(Math.random() * predefinedColors.length)],
+        path: isDuplicating ? `${sourcePage!.path}-${crypto.randomUUID().substring(0, 4)}` : `/dashboard/new-page-${crypto.randomUUID().substring(0, 4)}`,
+        description: sourcePage?.description || '',
+        isDynamic: sourcePage?.isDynamic || false,
+        associatedTabs: sourcePage?.associatedTabs || [],
+        access: sourcePage?.access || { users: [], teams: [] },
+        owner: { type: 'user', id: viewAsUser.userId },
+        workspaceId: viewAsUser.workspaceId,
+      };
+      
+      const newPages = [...appSettings.pages, newPage];
+      updateAppSettings({ pages: newPages });
+      toast({ title: isDuplicating ? 'Page Duplicated' : 'Page Added' });
+
+    }, [appSettings.pages, viewAsUser, updateAppSettings, toast]);
 
     const handleLinkPage = (pageId: string) => {
         const updatedLinkedIds = [...(viewAsUser.linkedPageIds || []), pageId];
@@ -706,10 +792,11 @@ export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelO
                   onDelete={handleDelete}
                   isExpanded={expandedCardIds.includes(page.id)}
                   onToggleExpand={() => onToggleExpand(page.id)}
+                  appSettings={appSettings}
               />
           )}
       </SortableItem>
-    )}, [handleUpdate, handleDelete, viewAsUser, onToggleExpand, contextKey]);
+    )}, [handleUpdate, handleDelete, viewAsUser, onToggleExpand, contextKey, appSettings]);
 
     return (
         <div className="h-full flex flex-col">
@@ -778,10 +865,28 @@ function SortableTabCard({ tab, onUpdate, isExpanded, onToggleExpand }: {
 }
 
 export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
-    const { viewAsUser, appSettings, updateAppTab, reorderTabs, updateUser } = useUser();
+    const { viewAsUser, updateUser } = useUser();
+    const [appSettings, setAppSettings] = useState<AppSettings>({ pages: [], tabs: [] });
     const [searchTerm, setSearchTerm] = useState('');
     const [colorFilter, setColorFilter] = useState<string | null>(null);
     const contextKey = 'tabs-management';
+    
+    useEffect(() => {
+        if (!viewAsUser?.workspaceId) return;
+        const db = getDb();
+        const unsub = onSnapshot(doc(db, 'app-settings', viewAsUser.workspaceId), (doc) => {
+            if (doc.exists()) {
+                setAppSettings(doc.data() as AppSettings);
+            }
+        });
+        return unsub;
+    }, [viewAsUser?.workspaceId]);
+    
+    const updateAppSettings = useCallback(async (newSettings: Partial<AppSettings>) => {
+        if (!viewAsUser?.workspaceId) return;
+        const db = getDb();
+        await updateDoc(doc(db, 'app-settings', viewAsUser.workspaceId), newSettings);
+    }, [viewAsUser?.workspaceId]);
 
     const onToggleExpand = useCallback((tabId: string) => {
         if (!viewAsUser) return;
@@ -802,8 +907,13 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
     };
 
     const handleUpdateTab = useCallback((tabId: string, data: Partial<AppTab>) => {
-        updateAppTab(tabId, data);
-    }, [updateAppTab]);
+        const newTabs = appSettings.tabs.map(t => t.id === tabId ? { ...t, ...data } : t);
+        updateAppSettings({ tabs: newTabs });
+    }, [appSettings.tabs, updateAppSettings]);
+    
+    const reorderTabs = useCallback((reorderedTabs: AppTab[]) => {
+      updateAppSettings({ tabs: reorderedTabs });
+    }, [updateAppSettings]);
     
     const filteredTabs = useMemo(() => {
         let results = appSettings.tabs;

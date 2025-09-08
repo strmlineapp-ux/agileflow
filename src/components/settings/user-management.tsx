@@ -21,6 +21,8 @@ import { TransparentCard, TransparentCardContent } from '../ui/transparent-card'
 import { SettingSelect } from '../common/setting-select';
 import { useRouter } from 'next/navigation';
 import { getAuth } from 'firebase/auth';
+import { doc, updateDoc } from 'firebase/firestore';
+import { getDb } from '@/lib/firebase';
 
 const predefinedColors = [
     'hsl(0, 84%, 60%)', 'hsl(25, 95%, 53%)', 'hsl(45, 93%, 47%)', 'hsl(88, 62%, 53%)', 'hsl(142, 71%, 45%)', 'hsl(160, 100%, 37%)',
@@ -124,13 +126,20 @@ const CustomColorPicker = ({ colorValue, onUpdate, onClose }: { colorValue: stri
 };
 
 function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }: { user: User, isCurrentUser: boolean, canEditPreferences: boolean, className?: string }) {
-    const { updateUser, linkGoogleCalendar } = useUser();
+    const { linkGoogleCalendar } = useUser();
     const [isPrimaryColorPopoverOpen, setIsPrimaryColorPopoverOpen] = useState(false);
     const [isFontWeightPopoverOpen, setIsFontWeightPopoverOpen] = useState(false);
     const [isIconGradePopoverOpen, setIsIconGradePopoverOpen] = useState(false);
     const [isIconOpticalSizePopoverOpen, setIsIconOpticalSizePopoverOpen] = useState(false);
     const [isRadiusPopoverOpen, setIsRadiusPopoverOpen] = useState(false);
     
+    const db = getDb();
+
+    const updateUser = useCallback(async (userId: string, userData: Partial<User>) => {
+        const userDocRef = doc(db, 'users', userId);
+        await updateDoc(userDocRef, userData);
+      }, [db]);
+
     const handleFontWeightChange = (value: number[]) => {
         const index = value[0];
         const weight = fontWeightOptions[index]?.value;
@@ -456,7 +465,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
 }
 
 
-export function UserManagement({ allUsers, showSearch = false, isActive = false }: { allUsers: User[], showSearch?: boolean, isActive?: boolean }) {
+export function UserManagement({ allUsers, showSearch = false }: { allUsers: User[], showSearch?: boolean }) {
     const { realUser, viewAsUser } = useUser();
     const [searchTerm, setSearchTerm] = useState('');
     
@@ -479,7 +488,6 @@ export function UserManagement({ allUsers, showSearch = false, isActive = false 
                         searchTerm={searchTerm} 
                         setSearchTerm={setSearchTerm} 
                         placeholder="Search users..." 
-                        autoFocus={isActive}
                     />
               </div>
           )}
@@ -496,5 +504,3 @@ export function UserManagement({ allUsers, showSearch = false, isActive = false 
         </div>
     )
 }
-
-    

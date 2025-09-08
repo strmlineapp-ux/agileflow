@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -14,55 +15,85 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { CenteredTabList } from '@/components/common/centered-tab-list';
 import { PageTitle } from '@/components/common/page-title';
 import { useToast } from '@/hooks/use-toast';
+import { getDb } from '@/lib/firebase';
+import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, Timestamp } from 'firebase/firestore';
 // A new form component will be needed for adding/editing tasks. Let's assume its creation.
 // For now, we'll imagine a placeholder. A real implementation would require a TaskForm component.
 
-export function TasksContent({ initialTasks, page, tab }: { initialTasks: Task[], page?: AppPage, tab?: AppTab }) {
+export function TasksContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
   const [activeTab, setActiveTab] = useState<'my-tasks' | 'all'>('my-tasks');
-  const { viewAsUser, addTask, updateTask, deleteTask, updatePage } = useUser();
+  const { viewAsUser, updateUser } = useUser();
   const { toast } = useToast();
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
-  const [loading, setLoading] = useState(false);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   useEffect(() => {
-    setTasks(initialTasks);
-  }, [initialTasks]);
+    if (!viewAsUser?.workspaceId) return;
+    setLoading(true);
+    const db = getDb();
+    const q = query(collection(db, 'tasks'), where('workspaceId', '==', viewAsUser.workspaceId));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const tasksData = snapshot.docs.map(doc => ({
+            taskId: doc.id,
+            ...doc.data(),
+            dueDate: (doc.data().dueDate as Timestamp).toDate(),
+        } as Task));
+        setTasks(tasksData);
+        setLoading(false);
+    }, (error) => {
+        console.error("Error fetching tasks:", error);
+        toast({ variant: "destructive", title: "Error", description: "Could not load tasks." });
+        setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [viewAsUser?.workspaceId, toast]);
 
   const title = page?.displayTitle ?? tab?.name ?? 'Tasks';
   const canManagePage = viewAsUser.isAdmin;
   
   const handleTitleSave = (newTitle: string) => {
     if (page) {
-      updatePage(page.id, { displayTitle: newTitle });
+      updateUser(page.id, { displayTitle: newTitle });
     }
   };
 
   const handleTitleReset = (e: React.MouseEvent) => {
     if (page && (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey)) {
         e.preventDefault();
-        updatePage(page.id, { displayTitle: null });
+        updateUser(page.id, { displayTitle: null });
         toast({title: "Title Reset", description: "The page title has been reset to its default."});
     }
   };
 
   const handleTaskAdded = async (newTaskData: Omit<Task, 'taskId' | 'createdAt' | 'lastUpdated'>) => {
-    const updatedTasks = await addTask(tasks, newTaskData);
-    setTasks(updatedTasks);
+    if (!viewAsUser) return;
+    const db = getDb();
+    await addDoc(collection(db, 'tasks'), {
+        ...newTaskData,
+        workspaceId: viewAsUser.workspaceId,
+        createdBy: viewAsUser.userId,
+        createdAt: new Date(),
+        lastUpdated: new Date(),
+    });
     setIsFormOpen(false);
   };
   
   const handleTaskUpdated = async (taskId: string, updatedData: Partial<Task>) => {
-    const updatedTasks = await updateTask(tasks, taskId, updatedData);
-    setTasks(updatedTasks);
+    const db = getDb();
+    await updateDoc(doc(db, 'tasks', taskId), {
+        ...updatedData,
+        lastUpdated: new Date(),
+    });
     setEditingTask(null);
     setIsFormOpen(false);
   };
   
   const handleTaskDeleted = async (taskId: string) => {
-    const updatedTasks = await deleteTask(tasks, taskId);
-    setTasks(updatedTasks);
+    const db = getDb();
+    await deleteDoc(doc(db, 'tasks', taskId));
   };
   
   const openNewTaskForm = () => {

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React from 'react';
@@ -19,15 +20,13 @@ const formatDistanceToNow = (date: Date): string => {
     if (interval > 1) return Math.floor(interval) + " months ago";
     interval = seconds / 86400;
     if (interval > 1) return Math.floor(interval) + " days ago";
-    interval = seconds / 3600;
-    if (interval > 1) return Math.floor(interval) + " hours ago";
     interval = seconds / 60;
     if (interval > 1) return Math.floor(interval) + " minutes ago";
     return Math.floor(seconds) + " seconds ago";
 }
 
-export function NotificationList({ initialNotifications }: { initialNotifications: Notification[] }) {
-  const { realUser, handleApproveAccessRequest } = useUser();
+export function NotificationList({ initialNotifications, onApprove }: { initialNotifications: Notification[], onApprove: (id: string, approved: boolean) => void }) {
+  const { realUser } = useUser();
   const [notifications, setNotifications] = React.useState(initialNotifications);
   const isAdmin = realUser?.isAdmin;
   
@@ -69,8 +68,8 @@ export function NotificationList({ initialNotifications }: { initialNotification
                 </p>
                 {notification.type === 'access_request' && notification.status === 'pending' && isAdmin && (
                   <div className="flex gap-2 mt-2">
-                    <Button size="sm" onClick={() => handleApproveAccessRequest(notification.id, true)}>Approve</Button>
-                    <Button size="sm" variant="default" className="text-destructive" onClick={() => handleApproveAccessRequest(notification.id, false)}>Reject</Button>
+                    <Button size="sm" onClick={() => onApprove(notification.id, true)}>Approve</Button>
+                    <Button size="sm" variant="default" className="text-destructive" onClick={() => onApprove(notification.id, false)}>Reject</Button>
                   </div>
                 )}
                  {notification.type === 'access_request' && notification.status !== 'pending' && (

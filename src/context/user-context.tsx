@@ -1,118 +1,36 @@
 
+
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
-import { type User, type Notification, type UserStatusAssignment, type SharedCalendar, type Event, type BookableLocation, type Team, type AppSettings, type Badge, type AppTab, type BadgeCollection, type BadgeOwner, type Task, type Holiday, type Project, type AppPage, type PreApprovedEmail } from '@/types';
-import { useToast } from '@/hooks/use-toast';
+import { type User } from '@/types';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { useAuth } from '@/hooks/useAuth';
-import { useData } from '@/hooks/useData';
-import { useTheme } from 'next-themes';
-import { arrayMove } from '@dnd-kit/sortable';
-import { googleSymbolNames } from '@/lib/google-symbols';
-import { predefinedColors } from '@/lib/colors';
-import { adjustHslColor } from '@/lib/utils';
-import { collection, doc, writeBatch, getFirestore, getDocs, query, where, addDoc, updateDoc, setDoc, getDoc, deleteDoc, Timestamp } from 'firebase/firestore';
-import { getAuthInstance, getDb } from '@/lib/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
+import { getDb } from '@/lib/firebase';
+import { GoogleSymbol } from '@/components/icons/google-symbol';
 
 // --- Context Definition ---
 interface UserContextType {
   // Session
-  realUser: User | null;
-  viewAsUser: User & { isDragModifierPressed?: boolean } | null;
+  realUser: User;
+  viewAsUser: User & { isDragModifierPressed?: boolean };
+  updateUser: (userId: string, data: Partial<User>) => Promise<void>;
   setViewAsUser: (userId: string) => void;
   googleLogin: () => Promise<boolean>;
   logout: (router: AppRouterInstance) => Promise<void>;
   loading: boolean;
   isFirebaseReady: boolean;
-
-  // Data & Actions
-  holidays: Holiday[];
-  users: User[];
-  teams: Team[];
-  projects: Project[];
-  appSettings: AppSettings;
-  calendars: SharedCalendar[];
-  locations: BookableLocation[];
-  allBookableLocations: BookableLocation[];
-  notifications: Notification[];
-  setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
-  preApprovedEmails: PreApprovedEmail[];
-  addPreApprovedEmail: (email: string) => Promise<void>;
-  removePreApprovedEmail: (email: string) => Promise<void>;
-  userStatusAssignments: Record<string, UserStatusAssignment[]>;
-  setUserStatusAssignments: React.Dispatch<React.SetStateAction<Record<string, UserStatusAssignment[]>>>;
-  handleApproveAccessRequest: (notificationId: string, approved: boolean) => Promise<void>;
-
-  // CRUD functions
-  seedDatabase: () => Promise<void>;
-  updateUser: (userId: string, userData: Partial<User>) => Promise<void>;
-  deleteUser: (userId: string) => Promise<void>;
-  reorderUsers: (reorderedUsers: User[]) => Promise<void>;
-  addTeam: (teamData: Partial<Omit<Team, 'id'>>) => Promise<Team | null>;
-  updateTeam: (teamId: string, teamData: Partial<Team>) => Promise<void>;
-  deleteTeam: (teamId: string, router: AppRouterInstance, pathname: string) => Promise<void>;
-  reorderTeams: (teams: Team[]) => Promise<void>;
-  addProject: (projectData: Partial<Project>) => Promise<void>;
-  updateProject: (projectId: string, projectData: Partial<Project>) => Promise<void>;
-  deleteProject: (projectId: string) => Promise<void>;
-  addCalendar: (newCalendar: Partial<Omit<SharedCalendar, 'id'>>) => Promise<SharedCalendar | null>;
-  updateCalendar: (calendarId: string, calendarData: Partial<SharedCalendar>) => Promise<void>;
-  deleteCalendar: (calendarId: string) => Promise<void>;
-  reorderCalendars: (calendars: SharedCalendar[]) => Promise<void>;
-
-  fetchEvents: (start: Date, end: Date) => Promise<Event[]>;
-  addEvent: (currentEvents: Event[], newEventData: Omit<Event, 'eventId'>) => Promise<Event[]>;
-  updateEvent: (currentEvents: Event[], eventId: string, eventData: Partial<Omit<Event, 'eventId'>>) => Promise<Event[]>;
-  deleteEvent: (currentEvents: Event[], eventId: string) => Promise<Event[]>;
-  
-  fetchTasks: () => Promise<Task[]>;
-  addTask: (currentTasks: Task[], newTaskData: Omit<Task, 'taskId' | 'createdAt' | 'lastUpdated'>) => Promise<Task[]>;
-  updateTask: (currentTasks: Task[], taskId: string, taskData: Partial<Task>) => Promise<Task[]>;
-  deleteTask: (currentTasks: Task[], taskId: string) => Promise<Task[]>;
-
-  addLocation: (locationName: string) => Promise<void>;
-  deleteLocation: (locationId: string) => Promise<void>;
-
-  updateAppSettings: (settings: Partial<AppSettings>) => Promise<void>;
-  addPage: (pageData: Partial<AppPage>) => Promise<void>;
-  updatePage: (pageId: string, pageData: Partial<AppPage>) => Promise<void>;
-  deletePage: (pageId: string) => Promise<void>;
-  reorderPages: (reorderedPages: AppPage[]) => Promise<void>;
-  updateAppTab: (tabId: string, tabData: Partial<AppTab>) => Promise<void>;
-  reorderTabs: (reorderedTabs: AppTab[]) => Promise<void>;
-
-  // Badge and Collection Management
-  allBadges: Badge[];
-  allBadgeCollections: BadgeCollection[];
-  setAllBadgeCollections: React.Dispatch<React.SetStateAction<BadgeCollection[]>>;
-  addBadgeCollection: (owner: User, sourceCollection?: BadgeCollection, contextTeam?: Team) => void;
-  updateBadgeCollection: (collectionId: string, data: Partial<BadgeCollection>) => void;
-  deleteBadgeCollection: (collectionId: string) => void;
-  reorderBadgeCollections: (collections: BadgeCollection[]) => void;
-  addBadge: (collectionId: string, sourceBadge?: Badge, unlinkSource?: boolean) => void;
-  updateBadge: (badgeId: string, badgeData: Partial<Badge>) => Promise<void>;
-  deleteBadge: (badgeId: string, collectionId: string) => void;
-  reorderBadges: (collectionId: string, badgeIds: string[]) => void;
-  handleBadgeAssignment: (badge: Badge, memberId: string) => void;
-  handleBadgeUnassignment: (badge: Badge, memberId: string) => void;
-
-  // Utilities
-  searchSharedTeams: (searchTerm: string) => Promise<Team[]>;
-  predefinedColors: string[];
 }
 
 const UserContext = createContext<UserContextType | null>(null);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  const { realUser, loading: authLoading, isFirebaseReady, googleLogin, logout, setRealUser } = useAuth();
-  const dataHook = useData(realUser, authLoading, setRealUser);
-  
+  const { realUser, loading: authLoading, isFirebaseReady, googleLogin, logout, linkGoogleCalendar, setRealUser } = useAuth();
   const [viewAsUserId, setViewAsUserId] = useState<string | null>(null);
   const [isDragModifierPressed, setIsDragModifierPressed] = useState(false);
-  const { toast } = useToast();
-
-  const loading = authLoading || dataHook.loading;
+  
+  const loading = authLoading;
 
   useEffect(() => {
     if (realUser && !viewAsUserId) {
@@ -121,9 +39,24 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, [realUser, viewAsUserId]);
 
   const viewAsUser = useMemo(() => {
-    if (!viewAsUserId) return realUser;
-    return dataHook.users.find(u => u.userId === viewAsUserId) || realUser;
-  }, [dataHook.users, viewAsUserId, realUser]);
+    // This is simplified. In a real scenario, you'd fetch the full user object
+    // from a list of all users if you had one.
+    if (viewAsUserId === realUser?.userId) return realUser;
+    // Placeholder for "view as" functionality.
+    // In this stripped-down context, it just returns the real user.
+    return realUser;
+  }, [viewAsUserId, realUser]);
+  
+  const updateUser = useCallback(async (userId: string, userData: Partial<User>) => {
+    const db = getDb();
+    const userDocRef = doc(db, 'users', userId);
+    await updateDoc(userDocRef, userData);
+    
+    // If updating the real user, update the context state as well
+    if (userId === realUser?.userId) {
+      setRealUser(prev => prev ? { ...prev, ...userData } : null);
+    }
+  }, [realUser, setRealUser]);
 
   useEffect(() => {
     if (!viewAsUser) return;
@@ -148,10 +81,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         window.removeEventListener('keydown', handleKeyDown);
         window.removeEventListener('keyup', handleKeyUp);
     };
-}, [viewAsUser]);
+  }, [viewAsUser]);
   
   
   const contextValue = useMemo(() => {
+    if (loading || !realUser || !viewAsUser) {
+        return null; // Return null or a loading state representation
+    }
+
     const setViewAsUserWithReset = (userId: string) => {
       if (userId === realUser?.userId) {
         setViewAsUserId(null); // Reset to real user
@@ -160,21 +97,30 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    const enrichedViewAsUser = viewAsUser ? { ...viewAsUser, isDragModifierPressed } : null;
+    const enrichedViewAsUser = { ...viewAsUser, isDragModifierPressed };
 
     return {
       realUser,
       viewAsUser: enrichedViewAsUser,
+      updateUser,
       setViewAsUser: setViewAsUserWithReset,
       googleLogin,
       logout,
       loading,
       isFirebaseReady,
-      ...dataHook,
     };
   }, [
-    realUser, viewAsUser, googleLogin, logout, loading, isFirebaseReady, dataHook, isDragModifierPressed
+    realUser, viewAsUser, googleLogin, logout, loading, isFirebaseReady, isDragModifierPressed, updateUser
   ]);
+  
+  if (loading || !contextValue) {
+    // Render a loading state or nothing, but don't provide an incomplete context
+    return (
+        <div className="flex h-screen w-full items-center justify-center bg-background">
+            <GoogleSymbol name="progress_activity" className="h-16 w-16 animate-spin text-primary" />
+        </div>
+    )
+  }
 
   return (
     <UserContext.Provider value={contextValue}>

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider, type User as FirebaseUser, type OAuthCredential } from 'firebase/auth';
@@ -10,18 +11,15 @@ import { useToast } from './use-toast';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { systemPages, coreTabs } from '@/lib/core-data';
 import { saveCredentials } from '@/lib/google-auth-service';
-
-
-const COMMON_EMAIL_DOMAINS = new Set([
-    'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com', 'icloud.com', 'msn.com'
-]);
+import { useRouter } from 'next/navigation';
 
 export function useAuth() {
   const [realUser, setRealUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFirebaseReady, setIsFirebaseReady] = useState(false);
   const { toast } = useToast();
-
+  const router = useRouter();
+  
   useEffect(() => {
     try {
       getAuthInstance();
@@ -35,20 +33,51 @@ export function useAuth() {
     if (!isFirebaseReady) return;
 
     const auth = getAuthInstance();
-    
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
         if (firebaseUser) {
-            // The useData hook will now handle creating/updating the user doc
-            // and setting the realUser state. We just need to wait for it.
-            setLoading(true);
+            const db = getDb();
+            const userRef = doc(db, 'users', firebaseUser.uid);
+            let userDoc = await getDoc(userRef);
+            const workspaceId = getCurrentWorkspaceId();
+
+            if (userDoc.exists()) {
+              setRealUser({ userId: userDoc.id, ...userDoc.data() } as User);
+            } else {
+              const usersInWorkspaceQuery = query(collection(db, 'users'), where('workspaceId', '==', workspaceId), limit(1));
+              const isFirstUser = (await getDocs(usersInWorkspaceQuery)).empty;
+
+              const preApprovedQuery = query(collection(db, 'pre-approved-emails'), where('email', '==', firebaseUser.email), where('workspaceId', '==', workspaceId));
+              const isPreApproved = !(await getDocs(preApprovedQuery)).empty;
+
+              const newUser: User = {
+                userId: firebaseUser.uid,
+                email: firebaseUser.email || '',
+                displayName: firebaseUser.displayName || 'New User',
+                avatarUrl: firebaseUser.photoURL || '',
+                isAdmin: isFirstUser,
+                accountType: (isFirstUser || isPreApproved) ? 'Full' : 'Viewer',
+                googleCalendarLinked: false, // Will be updated after OAuth flow
+                createdAt: new Date(),
+                workspaceId,
+              };
+              
+              await setDoc(userRef, newUser);
+              setRealUser(newUser);
+
+              if (isFirstUser) {
+                const batch = writeBatch(db);
+                const appSettingsRef = doc(db, 'app-settings', workspaceId);
+                batch.set(appSettingsRef, { pages: systemPages, tabs: coreTabs, workspaceId });
+                await batch.commit();
+              }
+            }
         } else {
           setRealUser(null);
-          setLoading(false);
         }
+        setLoading(false);
     });
-
     return () => unsubscribe();
-  }, [isFirebaseReady]);
+  }, [isFirebaseReady, toast]);
 
   const googleLogin = useCallback(async () => {
     if (!isFirebaseReady) {
@@ -58,15 +87,13 @@ export function useAuth() {
     const authInstance = getAuthInstance();
     const provider = new GoogleAuthProvider();
     provider.addScope('https://www.googleapis.com/auth/calendar.readonly');
-    provider.setCustomParameters({ prompt: 'consent' });
+    provider.setCustomParameters({ prompt: 'select_account' });
 
     try {
         const result = await signInWithPopup(authInstance, provider);
         const credential = GoogleAuthProvider.credentialFromResult(result);
         if (credential) {
-            // The onAuthStateChanged listener will now pick up the new user
-            // and the useData hook will handle the rest.
-            await saveCredentials(result.user.uid, credential);
+            await linkGoogleCalendar(result.user, credential);
         }
         return true;
     } catch (error: any) {
@@ -78,6 +105,18 @@ export function useAuth() {
     }
   }, [isFirebaseReady, toast]);
 
+  const linkGoogleCalendar = useCallback(async (firebaseUser: FirebaseUser, credential?: OAuthCredential | null) => {
+    if (!firebaseUser) return;
+    const db = getDb();
+    const userRef = doc(db, 'users', firebaseUser.uid);
+    const finalCredential = credential || GoogleAuthProvider.credentialFromError({ code: 'auth/requires-recent-login' });
+    if(finalCredential) {
+        await saveCredentials(firebaseUser.uid, finalCredential);
+        await updateDoc(userRef, { googleCalendarLinked: true });
+        setRealUser(prev => prev ? { ...prev, googleCalendarLinked: true } : null);
+        toast({ title: 'Success', description: 'Google Calendar connected.' });
+    }
+  }, [toast]);
 
   const logout = useCallback(async (router: AppRouterInstance) => {
     if (!isFirebaseReady) return;
@@ -92,6 +131,5 @@ export function useAuth() {
     }
   }, [isFirebaseReady, toast]);
 
-  // Pass setRealUser out so useData can update it
-  return { realUser, loading, isFirebaseReady, googleLogin, logout, setRealUser };
+  return { realUser, loading, isFirebaseReady, googleLogin, logout, setRealUser, linkGoogleCalendar };
 }
