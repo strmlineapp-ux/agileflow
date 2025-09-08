@@ -134,6 +134,34 @@ export function useDataQueries() {
     };
     // #endregion
 
+    // #region Badges & Collections
+    const useFetchAllBadges = (workspaceId?: string) => {
+        return useQuery<Badge[]>({
+            queryKey: ['badges', workspaceId],
+            queryFn: async () => {
+                const db = getDb();
+                const q = query(collection(db, 'badges'), where('workspaceId', '==', workspaceId));
+                const snapshot = await getDocs(q);
+                return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Badge));
+            },
+            enabled: !!workspaceId,
+        });
+    };
+
+    const useFetchAllBadgeCollections = (workspaceId?: string) => {
+        return useQuery<BadgeCollection[]>({
+            queryKey: ['badgeCollections', workspaceId],
+            queryFn: async () => {
+                const db = getDb();
+                const q = query(collection(db, 'badgeCollections'), where('workspaceId', '==', workspaceId));
+                const snapshot = await getDocs(q);
+                return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BadgeCollection));
+            },
+            enabled: !!workspaceId,
+        });
+    };
+    // #endregion
+
     // #region Projects
     const useFetchProjects = (workspaceId?: string) => {
       return useQuery<Project[]>({
@@ -364,6 +392,8 @@ export function useDataQueries() {
         useRemovePreApprovedEmail,
         useFetchAppSettings,
         useUpdateAppSettings,
+        useFetchAllBadges,
+        useFetchAllBadgeCollections,
         useFetchProjects,
         useFetchProject,
         useAddProject,
@@ -382,3 +412,5 @@ export function useDataQueries() {
         useDeleteEvent,
     };
 }
+
+    
