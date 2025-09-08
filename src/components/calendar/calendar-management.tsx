@@ -78,13 +78,12 @@ function CalendarCard({
             googleCalendarId: calendarIdToLink,
         });
 
-        // The flow itself now handles updating Firestore, so we just update local state
         onUpdate(calendar.id, { googleCalendarId: calendarIdToLink });
         
         toast({ title: 'Calendar Linked!', description: `Successfully linked and started watching ${calendar.name}. It expires on ${new Date(parseInt(watchResult.expiration)).toLocaleDateString()}` });
-    } catch (error) {
+    } catch (error: any) {
         console.error('Failed to link and watch calendar:', error);
-        toast({ variant: 'destructive', title: 'Error', description: 'Could not set up real-time sync. Please check the calendar ID and permissions.' });
+        toast({ variant: 'destructive', title: 'Error', description: error.message || 'Could not set up real-time sync.' });
     } finally {
         setGoogleCalendarIdInput('');
     }
@@ -222,7 +221,8 @@ export function CalendarManagement({ tab, page, isActive, isSharedPanelOpen, set
   };
 
   const handleAddCalendar = async (sourceCalendar?: SharedCalendar) => {
-    const newCalendar = await addCalendar(sourceCalendar || {});
+    if(!viewAsUser) return;
+    const newCalendar = await addCalendar(sourceCalendar || {}, viewAsUser);
     if (newCalendar) {
         setAllCalendars(prev => [...prev, newCalendar]);
         toast({ title: sourceCalendar ? 'Calendar Duplicated' : 'New Calendar Added' });
@@ -234,6 +234,7 @@ export function CalendarManagement({ tab, page, isActive, isSharedPanelOpen, set
   };
   
   const handleDelete = (calendar: SharedCalendar) => {
+    if(!viewAsUser) return;
     const isOwner = calendar.owner?.id === viewAsUser.userId;
     if (isOwner) {
         deleteCalendar(calendar.id);
@@ -246,20 +247,23 @@ export function CalendarManagement({ tab, page, isActive, isSharedPanelOpen, set
   };
 
   const handleLinkCalendar = (calendarId: string) => {
+    if(!viewAsUser) return;
     const updatedLinkedIds = [...(viewAsUser.linkedCalendarIds || []), calendarId];
     updateUser(viewAsUser.userId, { linkedCalendarIds: Array.from(new Set(updatedLinkedIds)) });
     toast({ title: 'Calendar Linked' });
   }
   
   const displayedCalendars = useMemo(() => {
+    if(!viewAsUser) return [];
     return allCalendars
       .filter(c => (c.owner && c.owner.id === viewAsUser.userId) || (viewAsUser.linkedCalendarIds || []).includes(c.id));
   }, [allCalendars, viewAsUser]);
 
   const sharedCalendars = useMemo(() => {
+    if(!viewAsUser) return [];
     const displayedIds = new Set(displayedCalendars.map(c => c.id));
     return allCalendars.filter(c => c.isShared && c.owner?.id !== viewAsUser.userId && !displayedIds.has(c.id));
-  }, [allCalendars, displayedCalendars, viewAsUser.userId]);
+  }, [allCalendars, displayedCalendars, viewAsUser]);
 
   const renderCalendarCard = useCallback((calendar: SharedCalendar) => {
       const expandedCardIds = viewAsUser?.expandedCardState?.[contextKey] || [];
@@ -313,5 +317,3 @@ export function CalendarManagement({ tab, page, isActive, isSharedPanelOpen, set
     />
   );
 }
-
-    

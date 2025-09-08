@@ -1,16 +1,16 @@
 
-'use client';
-
-import { useMemo, useState, useEffect, useCallback } from 'react';
-import { useParams } from 'next/navigation';
-import { useUser } from '@/context/user-context';
+import { useMemo } from 'react';
+import { notFound } from 'next/navigation';
+import { useUser } from '@/context/user-context'; // Although this is a server component, we can get user from a server context
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { hasAccess } from '@/lib/permissions';
 import { type AppTab, type Team, type AppPage, type BadgeCollection, type SharedCalendar, type Badge, type User } from '@/types';
 import { DndContext, DragOverlay, KeyboardSensor, PointerSensor, useSensor, useSensors, pointerWithin, type DragStartEvent, type DragEndEvent, type Active, type Over } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
-import { useToast } from '@/hooks/use-toast';
+import { getDb } from '@/lib/firebase';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+
 
 // Import all possible tab content components
 import { AdminsManagement, PagesManagement, TabsManagement } from '@/components/admin/page';
@@ -28,14 +28,9 @@ import { SettingsContent } from '@/components/dashboard/tabs/settings-tab';
 import { CalendarPageContent } from '@/components/dashboard/tabs/calendar-tab';
 import { ProjectsContent } from '@/components/dashboard/tabs/projects-tab';
 import { EventsContent } from '@/components/dashboard/tabs/events-tab';
-import { Tabs, TabsTrigger, TabsContent, SortableTabsList } from '@/components/ui/tabs';
-import { CenteredTabList } from '@/components/common/centered-tab-list';
-import { PageTitle } from '@/components/common/page-title';
-import { ManagementPageLayout } from '@/components/common/management-page-layout';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { DuplicateZone } from '@/components/common/duplicate-zone';
-import { SharedItemsPanel } from '@/components/common/shared-items-panel';
-import { cn } from '@/lib/utils';
+import { DynamicPageClient } from './page-client';
+import { auth } from '@/lib/firebase-admin';
+
 
 const componentMap = {
   admins: AdminsManagement,
@@ -58,339 +53,56 @@ const componentMap = {
   // Add other mappings as needed
 };
 
-type DraggableItem = Team | SharedCalendar | BadgeCollection | AppPage | Badge | User;
+async function getPageData(params: { page: string[] }) {
+    const db = getDb();
+    const { page: pagePath } = params;
+    const path = Array.isArray(pagePath) ? `/dashboard/${pagePath.join('/')}` : `/dashboard/${pagePath}`;
 
-const managementComponentKeys = new Set(['calendars', 'teams', 'badges', 'pages']);
+    // This part is tricky without a user session.
+    // For now, let's assume a simplified workspace logic for fetching settings.
+    // In a real multi-tenant app, you'd get the workspaceId from the user's session or subdomain.
+    const workspaceId = 'default'; // Hardcoded for this example
 
-export default function DynamicPage() {
-  const params = useParams();
-  const { viewAsUser, loading, appSettings, teams, reorderPages, addPage, updatePage, deletePage, allBadgeCollections, addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, reorderBadgeCollections, allBadges, addBadge, updateBadge, deleteBadge, reorderBadges, users, updateUser, reorderTeams, addTeam, updateTeam, deleteTeam, calendars, reorderCalendars, addCalendar, updateCalendar, deleteCalendar } = useUser();
-  const { page: pagePath } = params;
-  const { toast } = useToast();
-  
-  const [activeTabValue, setActiveTabValue] = useState<string | undefined>();
-  const [activeDragItem, setActiveDragItem] = useState<any>(null);
-  const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
-
-  const path = Array.isArray(pagePath) ? `/dashboard/${pagePath.join('/')}` : `/dashboard/${pagePath}`;
-
-  const { page, teamContext } = useMemo(() => {
-    if (loading || !appSettings.pages.length) {
-      return { page: null, teamContext: null };
+    const appSettingsDoc = await getDoc(doc(db, 'app-settings', workspaceId));
+    if (!appSettingsDoc.exists()) {
+        return { page: null, teamContext: null, appSettings: { pages: [], tabs: [] } };
     }
+    const appSettings = appSettingsDoc.data() as AppSettings;
 
-    const foundPage = appSettings.pages.find(p => p.isDynamic ? path.startsWith(p.path) : p.path === path);
-    let foundTeam: Team | null = null;
+    const foundPage = appSettings.pages.find(p => p.isDynamic ? path.startsWith(p.path.replace(/\[.*?\]/, '')) : p.path === path);
+
+    let teamContext: Team | null = null;
     if (foundPage?.isDynamic) {
-        const pathSegments = path.split('/');
-        const teamId = pathSegments[pathSegments.length - 1];
-        foundTeam = teams.find(t => t.id === teamId) || null;
-    }
-    
-    if (!foundPage || !hasAccess(viewAsUser!, foundPage)) {
-        return { page: null, teamContext: null };
-    }
-
-    return { page: foundPage, teamContext: foundTeam };
-  }, [path, appSettings.pages, viewAsUser, loading, teams]);
-
-  useEffect(() => {
-    if (page && page.associatedTabs.length > 0) {
-      const firstTabId = page.associatedTabs[0];
-      const firstTab = appSettings.tabs.find(t => t.id === firstTabId);
-      if(firstTab) {
-        setActiveTabValue(firstTab.id);
-      }
-    }
-  }, [page, appSettings.tabs]);
-  
-  const onDragStart = (event: DragStartEvent) => {
-    const itemData = event.active.data.current;
-    setActiveDragItem(itemData);
-  };
-
-  const onDragEnd = (event: DragEndEvent) => {
-    setActiveDragItem(null);
-    const { active, over } = event;
-    if (!over) return;
-
-    const activeItemData = active.data.current;
-    const activeType = activeItemData?.type;
-
-    if (activeType === 'badge') {
-        const badge = activeItemData?.badge as Badge;
-        const sourceCollectionId = activeItemData?.collectionId;
-        const overIsCollection = over.data.current?.type === 'collection';
-        const overIsDuplicateZone = over.data.current?.type === 'duplicate-badge-zone';
-
-        if (overIsCollection) {
-            const targetCollectionId = over.data.current?.collection?.id as string;
-            const targetCollection = allBadgeCollections.find(c => c.id === targetCollectionId);
-            if (targetCollection && targetCollectionId !== sourceCollectionId) {
-                const targetIsOwner = targetCollection.owner.id === viewAsUser?.userId;
-                if (targetIsOwner) {
-                    const updatedBadgeIds = [...targetCollection.badgeIds, badge.id];
-                    updateBadgeCollection(targetCollectionId, { badgeIds: updatedBadgeIds });
-                    toast({ title: 'Badge Linked', description: `"${badge.name}" linked to "${targetCollection.name}".` });
-                } else {
-                    toast({ variant: 'destructive', title: 'Permission Denied', description: 'You can only add badges to collections you own.' });
-                }
-            }
-        } else if (overIsDuplicateZone) {
-            const targetCollectionIdForDupe = over.data.current.collectionId;
-            addBadge(targetCollectionIdForDupe, badge);
-        }
-        return;
-    }
-    
-    // Handle user being dropped on a team card
-    if (activeType === 'user' && over.data.current?.type === 'team-card-droppable') {
-        const user = activeItemData.user as User;
-        const targetTeam = over.data.current.team as Team;
-
-        if (user && targetTeam && !targetTeam.members.includes(user.userId)) {
-            const updatedMembers = [...targetTeam.members, user.userId];
-            updateTeam(targetTeam.id, { members: updatedMembers });
-            toast({ title: 'User Added', description: `${user.displayName} added to ${targetTeam.name}.` });
-        }
-        return;
-    }
-    
-    const allItems = [...appSettings.pages, ...teams, ...allBadgeCollections, ...calendars];
-    const activeItem = allItems.find(i => i.id === active.id) as DraggableItem | undefined;
-        
-    if (!activeItem) return;
-        
-    const entityType = 
-        'path' in activeItem ? 'page' : 
-        'members' in activeItem ? 'team' :
-        'badgeIds' in activeItem ? 'collection' :
-        'googleCalendarId' in activeItem ? 'calendar' :
-        null;
-        
-    if (!entityType) return;
-    
-    // Handle duplication
-    if (over.id === `duplicate-${entityType}-zone`) {
-        if (entityType === 'page') addPage(activeItem);
-        if (entityType === 'team') addTeam(activeItem);
-        if (entityType === 'collection' && viewAsUser) addBadgeCollection(viewAsUser, activeItem);
-        if (entityType === 'calendar') addCalendar(activeItem);
-        toast({ title: `${entityType.charAt(0).toUpperCase() + entityType.slice(1)} Duplicated` });
-        return;
-    }
-    
-    // Handle sharing/unlinking
-    if (over.id === `shared-${entityType}-panel`) {
-      if (activeItem.owner?.id === viewAsUser?.userId) {
-        const isNowShared = !activeItem.isShared;
-        if (entityType === 'page') updatePage(activeItem.id, { isShared: isNowShared });
-        if (entityType === 'team') updateTeam(activeItem.id, { isShared: isNowShared });
-        if (entityType === 'collection') updateBadgeCollection(activeItem.id, { isShared: isNowShared });
-        if (entityType === 'calendar') updateCalendar(activeItem.id, { isShared: isNowShared });
-        toast({ title: isNowShared ? 'Item Shared' : 'Item Unshared' });
-      } else {
-        // Unlink from personal board
-        if (entityType === 'page') updateUser(viewAsUser!.userId, { linkedPageIds: (viewAsUser!.linkedPageIds || []).filter(id => id !== activeItem.id) });
-        if (entityType === 'team') updateUser(viewAsUser!.userId, { linkedTeamIds: (viewAsUser!.linkedTeamIds || []).filter(id => id !== activeItem.id) });
-        if (entityType === 'collection') updateUser(viewAsUser!.userId, { linkedBadgeCollectionIds: (viewAsUser!.linkedBadgeCollectionIds || []).filter(id => id !== activeItem.id) });
-        if (entityType === 'calendar') updateUser(viewAsUser!.userId, { linkedCalendarIds: (viewAsUser!.linkedCalendarIds || []).filter(id => id !== activeItem.id) });
-        toast({ title: 'Item Unlinked' });
-      }
-      return;
-    }
-
-    if (activeItemData.isSharedPreview) {
-        if (over.data.current?.type === `${entityType}-card` || over.id === 'collections-list' || over.id === 'pages-list' || over.id === 'teams-list' || over.id === 'calendars-list' ) {
-            if (entityType === 'page') updateUser(viewAsUser!.userId, { linkedPageIds: [...(viewAsUser!.linkedPageIds || []), activeItem.id] });
-            if (entityType === 'team') updateUser(viewAsUser!.userId, { linkedTeamIds: [...(viewAsUser!.linkedTeamIds || []), activeItem.id] });
-            if (entityType === 'collection') updateUser(viewAsUser!.userId, { linkedBadgeCollectionIds: [...(viewAsUser!.linkedBadgeCollectionIds || []), activeItem.id] });
-            if (entityType === 'calendar') updateUser(viewAsUser!.userId, { linkedCalendarIds: [...(viewAsUser!.linkedCalendarIds || []), activeItem.id] });
-            toast({ title: 'Item Linked' });
-        }
-        return;
-    }
-    
-    // Handle reordering
-    if (over.id && active.id !== over.id && !activeItemData.isSharedPreview) {
-        const itemSet = 
-            entityType === 'page' ? appSettings.pages :
-            entityType === 'team' ? teams :
-            entityType === 'collection' ? allBadgeCollections :
-            calendars;
-            
-        const reorderFn = 
-            entityType === 'page' ? reorderPages :
-            entityType === 'team' ? reorderTeams :
-            entityType === 'collection' ? reorderBadgeCollections :
-            reorderCalendars;
-
-        const oldIndex = itemSet.findIndex(item => item.id === active.id);
-        const newIndex = itemSet.findIndex(item => item.id === over.id);
-
-        if (oldIndex !== -1 && newIndex !== -1) {
-            reorderFn(arrayMove(itemSet, oldIndex, newIndex));
+        const teamId = pagePath[pagePath.length - 1];
+        const teamDoc = await getDoc(doc(db, 'teams', teamId));
+        if (teamDoc.exists()) {
+            teamContext = { id: teamDoc.id, ...teamDoc.data() } as Team;
         }
     }
-  };
 
-  const renderDragOverlay = () => {
-    if (!activeDragItem) return null;
-    
-    const itemType = activeDragItem.type;
-    let entity: any = null;
-
-    if (itemType === 'badge') entity = activeDragItem.badge;
-    else if (itemType === 'user') entity = activeDragItem.user;
-    else if (itemType === 'page-card') entity = activeDragItem.page;
-    else if (itemType === 'team-card') entity = activeDragItem.team;
-    else if (itemType === 'collection-card') entity = activeDragItem.collection;
-    else if (itemType === 'calendar-card') entity = activeDragItem.calendar;
-    
-    if (!entity) return null;
-
-    if (itemType === 'badge') {
-        return (
-            <div className="h-9 w-9 rounded-full border-2 flex items-center justify-center bg-card shadow-lg" style={{ borderColor: entity.color }}>
-                <GoogleSymbol name={entity.icon} style={{ fontSize: '28px', color: entity.color }} weight={100} />
-            </div>
-        );
-    }
-    
-    if (itemType === 'user') {
-        return (
-            <Avatar className="h-12 w-12">
-                <AvatarImage src={entity.avatarUrl} alt={entity.displayName} data-ai-hint="user avatar" />
-                <AvatarFallback>{entity.displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-            </Avatar>
-        )
-    }
-
-    if (entity.icon) {
-        return <GoogleSymbol name={entity.icon} style={{color: entity.color, fontSize: '48px'}} />;
-    }
-
-    return null;
-  };
-  
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  if (loading || !viewAsUser) {
-    return (
-      <div className="flex h-full w-full items-center justify-center">
-        <GoogleSymbol name="progress_activity" className="animate-spin text-4xl text-primary" />
-      </div>
-    );
-  }
-  
-  if (!page) {
-    return (
-      <div className="flex h-full w-full items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl mb-2">Page Not Found</h2>
-          <p className="text-muted-foreground">The page you are looking for does not exist or you do not have permission to view it.</p>
-        </div>
-      </div>
-    );
-  }
-
-  const seamlessPageIds = ['page-overview', 'page-admin-management', 'page-calendar', 'page-tasks', 'page-notifications', 'page-settings'];
-  
-  const renderTabContent = (tab: AppTab) => {
-    const Component = componentMap[tab.componentKey as keyof typeof componentMap];
-    if (!Component) return null;
-    
-    const props = {
-      tab: tab,
-      page: page,
-      team: teamContext,
-      isSingleTabPage: (page.associatedTabs || []).length === 1,
-      isActive: activeTabValue === tab.id,
-      isSharedPanelOpen,
-      setIsSharedPanelOpen,
-      isDragging: !!activeDragItem,
-    };
-    
-    return <Component {...props} />;
-  };
-
-  const renderContent = () => {
-    const pageTabs = page.associatedTabs
-        .map(tabId => appSettings.tabs.find(t => t.id === tabId))
-        .filter((t): t is AppTab => !!t);
-
-    if (pageTabs.length === 0) {
-       return (
-          <div className="text-center text-muted-foreground">
-            <p>This page has no content tabs configured.</p>
-          </div>
-        );
-    }
-    
-    const isManagementPage = managementComponentKeys.has(pageTabs.find(t => t.id === activeTabValue)?.componentKey || '');
-    
-    const handleReorderPageTabs = (reorderedPageTabs: AppTab[]) => {
-      const newTabIds = reorderedPageTabs.map(tab => tab.id);
-      updatePage(page.id, { associatedTabs: newTabIds });
-    };
-
-    return (
-       <Tabs value={activeTabValue} onValueChange={setActiveTabValue} className="flex flex-col h-full">
-          <CenteredTabList>
-            <SortableTabsList
-                items={pageTabs}
-                onReorder={handleReorderPageTabs}
-                disabled={!viewAsUser.isAdmin}
-            >
-                {pageTabs.map(tab => (
-                  <TabsTrigger key={tab.id} value={tab.id} className="gap-2">
-                     <GoogleSymbol name={tab.icon} className="text-4xl" weight={100} />
-                     <span>{tab.name}</span>
-                  </TabsTrigger>
-                ))}
-            </SortableTabsList>
-          </CenteredTabList>
-         <div className="flex-1 pt-6 min-h-0">
-            {pageTabs.map(tab => (
-                <TabsContent 
-                    key={tab.id} 
-                    value={tab.id} 
-                    className="mt-0 h-full"
-                >
-                  <div className={cn("h-full flex flex-col", isManagementPage && "overflow-hidden")}>
-                    {renderTabContent(tab)}
-                  </div>
-                </TabsContent>
-            ))}
-        </div>
-      </Tabs>
-    )
-  }
-  
-  return (
-    <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} collisionDetection={pointerWithin}>
-        <div className="h-full flex flex-col gap-6">
-           {!seamlessPageIds.includes(page.id) && (
-                <PageTitle 
-                  title={page.displayTitle || page.name}
-                  icon={page.icon}
-                  iconColor={page.color}
-                  onSave={(newTitle) => updatePage(page.id, { displayTitle: newTitle })}
-                  disabled={!viewAsUser.isAdmin}
-                />
-           )}
-           <div className="flex-1 min-h-0">
-               {renderContent()}
-           </div>
-        </div>
-        <DragOverlay modifiers={[snapCenterToCursor]}>
-          {renderDragOverlay()}
-        </DragOverlay>
-    </DndContext>
-  )
+    return { page: foundPage || null, teamContext, appSettings };
 }
+
+export default async function DynamicPage({ params }: { params: { page: string[] }}) {
+    const { page, teamContext, appSettings } = await getPageData(params);
+    
+    // In a real app with server-side auth, you'd get the user session here.
+    // We'll pass a placeholder or fetch it if possible.
+    // const session = await auth().getSession();
+    // const user = session ? await getUser(session.uid) : null;
+
+    if (!page) {
+        notFound();
+    }
+
+    return (
+       <DynamicPageClient
+            page={page}
+            teamContext={teamContext}
+            appSettings={appSettings}
+            componentMap={componentMap}
+            params={params}
+       />
+    );
+}
+
