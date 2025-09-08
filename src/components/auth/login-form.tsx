@@ -10,7 +10,7 @@ import { useUser } from "@/context/user-context";
 
 export function LoginForm() {
   const router = useRouter();
-  const { googleLogin, realUser, loading, isFirebaseReady } = useUser();
+  const { googleLogin, realUser, loading } = useUser();
   const [isSigningIn, setIsSigningIn] = React.useState(false);
 
   React.useEffect(() => {
@@ -23,14 +23,11 @@ export function LoginForm() {
 
 
   const handleGoogleSignIn = async () => {
-    if (!isFirebaseReady) return; 
     setIsSigningIn(true);
     try {
       const success = await googleLogin();
       // The useEffect will now handle the redirect after state updates.
-      if (success) {
-          router.push('/dashboard/overview');
-      } else {
+      if (!success) {
           setIsSigningIn(false);
       }
     } catch (error) {

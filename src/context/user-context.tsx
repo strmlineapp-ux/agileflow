@@ -3,7 +3,6 @@
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
 import { type User } from '@/types';
-import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { useAuth } from '@/hooks/useAuth';
 import { doc, updateDoc } from 'firebase/firestore';
 import { getDb } from '@/lib/firebase';
@@ -11,14 +10,13 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 
 // --- Context Definition ---
 interface UserContextType {
-  // Session
-  realUser: User;
-  viewAsUser: User & { isDragModifierPressed?: boolean };
+  realUser: User | null;
+  viewAsUser: (User & { isDragModifierPressed?: boolean }) | null;
   users: User[];
   updateUser: (userId: string, data: Partial<User>) => Promise<void>;
-  setViewAsUser: (userId: string) => void;
+  setViewAsUser: (userId: string | null) => void;
   googleLogin: () => Promise<boolean>;
-  logout: (router: AppRouterInstance) => Promise<void>;
+  logout: () => Promise<void>;
   linkGoogleCalendar: (user: User) => Promise<void>;
   loading: boolean;
   isFirebaseReady: boolean;
@@ -34,14 +32,19 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const loading = authLoading;
 
   useEffect(() => {
-    if (realUser && !viewAsUserId) {
+    // When the real user is available, set the view-as user to be the real user by default.
+    // If the real user logs out (becomes null), reset the view-as user as well.
+    if (realUser) {
       setViewAsUserId(realUser.userId);
+    } else {
+      setViewAsUserId(null);
     }
-  }, [realUser, viewAsUserId]);
+  }, [realUser]);
 
   const viewAsUser = useMemo(() => {
-    if (viewAsUserId === realUser?.userId) return realUser;
-    return users.find(u => u.userId === viewAsUserId) || realUser;
+    if (!viewAsUserId || !realUser) return null;
+    if (viewAsUserId === realUser.userId) return realUser;
+    return users.find(u => u.userId === viewAsUserId) || null;
   }, [viewAsUserId, realUser, users]);
   
   const updateUser = useCallback(async (userId: string, userData: Partial<User>) => {
@@ -58,15 +61,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!viewAsUser) return;
 
+    const modifierKey = viewAsUser.modifierKey || 'shift';
+    
     const handleKeyDown = (e: KeyboardEvent) => {
-        const key = viewAsUser.modifierKey || 'shift';
-        if (e.key.toLowerCase() === key) {
+        if (e.key.toLowerCase() === modifierKey) {
             setIsDragModifierPressed(true);
         }
     };
     const handleKeyUp = (e: KeyboardEvent) => {
-        const key = viewAsUser.modifierKey || 'shift';
-        if (e.key.toLowerCase() === key) {
+        if (e.key.toLowerCase() === modifierKey) {
             setIsDragModifierPressed(false);
         }
     };
@@ -78,30 +81,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         window.removeEventListener('keydown', handleKeyDown);
         window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [viewAsUser]);
+  }, [viewAsUser?.modifierKey]);
   
   
   const contextValue = useMemo(() => {
-    if (loading || !realUser || !viewAsUser) {
-        return null; // Return null or a loading state representation
-    }
-
-    const setViewAsUserWithReset = (userId: string) => {
-      if (userId === realUser?.userId) {
-        setViewAsUserId(null); // Reset to real user
-      } else {
-        setViewAsUserId(userId);
-      }
-    };
-
-    const enrichedViewAsUser = { ...viewAsUser, isDragModifierPressed };
+    const enrichedViewAsUser = viewAsUser ? { ...viewAsUser, isDragModifierPressed } : null;
 
     return {
       realUser,
       viewAsUser: enrichedViewAsUser,
       users,
       updateUser,
-      setViewAsUser: setViewAsUserWithReset,
+      setViewAsUser: setViewAsUserId,
       googleLogin,
       logout,
       linkGoogleCalendar,
@@ -112,15 +103,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     realUser, viewAsUser, users, googleLogin, logout, loading, isFirebaseReady, isDragModifierPressed, updateUser, linkGoogleCalendar
   ]);
   
-  if (loading || !contextValue) {
-    // Render a loading state or nothing, but don't provide an incomplete context
-    return (
-        <div className="flex h-screen w-full items-center justify-center bg-background">
-            <GoogleSymbol name="progress_activity" className="h-16 w-16 animate-spin text-primary" />
-        </div>
-    )
-  }
-
   return (
     <UserContext.Provider value={contextValue}>
         {children}

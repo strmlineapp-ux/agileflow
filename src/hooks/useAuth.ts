@@ -7,7 +7,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { type User, type Workspace } from '@/types';
 import { getAuthInstance, getDb, getCurrentWorkspaceId } from '@/lib/firebase';
 import { useToast } from './use-toast';
-import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { systemPages, coreTabs } from '@/lib/core-data';
 import { saveCredentials } from '@/lib/google-auth-service';
 import { useRouter } from 'next/navigation';
@@ -18,7 +17,6 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
   const [isFirebaseReady, setIsFirebaseReady] = useState(false);
   const { toast } = useToast();
-  const router = useRouter();
   
   useEffect(() => {
     try {
@@ -42,6 +40,7 @@ export function useAuth() {
               if (doc.exists()) {
                 setRealUser({ userId: doc.id, ...doc.data() } as User);
               }
+              setLoading(false);
             });
 
             let userDoc = await getDoc(userRef);
@@ -67,7 +66,7 @@ export function useAuth() {
               };
               
               await setDoc(userRef, newUser);
-              setRealUser(newUser);
+              // The onSnapshot listener will now set the realUser state.
 
               if (isFirstUser) {
                 const batch = writeBatch(db);
@@ -81,8 +80,6 @@ export function useAuth() {
             const usersUnsubscribe = onSnapshot(usersQuery, (snapshot) => {
               setUsers(snapshot.docs.map(d => ({...d.data(), userId: d.id} as User)));
             });
-
-            setLoading(false);
             
             return () => {
               userDocUnsubscribe();
@@ -143,7 +140,7 @@ export function useAuth() {
     const authInstance = getAuthInstance();
     try {
       await signOut(authInstance);
-      // The onAuthStateChanged listener will handle the state update and redirection.
+      // The onAuthStateChanged listener will handle the state update.
     } catch (error) {
       console.error("Logout failed:", error);
       toast({ variant: 'destructive', title: 'Logout Error', description: 'Could not sign out. Please try again.' });
