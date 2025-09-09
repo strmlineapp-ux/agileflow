@@ -17,7 +17,6 @@ interface UserContextType {
   setViewAsUser: (userId: string | null) => void;
   googleLogin: () => Promise<boolean>;
   logout: () => Promise<void>;
-  linkGoogleCalendar: (user: User) => Promise<void>;
   loading: boolean;
   isFirebaseReady: boolean;
 }
@@ -25,7 +24,7 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | null>(null);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  const { realUser, users, loading: authLoading, isFirebaseReady, googleLogin, logout, linkGoogleCalendar, setRealUser } = useAuth();
+  const { realUser, users, loading: authLoading, isFirebaseReady, googleLogin, logout, setRealUser } = useAuth();
   const [viewAsUserId, setViewAsUserId] = useState<string | null>(null);
   const [isDragModifierPressed, setIsDragModifierPressed] = useState(false);
   
@@ -95,12 +94,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       setViewAsUser: setViewAsUserId,
       googleLogin,
       logout,
-      linkGoogleCalendar,
       loading,
       isFirebaseReady,
     };
   }, [
-    realUser, viewAsUser, users, googleLogin, logout, loading, isFirebaseReady, isDragModifierPressed, updateUser, linkGoogleCalendar
+    realUser, viewAsUser, users, googleLogin, logout, loading, isFirebaseReady, isDragModifierPressed, updateUser
   ]);
   
   return (

@@ -8,7 +8,6 @@ import { type User, type Workspace } from '@/types';
 import { getAuthInstance, getDb, getCurrentWorkspaceId } from '@/lib/firebase';
 import { useToast } from './use-toast';
 import { systemPages, coreTabs } from '@/lib/core-data';
-import { saveCredentials } from '@/lib/google-auth-service';
 import { useRouter } from 'next/navigation';
 
 export function useAuth() {
@@ -28,6 +27,22 @@ export function useAuth() {
     }
   }, []);
   
+  const saveCredentials = async (userId: string, credential?: OAuthCredential | null) => {
+    if (!credential || !credential.accessToken) return;
+
+    const db = getDb();
+    const tokenDocRef = doc(db, 'google-auth-tokens', userId);
+
+    try {
+        await setDoc(tokenDocRef, {
+            userId,
+            accessToken: credential.accessToken,
+        }, { merge: true });
+    } catch (error) {
+        console.error("Failed to save credentials:", error);
+    }
+  };
+
   useEffect(() => {
     if (!isFirebaseReady) return;
 
@@ -67,7 +82,6 @@ export function useAuth() {
               };
               
               await setDoc(userRef, newUser);
-              // The onSnapshot listener will now set the realUser state.
 
               if (isFirstUser) {
                 const batch = writeBatch(db);
@@ -104,6 +118,7 @@ export function useAuth() {
     }
     const authInstance = getAuthInstance();
     const provider = new GoogleAuthProvider();
+    // Request calendar scope at initial login
     provider.addScope('https://www.googleapis.com/auth/calendar.readonly');
     provider.setCustomParameters({ prompt: 'select_account' });
 
@@ -111,9 +126,12 @@ export function useAuth() {
         const result = await signInWithPopup(authInstance, provider);
         const credential = GoogleAuthProvider.credentialFromResult(result);
         if (credential) {
-            await linkGoogleCalendar(result.user, credential);
+            // Save credential and mark calendar as linked immediately
+            await saveCredentials(result.user.uid, credential);
+            const userRef = doc(getDb(), 'users', result.user.uid);
+            await updateDoc(userRef, { googleCalendarLinked: true });
         }
-        router.push('/dashboard/overview'); // Redirect after successful login
+        router.push('/dashboard/overview');
         return true;
     } catch (error: any) {
         if (error.code !== 'auth/popup-closed-by-user') {
@@ -124,29 +142,17 @@ export function useAuth() {
     }
   }, [isFirebaseReady, toast, router]);
 
-  const linkGoogleCalendar = useCallback(async (firebaseUser: FirebaseUser, credential?: OAuthCredential | null) => {
-    if (!firebaseUser) return;
-    const db = getDb();
-    const userRef = doc(db, 'users', firebaseUser.uid);
-    const finalCredential = credential || GoogleAuthProvider.credentialFromError({ code: 'auth/requires-recent-login' });
-    if(finalCredential) {
-        await saveCredentials(firebaseUser.uid, finalCredential);
-        await updateDoc(userRef, { googleCalendarLinked: true });
-        setRealUser(prev => prev ? { ...prev, googleCalendarLinked: true } : null);
-        toast({ title: 'Success', description: 'Google Calendar connected.' });
-    }
-  }, [toast]);
-
   const logout = useCallback(async () => {
     if (!isFirebaseReady) return;
     const authInstance = getAuthInstance();
     try {
       await signOut(authInstance);
+      router.push('/');
     } catch (error) {
       console.error("Logout failed:", error);
       toast({ variant: 'destructive', title: 'Logout Error', description: 'Could not sign out. Please try again.' });
     }
-  }, [isFirebaseReady, toast]);
+  }, [isFirebaseReady, toast, router]);
 
-  return { realUser, users, loading, isFirebaseReady, googleLogin, logout, setRealUser, linkGoogleCalendar };
+  return { realUser, users, loading, isFirebaseReady, googleLogin, logout, setRealUser };
 }
