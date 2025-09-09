@@ -58,6 +58,16 @@ export function Header() {
     queryFn: () => fetchAppSettings(viewAsUser!.workspaceId),
     enabled: !!viewAsUser?.workspaceId,
   });
+  
+  const orderedNavItems = useMemo(() => {
+    if (!viewAsUser || !appSettings?.pages) return [];
+
+    return appSettings.pages.filter(page => {
+        if (!page.isSystemPage) return false;
+        if (page.id === 'page-admin-management') return viewAsUser.isAdmin;
+        return true; 
+    });
+  }, [viewAsUser, appSettings?.pages]);
 
   // Render nothing or a loading state if viewAsUser is not ready
   if (!viewAsUser) {
@@ -71,17 +81,6 @@ export function Header() {
   const isViewingAsSomeoneElse = realUser?.userId !== viewAsUser?.userId;
   const unreadCount = notifications.filter((n) => !n.read && n.type === 'standard').length;
   
-  const orderedNavItems = useMemo(() => {
-    if (!appSettings?.pages) return [];
-
-    return appSettings.pages.filter(page => {
-        if (!page.isSystemPage) return false;
-        if (page.id === 'page-admin-management') return viewAsUser.isAdmin;
-        return true; 
-    });
-  }, [viewAsUser, appSettings?.pages]);
-
-
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 bg-card px-4 sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 sm:py-4">
       {isViewingAsSomeoneElse && viewAsUser && (
