@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
@@ -128,6 +129,7 @@ const CustomColorPicker = ({ colorValue, onUpdate, onClose }: { colorValue: stri
 
 function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }: { user: User, isCurrentUser: boolean, canEditPreferences: boolean, className?: string }) {
     const queryClient = useQueryClient();
+    const { linkGoogleCalendar } = useUser();
     
     const [isPrimaryColorPopoverOpen, setIsPrimaryColorPopoverOpen] = useState(false);
     const [isFontWeightPopoverOpen, setIsFontWeightPopoverOpen] = useState(false);
@@ -222,13 +224,20 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                         </Avatar>
                                         <span className={cn(
                                             "absolute bottom-0 right-0 block h-3.5 w-3.5 rounded-full ring-2 ring-card",
-                                            user.googleCalendarLinked ? "bg-green-500" : "bg-gray-400"
+                                            user.googleCalendarLinked ? "bg-green-500" : "bg-gray-400",
+                                            isCurrentUser && !user.googleCalendarLinked && "cursor-pointer"
                                         )} 
+                                        onClick={(e) => {
+                                            if (isCurrentUser && !user.googleCalendarLinked) {
+                                              e.stopPropagation();
+                                              linkGoogleCalendar(user);
+                                            }
+                                        }}
                                         />
                                     </div>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                    <p>Google Calendar: {user.googleCalendarLinked ? 'Connected' : 'Not Connected'}</p>
+                                    <p>Google Account: {user.googleCalendarLinked ? 'Connected' : isCurrentUser ? 'Click to re-link' : 'Not Connected'}</p>
                                 </TooltipContent>
                             </Tooltip>
                         </TooltipProvider>

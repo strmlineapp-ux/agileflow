@@ -91,8 +91,8 @@ async function deleteEvent(eventId: string): Promise<void> {
     await deleteDoc(doc(db, 'events', eventId));
 }
 
-export function CalendarPageContent({ tab, initialCalendars }: { tab: AppTab, initialCalendars: SharedCalendar[] }) {
-  const { viewAsUser } = useUser();
+export function CalendarPageContent({ tab }: { tab: AppTab }) {
+  const { viewAsUser, calendars } = useUser();
   const queryClient = useQueryClient();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>(viewAsUser.defaultCalendarView || 'day');
@@ -105,7 +105,7 @@ export function CalendarPageContent({ tab, initialCalendars }: { tab: AppTab, in
 
   const viewContainerRef = useRef<HTMLDivElement>(null);
   
-  const userCanCreateEvent = canCreateAnyEvent(viewAsUser, initialCalendars);
+  const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
 
   const { data: viewEvents = [], isLoading: isDataLoading } = useQuery({
     queryKey: ['events', viewAsUser.workspaceId, view, currentDate.toISOString().split('T')[0]],

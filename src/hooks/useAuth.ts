@@ -1,14 +1,15 @@
 
 'use client';
 
-import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider, type User as FirebaseUser, type OAuthCredential } from 'firebase/auth';
-import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where, limit, updateDoc, writeBatch, onSnapshot } from 'firebase/firestore';
+import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider, type User as FirebaseUser } from 'firebase/auth';
+import { getFirestore, doc, getDoc, setDoc, collection, query, where, limit, updateDoc, writeBatch, onSnapshot } from 'firebase/firestore';
 import { useState, useEffect, useCallback } from 'react';
 import { type User, type Workspace } from '@/types';
 import { getAuthInstance, getDb, getCurrentWorkspaceId } from '@/lib/firebase';
 import { useToast } from './use-toast';
 import { systemPages, coreTabs } from '@/lib/core-data';
 import { useRouter } from 'next/navigation';
+import { getOAuth2Client } from '@/lib/google-auth-service';
 
 export function useAuth() {
   const [realUser, setRealUser] = useState<User | null>(null);
@@ -27,21 +28,6 @@ export function useAuth() {
     }
   }, []);
   
-  const saveCredentials = async (userId: string, credential?: OAuthCredential | null) => {
-    if (!credential || !credential.accessToken) return;
-
-    const db = getDb();
-    const tokenDocRef = doc(db, 'google-auth-tokens', userId);
-
-    try {
-        await setDoc(tokenDocRef, {
-            userId,
-            accessToken: credential.accessToken,
-        }, { merge: true });
-    } catch (error) {
-        console.error("Failed to save credentials:", error);
-    }
-  };
 
   useEffect(() => {
     if (!isFirebaseReady) return;
@@ -123,14 +109,8 @@ export function useAuth() {
     provider.setCustomParameters({ prompt: 'select_account' });
 
     try {
-        const result = await signInWithPopup(authInstance, provider);
-        const credential = GoogleAuthProvider.credentialFromResult(result);
-        if (credential) {
-            // Save credential and mark calendar as linked immediately
-            await saveCredentials(result.user.uid, credential);
-            const userRef = doc(getDb(), 'users', result.user.uid);
-            await updateDoc(userRef, { googleCalendarLinked: true });
-        }
+        await signInWithPopup(authInstance, provider);
+        // The onAuthStateChanged listener will handle the user state update and redirect.
         router.push('/dashboard/overview');
         return true;
     } catch (error: any) {
@@ -141,6 +121,34 @@ export function useAuth() {
         return false;
     }
   }, [isFirebaseReady, toast, router]);
+  
+  const linkGoogleCalendar = useCallback(async (user: User) => {
+    const oAuth2Client = getOAuth2Client();
+
+    const scopes = [
+        'https://www.googleapis.com/auth/calendar.readonly',
+        'https://www.googleapis.com/auth/drive.readonly',
+        'https://www.googleapis.com/auth/tasks',
+        'https://www.googleapis.com/auth/chat.messages'
+    ];
+
+    const state = JSON.stringify({ userId: user.userId });
+
+    const authUrl = oAuth2Client.generateAuthUrl({
+        access_type: 'offline',
+        scope: scopes,
+        prompt: 'consent',
+        state: state
+    });
+
+    // Open a popup window for the user to authenticate.
+    const popup = window.open(authUrl, '_blank', 'width=500,height=600');
+
+    // Here you would typically have a mechanism to listen for the callback to complete,
+    // for example, using BroadcastChannel or window.postMessage, or just by letting
+    // the user state re-fetch and update the UI.
+  }, []);
+
 
   const logout = useCallback(async () => {
     if (!isFirebaseReady) return;
@@ -154,5 +162,5 @@ export function useAuth() {
     }
   }, [isFirebaseReady, toast, router]);
 
-  return { realUser, users, loading, isFirebaseReady, googleLogin, logout, setRealUser };
+  return { realUser, users, loading, isFirebaseReady, googleLogin, linkGoogleCalendar, logout, setRealUser };
 }
