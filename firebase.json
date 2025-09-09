@@ -2,30 +2,9 @@
   "hosting": {
     "source": ".",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-    "appAssociation": "AUTO",
-    "rewrites": [
-      {
-        "source": "**",
-        "app": {
-          "backendId": "strm-backend",
-          "region": "us-central1"
-        }
-      }
-    ]
-  },
-  "apphosting": {
-    "backends": [
-      {
-        "id": "strm-backend",
-        "region": "us-central1",
-        "source": ".",
-        "codebase": "default",
-        "discovery": {
-          "github": {
-            "branch": "master"
-          }
-        }
-      }
-    ]
+    "frameworksBackend": {
+      "id": "strm-backend",
+      "region": "us-central1"
+    }
   }
 }
