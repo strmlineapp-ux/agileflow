@@ -95,7 +95,7 @@ export function CalendarPageContent({ tab }: { tab: AppTab }) {
   const { viewAsUser, calendars } = useUser();
   const queryClient = useQueryClient();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>(viewAsUser.defaultCalendarView || 'day');
+  const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>(viewAsUser?.defaultCalendarView || 'day');
   const [zoomLevel, setZoomLevel] = useState<'normal' | 'fit'>('normal');
   const [dayViewAxis, setDayViewAxis] = useState<'standard' | 'reversed'>('standard');
   const [isNewEventOpen, setIsNewEventOpen] = useState(false);
@@ -105,10 +105,10 @@ export function CalendarPageContent({ tab }: { tab: AppTab }) {
 
   const viewContainerRef = useRef<HTMLDivElement>(null);
   
-  const userCanCreateEvent = canCreateAnyEvent(viewAsUser, calendars);
+  const userCanCreateEvent = viewAsUser ? canCreateAnyEvent(viewAsUser, calendars) : false;
 
   const { data: viewEvents = [], isLoading: isDataLoading } = useQuery({
-    queryKey: ['events', viewAsUser.workspaceId, view, currentDate.toISOString().split('T')[0]],
+    queryKey: ['events', viewAsUser?.workspaceId, view, currentDate.toISOString().split('T')[0]],
     queryFn: () => {
         let start: Date;
         let end: Date;
@@ -128,9 +128,9 @@ export function CalendarPageContent({ tab }: { tab: AppTab }) {
             end = addDays(start, 1);
             break;
         }
-        return fetchEvents(viewAsUser.workspaceId, start, end);
+        return fetchEvents(viewAsUser!.workspaceId, start, end);
     },
-    enabled: !!viewAsUser.googleCalendarLinked && !!viewAsUser.workspaceId,
+    enabled: !!viewAsUser?.googleCalendarLinked && !!viewAsUser?.workspaceId,
   });
 
   const addMutation = useMutation({
@@ -185,7 +185,7 @@ export function CalendarPageContent({ tab }: { tab: AppTab }) {
   }, [currentDate]);
 
   const handleEasyBooking = useCallback((data: { startTime: Date; location?: string }) => {
-    if (!viewAsUser.easyBooking || !userCanCreateEvent) return;
+    if (!viewAsUser?.easyBooking || !userCanCreateEvent) return;
 
     const endTime = new Date(data.startTime.getTime() + 60 * 60 * 1000); // Default to 1 hour
 
@@ -195,7 +195,7 @@ export function CalendarPageContent({ tab }: { tab: AppTab }) {
         location: data.location,
     });
     setIsNewEventOpen(true);
-  }, [userCanCreateEvent, viewAsUser.easyBooking]);
+  }, [userCanCreateEvent, viewAsUser?.easyBooking]);
   
   const dateRange = useMemo(() => {
     if (view === 'month') {
@@ -220,6 +220,7 @@ export function CalendarPageContent({ tab }: { tab: AppTab }) {
   }, [view, currentDate]);
 
   const handleEventMutation = useCallback(async (mutationType: 'add' | 'update' | 'delete', eventData: any) => {
+    if (!viewAsUser) return;
     switch (mutationType) {
       case 'add':
         addMutation.mutate({ ...eventData, workspaceId: viewAsUser.workspaceId });
@@ -235,7 +236,7 @@ export function CalendarPageContent({ tab }: { tab: AppTab }) {
       default:
         return;
     }
-  }, [addMutation, updateMutation, deleteMutation, viewAsUser.workspaceId]);
+  }, [addMutation, updateMutation, deleteMutation, viewAsUser]);
 
   const closeDialogs = useCallback(() => {
     setIsNewEventOpen(false);
@@ -250,6 +251,7 @@ export function CalendarPageContent({ tab }: { tab: AppTab }) {
   const pageShouldScroll = view === 'month' || view === 'production-schedule';
 
   const renderCurrentView = () => {
+    if (!viewAsUser) return <div className="flex-1 flex items-center justify-center"><GoogleSymbol name="progress_activity" className="animate-spin text-4xl text-muted-foreground" /></div>;
     if (isDataLoading) return <div className="flex-1 flex items-center justify-center"><GoogleSymbol name="progress_activity" className="animate-spin text-4xl text-muted-foreground" /></div>;
     
     if (!viewAsUser.googleCalendarLinked) {

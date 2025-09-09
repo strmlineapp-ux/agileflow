@@ -9,7 +9,6 @@ import { getAuthInstance, getDb, getCurrentWorkspaceId } from '@/lib/firebase';
 import { useToast } from './use-toast';
 import { systemPages, coreTabs } from '@/lib/core-data';
 import { useRouter } from 'next/navigation';
-import { getOAuth2Client } from '@/lib/google-auth-service';
 
 export function useAuth() {
   const [realUser, setRealUser] = useState<User | null>(null);
@@ -104,15 +103,18 @@ export function useAuth() {
     }
     const authInstance = getAuthInstance();
     const provider = new GoogleAuthProvider();
-    // Request calendar scope at initial login
     provider.addScope('https://www.googleapis.com/auth/calendar.readonly');
     provider.setCustomParameters({ prompt: 'select_account' });
 
     try {
-        await signInWithPopup(authInstance, provider);
-        // The onAuthStateChanged listener will handle the user state update and redirect.
-        router.push('/dashboard/overview');
-        return true;
+        const result = await signInWithPopup(authInstance, provider);
+        const credential = GoogleAuthProvider.credentialFromResult(result);
+        if (credential) {
+          // This will trigger the onAuthStateChanged listener which handles user setup
+          router.push('/dashboard/overview');
+          return true;
+        }
+        return false;
     } catch (error: any) {
         if (error.code !== 'auth/popup-closed-by-user') {
             console.error("Google Sign-In failed:", error);
@@ -123,30 +125,11 @@ export function useAuth() {
   }, [isFirebaseReady, toast, router]);
   
   const linkGoogleCalendar = useCallback(async (user: User) => {
-    const oAuth2Client = getOAuth2Client();
-
-    const scopes = [
-        'https://www.googleapis.com/auth/calendar.readonly',
-        'https://www.googleapis.com/auth/drive.readonly',
-        'https://www.googleapis.com/auth/tasks',
-        'https://www.googleapis.com/auth/chat.messages'
-    ];
-
-    const state = JSON.stringify({ userId: user.userId });
-
-    const authUrl = oAuth2Client.generateAuthUrl({
-        access_type: 'offline',
-        scope: scopes,
-        prompt: 'consent',
-        state: state
-    });
-
-    // Open a popup window for the user to authenticate.
-    const popup = window.open(authUrl, '_blank', 'width=500,height=600');
-
-    // Here you would typically have a mechanism to listen for the callback to complete,
-    // for example, using BroadcastChannel or window.postMessage, or just by letting
-    // the user state re-fetch and update the UI.
+    // The user's ID is needed server-side to associate the tokens.
+    // In a real app, you'd securely get this from the session cookie.
+    // For this context, we'll set a temporary cookie.
+    document.cookie = `userId=${user.userId};path=/;max-age=300`; // Expires in 5 minutes
+    window.location.href = '/api/auth/google/signin';
   }, []);
 
 
