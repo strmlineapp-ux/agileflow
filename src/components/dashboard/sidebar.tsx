@@ -19,7 +19,7 @@ import { getDb } from '@/lib/firebase';
 import { type Notification, type AppSettings } from '@/types';
 import { useDataQueries } from '@/hooks/use-data-queries';
 
-async function fetchAppSettings(workspaceId: string): Promise<AppSettings | null> {
+async function fetchAppSettings(workspaceId?: string): Promise<AppSettings | null> {
     if (!workspaceId) return null;
     const db = getDb();
     const docRef = doc(db, 'app-settings', workspaceId);
@@ -34,12 +34,12 @@ export function Sidebar() {
   const pathname = usePathname();
   const { useFetchNotifications } = useDataQueries();
   
-  const { data: notifications = [] } = useFetchNotifications(viewAsUser.workspaceId);
+  const { data: notifications = [] } = useFetchNotifications(viewAsUser?.workspaceId);
 
   const { data: appSettings } = useQuery<AppSettings | null>({
-    queryKey: ['appSettings', viewAsUser.workspaceId],
-    queryFn: () => fetchAppSettings(viewAsUser.workspaceId),
-    enabled: !!viewAsUser.workspaceId,
+    queryKey: ['appSettings', viewAsUser?.workspaceId],
+    queryFn: () => fetchAppSettings(viewAsUser?.workspaceId),
+    enabled: !!viewAsUser?.workspaceId,
   });
 
   const setViewAsUser = (userId: string) => {
