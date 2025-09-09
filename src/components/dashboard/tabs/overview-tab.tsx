@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React from 'react';
@@ -26,14 +25,30 @@ export function OverviewContent({ page, tab }: { page?: AppPage, tab?: AppTab })
   const { toast } = useToast();
   
   const { data: tasks = [], isLoading: isLoadingTasks } = useFetchTasks(
-    viewAsUser.workspaceId,
+    viewAsUser?.workspaceId,
     { limit: 5 }
   );
 
-  const { data: allBadges = [], isLoading: isLoadingBadges } = useFetchAllBadges(viewAsUser.workspaceId);
-  const { data: allBadgeCollections = [], isLoading: isLoadingCollections } = useFetchAllBadgeCollections(viewAsUser.workspaceId);
+  const { data: allBadges = [], isLoading: isLoadingBadges } = useFetchAllBadges(viewAsUser?.workspaceId);
+  const { data: allBadgeCollections = [], isLoading: isLoadingCollections } = useFetchAllBadgeCollections(viewAsUser?.workspaceId);
 
   const isLoading = isLoadingTasks || isLoadingBadges || isLoadingCollections;
+
+  if (!viewAsUser) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-48" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+        </div>
+        <Skeleton className="h-8 w-32" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
   
   const title = page?.displayTitle ?? tab?.name ?? 'Overview';
   const canManagePage = viewAsUser.isAdmin;
