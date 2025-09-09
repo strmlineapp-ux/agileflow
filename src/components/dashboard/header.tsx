@@ -46,24 +46,33 @@ async function fetchAppSettings(workspaceId: string): Promise<AppSettings | null
 
 export function Header() {
   const { realUser, viewAsUser } = useUser();
-  const isViewingAsSomeoneElse = realUser?.userId !== viewAsUser?.userId;
   
   const { data: notifications = [] } = useQuery<Notification[]>({
-      queryKey: ['notifications', viewAsUser.workspaceId],
-      queryFn: () => fetchNotifications(viewAsUser.workspaceId),
-      enabled: !!viewAsUser.workspaceId,
+      queryKey: ['notifications', viewAsUser?.workspaceId],
+      queryFn: () => fetchNotifications(viewAsUser!.workspaceId),
+      enabled: !!viewAsUser?.workspaceId,
   });
 
   const { data: appSettings } = useQuery<AppSettings | null>({
-    queryKey: ['appSettings', viewAsUser.workspaceId],
-    queryFn: () => fetchAppSettings(viewAsUser.workspaceId),
-    enabled: !!viewAsUser.workspaceId,
+    queryKey: ['appSettings', viewAsUser?.workspaceId],
+    queryFn: () => fetchAppSettings(viewAsUser!.workspaceId),
+    enabled: !!viewAsUser?.workspaceId,
   });
 
+  // Render nothing or a loading state if viewAsUser is not ready
+  if (!viewAsUser) {
+    return (
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 bg-card px-4 sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 sm:py-4">
+            {/* Can be a skeleton loader as well */}
+        </header>
+    );
+  }
+
+  const isViewingAsSomeoneElse = realUser?.userId !== viewAsUser?.userId;
   const unreadCount = notifications.filter((n) => !n.read && n.type === 'standard').length;
   
   const orderedNavItems = useMemo(() => {
-    if (!viewAsUser || !appSettings?.pages) return [];
+    if (!appSettings?.pages) return [];
 
     return appSettings.pages.filter(page => {
         if (!page.isSystemPage) return false;
@@ -102,7 +111,7 @@ export function Header() {
               className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg md:text-base"
             >
               <Logo className="text-primary-foreground" />
-              <span className="sr-only">Strm</span>
+              <span className="sr-only">Strm_</span>
             </Link>
 
             {orderedNavItems.map(item => (
