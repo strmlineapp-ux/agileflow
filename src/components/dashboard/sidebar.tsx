@@ -17,13 +17,14 @@ import { useDataQueries } from '@/hooks/use-data-queries';
 import { type Notification, type AppPage } from '@/types';
 
 export function Sidebar() {
-  const { realUser, viewAsUser, users, loading, setViewAsUser: setContextViewAsUser, logout } = useUser();
+  const { realUser, viewAsUser, loading, setViewAsUser: setContextViewAsUser, logout } = useUser();
   const router = useRouter();
   const pathname = usePathname();
-  const { useFetchNotifications, useFetchPages } = useDataQueries();
+  const { useFetchNotifications, useFetchPages, useFetchUsers } = useDataQueries();
   
   const { data: notifications = [] } = useFetchNotifications(viewAsUser?.workspaceId);
   const { data: allPages = [] } = useFetchPages(viewAsUser?.workspaceId);
+  const { data: users = [] } = useFetchUsers(viewAsUser?.workspaceId);
 
   const setViewAsUser = (userId: string) => {
     setContextViewAsUser(userId);
@@ -179,7 +180,7 @@ export function Sidebar() {
                     </Link>
                 </DropdownMenuItem>
 
-                {realUser.isAdmin && users.length > 1 && (
+                {realUser.isAdmin && users && users.length > 1 && (
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
                       <GoogleSymbol name="how_to_reg" className="mr-2 text-lg" />
