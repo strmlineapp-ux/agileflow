@@ -1,18 +1,13 @@
 
 import { useMemo } from 'react';
 import { notFound } from 'next/navigation';
-import { useUser } from '@/context/user-context'; // Although this is a server component, we can get user from a server context
-import { GoogleSymbol } from '@/components/icons/google-symbol';
-import { hasAccess } from '@/lib/permissions';
-import { type AppTab, type Team, type AppPage, type BadgeCollection, type SharedCalendar, type Badge, type User } from '@/types';
-import { DndContext, DragOverlay, KeyboardSensor, PointerSensor, useSensor, useSensors, pointerWithin, type DragStartEvent, type DragEndEvent, type Active, type Over } from '@dnd-kit/core';
-import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { getDb } from '@/lib/firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { cookies } from 'next/headers'; // Import cookies
+import { auth } from '@/lib/firebase-admin'; // Import server-side auth
+import { type AppSettings, type Team, type User } from '@/types';
 
-
-// Import all possible tab content components
+// Component Imports (assuming these are correct)
 import { AdminsManagement, PagesManagement, TabsManagement } from '@/components/admin/page';
 import { BadgeManagement } from '@/components/teams/badge-management';
 import { CalendarManagement } from '@/components/calendar/calendar-management';
@@ -29,8 +24,6 @@ import { CalendarPageContent } from '@/components/dashboard/tabs/calendar-tab';
 import { ProjectsContent } from '@/components/dashboard/tabs/projects-tab';
 import { EventsContent } from '@/components/dashboard/tabs/events-tab';
 import { DynamicPageClient } from './page-client';
-import { auth } from '@/lib/firebase-admin';
-
 
 const componentMap = {
   admins: AdminsManagement,
@@ -50,22 +43,25 @@ const componentMap = {
   calendar: CalendarPageContent,
   projects: ProjectsContent,
   events: EventsContent,
-  // Add other mappings as needed
 };
 
-async function getPageData(params: { page: string[] }) {
+async function getPageData(params: { page: string[] }, user: User | null) {
     const db = getDb();
     const { page: pagePath } = params;
     const path = Array.isArray(pagePath) ? `/dashboard/${pagePath.join('/')}` : `/dashboard/${pagePath}`;
 
-    // This part is tricky without a user session.
-    // For now, let's assume a simplified workspace logic for fetching settings.
-    // In a real multi-tenant app, you'd get the workspaceId from the user's session or subdomain.
-    const workspaceId = 'default'; // Hardcoded for this example
+    // Get workspaceId from the authenticated user, not hardcoded.
+    const workspaceId = user?.workspaceId;
+
+    if (!workspaceId) {
+        // If there's no workspace ID, we cannot proceed.
+        return { page: null, teamContext: null, appSettings: null, user };
+    }
 
     const appSettingsDoc = await getDoc(doc(db, 'app-settings', workspaceId));
     if (!appSettingsDoc.exists()) {
-        return { page: null, teamContext: null, appSettings: { pages: [], tabs: [] } };
+        console.error(`App settings not found for workspace: ${workspaceId}`);
+        return { page: null, teamContext: null, appSettings: null, user };
     }
     const appSettings = appSettingsDoc.data() as AppSettings;
 
@@ -80,18 +76,34 @@ async function getPageData(params: { page: string[] }) {
         }
     }
 
-    return { page: foundPage || null, teamContext, appSettings };
+    return { page: foundPage || null, teamContext, appSettings, user };
+}
+
+async function getUserFromSession(): Promise<User | null> {
+    const sessionCookie = cookies().get('__session')?.value;
+    if (!sessionCookie) {
+        return null;
+    }
+
+    try {
+        const decodedIdToken = await auth.verifySessionCookie(sessionCookie, true);
+        const db = getDb();
+        const userDoc = await getDoc(doc(db, 'users', decodedIdToken.uid));
+        if (userDoc.exists()) {
+            return { userId: userDoc.id, ...userDoc.data() } as User;
+        }
+        return null;
+    } catch (error) {
+        console.error('Error verifying session cookie:', error);
+        return null;
+    }
 }
 
 export default async function DynamicPage({ params }: { params: { page: string[] }}) {
-    const { page, teamContext, appSettings } = await getPageData(params);
-    
-    // In a real app with server-side auth, you'd get the user session here.
-    // We'll pass a placeholder or fetch it if possible.
-    // const session = await auth().getSession();
-    // const user = session ? await getUser(session.uid) : null;
+    const user = await getUserFromSession();
+    const { page, teamContext, appSettings } = await getPageData(params, user);
 
-    if (!page) {
+    if (!page || !appSettings) {
         notFound();
     }
 
@@ -102,7 +114,9 @@ export default async function DynamicPage({ params }: { params: { page: string[]
             appSettings={appSettings}
             componentMap={componentMap}
             params={params}
+            // Pass the user prop to the client if needed by child components
+            // Note: Be careful not to expose sensitive user info to the client.
+            user={user} 
        />
     );
 }
-

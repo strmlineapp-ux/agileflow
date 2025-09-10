@@ -23,6 +23,7 @@ export default function AdminPage() {
   
   // Find the corresponding data from appSettings to get the potentially user-edited name.
   const getTabName = (tabId: string, defaultName: string) => {
+    if (!appSettings) return defaultName;
     return appSettings.tabs.find(t => t.id === tabId)?.name || defaultName;
   }
 

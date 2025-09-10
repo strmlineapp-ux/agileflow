@@ -21,12 +21,13 @@ import { DuplicateZone } from '@/components/common/duplicate-zone';
 import { SharedItemsPanel } from '@/components/common/shared-items-panel';
 import { cn } from '@/lib/utils';
 
-export function DynamicPageClient({ page: initialPage, teamContext: initialTeamContext, appSettings: initialAppSettings, componentMap, params }: {
+export function DynamicPageClient({ page: initialPage, teamContext: initialTeamContext, appSettings: initialAppSettings, componentMap, params, user }: {
     page: AppPage;
     teamContext: Team | null;
     appSettings: any;
     componentMap: any;
-    params: { page: string[] }
+    params: { page: string[] };
+    user: User | null;
 }) {
   const { viewAsUser, loading, reorderPages, addPage, updatePage, deletePage, users, updateUser, reorderTeams, addTeam, updateTeam, deleteTeam, reorderCalendars, addCalendar, updateCalendar, deleteCalendar } = useUser();
   const { toast } = useToast();
@@ -43,14 +44,15 @@ export function DynamicPageClient({ page: initialPage, teamContext: initialTeamC
   }, [initialPage, initialTeamContext]);
 
   useEffect(() => {
-    if (page && page.associatedTabs.length > 0) {
+    const tabs = initialAppSettings?.tabs;
+    if (page && page.associatedTabs.length > 0 && Array.isArray(tabs)) {
       const firstTabId = page.associatedTabs[0];
-      const firstTab = initialAppSettings.tabs.find((t: AppTab) => t.id === firstTabId);
+      const firstTab = tabs.find((t: AppTab) => t.id === firstTabId);
       if(firstTab) {
         setActiveTabValue(firstTab.id);
       }
     }
-  }, [page, initialAppSettings.tabs]);
+  }, [page, initialAppSettings]);
   
   const onDragStart = (event: DragStartEvent) => {
     const itemData = event.active.data.current;
@@ -58,17 +60,15 @@ export function DynamicPageClient({ page: initialPage, teamContext: initialTeamC
   };
 
   const onDragEnd = (event: DragEndEvent) => {
-    // This function will need to be simplified as most data fetching is now server-side
-    // or passed down directly to the client components that handle their own state.
     setActiveDragItem(null);
     const { active, over } = event;
     if (!over) return;
-    // ... Simplified drag-end logic ...
   };
 
   const renderDragOverlay = () => {
     if (!activeDragItem) return null;
-    // ... Drag overlay logic remains the same ...
+    // Drag overlay logic can be implemented here if needed
+    return null;
   };
   
   const sensors = useSensors(
@@ -78,7 +78,9 @@ export function DynamicPageClient({ page: initialPage, teamContext: initialTeamC
     })
   );
 
-  if (loading || !viewAsUser) {
+  const effectiveUser = viewAsUser || user;
+
+  if (loading || !effectiveUser) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <GoogleSymbol name="progress_activity" className="animate-spin text-4xl text-primary" />
@@ -86,7 +88,7 @@ export function DynamicPageClient({ page: initialPage, teamContext: initialTeamC
     );
   }
   
-  if (!page || !hasAccess(viewAsUser, page)) {
+  if (!page || !hasAccess(effectiveUser, page)) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <div className="text-center">
@@ -118,8 +120,17 @@ export function DynamicPageClient({ page: initialPage, teamContext: initialTeamC
   };
 
   const renderContent = () => {
+    const tabs = initialAppSettings?.tabs;
+    if (!Array.isArray(tabs)) {
+      return (
+         <div className="text-center text-muted-foreground">
+           <p>Error: Application tabs are not configured. Please contact support.</p>
+         </div>
+       );
+    }
+
     const pageTabs = page.associatedTabs
-        .map(tabId => initialAppSettings.tabs.find((t: AppTab) => t.id === tabId))
+        .map(tabId => tabs.find((t: AppTab) => t.id === tabId))
         .filter((t): t is AppTab => !!t);
 
     if (pageTabs.length === 0) {
@@ -143,7 +154,7 @@ export function DynamicPageClient({ page: initialPage, teamContext: initialTeamC
             <SortableTabsList
                 items={pageTabs}
                 onReorder={handleReorderPageTabs}
-                disabled={!viewAsUser.isAdmin}
+                disabled={!effectiveUser.isAdmin}
             >
                 {pageTabs.map(tab => (
                   <TabsTrigger key={tab.id} value={tab.id} className="gap-2">
@@ -179,7 +190,7 @@ export function DynamicPageClient({ page: initialPage, teamContext: initialTeamC
                   icon={page.icon}
                   iconColor={page.color}
                   onSave={(newTitle) => updatePage(page.id, { displayTitle: newTitle })}
-                  disabled={!viewAsUser.isAdmin}
+                  disabled={!effectiveUser.isAdmin}
                 />
            )}
            <div className="flex-1 min-h-0">

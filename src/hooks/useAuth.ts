@@ -1,10 +1,10 @@
 
 'use client';
 
-import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider, type User as FirebaseUser } from 'firebase/auth';
-import { getFirestore, doc, getDoc, setDoc, collection, query, where, limit, updateDoc, writeBatch, onSnapshot } from 'firebase/firestore';
+import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider } from 'firebase/auth';
+import { getFirestore, doc, getDoc, setDoc, collection, query, where, limit, onSnapshot, getDocs } from 'firebase/firestore';
 import { useState, useEffect, useCallback } from 'react';
-import { type User, type Workspace } from '@/types';
+import { type User } from '@/types';
 import { getAuthInstance, getDb, getCurrentWorkspaceId } from '@/lib/firebase';
 import { useToast } from './use-toast';
 import { systemPages, coreTabs } from '@/lib/core-data';
@@ -17,7 +17,7 @@ export function useAuth() {
   const [isFirebaseReady, setIsFirebaseReady] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
-  
+
   useEffect(() => {
     try {
       getAuthInstance();
@@ -26,79 +26,105 @@ export function useAuth() {
       console.error("Firebase initialization error in useAuth:", error);
     }
   }, []);
-  
 
   useEffect(() => {
     if (!isFirebaseReady) return;
 
     const auth = getAuthInstance();
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-        if (firebaseUser) {
-            const db = getDb();
-            const userRef = doc(db, 'users', firebaseUser.uid);
-            
-            const userDocUnsubscribe = onSnapshot(userRef, (doc) => {
-              if (doc.exists()) {
-                setRealUser({ userId: doc.id, ...doc.data() } as User);
-              }
-              setLoading(false);
-            });
+    const db = getDb();
 
-            let userDoc = await getDoc(userRef);
-            const workspaceId = getCurrentWorkspaceId();
+    const authUnsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        const userRef = doc(db, 'users', firebaseUser.uid);
 
-            if (!userDoc.exists()) {
+        const userDocUnsubscribe = onSnapshot(userRef, async (docSnapshot) => {
+          if (docSnapshot.exists()) {
+            setRealUser({ userId: docSnapshot.id, ...docSnapshot.data() } as User);
+            setLoading(false);
+          } else {
+            try {
+              const workspaceId = getCurrentWorkspaceId();
               const usersInWorkspaceQuery = query(collection(db, 'users'), where('workspaceId', '==', workspaceId), limit(1));
-              const isFirstUser = (await getDocs(usersInWorkspaceQuery)).empty;
-
               const preApprovedQuery = query(collection(db, 'pre-approved-emails'), where('email', '==', firebaseUser.email), where('workspaceId', '==', workspaceId));
-              const isPreApproved = !(await getDocs(preApprovedQuery)).empty;
-
-              const newUser: User = {
-                userId: firebaseUser.uid,
-                email: firebaseUser.email || '',
-                displayName: firebaseUser.displayName || 'New User',
-                avatarUrl: firebaseUser.photoURL || '',
-                isAdmin: isFirstUser,
-                accountType: (isFirstUser || isPreApproved) ? 'Full' : 'Viewer',
-                googleCalendarLinked: false, // Will be updated after OAuth flow
-                createdAt: new Date(),
-                workspaceId,
-              };
               
-              await setDoc(userRef, newUser);
+              const [usersSnapshot, preApprovedSnapshot] = await Promise.all([
+                getDocs(usersInWorkspaceQuery),
+                getDocs(preApprovedQuery)
+              ]);
 
-              if (isFirstUser) {
-                const batch = writeBatch(db);
-                const appSettingsRef = doc(db, 'app-settings', workspaceId);
-                batch.set(appSettingsRef, { pages: systemPages, tabs: coreTabs, workspaceId });
-                await batch.commit();
+              const isFirstUser = usersSnapshot.empty;
+              const isPreApproved = !preApprovedSnapshot.empty;
+
+              if (isFirstUser || isPreApproved) {
+                const newUser: User = {
+                  userId: firebaseUser.uid,
+                  email: firebaseUser.email || '',
+                  displayName: firebaseUser.displayName || 'New User',
+                  avatarUrl: firebaseUser.photoURL || '',
+                  isAdmin: isFirstUser,
+                  accountType: 'Full',
+                  createdAt: new Date(),
+                  workspaceId,
+                  approvedBy: isFirstUser ? 'system' : 'pre-approved',
+                  memberOfTeamIds: [],
+                  theme: 'light',
+                  defaultCalendarView: 'day',
+                  modifierKey: 'shift',
+                  primaryColor: '',
+                  easyBooking: false,
+                  timeFormat: '12-hour',
+                  googleCalendarLinked: false,
+                };
+                
+                await setDoc(userRef, newUser);
+
+              } else {
+                toast({
+                  variant: 'default',
+                  title: 'Account Pending Approval',
+                  description: 'An administrator must approve your account before you can log in.',
+                });
+                await signOut(auth);
+                setLoading(false);
               }
+            } catch (error: any) {
+              const errorMessage = error.message || 'An unknown error occurred.';
+              console.error("CRITICAL: Failed during first-time user setup:", error);
+              toast({
+                variant: 'destructive',
+                title: 'Login Error',
+                description: `A critical error occurred: ${errorMessage}`,
+                duration: 15000,
+              });
+              await signOut(auth);
+              setLoading(false);
             }
+          }
+        });
 
-            const usersQuery = query(collection(db, 'users'), where('workspaceId', '==', workspaceId));
-            const usersUnsubscribe = onSnapshot(usersQuery, (snapshot) => {
-              setUsers(snapshot.docs.map(d => ({...d.data(), userId: d.id} as User)));
-            });
-            
-            return () => {
-              userDocUnsubscribe();
-              usersUnsubscribe();
-            };
+        const workspaceId = getCurrentWorkspaceId();
+        const usersQuery = query(collection(db, 'users'), where('workspaceId', '==', workspaceId));
+        const usersUnsubscribe = onSnapshot(usersQuery, (snapshot) => {
+          setUsers(snapshot.docs.map(d => ({ ...d.data(), userId: d.id } as User)));
+        });
 
-        } else {
-          setRealUser(null);
-          setUsers([]);
-          setLoading(false);
-        }
+        return () => {
+          userDocUnsubscribe();
+          usersUnsubscribe();
+        };
+      } else {
+        setRealUser(null);
+        setUsers([]);
+        setLoading(false);
+      }
     });
 
-    return () => unsubscribe();
+    return () => authUnsubscribe();
   }, [isFirebaseReady, toast]);
 
   const googleLogin = useCallback(async () => {
     if (!isFirebaseReady) {
-      toast({ variant: "destructive", title: "Authentication service not ready."});
+      toast({ variant: "destructive", title: "Authentication service not ready." });
       return false;
     }
     const authInstance = getAuthInstance();
@@ -107,31 +133,21 @@ export function useAuth() {
     provider.setCustomParameters({ prompt: 'select_account' });
 
     try {
-        const result = await signInWithPopup(authInstance, provider);
-        const credential = GoogleAuthProvider.credentialFromResult(result);
-        if (credential) {
-          // This will trigger the onAuthStateChanged listener which handles user setup
-          router.push('/dashboard/overview');
-          return true;
-        }
-        return false;
+      await signInWithPopup(authInstance, provider);
+      return true;
     } catch (error: any) {
-        if (error.code !== 'auth/popup-closed-by-user') {
-            console.error("Google Sign-In failed:", error);
-            toast({ variant: 'destructive', title: 'Sign-in Error', description: 'Could not sign in with Google. Please try again.' });
-        }
-        return false;
+      if (error.code !== 'auth/popup-closed-by-user') {
+        console.error("Google Sign-In failed:", error);
+        toast({ variant: 'destructive', title: 'Sign-in Error', description: 'Could not sign in with Google. Please try again.' });
+      }
+      return false;
     }
-  }, [isFirebaseReady, toast, router]);
-  
+  }, [isFirebaseReady, toast]);
+
   const linkGoogleCalendar = useCallback(async (user: User) => {
-    // The user's ID is needed server-side to associate the tokens.
-    // In a real app, you'd securely get this from the session cookie.
-    // For this context, we'll set a temporary cookie.
-    document.cookie = `userId=${user.userId};path=/;max-age=300`; // Expires in 5 minutes
+    document.cookie = `userId=${user.userId};path=/;max-age=300`;
     window.location.href = '/api/auth/google/signin';
   }, []);
-
 
   const logout = useCallback(async () => {
     if (!isFirebaseReady) return;

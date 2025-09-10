@@ -1,0 +1,13 @@
+
+run:
+  build:
+    - npm install
+    - npm run build
+  start: npm start
+secretEnvironmentVariables:
+  - key: GOOGLE_CLIENT_SECRET
+    secret: GOOGLE_CLIENT_SECRET
+  - key: NEXT_PUBLIC_GOOGLE_CLIENT_ID
+    secret: NEXT_PUBLIC_GOOGLE_CLIENT_ID
+  - key: NEXT_PUBLIC_GOOGLE_REDIRECT_URI
+    secret: NEXT_PUBLIC_GOOGLE_REDIRECT_URI
