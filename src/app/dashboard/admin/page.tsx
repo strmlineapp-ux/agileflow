@@ -17,7 +17,7 @@ export default function AdminPage() {
   const [activeTabKey, setActiveTabKey] = useState('admins');
   const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
 
-  const { data: appSettings } = useFetchAppSettings(viewAsUser?.workspaceId);
+  const { data: appSettings, isLoading: isLoadingSettings } = useFetchAppSettings(viewAsUser?.workspaceId);
 
   // Statically define the admin tabs to ensure they are always present.
   const adminTabs = [
@@ -32,7 +32,7 @@ export default function AdminPage() {
     return appSettings.tabs.find(t => t.id === tabId)?.name || defaultName;
   }
 
-  if (!appSettings) {
+  if (isLoadingSettings || !appSettings) {
     return (
         <div className="flex h-full w-full items-center justify-center">
             <GoogleSymbol name="progress_activity" className="animate-spin text-4xl text-primary" />
@@ -56,9 +56,12 @@ export default function AdminPage() {
             <div className="flex-1 pt-6 min-h-0">
                 {adminTabs.map(tab => {
                   const Component = tab.component;
-                  const props = tab.key === 'pages' 
-                    ? { isActive: activeTabKey === tab.key, isSharedPanelOpen, setIsSharedPanelOpen }
-                    : { isActive: activeTabKey === tab.key };
+                  const props = {
+                    isActive: activeTabKey === tab.key,
+                    isSharedPanelOpen: tab.key === 'pages' ? isSharedPanelOpen : undefined,
+                    setIsSharedPanelOpen: tab.key === 'pages' ? setIsSharedPanelOpen : undefined,
+                    appSettings: appSettings, // Pass appSettings to children that need it
+                  };
 
                   return (
                     <TabsContent 

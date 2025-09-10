@@ -4,7 +4,7 @@
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useUser } from '@/context/user-context';
-import { type User, type AdminGroup, type AppPage, type AppTab, type Team, type PreApprovedEmail } from '@/types';
+import { type User, type AdminGroup, type AppPage, type AppTab, type Team, type PreApprovedEmail, type AppSettings } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -617,13 +617,12 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
     );
 }
 
-export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelOpen, isDragging }: { isActive: boolean; isSharedPanelOpen?: boolean; setIsSharedPanelOpen?: (isOpen: boolean) => void; isDragging?: boolean; }) => {
+export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelOpen, isDragging, appSettings }: { isActive: boolean; isSharedPanelOpen?: boolean; setIsSharedPanelOpen?: (isOpen: boolean) => void; isDragging?: boolean; appSettings: AppSettings; }) => {
     const { viewAsUser, updateUser } = useUser();
-    const { useFetchPages, useAddPage, useUpdatePage, useDeletePage, useFetchAppSettings } = useDataQueries();
+    const { useFetchPages, useAddPage, useUpdatePage, useDeletePage } = useDataQueries();
     const { toast } = useToast();
     const contextKey = 'pages-management';
     
-    const { data: appSettings } = useFetchAppSettings(viewAsUser?.workspaceId);
     const { data: allPages = [], isLoading } = useFetchPages(viewAsUser?.workspaceId);
     
     const addPageMutation = useAddPage();
@@ -758,7 +757,7 @@ export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelO
       </SortableItem>
     )}, [handleUpdate, handleDelete, viewAsUser, onToggleExpand, contextKey, appSettings]);
 
-    if (!appSettings) {
+    if (isLoading || !appSettings) {
         return (
             <div className="flex items-center justify-center h-full">
                 <GoogleSymbol name="progress_activity" className="animate-spin text-4xl" />
@@ -832,11 +831,9 @@ function SortableTabCard({ tab, onUpdate, isExpanded, onToggleExpand }: {
     );
 }
 
-export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
+export const TabsManagement = ({ isActive, appSettings }: { isActive: boolean; appSettings: AppSettings; }) => {
     const { viewAsUser, updateUser } = useUser();
-    const { useFetchAppSettings, useUpdateAppSettings } = useDataQueries();
-    
-    const { data: appSettings } = useFetchAppSettings(viewAsUser?.workspaceId);
+    const { useUpdateAppSettings } = useDataQueries();
     
     const updateSettingsMutation = useUpdateAppSettings();
 
@@ -918,14 +915,6 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
             </SortableItem>
         )
     }, [handleUpdateTab, viewAsUser, onToggleExpand, contextKey]);
-
-    if (!appSettings) {
-        return (
-            <div className="flex items-center justify-center h-full">
-                <GoogleSymbol name="progress_activity" className="animate-spin text-4xl" />
-            </div>
-        );
-    }
 
     return (
         <div className="space-y-6">
