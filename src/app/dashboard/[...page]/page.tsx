@@ -5,7 +5,7 @@ import { getDb } from '@/lib/firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { cookies } from 'next/headers'; // Import cookies
 import { auth } from '@/lib/firebase-admin'; // Import server-side auth
-import { type AppSettings, type Team, type User } from '@/types';
+import { type AppSettings, type Team, type User, type AppPage } from '@/types';
 
 // Component Imports (assuming these are correct)
 import { AdminsManagement, PagesManagement, TabsManagement } from '@/components/admin/page';
@@ -55,17 +55,14 @@ async function getPageData(params: { page: string[] }, user: User | null) {
 
     if (!workspaceId) {
         // If there's no workspace ID, we cannot proceed.
-        return { page: null, teamContext: null, appSettings: null, user };
+        return { page: null, teamContext: null, user };
     }
+    
+    const pagesQuery = query(collection(db, 'pages'), where('workspaceId', '==', workspaceId));
+    const pagesSnapshot = await getDocs(pagesQuery);
+    const allPages = pagesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AppPage));
 
-    const appSettingsDoc = await getDoc(doc(db, 'app-settings', workspaceId));
-    if (!appSettingsDoc.exists()) {
-        console.error(`App settings not found for workspace: ${workspaceId}`);
-        return { page: null, teamContext: null, appSettings: null, user };
-    }
-    const appSettings = appSettingsDoc.data() as AppSettings;
-
-    const foundPage = appSettings.pages.find(p => p.isDynamic ? path.startsWith(p.path.replace(/\[.*?\]/, '')) : p.path === path);
+    const foundPage = allPages.find(p => p.isDynamic ? path.startsWith(p.path.replace(/\[.*?\]/, '')) : p.path === path);
 
     let teamContext: Team | null = null;
     if (foundPage?.isDynamic) {
@@ -76,7 +73,7 @@ async function getPageData(params: { page: string[] }, user: User | null) {
         }
     }
 
-    return { page: foundPage || null, teamContext, appSettings, user };
+    return { page: foundPage || null, teamContext, user };
 }
 
 async function getUserFromSession(): Promise<User | null> {
@@ -101,9 +98,9 @@ async function getUserFromSession(): Promise<User | null> {
 
 export default async function DynamicPage({ params }: { params: { page: string[] }}) {
     const user = await getUserFromSession();
-    const { page, teamContext, appSettings } = await getPageData(params, user);
+    const { page, teamContext } = await getPageData(params, user);
 
-    if (!page || !appSettings) {
+    if (!page) {
         notFound();
     }
 
@@ -111,11 +108,8 @@ export default async function DynamicPage({ params }: { params: { page: string[]
        <DynamicPageClient
             page={page}
             teamContext={teamContext}
-            appSettings={appSettings}
             componentMap={componentMap}
             params={params}
-            // Pass the user prop to the client if needed by child components
-            // Note: Be careful not to expose sensitive user info to the client.
             user={user} 
        />
     );

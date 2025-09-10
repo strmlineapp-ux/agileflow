@@ -6,11 +6,12 @@ import { useParams } from 'next/navigation';
 import { useUser } from '@/context/user-context';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { hasAccess } from '@/lib/permissions';
-import { type AppTab, type Team, type AppPage, type BadgeCollection, type SharedCalendar, type Badge, type User } from '@/types';
+import { type AppTab, type Team, type AppPage, type SharedCalendar } from '@/types';
 import { DndContext, DragOverlay, KeyboardSensor, PointerSensor, useSensor, useSensors, pointerWithin, type DragStartEvent, type DragEndEvent, type Active, type Over } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { useToast } from '@/hooks/use-toast';
+import { useDataQueries } from '@/hooks/use-data-queries';
 
 import { Tabs, TabsTrigger, TabsContent, SortableTabsList } from '@/components/ui/tabs';
 import { CenteredTabList } from '@/components/common/centered-tab-list';
@@ -21,15 +22,15 @@ import { DuplicateZone } from '@/components/common/duplicate-zone';
 import { SharedItemsPanel } from '@/components/common/shared-items-panel';
 import { cn } from '@/lib/utils';
 
-export function DynamicPageClient({ page: initialPage, teamContext: initialTeamContext, appSettings: initialAppSettings, componentMap, params, user }: {
+export function DynamicPageClient({ page: initialPage, teamContext: initialTeamContext, componentMap, params, user }: {
     page: AppPage;
     teamContext: Team | null;
-    appSettings: any;
     componentMap: any;
     params: { page: string[] };
     user: User | null;
 }) {
-  const { viewAsUser, loading, reorderPages, addPage, updatePage, deletePage, users, updateUser, reorderTeams, addTeam, updateTeam, deleteTeam, reorderCalendars, addCalendar, updateCalendar, deleteCalendar } = useUser();
+  const { viewAsUser, loading } = useUser();
+  const { useFetchAppSettings, useUpdatePage } = useDataQueries();
   const { toast } = useToast();
   
   const [activeTabValue, setActiveTabValue] = useState<string | undefined>();
@@ -38,13 +39,16 @@ export function DynamicPageClient({ page: initialPage, teamContext: initialTeamC
   const [page, setPage] = useState(initialPage);
   const [teamContext, setTeamContext] = useState(initialTeamContext);
 
+  const { data: appSettings } = useFetchAppSettings(viewAsUser?.workspaceId);
+  const updatePageMutation = useUpdatePage();
+
   useEffect(() => {
     setPage(initialPage);
     setTeamContext(initialTeamContext);
   }, [initialPage, initialTeamContext]);
 
   useEffect(() => {
-    const tabs = initialAppSettings?.tabs;
+    const tabs = appSettings?.tabs;
     if (page && page.associatedTabs.length > 0 && Array.isArray(tabs)) {
       const firstTabId = page.associatedTabs[0];
       const firstTab = tabs.find((t: AppTab) => t.id === firstTabId);
@@ -52,7 +56,7 @@ export function DynamicPageClient({ page: initialPage, teamContext: initialTeamC
         setActiveTabValue(firstTab.id);
       }
     }
-  }, [page, initialAppSettings]);
+  }, [page, appSettings]);
   
   const onDragStart = (event: DragStartEvent) => {
     const itemData = event.active.data.current;
@@ -120,7 +124,7 @@ export function DynamicPageClient({ page: initialPage, teamContext: initialTeamC
   };
 
   const renderContent = () => {
-    const tabs = initialAppSettings?.tabs;
+    const tabs = appSettings?.tabs;
     if (!Array.isArray(tabs)) {
       return (
          <div className="text-center text-muted-foreground">
@@ -145,7 +149,7 @@ export function DynamicPageClient({ page: initialPage, teamContext: initialTeamC
     
     const handleReorderPageTabs = (reorderedPageTabs: AppTab[]) => {
       const newTabIds = reorderedPageTabs.map(tab => tab.id);
-      updatePage(page.id, { associatedTabs: newTabIds });
+      updatePageMutation.mutate({ pageId: page.id, data: { associatedTabs: newTabIds }});
     };
 
     return (
@@ -189,7 +193,7 @@ export function DynamicPageClient({ page: initialPage, teamContext: initialTeamC
                   title={page.displayTitle || page.name}
                   icon={page.icon}
                   iconColor={page.color}
-                  onSave={(newTitle) => updatePage(page.id, { displayTitle: newTitle })}
+                  onSave={(newTitle) => updatePageMutation.mutate({ pageId: page.id, data: { displayTitle: newTitle } })}
                   disabled={!effectiveUser.isAdmin}
                 />
            )}

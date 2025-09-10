@@ -16,31 +16,17 @@ import Logo from '../icons/logo';
 import { useQuery } from '@tanstack/react-query';
 import { getFirestore, collection, query, where, orderBy, getDocs, Timestamp, doc, getDoc } from 'firebase/firestore';
 import { getDb } from '@/lib/firebase';
-import { type Notification, type AppSettings } from '@/types';
+import { type Notification, type AppPage } from '@/types';
 import { useDataQueries } from '@/hooks/use-data-queries';
-
-async function fetchAppSettings(workspaceId?: string): Promise<AppSettings | null> {
-    if (!workspaceId) return null;
-    const db = getDb();
-    const docRef = doc(db, 'app-settings', workspaceId);
-    const docSnap = await getDoc(docRef);
-    return docSnap.exists() ? docSnap.data() as AppSettings : null;
-}
-
 
 export function Sidebar() {
   const { realUser, viewAsUser, users, loading, setViewAsUser: setContextViewAsUser, logout } = useUser();
   const router = useRouter();
   const pathname = usePathname();
-  const { useFetchNotifications } = useDataQueries();
+  const { useFetchNotifications, useFetchPages } = useDataQueries();
   
   const { data: notifications = [] } = useFetchNotifications(viewAsUser?.workspaceId);
-
-  const { data: appSettings } = useQuery<AppSettings | null>({
-    queryKey: ['appSettings', viewAsUser?.workspaceId],
-    queryFn: () => fetchAppSettings(viewAsUser?.workspaceId),
-    enabled: !!viewAsUser?.workspaceId,
-  });
+  const { data: allPages = [] } = useFetchPages(viewAsUser?.workspaceId);
 
   const setViewAsUser = (userId: string) => {
     setContextViewAsUser(userId);
@@ -50,18 +36,18 @@ export function Sidebar() {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const { adminPage, notificationsPage, otherPages } = useMemo(() => {
-    if (!viewAsUser || !appSettings?.pages) return { adminPage: null, notificationsPage: null, otherPages: [] };
+    if (!viewAsUser || !allPages) return { adminPage: null, notificationsPage: null, otherPages: [] };
     
-    const adminPage = appSettings.pages.find(p => p.id === 'page-admin-management');
-    const notificationsPage = appSettings.pages.find(p => p.id === 'page-notifications');
-    const otherPages = appSettings.pages
+    const adminPage = allPages.find(p => p.id === 'page-admin-management');
+    const notificationsPage = allPages.find(p => p.id === 'page-notifications');
+    const otherPages = allPages
       .filter(page => page.id !== 'page-admin-management' && page.id !== 'page-notifications' && page.id !== 'page-settings')
       .filter(page => hasAccess(viewAsUser, page))
       .filter(page => page.associatedTabs && page.associatedTabs.length > 0) // Ensure page has tabs
       .filter(page => !!page.path); // Ensure page has a path
 
     return { adminPage, notificationsPage, otherPages };
-  }, [viewAsUser, appSettings?.pages]);
+  }, [viewAsUser, allPages]);
   
   if (loading || !viewAsUser || !realUser) {
     return (

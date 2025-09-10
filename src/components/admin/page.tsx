@@ -619,19 +619,17 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
 
 export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelOpen, isDragging }: { isActive: boolean; isSharedPanelOpen?: boolean; setIsSharedPanelOpen?: (isOpen: boolean) => void; isDragging?: boolean; }) => {
     const { viewAsUser, updateUser } = useUser();
-    const { useFetchAppSettings, useUpdateAppSettings } = useDataQueries();
+    const { useFetchPages, useAddPage, useUpdatePage, useDeletePage, useFetchAppSettings } = useDataQueries();
     const { toast } = useToast();
     const contextKey = 'pages-management';
     
-    const { data: appSettings = { pages: [], tabs: [] } } = useFetchAppSettings(viewAsUser?.workspaceId);
+    const { data: appSettings = { tabs: [] } } = useFetchAppSettings(viewAsUser?.workspaceId);
+    const { data: allPages = [] } = useFetchPages(viewAsUser?.workspaceId);
     
-    const updateSettingsMutation = useUpdateAppSettings();
+    const addPageMutation = useAddPage();
+    const updatePageMutation = useUpdatePage();
+    const deletePageMutation = useDeletePage();
 
-    const updateSettings = useCallback((newSettings: Partial<AppSettings>) => {
-        if (!viewAsUser?.workspaceId) return;
-        updateSettingsMutation.mutate({ workspaceId: viewAsUser.workspaceId, newSettings });
-    }, [viewAsUser?.workspaceId, updateSettingsMutation]);
-    
     const onToggleExpand = useCallback((pageId: string) => {
         if (!viewAsUser) return;
         const currentState = viewAsUser.expandedCardState || {};
@@ -651,9 +649,8 @@ export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelO
     };
 
     const handleUpdate = useCallback((pageId: string, data: Partial<AppPage>) => {
-        const newPages = appSettings.pages.map(p => p.id === pageId ? { ...p, ...data } : p);
-        updateSettings({ pages: newPages });
-    }, [appSettings.pages, updateSettings]);
+        updatePageMutation.mutate({ pageId, data });
+    }, [updatePageMutation]);
     
     const handleDelete = (page: AppPage) => {
         if (!viewAsUser) return;
@@ -661,9 +658,7 @@ export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelO
         const canDeleteSystemPage = viewAsUser.isAdmin && page.isSystemPage && !['page-admin-management', 'page-settings', 'page-notifications'].includes(page.id);
 
         if (isOwner || canDeleteSystemPage) {
-            const newPages = appSettings.pages.filter(p => p.id !== page.id);
-            updateSettings({ pages: newPages });
-            toast({ title: 'Page Deleted' });
+            deletePageMutation.mutate(page.id);
         } else if (!isOwner && !page.isSystemPage) { // Unlink non-system page
             const updatedLinkedIds = (viewAsUser.linkedPageIds || []).filter(id => id !== page.id);
             updateUser(viewAsUser.userId, { linkedPageIds: updatedLinkedIds });
@@ -672,31 +667,41 @@ export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelO
     };
     
     const reorderPages = useCallback((reorderedPages: AppPage[]) => {
-      updateSettings({ pages: reorderedPages });
-    }, [updateSettings]);
+      // Create a batch write to update the 'order' field of each page
+      const db = getDb();
+      const batch = writeBatch(db);
+      reorderedPages.forEach((page, index) => {
+        const pageRef = doc(db, 'pages', page.id);
+        batch.update(pageRef, { order: index });
+      });
+      batch.commit().then(() => {
+        queryClient.invalidateQueries({ queryKey: ['pages', viewAsUser?.workspaceId] });
+      });
+    }, [viewAsUser?.workspaceId, queryClient]);
     
     const addPage = useCallback((sourcePage?: Partial<AppPage>) => {
       if(!viewAsUser) return;
-      const isDuplicating = !!sourcePage?.id;
-      const newPage: AppPage = {
-        id: crypto.randomUUID(),
-        name: isDuplicating ? `${sourcePage!.name} (Copy)` : 'New Page',
-        icon: sourcePage?.icon || googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
-        color: 'hsl(221, 83%, 61%)',
-        path: isDuplicating ? `${sourcePage!.path}-${crypto.randomUUID().substring(0, 4)}` : `/dashboard/new-page-${crypto.randomUUID().substring(0, 4)}`,
-        description: sourcePage?.description || '',
-        isDynamic: sourcePage?.isDynamic || false,
-        associatedTabs: sourcePage?.associatedTabs || [],
-        access: sourcePage?.access || { users: [], teams: [] },
-        owner: { type: 'user', id: viewAsUser.userId },
-        workspaceId: viewAsUser.workspaceId,
-      };
       
-      const newPages = [...appSettings.pages, newPage];
-      updateSettings({ pages: newPages });
-      toast({ title: isDuplicating ? 'Page Duplicated' : 'Page Added' });
+      const newPageData = {
+          name: sourcePage?.id ? `${sourcePage.name} (Copy)` : 'New Page',
+          icon: sourcePage?.icon || googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
+          color: 'hsl(221, 83%, 61%)',
+          path: sourcePage?.id ? `${sourcePage.path}-${crypto.randomUUID().substring(0, 4)}` : `/dashboard/new-page-${crypto.randomUUID().substring(0, 4)}`,
+          description: sourcePage?.description || '',
+          isDynamic: sourcePage?.isDynamic || false,
+          associatedTabs: sourcePage?.associatedTabs || [],
+          access: sourcePage?.access || { users: [], teams: [] },
+          owner: { type: 'user', id: viewAsUser.userId },
+          workspaceId: viewAsUser.workspaceId,
+          order: allPages.length, // Add to the end
+      };
 
-    }, [appSettings.pages, viewAsUser, updateSettings, toast]);
+      addPageMutation.mutate(newPageData, {
+        onSuccess: () => {
+          toast({ title: sourcePage?.id ? 'Page Duplicated' : 'Page Added' });
+        }
+      });
+    }, [allPages, viewAsUser, addPageMutation, toast]);
 
     const handleLinkPage = (pageId: string) => {
         if(!viewAsUser) return;
@@ -706,19 +711,19 @@ export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelO
     }
   
     const displayedPages = useMemo(() => {
-        if (!viewAsUser) return [];
+        if (!viewAsUser || !allPages) return [];
 
         const isViewingAdmin = viewAsUser.isAdmin;
         
         let pagesToShow: AppPage[];
         
-        const ownedPages = appSettings.pages.filter(p => p.owner?.id === viewAsUser.userId);
+        const ownedPages = allPages.filter(p => p.owner?.id === viewAsUser.userId);
         const linkedPageIds = new Set(viewAsUser.linkedPageIds || []);
-        const linkedPages = appSettings.pages.filter(p => linkedPageIds.has(p.id));
-        const systemAndPublicPages = appSettings.pages.filter(p => p.isSystemPage || (!p.owner?.id && !p.access?.users?.length && !p.access?.teams?.length));
+        const linkedPages = allPages.filter(p => linkedPageIds.has(p.id));
+        const systemAndPublicPages = allPages.filter(p => p.isSystemPage || (!p.owner?.id && !p.access?.users?.length && !p.access?.teams?.length));
 
         if (isViewingAdmin) {
-             pagesToShow = appSettings.pages;
+             pagesToShow = allPages;
         } else {
              const combined = [...systemAndPublicPages, ...ownedPages, ...linkedPages];
              pagesToShow = Array.from(new Map(combined.map(p => [p.id, p])).values());
@@ -729,16 +734,20 @@ export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelO
             const bIsSystem = b.isSystemPage;
             if (aIsSystem && !bIsSystem) return -1;
             if (!aIsSystem && bIsSystem) return 1;
+            // Add sorting by 'order' property if it exists
+            if (a.order !== undefined && b.order !== undefined) {
+                return a.order - b.order;
+            }
             return a.name.localeCompare(b.name);
         });
-    }, [appSettings.pages, viewAsUser]);
+    }, [allPages, viewAsUser]);
 
 
     const sharedPages = useMemo(() => {
-        if(!viewAsUser) return [];
+        if(!viewAsUser || !allPages) return [];
         const displayedIds = new Set(displayedPages.map(p => p.id));
-        return appSettings.pages.filter(p => p.isShared && p.owner?.id !== viewAsUser.userId && !displayedIds.has(p.id));
-    }, [appSettings.pages, displayedPages, viewAsUser?.userId]);
+        return allPages.filter(p => p.isShared && p.owner?.id !== viewAsUser.userId && !displayedIds.has(p.id));
+    }, [allPages, displayedPages, viewAsUser?.userId]);
 
     const renderPageCard = useCallback((page: AppPage) => {
         if (!viewAsUser) return null;
