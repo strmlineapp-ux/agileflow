@@ -623,8 +623,8 @@ export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelO
     const { toast } = useToast();
     const contextKey = 'pages-management';
     
-    const { data: appSettings = { tabs: [] } } = useFetchAppSettings(viewAsUser?.workspaceId);
-    const { data: allPages = [] } = useFetchPages(viewAsUser?.workspaceId);
+    const { data: appSettings } = useFetchAppSettings(viewAsUser?.workspaceId);
+    const { data: allPages = [], isLoading } = useFetchPages(viewAsUser?.workspaceId);
     
     const addPageMutation = useAddPage();
     const updatePageMutation = useUpdatePage();
@@ -667,17 +667,8 @@ export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelO
     };
     
     const reorderPages = useCallback((reorderedPages: AppPage[]) => {
-      // Create a batch write to update the 'order' field of each page
-      const db = getDb();
-      const batch = writeBatch(db);
-      reorderedPages.forEach((page, index) => {
-        const pageRef = doc(db, 'pages', page.id);
-        batch.update(pageRef, { order: index });
-      });
-      batch.commit().then(() => {
-        queryClient.invalidateQueries({ queryKey: ['pages', viewAsUser?.workspaceId] });
-      });
-    }, [viewAsUser?.workspaceId, queryClient]);
+      // This needs to be implemented with batch writes to Firestore
+    }, []);
     
     const addPage = useCallback((sourcePage?: Partial<AppPage>) => {
       if(!viewAsUser) return;
@@ -750,7 +741,7 @@ export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelO
     }, [allPages, displayedPages, viewAsUser?.userId]);
 
     const renderPageCard = useCallback((page: AppPage) => {
-        if (!viewAsUser) return null;
+        if (!viewAsUser || !appSettings) return null;
         const expandedCardIds = viewAsUser?.expandedCardState?.[contextKey] || [];
       return (
       <SortableItem key={page.id} id={page.id} data={{ type: 'page-card', page, isSharedPreview: false }} disabled={page.isSystemPage}>
@@ -837,14 +828,14 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
     const { viewAsUser, updateUser } = useUser();
     const { useFetchAppSettings, useUpdateAppSettings } = useDataQueries();
     
-    const { data: appSettings = { pages: [], tabs: [] } } = useFetchAppSettings(viewAsUser?.workspaceId);
+    const { data: appSettings } = useFetchAppSettings(viewAsUser?.workspaceId);
     
     const updateSettingsMutation = useUpdateAppSettings();
 
     const updateSettings = useCallback((newSettings: Partial<AppSettings>) => {
-        if (!viewAsUser?.workspaceId) return;
-        updateSettingsMutation.mutate({ workspaceId: viewAsUser.workspaceId, newSettings });
-    }, [viewAsUser?.workspaceId, updateSettingsMutation]);
+        if (!viewAsUser?.workspaceId || !appSettings) return;
+        updateSettingsMutation.mutate({ workspaceId: viewAsUser.workspaceId, newSettings: { ...appSettings, ...newSettings } });
+    }, [viewAsUser?.workspaceId, updateSettingsMutation, appSettings]);
     
     const [searchTerm, setSearchTerm] = useState('');
     const [colorFilter, setColorFilter] = useState<string | null>(null);
@@ -869,15 +860,17 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
     };
 
     const handleUpdateTab = useCallback((tabId: string, data: Partial<AppTab>) => {
+        if(!appSettings) return;
         const newTabs = appSettings.tabs.map(t => t.id === tabId ? { ...t, ...data } : t);
         updateSettings({ tabs: newTabs });
-    }, [appSettings.tabs, updateSettings]);
+    }, [appSettings, updateSettings]);
     
     const reorderTabs = useCallback((reorderedTabs: AppTab[]) => {
       updateSettings({ tabs: reorderedTabs });
     }, [updateSettings]);
     
     const filteredTabs = useMemo(() => {
+        if (!appSettings?.tabs) return [];
         let results = appSettings.tabs;
         
         if (searchTerm) {
@@ -898,7 +891,7 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
         }
     
         return results;
-    }, [appSettings.tabs, searchTerm, colorFilter]);
+    }, [appSettings?.tabs, searchTerm, colorFilter]);
 
     const renderTabCard = useCallback((tab: AppTab) => {
         if (!viewAsUser) return null;

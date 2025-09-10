@@ -26,10 +26,11 @@ export function TasksContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const { toast } = useToast();
 
-  const { data: tasks = [], isLoading: isLoadingTasks } = useFetchTasks(viewAsUser.workspaceId);
-  const { data: allBadges = [], isLoading: isLoadingBadges } = useFetchAllBadges(viewAsUser.workspaceId);
-  const { data: allBadgeCollections = [], isLoading: isLoadingCollections } = useFetchAllBadgeCollections(viewAsUser.workspaceId);
+  const { data: tasks = [], isLoading: isLoadingTasks } = useFetchTasks(viewAsUser?.workspaceId);
+  const { data: allBadges = [], isLoading: isLoadingBadges } = useFetchAllBadges(viewAsUser?.workspaceId);
+  const { data: allBadgeCollections = [], isLoading: isLoadingCollections } = useFetchAllBadgeCollections(viewAsUser?.workspaceId);
 
   const isLoading = isLoadingTasks || isLoadingBadges || isLoadingCollections;
   
@@ -50,11 +51,12 @@ export function TasksContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
     if (page && (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey)) {
         e.preventDefault();
         updateUser(page.id, { displayTitle: null });
-        // toast({title: "Title Reset", description: "The page title has been reset to its default."});
+        toast({title: "Title Reset", description: "The page title has been reset to its default."});
     }
   };
 
   const handleTaskAdded = async (taskData: Omit<Task, 'taskId' | 'createdAt' | 'lastUpdated'>) => {
+    if(!viewAsUser) return;
     const dataWithContext = {
       ...taskData,
       workspaceId: viewAsUser.workspaceId,
@@ -83,7 +85,7 @@ export function TasksContent({ page, tab }: { page?: AppPage, tab?: AppTab }) {
     setIsFormOpen(true);
   };
 
-  const filteredTasks = activeTab === 'my-tasks'
+  const filteredTasks = activeTab === 'my-tasks' && viewAsUser
     ? tasks.filter(task => task.assignedTo.some(user => user.userId === viewAsUser.userId))
     : tasks;
 

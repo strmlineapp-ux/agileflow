@@ -14,11 +14,11 @@ export function SettingsContent({ isActive }: { isActive: boolean }) {
     return null; // Or a loading skeleton
   }
   
-  const { data: allUsers = [] } = useFetchUsers(viewAsUser.workspaceId);
+  const { data: allUsers = [] } = useFetchUsers(viewAsUser?.workspaceId);
 
   return (
     <div className="flex flex-col h-full gap-6 overflow-y-auto hide-scrollbar">
-      <UserManagement allUsers={allUsers} showSearch={true} />
+      <UserManagement showSearch={true} />
     </div>
   );
 }

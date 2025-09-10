@@ -25,6 +25,7 @@ import { getAuth } from 'firebase/auth';
 import { doc, updateDoc } from 'firebase/firestore';
 import { getDb } from '@/lib/firebase';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useDataQueries } from '@/hooks/use-data-queries';
 
 const predefinedColors = [
     'hsl(0, 84%, 60%)', 'hsl(25, 95%, 53%)', 'hsl(45, 93%, 47%)', 'hsl(88, 62%, 53%)', 'hsl(142, 71%, 45%)', 'hsl(160, 100%, 37%)',
@@ -128,8 +129,7 @@ const CustomColorPicker = ({ colorValue, onUpdate, onClose }: { colorValue: stri
 };
 
 function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }: { user: User, isCurrentUser: boolean, canEditPreferences: boolean, className?: string }) {
-    const queryClient = useQueryClient();
-    const { linkGoogleCalendar } = useUser();
+    const { updateUser, linkGoogleCalendar } = useUser();
     
     const [isPrimaryColorPopoverOpen, setIsPrimaryColorPopoverOpen] = useState(false);
     const [isFontWeightPopoverOpen, setIsFontWeightPopoverOpen] = useState(false);
@@ -137,28 +137,11 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
     const [isIconOpticalSizePopoverOpen, setIsIconOpticalSizePopoverOpen] = useState(false);
     const [isRadiusPopoverOpen, setIsRadiusPopoverOpen] = useState(false);
     
-    const db = getDb();
-
-    const mutation = useMutation({
-        mutationFn: (userData: Partial<User>) => {
-            const userDocRef = doc(db, 'users', user.userId);
-            return updateDoc(userDocRef, userData);
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['users', user.workspaceId] });
-            queryClient.invalidateQueries({ queryKey: ['user', user.userId] }); // Invalidate specific user query
-        },
-    });
-
-    const updateUser = (userData: Partial<User>) => {
-        mutation.mutate(userData);
-    };
-
     const handleFontWeightChange = (value: number[]) => {
         const index = value[0];
         const weight = fontWeightOptions[index]?.value;
         if(weight) {
-            updateUser({ fontWeight: weight });
+            updateUser(user.userId, { fontWeight: weight });
         }
     }
     
@@ -166,7 +149,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
         const index = value[0];
         const grade = iconGradeOptions[index]?.value;
         if (grade !== undefined) {
-            updateUser({ iconGrade: grade });
+            updateUser(user.userId, { iconGrade: grade });
         }
     }
 
@@ -174,13 +157,13 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
         const index = value[0];
         const size = iconOpticalSizeOptions[index]?.value;
         if (size !== undefined) {
-            updateUser({ iconOpticalSize: size });
+            updateUser(user.userId, { iconOpticalSize: size });
         }
     }
 
     const handleRadiusChange = (value: number[]) => {
         const newRadius = value[0] / 10;
-        updateUser({ radius: newRadius });
+        updateUser(user.userId, { radius: newRadius });
     }
     
     const currentWeight = user.fontWeight || 400;
@@ -230,7 +213,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                         onClick={(e) => {
                                             if (isCurrentUser && !user.googleCalendarLinked) {
                                               e.stopPropagation();
-                                              linkGoogleCalendar(user);
+                                              linkGoogleCalendar(user.userId);
                                             }
                                         }}
                                         />
@@ -260,7 +243,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                                     className="h-9 w-9 shrink-0 font-emphasis"
                                                     style={{ color: user.primaryColor || 'hsl(var(--primary))' }}
                                                     enableReset={true}
-                                                    onReset={() => updateUser({ primaryColor: null })}
+                                                    onReset={() => updateUser(user.userId, { primaryColor: null })}
                                                 >
                                                     <GoogleSymbol name="radio_button_checked" />
                                                 </Button>
@@ -275,7 +258,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                 >
                                     <CustomColorPicker 
                                         colorValue={user.primaryColor || null} 
-                                        onUpdate={(color) => updateUser({ primaryColor: color })} 
+                                        onUpdate={(color) => updateUser(user.userId, { primaryColor: color })} 
                                         onClose={() => setIsPrimaryColorPopoverOpen(false)} 
                                     />
                                 </PopoverContent>
@@ -288,9 +271,9 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                             variant="ghost"
                                             size="icon"
                                             className="h-9 w-9 text-foreground font-emphasis"
-                                            onClick={() => updateUser({ theme: user.theme === 'dark' ? 'light' : 'dark' })}
+                                            onClick={() => updateUser(user.userId, { theme: user.theme === 'dark' ? 'light' : 'dark' })}
                                             enableReset={true}
-                                            onReset={() => updateUser({ theme: 'light' })}
+                                            onReset={() => updateUser(user.userId, { theme: 'light' })}
                                         >
                                             <GoogleSymbol
                                                 name={user.theme === 'dark' ? 'dark_mode' : 'light_mode'}
@@ -308,7 +291,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="icon" onClick={() => updateUser({ highContrast: !user.highContrast })} onReset={() => updateUser({ highContrast: false })} enableReset className="h-9 w-9 text-foreground font-emphasis">
+                                        <Button variant="ghost" size="icon" onClick={() => updateUser(user.userId, { highContrast: !user.highContrast })} onReset={() => updateUser(user.userId, { highContrast: false })} enableReset className="h-9 w-9 text-foreground font-emphasis">
                                             <GoogleSymbol name="contrast" />
                                         </Button>
                                     </TooltipTrigger>
@@ -321,7 +304,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                             <TooltipProvider>
                                 <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" onClick={() => updateUser({ iconFill: !user.iconFill })} onReset={() => updateUser({ iconFill: false})} enableReset className="h-9 w-9 text-foreground font-emphasis">
+                                    <Button variant="ghost" size="icon" onClick={() => updateUser(user.userId, { iconFill: !user.iconFill })} onReset={() => updateUser(user.userId, { iconFill: false})} enableReset className="h-9 w-9 text-foreground font-emphasis">
                                         <GoogleSymbol name="opacity" />
                                     </Button>
                                 </TooltipTrigger>
@@ -336,7 +319,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <PopoverTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground font-emphasis" onReset={() => updateUser({ fontWeight: 300 })} enableReset>
+                                      <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground font-emphasis" onReset={() => updateUser(user.userId, { fontWeight: 300 })} enableReset>
                                         <GoogleSymbol name="fitness_center" />
                                       </Button>
                                     </PopoverTrigger>
@@ -366,7 +349,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground font-emphasis" onReset={() => updateUser({ iconGrade: 0 })} enableReset>
+                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground font-emphasis" onReset={() => updateUser(user.userId, { iconGrade: 0 })} enableReset>
                                                     <GoogleSymbol name="tonality" />
                                                 </Button>
                                             </PopoverTrigger>
@@ -390,7 +373,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground font-emphasis" onReset={() => updateUser({ iconOpticalSize: 40 })} enableReset>
+                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground font-emphasis" onReset={() => updateUser(user.userId, { iconOpticalSize: 40 })} enableReset>
                                                     <GoogleSymbol name="visibility" />
                                                 </Button>
                                             </PopoverTrigger>
@@ -414,7 +397,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground font-emphasis" onClick={() => {}} onReset={() => updateUser({ radius: 1.0 })} enableReset>
+                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground font-emphasis" onClick={() => {}} onReset={() => updateUser(user.userId, { radius: 1.0 })} enableReset>
                                                     <GoogleSymbol name="rounded_corner" />
                                                 </Button>
                                             </PopoverTrigger>
@@ -435,7 +418,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
 
                              <SettingSelect
                                 value={user.defaultCalendarView || 'production-schedule'}
-                                onSave={(newValue) => updateUser({ defaultCalendarView: newValue as any})}
+                                onSave={(newValue) => updateUser(user.userId, { defaultCalendarView: newValue as any})}
                                 options={calendarViewOptions}
                                 tooltip="Default Calendar View"
                                 triggerIcon="edit_calendar"
@@ -443,7 +426,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
 
                             <SettingSelect
                                 value={user.timeFormat || '12h'}
-                                onSave={(newValue) => updateUser({ timeFormat: newValue as any})}
+                                onSave={(newValue) => updateUser(user.userId, { timeFormat: newValue as any})}
                                 options={timeFormatOptions}
                                 tooltip="Time Format"
                                 triggerIcon="schedule"
@@ -452,7 +435,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
                             <TooltipProvider>
                                 <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" onClick={() => updateUser({ easyBooking: !user.easyBooking })} onReset={() => updateUser({ easyBooking: false })} enableReset className="h-9 w-9 text-foreground font-emphasis">
+                                    <Button variant="ghost" size="icon" onClick={() => updateUser(user.userId, { easyBooking: !user.easyBooking })} onReset={() => updateUser(user.userId, { easyBooking: false })} enableReset className="h-9 w-9 text-foreground font-emphasis">
                                         <GoogleSymbol name={user.easyBooking ? 'toggle_on' : 'toggle_off'} />
                                     </Button>
                                 </TooltipTrigger>
@@ -464,7 +447,7 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
 
                             <ModifierKeySetting 
                                 user={user}
-                                onUpdate={(newKey) => updateUser({ modifierKey: newKey })}
+                                onUpdate={(newKey) => updateUser(user.userId, { modifierKey: newKey })}
                             />
                         </div>
                     )}
@@ -475,13 +458,13 @@ function CurrentUserCard({ user, isCurrentUser, canEditPreferences, className }:
 }
 
 
-export function UserManagement({ allUsers, showSearch = false }: { allUsers: User[], showSearch?: boolean }) {
-    const { realUser, viewAsUser } = useUser();
+export function UserManagement({ showSearch = false }: { showSearch?: boolean }) {
+    const { realUser, viewAsUser, users } = useUser();
     const [searchTerm, setSearchTerm] = useState('');
     
-    const currentUser = allUsers.find(u => u.userId === viewAsUser.userId);
+    const currentUser = users.find(u => u.userId === viewAsUser.userId);
         
-    const otherUsers = allUsers
+    const otherUsers = users
         .filter(user => user.userId !== viewAsUser.userId)
         .filter(user => user.displayName.toLowerCase().includes(searchTerm.toLowerCase()));
 
