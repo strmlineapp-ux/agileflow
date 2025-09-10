@@ -1,15 +1,13 @@
 
 import * as admin from 'firebase-admin';
 
+// Prevent re-initialization in development
 if (!admin.apps.length) {
-  admin.initializeApp({
-    // If you're running this in a serverless environment (like Firebase Functions or Cloud Run),
-    // and you've given the service account the right permissions, you don't need to provide credentials here.
-    // The SDK will automatically find them.
-  });
+  // When deployed to Firebase, service account credentials will be automatically
+  // discovered. For local development, you must set the GOOGLE_APPLICATION_CREDENTIALS
+  // environment variable in your .env.development file.
+  admin.initializeApp();
 }
 
-const firestore = admin.firestore();
-const auth = admin.auth();
-
-export { firestore, auth };
+export const adminDb = admin.firestore();
+export const adminAuth = admin.auth();

@@ -1,64 +1,53 @@
 
-import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
-import { getAuth, type Auth } from 'firebase/auth';
-import { getFirestore, type Firestore } from 'firebase/firestore';
+import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
+import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore';
+import { getStorage, FirebaseStorage } from 'firebase/storage';
 
-// This is a standard Firebase configuration object.
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID!,
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
-
-// This function ensures that we initialize Firebase only once.
-function initializeFirebase() {
-  if (!getApps().length) {
-    app = initializeApp(firebaseConfig);
-  } else {
-    app = getApp();
+// This function ensures we initialize the app only once.
+// On the client, it behaves like a singleton.
+// On the server, it prevents re-initialization on every hot-reload during development.
+function getClientApp(): FirebaseApp {
+  if (getApps().length) {
+    return getApp();
   }
-  auth = getAuth(app);
-  db = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  return app;
 }
 
-// Call the initialization function immediately.
-initializeFirebase();
-
-/**
- * A safe getter for the initialized Firestore instance.
- * @returns {Firestore} The initialized Firestore instance.
- */
-export function getDb(): Firestore {
-  if (!db) initializeFirebase();
-  return db;
+// These getters provide a clean and consistent way to access Firebase services.
+// They ensure the app is initialized before any service is used.
+export function getClientAuth(): Auth {
+  return getAuth(getClientApp());
 }
 
-/**
- * A safe getter for the initialized Auth instance.
- * @returns {Auth} The initialized Auth instance.
- */
-export function getAuthInstance(): Auth {
-  if (!auth) initializeFirebase();
-  return auth;
+export function getClientDb(): Firestore {
+  return getFirestore(getClientApp());
+}
+
+export function getClientStorage(): FirebaseStorage {
+  return getStorage(getClientApp());
 }
 
 /**
- * Since this is a single-workspace application, this function
- * simply returns the globally configured project ID. It's a placeholder
- * to maintain consistency with multi-workspace patterns if needed later.
- * @returns The workspace ID (Firebase Project ID).
+ * Note on Server-Side Firebase:
+ * 
+ * For server-side operations (in API Routes or getServerSideProps), especially those requiring
+ * elevated privileges or bypassing security rules (like admin tasks), it is STRONGLY
+ * recommended to use the Firebase Admin SDK.
+ * 
+ * The client-side SDK initialized here is intended for client-facing operations and will
+ * adhere to your security rules from the user's perspective. For any backend logic,
+ * the Admin SDK provides a secure and privileged environment.
+ * 
+ * You would typically initialize the Admin SDK in a separate file, e.g., `firebase-admin.ts`.
  */
-export function getCurrentWorkspaceId(): string {
-  if (!firebaseConfig.projectId) {
-    throw new Error("Firebase Project ID is not configured. Please check your environment variables.");
-  }
-  return firebaseConfig.projectId;
-}

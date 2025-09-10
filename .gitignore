@@ -1,22 +1,5 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
-node_modules/
-/functions/node_modules/
 
-# next.js
-.next/
-/functions/.next/
-out/
-
-# firebase
-.firebase/
-
-# misc
-.DS_Store
-*.pem
-*.log
-
-# local env files
-.env.local
-.env.*.local
+# GCP Service Account Keys
+/gcp-keys/
+node_modules
