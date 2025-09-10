@@ -140,6 +140,7 @@ export function useDataQueries() {
         return useQuery<AppPage[]>({
             queryKey: ['pages', workspaceId],
             queryFn: async () => {
+                if (!workspaceId) return [];
                 const db = getDb();
                 const q = query(collection(db, 'pages'), where('workspaceId', '==', workspaceId), orderBy('order', 'asc'));
                 const snapshot = await getDocs(q);

@@ -50,11 +50,9 @@ async function getPageData(params: { page: string[] }, user: User | null) {
     const { page: pagePath } = params;
     const path = Array.isArray(pagePath) ? `/dashboard/${pagePath.join('/')}` : `/dashboard/${pagePath}`;
 
-    // Get workspaceId from the authenticated user, not hardcoded.
     const workspaceId = user?.workspaceId;
 
     if (!workspaceId) {
-        // If there's no workspace ID, we cannot proceed.
         return { page: null, teamContext: null, user };
     }
     
@@ -67,9 +65,11 @@ async function getPageData(params: { page: string[] }, user: User | null) {
     let teamContext: Team | null = null;
     if (foundPage?.isDynamic) {
         const teamId = pagePath[pagePath.length - 1];
-        const teamDoc = await getDoc(doc(db, 'teams', teamId));
-        if (teamDoc.exists()) {
-            teamContext = { id: teamDoc.id, ...teamDoc.data() } as Team;
+        if (teamId) {
+            const teamDoc = await getDoc(doc(db, 'teams', teamId));
+            if (teamDoc.exists()) {
+                teamContext = { id: teamDoc.id, ...teamDoc.data() } as Team;
+            }
         }
     }
 

@@ -48,6 +48,10 @@ import { ManagementPageLayout } from '../common/management-page-layout';
 import { useTheme } from 'next-themes';
 import { useDataQueries } from '@/hooks/use-data-queries';
 import { DraggableGrid } from '../common/draggable-grid';
+import { writeBatch } from 'firebase/firestore';
+import { getDb } from '@/lib/firebase';
+import { doc } from 'firebase/firestore';
+
 
 // #region Admin Groups Management Tab
 
@@ -658,22 +662,27 @@ export const PagesManagement = ({ appSettings, isActive }: { appSettings: AppSet
 
         if (isOwner || canDeleteSystemPage) {
             deletePageMutation.mutate(page.id);
-        } else if (!isOwner && !page.isSystemPage) { // Unlink non-system page
-            // This assumes linkedPageIds are stored on the user object, which needs to be implemented
-            // const updatedLinkedIds = (viewAsUser.linkedPageIds || []).filter(id => id !== page.id);
-            // updateUser(viewAsUser.userId, { linkedPageIds: updatedLinkedIds });
-            // toast({ title: 'Page Unlinked' });
+        } else {
+            // Unlink logic would go here if pages were linkable
         }
     };
     
-    const reorderPages = useCallback((reorderedPages: AppPage[]) => {
-      // This needs to be implemented with batch writes to Firestore
-    }, []);
+    const reorderPages = useCallback(async (reorderedPages: AppPage[]) => {
+      if(!viewAsUser) return;
+      const db = getDb();
+      const batch = writeBatch(db);
+      reorderedPages.forEach((page, index) => {
+        const pageRef = doc(db, 'pages', page.id);
+        batch.update(pageRef, { order: index });
+      });
+      await batch.commit();
+      toast({title: 'Page Order Saved'});
+    }, [viewAsUser]);
     
     const addPage = useCallback((sourcePage?: Partial<AppPage>) => {
       if(!viewAsUser) return;
       
-      const newPageData = {
+      const newPageData: Partial<AppPage> = {
           name: sourcePage?.id ? `${sourcePage.name} (Copy)` : 'New Page',
           icon: sourcePage?.icon || googleSymbolNames[Math.floor(Math.random() * googleSymbolNames.length)],
           color: 'hsl(221, 83%, 61%)',
@@ -696,7 +705,7 @@ export const PagesManagement = ({ appSettings, isActive }: { appSettings: AppSet
   
     const displayedPages = useMemo(() => {
         if (!viewAsUser || !allPages) return [];
-        return allPages; // Simplified for now
+        return allPages;
     }, [allPages, viewAsUser]);
 
     const renderPageCard = useCallback((page: AppPage) => {
@@ -717,7 +726,7 @@ export const PagesManagement = ({ appSettings, isActive }: { appSettings: AppSet
       </SortableItem>
     )}, [handleUpdate, handleDelete, viewAsUser, onToggleExpand, contextKey, appSettings]);
 
-    if (isLoading) {
+    if (isLoading || !appSettings) {
         return (
             <div className="flex items-center justify-center h-full">
                 <GoogleSymbol name="progress_activity" className="animate-spin text-4xl" />
