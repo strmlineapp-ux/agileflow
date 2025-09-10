@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -8,11 +9,15 @@ import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { useUser } from '@/context/user-context';
 import { CenteredTabList } from '@/components/common/centered-tab-list';
 import { cn } from '@/lib/utils';
+import { useDataQueries } from '@/hooks/use-data-queries';
 
 export default function AdminPage() {
-  const { appSettings } = useUser();
+  const { viewAsUser } = useUser();
+  const { useFetchAppSettings } = useDataQueries();
   const [activeTabKey, setActiveTabKey] = useState('admins');
   const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
+
+  const { data: appSettings } = useFetchAppSettings(viewAsUser?.workspaceId);
 
   // Statically define the admin tabs to ensure they are always present.
   const adminTabs = [
@@ -23,8 +28,16 @@ export default function AdminPage() {
   
   // Find the corresponding data from appSettings to get the potentially user-edited name.
   const getTabName = (tabId: string, defaultName: string) => {
-    if (!appSettings) return defaultName;
+    if (!appSettings?.tabs) return defaultName;
     return appSettings.tabs.find(t => t.id === tabId)?.name || defaultName;
+  }
+
+  if (!appSettings) {
+    return (
+        <div className="flex h-full w-full items-center justify-center">
+            <GoogleSymbol name="progress_activity" className="animate-spin text-4xl text-primary" />
+        </div>
+    );
   }
 
   return (

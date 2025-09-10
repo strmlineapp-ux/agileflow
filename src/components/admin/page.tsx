@@ -758,6 +758,14 @@ export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelO
       </SortableItem>
     )}, [handleUpdate, handleDelete, viewAsUser, onToggleExpand, contextKey, appSettings]);
 
+    if (!appSettings) {
+        return (
+            <div className="flex items-center justify-center h-full">
+                <GoogleSymbol name="progress_activity" className="animate-spin text-4xl" />
+            </div>
+        );
+    }
+    
     return (
         <div className="h-full flex flex-col">
             <ManagementPageLayout
@@ -910,6 +918,14 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
             </SortableItem>
         )
     }, [handleUpdateTab, viewAsUser, onToggleExpand, contextKey]);
+
+    if (!appSettings) {
+        return (
+            <div className="flex items-center justify-center h-full">
+                <GoogleSymbol name="progress_activity" className="animate-spin text-4xl" />
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
