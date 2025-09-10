@@ -47,6 +47,7 @@ import { ItemSelectionPopover, type ItemSelectionTab } from '../common/item-sele
 import { ManagementPageLayout } from '../common/management-page-layout';
 import { useTheme } from 'next-themes';
 import { useDataQueries } from '@/hooks/use-data-queries';
+import { DraggableGrid } from '../common/draggable-grid';
 
 // #region Admin Groups Management Tab
 
