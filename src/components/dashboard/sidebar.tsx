@@ -23,7 +23,7 @@ export function Sidebar() {
   const { useFetchNotifications, useFetchPages, useFetchUsers } = useDataQueries();
   
   const { data: notifications = [] } = useFetchNotifications(viewAsUser?.workspaceId);
-  const { data: allPages = [] } = useFetchPages(viewAsUser?.workspaceId);
+  const { data: allPages = [], isLoading: isLoadingPages } = useFetchPages(viewAsUser?.workspaceId);
   const { data: users = [] } = useFetchUsers(viewAsUser?.workspaceId);
 
   const setViewAsUser = (userId: string) => {
@@ -41,13 +41,13 @@ export function Sidebar() {
     const otherPages = allPages
       .filter(page => page.id !== 'page-admin-management' && page.id !== 'page-notifications' && page.id !== 'page-settings')
       .filter(page => hasAccess(viewAsUser, page))
-      .filter(page => page.associatedTabs && page.associatedTabs.length > 0) // Ensure page has tabs
-      .filter(page => !!page.path); // Ensure page has a path
+      .filter(page => page.associatedTabs && page.associatedTabs.length > 0)
+      .filter(page => !!page.path);
 
     return { adminPage, notificationsPage, otherPages };
   }, [viewAsUser, allPages]);
   
-  if (loading || !viewAsUser || !realUser) {
+  if (loading || isLoadingPages || !viewAsUser || !realUser) {
     return (
         <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col bg-card sm:flex" />
     );
