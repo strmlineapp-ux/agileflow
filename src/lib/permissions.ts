@@ -30,6 +30,11 @@ export const canManageEventOnCalendar = (user: User, calendar: SharedCalendar): 
  * @returns `true` if the user has any event creation permissions, `false` otherwise.
  */
 export const canCreateAnyEvent = (user: User, allCalendars: SharedCalendar[]): boolean => {
+    // Add a guard clause to handle cases where calendars might not be loaded yet.
+    if (!allCalendars) {
+        return false;
+    }
+
     // If Admin, they can always create events as long as there's a calendar.
     if (user.isAdmin) {
         return allCalendars.length > 0;
