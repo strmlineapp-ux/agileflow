@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { UserManagement } from '@/components/settings/user-management';
@@ -10,6 +9,11 @@ import { useDataQueries } from '@/hooks/use-data-queries';
 export function SettingsContent({ isActive }: { isActive: boolean }) {
   const { viewAsUser } = useUser();
   const { useFetchUsers } = useDataQueries();
+  
+  if (!viewAsUser) {
+    return null; // Or a loading skeleton
+  }
+  
   const { data: allUsers = [] } = useFetchUsers(viewAsUser.workspaceId);
 
   return (

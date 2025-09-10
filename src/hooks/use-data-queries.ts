@@ -329,6 +329,7 @@ export function useDataQueries() {
             queryKey: ['notifications', workspaceId],
             queryFn: async () => {
                 const db = getDb();
+                if (!workspaceId) return [];
                 const q = query(
                     collection(db, 'notifications'),
                     where('workspaceId', '==', workspaceId),
@@ -384,6 +385,7 @@ export function useDataQueries() {
         queryKey: ['events', workspaceId, start?.toISOString(), end?.toISOString()],
         queryFn: async () => {
           const db = getDb();
+          if (!workspaceId || !start || !end) return [];
           const eventsQuery = query(
             collection(db, "events"),
             where("workspaceId", "==", workspaceId),
@@ -461,5 +463,3 @@ export function useDataQueries() {
         useDeleteEvent,
     };
 }
-
-    

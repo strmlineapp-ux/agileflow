@@ -13,20 +13,17 @@ import { GoogleSymbol } from '../icons/google-symbol';
 import { ScrollArea } from '../ui/scroll-area';
 import { hasAccess } from '@/lib/permissions';
 import Logo from '../icons/logo';
-import { useQuery } from '@tanstack/react-query';
-import { getFirestore, collection, query, where, orderBy, getDocs, Timestamp, doc, getDoc } from 'firebase/firestore';
-import { getDb } from '@/lib/firebase';
-import { type Notification, type AppPage } from '@/types';
 import { useDataQueries } from '@/hooks/use-data-queries';
+import { type Notification, type AppPage } from '@/types';
 
 export function Sidebar() {
   const { realUser, viewAsUser, users, loading, setViewAsUser: setContextViewAsUser, logout } = useUser();
   const router = useRouter();
   const pathname = usePathname();
-  const { useFetchNotifications, useFetchPages } = useDataQueries();
+  const { useFetchNotifications, useFetchAppSettings } = useDataQueries();
   
   const { data: notifications = [] } = useFetchNotifications(viewAsUser?.workspaceId);
-  const { data: allPages = [] } = useFetchPages(viewAsUser?.workspaceId);
+  const { data: appSettings } = useFetchAppSettings(viewAsUser?.workspaceId);
 
   const setViewAsUser = (userId: string) => {
     setContextViewAsUser(userId);
@@ -36,8 +33,9 @@ export function Sidebar() {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const { adminPage, notificationsPage, otherPages } = useMemo(() => {
-    if (!viewAsUser || !allPages) return { adminPage: null, notificationsPage: null, otherPages: [] };
+    if (!viewAsUser || !appSettings?.pages) return { adminPage: null, notificationsPage: null, otherPages: [] };
     
+    const allPages = appSettings.pages;
     const adminPage = allPages.find(p => p.id === 'page-admin-management');
     const notificationsPage = allPages.find(p => p.id === 'page-notifications');
     const otherPages = allPages
@@ -47,7 +45,7 @@ export function Sidebar() {
       .filter(page => !!page.path); // Ensure page has a path
 
     return { adminPage, notificationsPage, otherPages };
-  }, [viewAsUser, allPages]);
+  }, [viewAsUser, appSettings?.pages]);
   
   if (loading || !viewAsUser || !realUser) {
     return (
