@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation';
 import { useUser } from '@/context/user-context';
 import { GoogleSymbol } from '@/components/icons/google-symbol';
 import { hasAccess } from '@/lib/permissions';
-import { type AppTab, type Team, type AppPage, type SharedCalendar } from '@/types';
+import { type AppTab, type Team, type AppPage, type SharedCalendar, type User } from '@/types';
 import { DndContext, DragOverlay, KeyboardSensor, PointerSensor, useSensor, useSensors, pointerWithin, type DragStartEvent, type DragEndEvent, type Active, type Over } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
