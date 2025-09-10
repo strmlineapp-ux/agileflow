@@ -141,8 +141,8 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
 
   const { useFetchUsers, useFetchPreApprovedEmails, useUpdateUser, useDeleteUser, useAddPreApprovedEmail, useRemovePreApprovedEmail } = useDataQueries();
 
-  const { data: users = [] } = useFetchUsers(viewAsUser.workspaceId);
-  const { data: preApprovedEmails = [] } = useFetchPreApprovedEmails(viewAsUser.workspaceId);
+  const { data: users = [] } = useFetchUsers(viewAsUser?.workspaceId);
+  const { data: preApprovedEmails = [] } = useFetchPreApprovedEmails(viewAsUser?.workspaceId);
 
   const updateUserMutation = useUpdateUser();
   const deleteUserMutation = useDeleteUser();
@@ -439,7 +439,7 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
 function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: Partial<AppPage>) => void }) {
     const { viewAsUser } = useUser();
     const { useFetchUsers } = useDataQueries();
-    const { data: users = [] } = useFetchUsers(viewAsUser.workspaceId);
+    const { data: users = [] } = useFetchUsers(viewAsUser?.workspaceId);
     // This part is problematic as it assumes a global `teams` state which we are removing.
     // It should be fetched if needed, or the logic re-evaluated.
     // For now, we'll pass an empty array to avoid breaking the UI.
@@ -622,7 +622,7 @@ export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelO
     const { toast } = useToast();
     const contextKey = 'pages-management';
     
-    const { data: appSettings = { pages: [], tabs: [] } } = useFetchAppSettings(viewAsUser.workspaceId);
+    const { data: appSettings = { pages: [], tabs: [] } } = useFetchAppSettings(viewAsUser?.workspaceId);
     
     const updateSettingsMutation = useUpdateAppSettings();
 
@@ -655,6 +655,7 @@ export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelO
     }, [appSettings.pages, updateSettings]);
     
     const handleDelete = (page: AppPage) => {
+        if (!viewAsUser) return;
         const isOwner = page.owner?.id === viewAsUser.userId;
         const canDeleteSystemPage = viewAsUser.isAdmin && page.isSystemPage && !['page-admin-management', 'page-settings', 'page-notifications'].includes(page.id);
 
@@ -736,9 +737,10 @@ export const PagesManagement = ({ isActive, isSharedPanelOpen, setIsSharedPanelO
         if(!viewAsUser) return [];
         const displayedIds = new Set(displayedPages.map(p => p.id));
         return appSettings.pages.filter(p => p.isShared && p.owner?.id !== viewAsUser.userId && !displayedIds.has(p.id));
-    }, [appSettings.pages, displayedPages, viewAsUser.userId]);
+    }, [appSettings.pages, displayedPages, viewAsUser?.userId]);
 
     const renderPageCard = useCallback((page: AppPage) => {
+        if (!viewAsUser) return null;
         const expandedCardIds = viewAsUser?.expandedCardState?.[contextKey] || [];
       return (
       <SortableItem key={page.id} id={page.id} data={{ type: 'page-card', page, isSharedPreview: false }} disabled={page.isSystemPage}>
@@ -825,7 +827,7 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
     const { viewAsUser, updateUser } = useUser();
     const { useFetchAppSettings, useUpdateAppSettings } = useDataQueries();
     
-    const { data: appSettings = { pages: [], tabs: [] } } = useFetchAppSettings(viewAsUser.workspaceId);
+    const { data: appSettings = { pages: [], tabs: [] } } = useFetchAppSettings(viewAsUser?.workspaceId);
     
     const updateSettingsMutation = useUpdateAppSettings();
 
@@ -889,6 +891,7 @@ export const TabsManagement = ({ isActive }: { isActive: boolean }) => {
     }, [appSettings.tabs, searchTerm, colorFilter]);
 
     const renderTabCard = useCallback((tab: AppTab) => {
+        if (!viewAsUser) return null;
         const expandedCardIds = viewAsUser?.expandedCardState?.[contextKey] || [];
         return (
             <SortableItem key={tab.id} id={tab.id}>
