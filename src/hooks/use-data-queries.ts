@@ -277,6 +277,7 @@ export function useDataQueries() {
         return useQuery<Task[]>({
             queryKey: ['tasks', workspaceId, projectId, queryLimit],
             queryFn: async () => {
+                if (!workspaceId) return [];
                 const db = getDb();
                 let constraints = [where('workspaceId', '==', workspaceId)];
                 if (projectId) {
