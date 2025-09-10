@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Link from 'next/link';
@@ -20,10 +21,10 @@ export function Sidebar() {
   const { realUser, viewAsUser, users, loading, setViewAsUser: setContextViewAsUser, logout } = useUser();
   const router = useRouter();
   const pathname = usePathname();
-  const { useFetchNotifications, useFetchAppSettings } = useDataQueries();
+  const { useFetchNotifications, useFetchPages } = useDataQueries();
   
   const { data: notifications = [] } = useFetchNotifications(viewAsUser?.workspaceId);
-  const { data: appSettings } = useFetchAppSettings(viewAsUser?.workspaceId);
+  const { data: allPages = [] } = useFetchPages(viewAsUser?.workspaceId);
 
   const setViewAsUser = (userId: string) => {
     setContextViewAsUser(userId);
@@ -33,9 +34,8 @@ export function Sidebar() {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const { adminPage, notificationsPage, otherPages } = useMemo(() => {
-    if (!viewAsUser || !appSettings?.pages) return { adminPage: null, notificationsPage: null, otherPages: [] };
+    if (!viewAsUser || !allPages) return { adminPage: null, notificationsPage: null, otherPages: [] };
     
-    const allPages = appSettings.pages;
     const adminPage = allPages.find(p => p.id === 'page-admin-management');
     const notificationsPage = allPages.find(p => p.id === 'page-notifications');
     const otherPages = allPages
@@ -45,7 +45,7 @@ export function Sidebar() {
       .filter(page => !!page.path); // Ensure page has a path
 
     return { adminPage, notificationsPage, otherPages };
-  }, [viewAsUser, appSettings?.pages]);
+  }, [viewAsUser, allPages]);
   
   if (loading || !viewAsUser || !realUser) {
     return (

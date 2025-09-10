@@ -15,7 +15,6 @@ export default function AdminPage() {
   const { viewAsUser } = useUser();
   const { useFetchAppSettings } = useDataQueries();
   const [activeTabKey, setActiveTabKey] = useState('admins');
-  const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
 
   const { data: appSettings, isLoading: isLoadingSettings } = useFetchAppSettings(viewAsUser?.workspaceId);
 
@@ -58,9 +57,8 @@ export default function AdminPage() {
                   const Component = tab.component;
                   const props = {
                     isActive: activeTabKey === tab.key,
-                    isSharedPanelOpen: tab.key === 'pages' ? isSharedPanelOpen : undefined,
-                    setIsSharedPanelOpen: tab.key === 'pages' ? setIsSharedPanelOpen : undefined,
-                    appSettings: appSettings, // Pass appSettings to children that need it
+                    // Pass appSettings to children that need it
+                    appSettings: appSettings, 
                   };
 
                   return (
