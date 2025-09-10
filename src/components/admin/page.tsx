@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
@@ -677,7 +676,7 @@ export const PagesManagement = ({ appSettings, isActive }: { appSettings: AppSet
       });
       await batch.commit();
       toast({title: 'Page Order Saved'});
-    }, [viewAsUser]);
+    }, [viewAsUser, toast]);
     
     const addPage = useCallback((sourcePage?: Partial<AppPage>) => {
       if(!viewAsUser) return;
