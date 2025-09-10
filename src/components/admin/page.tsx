@@ -954,3 +954,4 @@ export const TabsManagement = ({ isActive, appSettings }: { isActive: boolean; a
     );
 };
 // #endregion
+
