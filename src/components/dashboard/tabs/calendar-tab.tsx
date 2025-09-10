@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils';
 import { getDb } from '@/lib/firebase';
 import { collection, query, where, onSnapshot, addDoc, doc, updateDoc, deleteDoc, Timestamp, getDocs } from 'firebase/firestore';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useDataQueries } from '@/hooks/use-data-queries';
 
 function CalendarLinkPrompt() {
   const { linkGoogleCalendar, realUser } = useUser();
@@ -39,7 +40,7 @@ function CalendarLinkPrompt() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button onClick={() => linkGoogleCalendar(realUser)}>
+          <Button onClick={() => linkGoogleCalendar(realUser.userId)}>
             <GoogleSymbol name="link" className="mr-2" />
             Connect Google Calendar
           </Button>
@@ -49,51 +50,11 @@ function CalendarLinkPrompt() {
   )
 }
 
-async function fetchEvents(workspaceId: string, start: Date, end: Date): Promise<Event[]> {
-    if (!workspaceId) return [];
-    const db = getDb();
-    const eventsQuery = query(
-      collection(db, "events"),
-      where("workspaceId", "==", workspaceId),
-      where("startTime", ">=", start),
-      where("startTime", "<=", end)
-    );
-    const snapshot = await getDocs(eventsQuery);
-    return snapshot.docs.map(doc => ({
-        eventId: doc.id,
-        ...doc.data(),
-        startTime: (doc.data().startTime as Timestamp).toDate(),
-        endTime: (doc.data().endTime as Timestamp).toDate(),
-    } as Event));
-}
-
-async function addEvent(eventData: Omit<Event, 'eventId'>): Promise<Event> {
-    const db = getDb();
-    const docRef = await addDoc(collection(db, 'events'), {
-        ...eventData,
-        startTime: Timestamp.fromDate(eventData.startTime),
-        endTime: Timestamp.fromDate(eventData.endTime),
-    });
-    return { ...eventData, eventId: docRef.id };
-}
-
-async function updateEvent({ eventId, eventData }: { eventId: string, eventData: Partial<Omit<Event, 'eventId'>> }): Promise<Partial<Event>> {
-    const db = getDb();
-    const dataToUpdate: Record<string, any> = { ...eventData, lastUpdated: new Date() };
-    if (eventData.startTime) dataToUpdate.startTime = Timestamp.fromDate(eventData.startTime);
-    if (eventData.endTime) dataToUpdate.endTime = Timestamp.fromDate(eventData.endTime);
-    await updateDoc(doc(db, 'events', eventId), dataToUpdate);
-    return { eventId, ...eventData };
-}
-
-async function deleteEvent(eventId: string): Promise<void> {
-    const db = getDb();
-    await deleteDoc(doc(db, 'events', eventId));
-}
-
 export function CalendarPageContent({ tab }: { tab: AppTab }) {
   const { viewAsUser, calendars } = useUser();
   const queryClient = useQueryClient();
+  const { useFetchEvents, useAddEvent, useUpdateEvent, useDeleteEvent } = useDataQueries();
+
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day' | 'production-schedule'>(viewAsUser?.defaultCalendarView || 'day');
   const [zoomLevel, setZoomLevel] = useState<'normal' | 'fit'>('normal');
@@ -107,7 +68,7 @@ export function CalendarPageContent({ tab }: { tab: AppTab }) {
   
   const userCanCreateEvent = viewAsUser ? canCreateAnyEvent(viewAsUser, calendars) : false;
 
-  const { data: viewEvents = [], isLoading: isDataLoading } = useQuery({
+  const { data: viewEvents = [], isLoading: isDataLoading } = useQuery<Event[]>({
     queryKey: ['events', viewAsUser?.workspaceId, view, currentDate.toISOString().split('T')[0]],
     queryFn: () => {
         let start: Date;
@@ -128,23 +89,14 @@ export function CalendarPageContent({ tab }: { tab: AppTab }) {
             end = addDays(start, 1);
             break;
         }
-        return fetchEvents(viewAsUser!.workspaceId, start, end);
+        return useFetchEvents(viewAsUser!.workspaceId, start, end).data || [];
     },
     enabled: !!viewAsUser?.googleCalendarLinked && !!viewAsUser?.workspaceId,
   });
 
-  const addMutation = useMutation({
-    mutationFn: addEvent,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['events'] }),
-  });
-  const updateMutation = useMutation({
-    mutationFn: updateEvent,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['events'] }),
-  });
-  const deleteMutation = useMutation({
-    mutationFn: deleteEvent,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['events'] }),
-  });
+  const addMutation = useAddEvent();
+  const updateMutation = useUpdateEvent();
+  const deleteMutation = useDeleteEvent();
   
   const handlePrev = useCallback(() => {
     switch (view) {

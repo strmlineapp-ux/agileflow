@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -382,12 +383,14 @@ export function useDataQueries() {
     // #endregion
     
     // #region Events
-    const useFetchEvents = (workspaceId?: string, start?: Date, end?: Date) => {
-      return useQuery<Event[]>({
-        queryKey: ['events', workspaceId, start?.toISOString(), end?.toISOString()],
-        queryFn: async () => {
+    const useFetchEvents = useQuery<Event[], Error, Event[], (string | undefined)[]>({
+        queryKey: ['events', undefined, undefined, undefined],
+        queryFn: async ({ queryKey }) => {
+          const [, workspaceId, startStr, endStr] = queryKey;
           const db = getDb();
-          if (!workspaceId || !start || !end) return [];
+          if (!workspaceId || !startStr || !endStr) return [];
+          const start = new Date(startStr);
+          const end = new Date(endStr);
           const eventsQuery = query(
             collection(db, "events"),
             where("workspaceId", "==", workspaceId),
@@ -397,9 +400,8 @@ export function useDataQueries() {
           const snapshot = await getDocs(eventsQuery);
           return snapshot.docs.map(doc => convertTimestamps<Event>({ eventId: doc.id, ...doc.data()}));
         },
-        enabled: !!workspaceId && !!start && !!end,
+        enabled: false, // This query is intended to be called manually via queryClient
       });
-    };
 
     const useAddEvent = () => {
       return useMutation({
