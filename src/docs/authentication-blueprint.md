@@ -1,6 +1,10 @@
 
+<<<<<<< HEAD
 
 # Strm_: Authentication Blueprint
+=======
+# AgileFlow: Authentication Blueprint
+>>>>>>> e882d9bc8ba92353d999a9492d9b18da62130488
 
 This document provides a clear, non-technical overview of how user authentication is handled within the Strm_ application, incorporating a robust, administrator-controlled access model.
 
@@ -45,6 +49,7 @@ An existing administrator uses a dedicated "Pre-approve User" form within the ap
 A Cloud Function is automatically triggered by the new entry in the `pre-approved-emails` collection. This function sends a welcome email to the new user with a link to the Strm_ login page.
 
 **Step 3: User Clicks "Sign in with Google"**
+<<<<<<< HEAD
 The new user clicks the link and uses the "Sign in with Google" button. They complete the secure sign-in process directly with Google.
 
 **Step 4: System Verifies Invitation**
@@ -52,6 +57,12 @@ Firebase Authentication confirms the user's identity and returns their verified 
 
 **Step 5: Profile Creation & Access Granted**
 Upon finding a match, the system creates a new user profile in the Firestore `/users` collection, populating it with their Google account details (Name, Email, Profile Picture), setting their `accountType` to 'Full', and granting them full access immediately.
+=======
+The new user clicks the link and uses the "Sign in with Google" button. Google will prompt them to grant the application permission to view their calendar information if they have not done so before.
+
+**Step 4: System Verifies Invitation & Creates Profile**
+Firebase Authentication confirms the user's identity. The application checks the `pre-approved-emails` list and finds a match. It then creates a new user profile in the Firestore `/users` collection, populating it with their Google account details (Name, Email, Profile Picture), setting their `accountType` to 'Full', and granting them full access immediately. The `googleCalendarLinked` flag is set to `true` after they approve the permissions via the separate redirect flow.
+>>>>>>> e882d9bc8ba92353d999a9492d9b18da62130488
 
 ---
 
@@ -63,7 +74,11 @@ This flow handles "walk-up" attempts, where a user who has not been invited trie
 A new, uninvited user navigates to the application URL and clicks "Sign in with Google."
 
 **Step 2: System Creates a "Pending" Profile**
+<<<<<<< HEAD
 Firebase authenticates the user. The application checks Firestore, finds no existing user and that the user is not pre-approved, and creates a new user document. **Crucially, it sets the `accountType` to `'Viewer'`, which restricts all access.**
+=======
+Firebase authenticates the user. The application checks Firestore, finds no existing user and that the user is not pre-approved, and creates a new user document. **Crucially, it sets the `accountType` to `'Viewer'`, which restricts all access.** The `googleCalendarLinked` flag will initially be `false`.
+>>>>>>> e882d9bc8ba92353d999a9492d9b18da62130488
 
 **Step 3: Administrator Notification**
 *   **In-App:** A notification appears in the administrator's notification list, stating that a new user has requested access.
@@ -75,7 +90,7 @@ The administrator reviews the request in the in-app notification list. They have
 *   **Reject:** The administrator clicks "Reject." The system deletes the user's document from Firestore and revokes their authentication token.
 
 **Step 5: Access Granted or Denied**
-The user will be granted full access the next time they refresh the application (if approved) or will be unable to log in (if rejected).
+The user will be granted full access the next time they refresh the application (if approved) or will be unable to log in (if rejected). They may then be prompted to link their Google Calendar separately if they haven't already.
 
 ---
 
@@ -117,7 +132,11 @@ When a new user signs in for the first time, their profile is created from a mix
 | `displayName` | **Google:** The user's full name from their Google profile. |
 | `email` | **Google:** The user's primary email address from their Google profile. |
 | `avatarUrl` | **Google:** The URL of their Google profile picture. |
+<<<<<<< HEAD
 | `googleCalendarLinked`| **Google:** Set to `true` by default as the OAuth consent screen now includes the calendar scope. |
+=======
+| `googleCalendarLinked`| **Application:** Defaults to `false`. Set to `true` by the application only after the user successfully completes the separate OAuth consent flow for calendar access. |
+>>>>>>> e882d9bc8ba92353d999a9492d9b18da62130488
 | --- | --- |
 | `isAdmin` | **Application:** Defaults to `true` if the user is the first one in the database, otherwise `false`. |
 | `accountType` | **Application:** Defaults to `Viewer` for user-initiated requests, `Full` for invited users, or `Full` for the first user. |

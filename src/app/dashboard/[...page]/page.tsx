@@ -1,10 +1,9 @@
 
 import { useMemo } from 'react';
 import { notFound } from 'next/navigation';
-import { getDb } from '@/lib/firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
-import { cookies } from 'next/headers'; // Import cookies
-import { auth } from '@/lib/firebase-admin'; // Import server-side auth
+import { cookies } from 'next/headers'; 
+import { adminAuth, adminDb } from '@/lib/firebase-admin';
 import { type AppSettings, type Team, type User, type AppPage } from '@/types';
 
 // Component Imports (assuming these are correct)
@@ -46,7 +45,7 @@ const componentMap = {
 };
 
 async function getPageData(params: { page: string[] }, user: User | null) {
-    const db = getDb();
+    const db = adminDb;
     const { page: pagePath } = params;
     const path = Array.isArray(pagePath) ? `/dashboard/${pagePath.join('/')}` : `/dashboard/${pagePath}`;
 
@@ -83,8 +82,8 @@ async function getUserFromSession(): Promise<User | null> {
     }
 
     try {
-        const decodedIdToken = await auth.verifySessionCookie(sessionCookie, true);
-        const db = getDb();
+        const decodedIdToken = await adminAuth.verifySessionCookie(sessionCookie, true);
+        const db = adminDb;
         const userDoc = await getDoc(doc(db, 'users', decodedIdToken.uid));
         if (userDoc.exists()) {
             return { userId: userDoc.id, ...userDoc.data() } as User;

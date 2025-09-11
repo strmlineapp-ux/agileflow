@@ -72,7 +72,6 @@ function AppThemeManager({ children }: { children: React.ReactNode }) {
             const radius = viewAsUser.radius ?? 0.5;
             root.style.setProperty('--radius', `${radius}rem`);
 
-             // Set primary color
             if (viewAsUser.primaryColor) {
                 const match = viewAsUser.primaryColor.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
                 if (match) {
@@ -87,7 +86,6 @@ function AppThemeManager({ children }: { children: React.ReactNode }) {
                 }
             }
             
-            // Set foreground/contrast
             const themeForeground = theme === 'dark' ? '210 7% 60%' : '210 7% 40%';
             if(viewAsUser.highContrast) {
                 root.style.setProperty('--foreground', theme === 'dark' ? '210 7% 80%' : '210 7% 20%');

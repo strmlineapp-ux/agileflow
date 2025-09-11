@@ -1,6 +1,11 @@
 
 import { getOAuth2Client, saveCredentials } from '@/lib/google-auth-service';
+<<<<<<< HEAD
 import { type NextRequest, NextResponse } from 'next/server';
+=======
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { getDb } from '@/lib/firebase';
+>>>>>>> e882d9bc8ba92353d999a9492d9b18da62130488
 
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
@@ -23,6 +28,11 @@ export async function GET(request: NextRequest) {
     // The 'tokens' object contains access_token, refresh_token, expiry_date, etc.
     // We can now save these securely, associated with the userId.
     await saveCredentials(userId, tokens);
+    
+    // Also update the user's profile to mark the calendar as linked
+    const db = getDb();
+    const userDocRef = doc(db, 'users', userId);
+    await updateDoc(userDocRef, { googleCalendarLinked: true });
 
     // After successfully exchanging the code, close the popup window.
     // A simple HTML page with a script to close the window is sufficient.

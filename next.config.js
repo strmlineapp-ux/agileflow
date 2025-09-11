@@ -1,4 +1,3 @@
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
@@ -30,6 +29,18 @@ const nextConfig = {
         'google-auth-library'
     ],
   },
+   webpack: (
+    config,
+    { buildId, dev, isServer, defaultLoaders, nextRuntime, webpack }
+  ) => {
+    config.externals.push({
+      canvas: "commonjs canvas",
+    });
+    return config
+  },
+  env: {
+    NEXT_PUBLIC_URL: process.env.NEXT_PUBLIC_URL,
+  }
 };
 
 module.exports = nextConfig;
