@@ -621,12 +621,10 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
 }
 
 export const PagesManagement = ({ appSettings, isActive }: { appSettings: AppSettings; isActive: boolean; }) => {
-    const { viewAsUser, updateUser } = useUser();
-    const { useFetchPages, useAddPage, useUpdatePage, useDeletePage } = useDataQueries();
+    const { viewAsUser, updateUser, allPages } = useUser();
+    const { useAddPage, useUpdatePage, useDeletePage } = useDataQueries();
     const { toast } = useToast();
     const contextKey = 'pages-management';
-    
-    const { data: allPages = [], isLoading } = useFetchPages(viewAsUser?.workspaceId);
     
     const addPageMutation = useAddPage();
     const updatePageMutation = useUpdatePage();
@@ -725,7 +723,7 @@ export const PagesManagement = ({ appSettings, isActive }: { appSettings: AppSet
       </SortableItem>
     )}, [handleUpdate, handleDelete, viewAsUser, onToggleExpand, contextKey, appSettings]);
 
-    if (isLoading || !appSettings) {
+    if (!appSettings) {
         return (
             <div className="flex items-center justify-center h-full">
                 <GoogleSymbol name="progress_activity" className="animate-spin text-4xl" />

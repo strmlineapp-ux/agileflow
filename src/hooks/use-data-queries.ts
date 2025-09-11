@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -135,52 +134,6 @@ export function useDataQueries() {
     };
     // #endregion
     
-    // #region Pages
-    const useFetchPages = (workspaceId?: string) => {
-        return useQuery<AppPage[]>({
-            queryKey: ['pages', workspaceId],
-            queryFn: async () => {
-                if (!workspaceId) return [];
-                const db = getDb();
-                const q = query(collection(db, 'pages'), where('workspaceId', '==', workspaceId), orderBy('order', 'asc'));
-                const snapshot = await getDocs(q);
-                return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AppPage));
-            },
-            enabled: !!workspaceId,
-        });
-    };
-
-    const useAddPage = () => {
-        return useMutation({
-            mutationFn: async (pageData: Partial<AppPage>) => {
-                const db = getDb();
-                await addDoc(collection(db, 'pages'), pageData);
-            },
-            ...genericMutationOptions(['pages']),
-        });
-    };
-
-    const useUpdatePage = () => {
-        return useMutation({
-            mutationFn: async (variables: { pageId: string, data: Partial<AppPage> }) => {
-                const db = getDb();
-                await updateDoc(doc(db, 'pages', variables.pageId), variables.data);
-            },
-            ...genericMutationOptions(['pages'])
-        });
-    };
-
-    const useDeletePage = () => {
-        return useMutation({
-            mutationFn: async (pageId: string) => {
-                const db = getDb();
-                await deleteDoc(doc(db, 'pages', pageId));
-            },
-            ...genericMutationOptions(['pages']),
-        });
-    };
-    // #endregion
-
     // #region Badges & Collections
     const useFetchAllBadges = (workspaceId?: string) => {
         return useQuery<Badge[]>({
@@ -443,10 +396,6 @@ export function useDataQueries() {
         useRemovePreApprovedEmail,
         useFetchAppSettings,
         useUpdateAppSettings,
-        useFetchPages,
-        useAddPage,
-        useUpdatePage,
-        useDeletePage,
         useFetchAllBadges,
         useFetchAllBadgeCollections,
         useFetchProjects,

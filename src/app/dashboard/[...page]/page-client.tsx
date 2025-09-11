@@ -29,8 +29,7 @@ export function DynamicPageClient({ page: initialPage, teamContext: initialTeamC
     params: { page: string[] };
     user: User | null;
 }) {
-  const { viewAsUser, loading } = useUser();
-  const { useFetchAppSettings, useUpdatePage } = useDataQueries();
+  const { viewAsUser, loading, appSettings, updatePage } = useUser();
   const { toast } = useToast();
   
   const [activeTabValue, setActiveTabValue] = useState<string | undefined>();
@@ -38,9 +37,6 @@ export function DynamicPageClient({ page: initialPage, teamContext: initialTeamC
   const [isSharedPanelOpen, setIsSharedPanelOpen] = useState(false);
   const [page, setPage] = useState(initialPage);
   const [teamContext, setTeamContext] = useState(initialTeamContext);
-
-  const { data: appSettings } = useFetchAppSettings(viewAsUser?.workspaceId);
-  const updatePageMutation = useUpdatePage();
 
   useEffect(() => {
     setPage(initialPage);
@@ -149,7 +145,7 @@ export function DynamicPageClient({ page: initialPage, teamContext: initialTeamC
     
     const handleReorderPageTabs = (reorderedPageTabs: AppTab[]) => {
       const newTabIds = reorderedPageTabs.map(tab => tab.id);
-      updatePageMutation.mutate({ pageId: page.id, data: { associatedTabs: newTabIds }});
+      updatePage(page.id, { associatedTabs: newTabIds });
     };
 
     return (
@@ -193,7 +189,7 @@ export function DynamicPageClient({ page: initialPage, teamContext: initialTeamC
                   title={page.displayTitle || page.name}
                   icon={page.icon}
                   iconColor={page.color}
-                  onSave={(newTitle) => updatePageMutation.mutate({ pageId: page.id, data: { displayTitle: newTitle } })}
+                  onSave={(newTitle) => updatePage(page.id, { displayTitle: newTitle })}
                   disabled={!effectiveUser.isAdmin}
                 />
            )}

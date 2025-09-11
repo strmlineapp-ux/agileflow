@@ -19,11 +19,7 @@ import { type Notification, type AppSettings } from '@/types';
 
 
 export function Header() {
-  const { realUser, viewAsUser } = useUser();
-  const { useFetchNotifications, useFetchAppSettings } = useDataQueries();
-
-  const { data: notifications = [] } = useFetchNotifications(viewAsUser?.workspaceId);
-  const { data: appSettings } = useFetchAppSettings(viewAsUser?.workspaceId);
+  const { realUser, viewAsUser, notifications, appSettings } = useUser();
 
   const orderedNavItems = useMemo(() => {
     if (!viewAsUser || !appSettings?.pages) return [];

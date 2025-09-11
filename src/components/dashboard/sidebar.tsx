@@ -13,41 +13,42 @@ import { GoogleSymbol } from '../icons/google-symbol';
 import { ScrollArea } from '../ui/scroll-area';
 import { hasAccess } from '@/lib/permissions';
 import Logo from '../icons/logo';
-import { useDataQueries } from '@/hooks/use-data-queries';
 import { type Notification, type AppPage } from '@/types';
 
 export function Sidebar() {
-  const { realUser, viewAsUser, loading, setViewAsUser: setContextViewAsUser, logout } = useUser();
+  const { realUser, viewAsUser, loading, setViewAsUser, logout, appSettings, notifications, users } = useUser();
   const router = useRouter();
   const pathname = usePathname();
-  const { useFetchNotifications, useFetchPages, useFetchUsers } = useDataQueries();
   
-  const { data: notifications = [] } = useFetchNotifications(viewAsUser?.workspaceId);
-  const { data: allPages = [], isLoading: isLoadingPages } = useFetchPages(viewAsUser?.workspaceId);
-  const { data: users = [] } = useFetchUsers(viewAsUser?.workspaceId);
-
-  const setViewAsUser = (userId: string) => {
-    setContextViewAsUser(userId);
+  const setViewAsUserAndRedirect = (userId: string) => {
+    setViewAsUser(userId);
+    router.push('/dashboard/overview');
   };
 
   const isViewingAsSomeoneElse = realUser?.userId !== viewAsUser?.userId;
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const { adminPage, notificationsPage, otherPages } = useMemo(() => {
-    if (!viewAsUser || !allPages) return { adminPage: null, notificationsPage: null, otherPages: [] };
-    
-    const adminPage = allPages.find(p => p.id === 'page-admin-management');
-    const notificationsPage = allPages.find(p => p.id === 'page-notifications');
-    const otherPages = allPages
-      .filter(page => page.id !== 'page-admin-management' && page.id !== 'page-notifications' && page.id !== 'page-settings')
-      .filter(page => hasAccess(viewAsUser, page))
-      .filter(page => page.associatedTabs && page.associatedTabs.length > 0)
-      .filter(page => !!page.path);
+  const orderedNavItems = useMemo(() => {
+    if (!viewAsUser || !appSettings?.pages) return [];
 
-    return { adminPage, notificationsPage, otherPages };
-  }, [viewAsUser, allPages]);
+    return appSettings.pages.filter(page => {
+        if (!page.isSystemPage) return false;
+        if (page.id === 'page-admin-management') return viewAsUser.isAdmin;
+        return true; 
+    });
+  }, [viewAsUser, appSettings?.pages]);
   
-  if (loading || isLoadingPages || !viewAsUser || !realUser) {
+  const otherPages = useMemo(() => {
+    if (!viewAsUser || !appSettings?.pages) return [];
+    return appSettings.pages
+      .filter(page => !page.isSystemPage && hasAccess(viewAsUser, page) && page.associatedTabs?.length > 0 && page.path)
+      .sort((a,b) => (a.order || 0) - (b.order || 0));
+  }, [viewAsUser, appSettings?.pages]);
+
+  const adminPage = useMemo(() => appSettings?.pages.find(p => p.id === 'page-admin-management'), [appSettings?.pages]);
+  const notificationsPage = useMemo(() => appSettings?.pages.find(p => p.id === 'page-notifications'), [appSettings?.pages]);
+  
+  if (loading || !viewAsUser || !realUser) {
     return (
         <aside className="fixed inset-y-0 left-0 z-40 hidden w-14 flex-col bg-card sm:flex" />
     );
@@ -189,12 +190,12 @@ export function Sidebar() {
                     <DropdownMenuPortal>
                       <DropdownMenuSubContent>
                         {isViewingAsSomeoneElse && (
-                          <DropdownMenuItem onSelect={() => setViewAsUser(realUser.userId)}>
+                          <DropdownMenuItem onSelect={() => setViewAsUserAndRedirect(realUser.userId)}>
                             Return to your view ({realUser.displayName})
                           </DropdownMenuItem>
                         )}
                         {users.filter(u => u.userId !== realUser.userId).map(user => (
-                          <DropdownMenuItem key={user.userId} onSelect={() => setViewAsUser(user.userId)}>
+                          <DropdownMenuItem key={user.userId} onSelect={() => setViewAsUserAndRedirect(user.userId)}>
                             {user.displayName}
                           </DropdownMenuItem>
                         ))}
