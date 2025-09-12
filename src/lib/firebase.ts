@@ -16,14 +16,26 @@ let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
 
-if (typeof window !== 'undefined' && !getApps().length) {
-    app = initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    db = getFirestore(app);
-} else if (getApps().length) {
-    app = getApp();
+function initializeServices() {
+    if (!getApps().length) {
+        app = initializeApp(firebaseConfig);
+    } else {
+        app = getApp();
+    }
     auth = getAuth(app);
     db = getFirestore(app);
 }
 
-export { app, auth, db };
+if (typeof window !== 'undefined') {
+    initializeServices();
+}
+
+// This function can be called from server-side code to ensure services are initialized.
+export function getDb(): Firestore {
+    if (!db) {
+        initializeServices();
+    }
+    return db;
+}
+
+export { app, auth };
