@@ -1,11 +1,8 @@
 
 import { getOAuth2Client, saveCredentials } from '@/lib/google-auth-service';
-<<<<<<< HEAD
 import { type NextRequest, NextResponse } from 'next/server';
-=======
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { getDb } from '@/lib/firebase';
->>>>>>> e882d9bc8ba92353d999a9492d9b18da62130488
 
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
