@@ -16,16 +16,20 @@ export async function getOAuth2Client(): Promise<OAuth2Client> {
     throw new Error('Google OAuth client environment variables are not set.');
   }
 
+  // Firebase App Hosting provides the APP_URL environment variable.
+  const appUrl = process.env.APP_URL;
   const vercelUrl = process.env.VERCEL_URL;
   const ngrokUrl = process.env.NGROK_URL;
-  const baseUrl = ngrokUrl ? `https://${ngrokUrl}` : (vercelUrl ? `https://${vercelUrl}` : process.env.NEXT_PUBLIC_URL);
-  
+
+  // Prioritize App Hosting URL, then fall back for other environments.
+  const baseUrl = appUrl || (ngrokUrl ? `https://${ngrokUrl}` : (vercelUrl ? `https://${vercelUrl}` : process.env.NEXT_PUBLIC_URL));
+
   if (!baseUrl) {
-    throw new Error("Could not determine base URL for OAuth redirect URI.");
+    throw new Error("Could not determine base URL for OAuth redirect URI. Ensure NEXT_PUBLIC_URL is set in your environment variables.");
   }
-  
+
   const redirectUri = `${baseUrl}/api/auth/google/callback`;
-  
+
   console.log(`Using Google OAuth Redirect URI: ${redirectUri}`);
 
   return new google.auth.OAuth2(
@@ -43,12 +47,12 @@ export async function getOAuth2Client(): Promise<OAuth2Client> {
  */
 export async function saveCredentials(userId: string, tokens: Credentials): Promise<void> {
   const tokenDocRef = doc(db, 'google-auth-tokens', userId);
-  
+
   if (!tokens.access_token) {
     console.warn('Attempted to save credentials without an access token.');
     return;
   }
-  
+
   await setDoc(tokenDocRef, {
     userId,
     ...tokens
@@ -76,6 +80,6 @@ export async function getAuthorizedClient(userId: string): Promise<OAuth2Client>
 
   const oAuth2Client = await getOAuth2Client();
   oAuth2Client.setCredentials(tokens as Credentials);
-  
+
   return oAuth2Client;
 }
