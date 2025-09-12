@@ -16,6 +16,7 @@ let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
 
+// Initialize Firebase services
 function initializeServices() {
     if (!getApps().length) {
         app = initializeApp(firebaseConfig);
@@ -26,6 +27,7 @@ function initializeServices() {
     db = getFirestore(app);
 }
 
+// Ensure services are initialized
 if (typeof window !== 'undefined') {
     initializeServices();
 }
@@ -38,4 +40,4 @@ export function getDb(): Firestore {
     return db;
 }
 
-export { app, auth };
+export { app, auth, db };
