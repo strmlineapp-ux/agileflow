@@ -10,4 +10,7 @@
 
 # Logs
 firestore-debug.log
+
+# Secrets
+/gcp-keys/
 node_modules
