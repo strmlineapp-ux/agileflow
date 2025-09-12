@@ -2,18 +2,14 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
-import { getAuth, onAuthStateChanged, signOut, type User as FirebaseUser } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import { getFirestore, doc, onSnapshot, collection, query, where, getDoc, updateDoc } from 'firebase/firestore';
-import { type User, type Team, type SharedCalendar, type BadgeCollection, type Badge, type Holiday, type BookableLocation, type AppSettings, type UserStatusAssignment, type Notification } from '@/types';
+import { doc, onSnapshot, collection, query, where, updateDoc } from 'firebase/firestore';
+import { type User, type Team, type SharedCalendar, type BadgeCollection, type Badge, type Holiday, type BookableLocation, type AppSettings, type UserStatusAssignment, type Notification, type AppPage } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { getClientDb } from '@/lib/firebase';
-import { reorderArray } from '@dnd-kit/sortable';
+import { db } from '@/lib/firebase';
 import { googleSymbolNames } from '@/lib/google-symbols';
 import { predefinedColors } from '@/lib/colors';
-import { adjustHslColor } from '@/lib/utils';
-import { useDataQueries } from '@/hooks/use-data-queries';
 
 // --- Context Definition ---
 interface UserContextType {
@@ -30,29 +26,31 @@ interface UserContextType {
   userStatusAssignments: Record<string, UserStatusAssignment[]>;
   notifications: Notification[];
   loading: boolean;
-  
+  currentWorkstation: BookableLocation | null;
+
   googleLogin: () => Promise<boolean>;
   logout: () => void;
-  linkGoogleCalendar: (userId: string) => void;
-  
+  reauthenticate: () => Promise<boolean>;
+  selectWorkstation: (workstation: BookableLocation) => void;
+
   setViewAsUser: (userId: string) => void;
   updateUser: (userId: string, data: Partial<User>) => void;
   updatePage: (pageId: string, pageData: Partial<any>) => void;
-  
+
   addTeam: (sourceTeam?: Team) => void;
   updateTeam: (teamId: string, data: Partial<Team>) => void;
   deleteTeam: (teamId: string, router: any, pathname: string) => void;
   reorderTeams: (reorderedTeams: Team[]) => void;
-  
+
   addBadge: (collectionId: string, sourceBadge?: Badge, isLinked?: boolean) => void;
   updateBadge: (badgeId: string, data: Partial<Badge>) => void;
   deleteBadge: (badgeId: string, ownerCollectionId: string) => void;
-  
+
   addBadgeCollection: (user: User, sourceCollection?: BadgeCollection) => void;
   updateBadgeCollection: (collectionId: string, data: Partial<BadgeCollection>) => void;
   deleteBadgeCollection: (collectionId: string) => void;
   reorderBadgeCollections: (reorderedCollections: BadgeCollection[]) => void;
-  
+
   reorderBadges: (updates: { collectionId: string, badgeIds: string[] }[]) => void;
   setUserStatusAssignments: React.Dispatch<React.SetStateAction<Record<string, UserStatusAssignment[]>>>;
 }
@@ -60,12 +58,12 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | null>(null);
 
 // --- Provider Component ---
-export function UserProvider({ children, user: initialUser }: { children: React.ReactNode, user?: User | null }) {
+export function UserProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   const router = useRouter();
 
-  const [realUser, setRealUser] = useState<User | null>(initialUser || null);
-  const [viewAsUserId, setViewAsUserId] = useState<string | null>(initialUser?.userId || null);
+  const { user: realUser, loading: authLoading, googleLogin, logout, reauthenticate, currentWorkstation, selectWorkstation } = useAuth();
+  const [viewAsUserId, setViewAsUserId] = useState<string | null>(null);
   const [isDataLoading, setIsDataLoading] = useState(true);
 
   const [users, setUsers] = useState<User[]>([]);
@@ -78,18 +76,14 @@ export function UserProvider({ children, user: initialUser }: { children: React.
   const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
   const [userStatusAssignments, setUserStatusAssignments] = useState<Record<string, UserStatusAssignment[]>>({});
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  
-  const { realUser: authRealUser, loading: authLoading, isFirebaseReady, googleLogin, logout: authLogout, linkGoogleCalendar } = useAuth();
-  
+
   useEffect(() => {
-    if(!authLoading && authRealUser) {
-        setRealUser(authRealUser);
-        setViewAsUserId(authRealUser.userId);
-    } else if (!authLoading && !authRealUser) {
-        setRealUser(null);
-        setViewAsUserId(null);
+    if (realUser) {
+      setViewAsUserId(realUser.userId);
+    } else {
+      setViewAsUserId(null);
     }
-  }, [authRealUser, authLoading]);
+  }, [realUser]);
 
   const viewAsUser = useMemo(() => {
     const userToView = users.find(u => u.userId === viewAsUserId);
@@ -103,20 +97,17 @@ export function UserProvider({ children, user: initialUser }: { children: React.
     }
 
     setIsDataLoading(true);
-    const db = getClientDb();
-    
-    // An array to hold all the unsubscribe functions
     const unsubscribers: (() => void)[] = [];
 
     const collectionsToFetch = [
-        { name: 'users', setter: setUsers, dependencies: [] },
-        { name: 'teams', setter: setTeams, dependencies: [] },
-        { name: 'calendars', setter: setCalendars, dependencies: [] },
-        { name: 'badges', setter: setAllBadges, dependencies: [] },
-        { name: 'badgeCollections', setter: setAllBadgeCollections, dependencies: [] },
-        { name: 'locations', setter: setLocations, dependencies: [] },
+        { name: 'users', setter: setUsers },
+        { name: 'teams', setter: setTeams },
+        { name: 'calendars', setter: setCalendars },
+        { name: 'badges', setter: setAllBadges },
+        { name: 'badgeCollections', setter: setAllBadgeCollections },
+        { name: 'locations', setter: setLocations },
         { name: 'userStatusAssignments', setter: setUserStatusAssignments, isMap: true },
-        { name: 'notifications', setter: setNotifications, dependencies: [] },
+        { name: 'notifications', setter: setNotifications },
     ];
 
     collectionsToFetch.forEach(({ name, setter, isMap }) => {
@@ -129,32 +120,19 @@ export function UserProvider({ children, user: initialUser }: { children: React.
         });
         unsubscribers.push(unsubscribe);
     });
-    
-    // Fetch AppSettings (single document)
+
     const appSettingsRef = doc(db, 'app-settings', viewAsUser.workspaceId);
     const unsubscribeAppSettings = onSnapshot(appSettingsRef, (doc) => {
         setAppSettings(doc.exists() ? doc.data() as AppSettings : null);
     });
     unsubscribers.push(unsubscribeAppSettings);
 
-    // Fetch user-specific data only if the realUser is available
-    if(realUser) {
-      const userDocRef = doc(db, 'users', realUser.userId);
-      const unsubscribeUser = onSnapshot(userDocRef, (doc) => {
-          if (doc.exists()) {
-              setRealUser(prev => ({...prev, ...doc.data()} as User));
-          }
-      });
-      unsubscribers.push(unsubscribeUser);
-    }
-
     setIsDataLoading(false);
 
-    // Cleanup function to unsubscribe from all listeners when the component unmounts
     return () => {
         unsubscribers.forEach(unsub => unsub());
     };
-}, [viewAsUser?.workspaceId, realUser?.userId]);
+}, [viewAsUser?.workspaceId]);
 
   const setViewAsUser = (userId: string) => {
     const userToView = users.find(u => u.userId === userId);
@@ -170,7 +148,6 @@ export function UserProvider({ children, user: initialUser }: { children: React.
   };
 
   const updateUser = async (userId: string, data: Partial<User>) => {
-    const db = getClientDb();
     const userDocRef = doc(db, 'users', userId);
     try {
       await updateDoc(userDocRef, data);
@@ -179,10 +156,9 @@ export function UserProvider({ children, user: initialUser }: { children: React.
       toast({ variant: 'destructive', title: 'Update Failed', description: error.message });
     }
   };
-  
+
   const updatePage = async (pageId: string, pageData: Partial<AppPage>) => {
       if(!viewAsUser) return;
-      const db = getClientDb();
       const pageDocRef = doc(db, 'app-settings', viewAsUser.workspaceId, 'pages', pageId);
       try {
         await updateDoc(pageDocRef, pageData);
@@ -191,10 +167,9 @@ export function UserProvider({ children, user: initialUser }: { children: React.
         toast({ variant: 'destructive', title: 'Update Failed', description: error.message });
       }
   };
-  
+
   const addTeam = async (sourceTeam?: Team) => {
     if (!viewAsUser) return;
-    const db = getClientDb();
     const newTeamData = {
         name: sourceTeam ? `${sourceTeam.name} (Copy)` : "New Team",
         icon: sourceTeam?.icon || 'group',
@@ -203,17 +178,15 @@ export function UserProvider({ children, user: initialUser }: { children: React.
         workspaceId: viewAsUser.workspaceId,
         members: [viewAsUser.userId],
     };
-    // In a real app, you would add this to your Firestore 'teams' collection
     console.log("Adding new team:", newTeamData);
     toast({ title: 'Team Added', description: `"${newTeamData.name}" has been created.` });
   };
 
   const updateTeam = async (teamId: string, data: Partial<Team>) => {
-    // In a real app, you would update the team in Firestore
     console.log(`Updating team ${teamId} with:`, data);
     setTeams(prev => prev.map(t => t.id === teamId ? { ...t, ...data } : t));
   };
-  
+
   const deleteTeam = async (teamId: string, router: any, pathname: string) => {
     setTeams(prev => prev.filter(t => t.id !== teamId));
     if (pathname.includes(teamId)) {
@@ -221,13 +194,13 @@ export function UserProvider({ children, user: initialUser }: { children: React.
     }
     toast({ title: 'Team Deleted' });
   };
-  
+
   const reorderTeams = (reorderedTeams: Team[]) => {
     setTeams(reorderedTeams);
-    // In a real app, you might save this order to user preferences
   };
-  
+
   const addBadge = (collectionId: string, sourceBadge?: Badge, isLinked: boolean = false) => {
+    if (!viewAsUser) return;
     const newBadge = {
       id: `badge-${Date.now()}`,
       name: sourceBadge ? `${sourceBadge.name} (Copy)` : 'New Badge',
@@ -237,9 +210,9 @@ export function UserProvider({ children, user: initialUser }: { children: React.
       ownerCollectionId: sourceBadge && isLinked ? sourceBadge.ownerCollectionId : collectionId,
       workspaceId: viewAsUser.workspaceId,
     };
-    
+
     setAllBadges(prev => [...prev, newBadge]);
-    setAllBadgeCollections(prev => prev.map(c => 
+    setAllBadgeCollections(prev => prev.map(c =>
       c.id === collectionId ? { ...c, badgeIds: [...c.badgeIds, newBadge.id] } : c
     ));
     toast({ title: sourceBadge ? 'Badge Duplicated' : 'Badge Added' });
@@ -251,12 +224,12 @@ export function UserProvider({ children, user: initialUser }: { children: React.
 
   const deleteBadge = (badgeId: string, ownerCollectionId: string) => {
     setAllBadges(prev => prev.filter(b => b.id !== badgeId));
-    setAllBadgeCollections(prev => prev.map(c => 
+    setAllBadgeCollections(prev => prev.map(c =>
       c.id === ownerCollectionId ? { ...c, badgeIds: c.badgeIds.filter(id => id !== badgeId) } : c
     ));
     toast({ title: 'Badge Deleted' });
   };
-  
+
   const addBadgeCollection = (user: User, sourceCollection?: BadgeCollection) => {
     const newCollection = {
       id: `collection-${Date.now()}`,
@@ -275,26 +248,25 @@ export function UserProvider({ children, user: initialUser }: { children: React.
   const updateBadgeCollection = (collectionId: string, data: Partial<BadgeCollection>) => {
     setAllBadgeCollections(prev => prev.map(c => c.id === collectionId ? { ...c, ...data } : c));
   };
-  
+
   const deleteBadgeCollection = (collectionId: string) => {
     const collectionToDelete = allBadgeCollections.find(c => c.id === collectionId);
     if (!collectionToDelete) return;
-  
-    // Badges owned by this collection are also deleted
+
     const badgesToDelete = new Set(collectionToDelete.badgeIds.filter(badgeId => {
       const badge = allBadges.find(b => b.id === badgeId);
       return badge && badge.ownerCollectionId === collectionId;
     }));
-    
+
     setAllBadges(prev => prev.filter(b => !badgesToDelete.has(b.id)));
     setAllBadgeCollections(prev => prev.filter(c => c.id !== collectionId));
     toast({ title: 'Collection Deleted' });
   };
-  
+
   const reorderBadgeCollections = (reorderedCollections: BadgeCollection[]) => {
       setAllBadgeCollections(reorderedCollections);
   };
-  
+
   const reorderBadges = (updates: { collectionId: string, badgeIds: string[] }[]) => {
     setAllBadgeCollections(prev => prev.map(collection => {
       const update = updates.find(u => u.collectionId === collection.id);
@@ -302,28 +274,6 @@ export function UserProvider({ children, user: initialUser }: { children: React.
     }));
   };
 
-  const handleBadgeAssignment = (badge: Badge, memberId: string) => {
-    const userToUpdate = users.find(u => u.userId === memberId);
-    if (!userToUpdate) return;
-    
-    const newRoles = new Set(userToUpdate.roles || []);
-    newRoles.add(badge.id);
-    
-    updateUser(memberId, { roles: Array.from(newRoles) });
-    toast({ title: `Assigned "${badge.name}" to ${userToUpdate.displayName}` });
-  };
-  
-  const handleBadgeUnassignment = (badge: Badge, memberId: string) => {
-    const userToUpdate = users.find(u => u.userId === memberId);
-    if (!userToUpdate) return;
-
-    const newRoles = (userToUpdate.roles || []).filter(roleId => roleId !== badge.id);
-    
-    updateUser(memberId, { roles: newRoles });
-    toast({ title: `Unassigned "${badge.name}" from ${userToUpdate.displayName}` });
-  };
-
-  // The context value now includes all the fetched data and memoized functions.
   const contextValue = useMemo(() => ({
     realUser,
     viewAsUser,
@@ -338,9 +288,11 @@ export function UserProvider({ children, user: initialUser }: { children: React.
     userStatusAssignments,
     notifications,
     loading: authLoading || isDataLoading,
+    currentWorkstation,
     googleLogin,
-    logout: () => authLogout(router),
-    linkGoogleCalendar,
+    logout,
+    reauthenticate,
+    selectWorkstation,
     setViewAsUser,
     updateUser,
     updatePage,
@@ -356,14 +308,11 @@ export function UserProvider({ children, user: initialUser }: { children: React.
     deleteBadgeCollection,
     reorderBadgeCollections,
     reorderBadges,
-    handleBadgeAssignment,
-    handleBadgeUnassignment,
     setUserStatusAssignments
   }), [
-      realUser, viewAsUser, users, teams, calendars, allBadges, allBadgeCollections, holidays, locations, appSettings, userStatusAssignments, notifications, authLoading, isDataLoading,
-      googleLogin, authLogout, router, linkGoogleCalendar,
-      updateUser, updatePage, addTeam, updateTeam, deleteTeam, reorderTeams, addBadge, updateBadge, deleteBadge,
-      addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, reorderBadgeCollections, reorderBadges, handleBadgeAssignment, handleBadgeUnassignment
+      realUser, viewAsUser, users, teams, calendars, allBadges, allBadgeCollections, holidays, locations, appSettings, userStatusAssignments, notifications, authLoading, isDataLoading, currentWorkstation,
+      googleLogin, logout, reauthenticate, selectWorkstation, setViewAsUser, updateUser, updatePage, addTeam, updateTeam, deleteTeam, reorderTeams, addBadge, updateBadge, deleteBadge,
+      addBadgeCollection, updateBadgeCollection, deleteBadgeCollection, reorderBadgeCollections, reorderBadges, setUserStatusAssignments
   ]);
 
   return (
