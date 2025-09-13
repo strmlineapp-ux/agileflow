@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -14,11 +14,18 @@ import { ScrollArea } from '../ui/scroll-area';
 import { hasAccess } from '@/lib/permissions';
 import Logo from '../icons/logo';
 import { type Notification, type AppPage } from '@/types';
+import { useDataQueries } from '@/hooks/use-data-queries';
 
 export function Sidebar() {
-  const { realUser, viewAsUser, loading, setViewAsUser, logout, appSettings, notifications, users } = useUser();
+  const { realUser, viewAsUser, loading, setViewAsUser, logout } = useUser();
   const router = useRouter();
   const pathname = usePathname();
+  
+  const { useFetchUsers, useFetchNotifications, useFetchPages } = useDataQueries();
+
+  const { data: users = [] } = useFetchUsers(viewAsUser?.workspaceId);
+  const { data: notifications = [] } = useFetchNotifications(viewAsUser?.workspaceId);
+  const { data: allPages = [], isLoading: isLoadingPages } = useFetchPages(viewAsUser?.workspaceId);
   
   const setViewAsUserAndRedirect = (userId: string) => {
     setViewAsUser(userId);
@@ -29,24 +36,24 @@ export function Sidebar() {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const orderedNavItems = useMemo(() => {
-    if (!viewAsUser || !appSettings?.pages) return [];
+    if (!viewAsUser || !allPages) return [];
 
-    return appSettings.pages.filter(page => {
+    return allPages.filter(page => {
         if (!page.isSystemPage) return false;
         if (page.id === 'page-admin-management') return viewAsUser.isAdmin;
         return true; 
     });
-  }, [viewAsUser, appSettings?.pages]);
+  }, [viewAsUser, allPages]);
   
   const otherPages = useMemo(() => {
-    if (!viewAsUser || !appSettings?.pages) return [];
-    return appSettings.pages
+    if (!viewAsUser || !allPages) return [];
+    return allPages
       .filter(page => !page.isSystemPage && hasAccess(viewAsUser, page) && page.associatedTabs?.length > 0 && page.path)
       .sort((a,b) => (a.order || 0) - (b.order || 0));
-  }, [viewAsUser, appSettings?.pages]);
+  }, [viewAsUser, allPages]);
 
-  const adminPage = useMemo(() => appSettings?.pages.find(p => p.id === 'page-admin-management'), [appSettings?.pages]);
-  const notificationsPage = useMemo(() => appSettings?.pages.find(p => p.id === 'page-notifications'), [appSettings?.pages]);
+  const adminPage = useMemo(() => allPages.find(p => p.id === 'page-admin-management'), [allPages]);
+  const notificationsPage = useMemo(() => allPages.find(p => p.id === 'page-notifications'), [allPages]);
   
   if (loading || !viewAsUser || !realUser) {
     return (
@@ -86,9 +93,14 @@ export function Sidebar() {
       <ScrollArea className="flex-1">
         <nav className="flex flex-col items-center gap-4 px-2 pt-2 pb-4">
           <TooltipProvider>
-            {otherPages.map((item) => {
+            {isLoadingPages ? (
+              <div className="flex flex-col items-center gap-4">
+                <div className="h-8 w-8 rounded-lg bg-muted animate-pulse" />
+                <div className="h-8 w-8 rounded-lg bg-muted animate-pulse" />
+                <div className="h-8 w-8 rounded-lg bg-muted animate-pulse" />
+              </div>
+            ) : otherPages.map((item) => {
                 if (!item) return null;
-                const isNotifications = item.id === 'page-notifications';
                 const isActive = pathname.startsWith(item.path);
 
                 return (
@@ -101,11 +113,6 @@ export function Sidebar() {
                         })}
                       >
                         <GoogleSymbol name={item.icon} className="text-4xl" />
-                        {isNotifications && unreadCount > 0 && (
-                          <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary p-0 text-xs text-primary-foreground">
-                            {unreadCount}
-                          </span>
-                        )}
                         <span className="sr-only">{item.name}</span>
                       </Link>
                     </TooltipTrigger>
@@ -181,7 +188,7 @@ export function Sidebar() {
                     </Link>
                 </DropdownMenuItem>
 
-                {realUser.isAdmin && users && users.length > 1 && (
+                {realUser.isAdmin && users.length > 1 && (
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
                       <GoogleSymbol name="how_to_reg" className="mr-2 text-lg" />
@@ -214,3 +221,5 @@ export function Sidebar() {
     </aside>
   );
 }
+
+    

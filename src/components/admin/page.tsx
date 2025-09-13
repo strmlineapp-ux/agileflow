@@ -442,12 +442,9 @@ export const AdminsManagement = ({ isActive }: { isActive: boolean }) => {
 // #region Pages Management Tab
 function PageAccessControl({ page, onUpdate }: { page: AppPage; onUpdate: (data: Partial<AppPage>) => void }) {
     const { viewAsUser } = useUser();
-    const { useFetchUsers } = useDataQueries();
+    const { useFetchUsers, useFetchTeams } = useDataQueries();
     const { data: users = [] } = useFetchUsers(viewAsUser?.workspaceId);
-    // This part is problematic as it assumes a global `teams` state which we are removing.
-    // It should be fetched if needed, or the logic re-evaluated.
-    // For now, we'll pass an empty array to avoid breaking the UI.
-    const teams: Team[] = []; 
+    const { data: teams = [] } = useFetchTeams(viewAsUser?.workspaceId);
     
     const handleToggle = (type: 'users' | 'teams', id: string) => {
         const access = page.access || { users: [], teams: [] };
@@ -555,7 +552,7 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
     isSharedPreview?: boolean;
     appSettings: AppSettings;
 }) {
-    const { viewAsUser, users } = useUser();
+    const { viewAsUser } = useUser();
     
     const canManage = viewAsUser.isAdmin;
     const isPinned = page.isSystemPage;
@@ -621,14 +618,17 @@ function SortablePageCard({ page, onUpdate, onDelete, isExpanded, onToggleExpand
 }
 
 export const PagesManagement = ({ appSettings, isActive }: { appSettings: AppSettings; isActive: boolean; }) => {
-    const { viewAsUser, updateUser, allPages } = useUser();
-    const { useAddPage, useUpdatePage, useDeletePage } = useDataQueries();
+    const { viewAsUser, updateUser: updateContextUser } = useUser();
+    const { useFetchPages, useAddPage, useUpdatePage, useDeletePage, useReorderPages } = useDataQueries();
     const { toast } = useToast();
     const contextKey = 'pages-management';
+
+    const { data: allPages = [], isLoading: isLoadingPages } = useFetchPages(viewAsUser?.workspaceId);
     
     const addPageMutation = useAddPage();
     const updatePageMutation = useUpdatePage();
     const deletePageMutation = useDeletePage();
+    const reorderPagesMutation = useReorderPages();
 
     const onToggleExpand = useCallback((pageId: string) => {
         if (!viewAsUser) return;
@@ -639,13 +639,13 @@ export const PagesManagement = ({ appSettings, isActive }: { appSettings: AppSet
         } else {
           currentExpanded.add(pageId);
         }
-        updateUser(viewAsUser.userId, { expandedCardState: { ...currentState, [contextKey]: Array.from(currentExpanded) } });
-    }, [viewAsUser, updateUser, contextKey]);
+        updateContextUser(viewAsUser.userId, { expandedCardState: { ...currentState, [contextKey]: Array.from(currentExpanded) } });
+    }, [viewAsUser, updateContextUser, contextKey]);
     
     const onCollapseAll = () => {
         if (!viewAsUser) return;
         const currentState = viewAsUser.expandedCardState || {};
-        updateUser(viewAsUser.userId, { expandedCardState: { ...currentState, [contextKey]: [] } });
+        updateContextUser(viewAsUser.userId, { expandedCardState: { ...currentState, [contextKey]: [] } });
     };
 
     const handleUpdate = useCallback((pageId: string, data: Partial<AppPage>) => {
@@ -664,17 +664,9 @@ export const PagesManagement = ({ appSettings, isActive }: { appSettings: AppSet
         }
     };
     
-    const reorderPages = useCallback(async (reorderedPages: AppPage[]) => {
-      if(!viewAsUser) return;
-      const db = getDb();
-      const batch = writeBatch(db);
-      reorderedPages.forEach((page, index) => {
-        const pageRef = doc(db, 'pages', page.id);
-        batch.update(pageRef, { order: index });
-      });
-      await batch.commit();
-      toast({title: 'Page Order Saved'});
-    }, [viewAsUser, toast]);
+    const reorderPages = useCallback((reorderedPages: AppPage[]) => {
+      reorderPagesMutation.mutate(reorderedPages);
+    }, [reorderPagesMutation]);
     
     const addPage = useCallback((sourcePage?: Partial<AppPage>) => {
       if(!viewAsUser) return;
@@ -700,11 +692,6 @@ export const PagesManagement = ({ appSettings, isActive }: { appSettings: AppSet
       });
     }, [allPages, viewAsUser, addPageMutation, toast]);
   
-    const displayedPages = useMemo(() => {
-        if (!viewAsUser || !allPages) return [];
-        return allPages;
-    }, [allPages, viewAsUser]);
-
     const renderPageCard = useCallback((page: AppPage) => {
         if (!viewAsUser || !appSettings) return null;
         const expandedCardIds = viewAsUser?.expandedCardState?.[contextKey] || [];
@@ -723,7 +710,7 @@ export const PagesManagement = ({ appSettings, isActive }: { appSettings: AppSet
       </SortableItem>
     )}, [handleUpdate, handleDelete, viewAsUser, onToggleExpand, contextKey, appSettings]);
 
-    if (!appSettings) {
+    if (!appSettings || isLoadingPages) {
         return (
             <div className="flex items-center justify-center h-full">
                 <GoogleSymbol name="progress_activity" className="animate-spin text-4xl" />
@@ -738,7 +725,7 @@ export const PagesManagement = ({ appSettings, isActive }: { appSettings: AppSet
                 onPageTitleSave={() => {}} // No page title to save on this tab
                 canManagePage={false}
                 entityType="page"
-                allItems={displayedPages}
+                allItems={allPages}
                 allSharedItems={[]} // Shared pages logic to be implemented
                 onAddItem={(sourcePage) => addPage(sourcePage as any || {})}
                 onUpdateItem={handleUpdate}
@@ -798,7 +785,7 @@ function SortableTabCard({ tab, onUpdate, isExpanded, onToggleExpand }: {
 }
 
 export const TabsManagement = ({ appSettings, isActive }: { appSettings: AppSettings; isActive: boolean; }) => {
-    const { viewAsUser, updateUser } = useUser();
+    const { viewAsUser, updateUser: updateContextUser } = useUser();
     const { useUpdateAppSettings } = useDataQueries();
     
     const updateSettingsMutation = useUpdateAppSettings();
@@ -821,13 +808,13 @@ export const TabsManagement = ({ appSettings, isActive }: { appSettings: AppSett
         } else {
           currentExpanded.add(tabId);
         }
-        updateUser(viewAsUser.userId, { expandedCardState: { ...currentState, [contextKey]: Array.from(currentExpanded) } });
-    }, [viewAsUser, updateUser, contextKey]);
+        updateContextUser(viewAsUser.userId, { expandedCardState: { ...currentState, [contextKey]: Array.from(currentExpanded) } });
+    }, [viewAsUser, updateContextUser, contextKey]);
     
     const onCollapseAll = () => {
         if (!viewAsUser) return;
         const currentState = viewAsUser.expandedCardState || {};
-        updateUser(viewAsUser.userId, { expandedCardState: { ...currentState, [contextKey]: [] } });
+        updateContextUser(viewAsUser.userId, { expandedCardState: { ...currentState, [contextKey]: [] } });
     };
 
     const handleUpdateTab = useCallback((tabId: string, data: Partial<AppTab>) => {
@@ -920,3 +907,5 @@ export const TabsManagement = ({ appSettings, isActive }: { appSettings: AppSett
     );
 };
 // #endregion
+
+    

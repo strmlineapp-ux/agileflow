@@ -29,7 +29,7 @@ export function useDataQueries() {
     const queryClient = useQueryClient();
     const { toast } = useToast();
 
-    const genericMutationOptions = (queryKey: string | (string | undefined)[]) => ({
+    const genericMutationOptions = (queryKey: (string | undefined)[]) => ({
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey });
         toast({ title: 'Success', description: 'Your changes have been saved.' });
@@ -44,6 +44,7 @@ export function useDataQueries() {
         return useQuery<User[]>({
             queryKey: ['users', workspaceId],
             queryFn: async () => {
+                if (!workspaceId) return [];
                 const db = getDb();
                 const q = query(collection(db, 'users'), where('workspaceId', '==', workspaceId));
                 const snapshot = await getDocs(q);
@@ -79,6 +80,7 @@ export function useDataQueries() {
         return useQuery<PreApprovedEmail[]>({
             queryKey: ['preApprovedEmails', workspaceId],
             queryFn: async () => {
+                if (!workspaceId) return [];
                 const db = getDb();
                 const q = query(collection(db, 'pre-approved-emails'), where('workspaceId', '==', workspaceId));
                 const snapshot = await getDocs(q);
@@ -109,11 +111,12 @@ export function useDataQueries() {
     };
     // #endregion
     
-    // #region AppSettings
+    // #region AppSettings and Pages
     const useFetchAppSettings = (workspaceId?: string) => {
         return useQuery<AppSettings>({
             queryKey: ['appSettings', workspaceId],
             queryFn: async () => {
+                if (!workspaceId) throw new Error("Workspace ID is required to fetch app settings.");
                 const db = getDb();
                 const docRef = doc(db, 'app-settings', workspaceId!);
                 const docSnap = await getDoc(docRef);
@@ -132,13 +135,73 @@ export function useDataQueries() {
             ...genericMutationOptions(['appSettings']),
         });
     };
-    // #endregion
+
+    const useFetchPages = (workspaceId?: string) => {
+        return useQuery<AppPage[]>({
+            queryKey: ['pages', workspaceId],
+            queryFn: async () => {
+                if (!workspaceId) return [];
+                const db = getDb();
+                const q = query(collection(db, 'pages'), where('workspaceId', '==', workspaceId), orderBy('order', 'asc'));
+                const snapshot = await getDocs(q);
+                return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AppPage));
+            },
+            enabled: !!workspaceId
+        });
+    };
+
+    const useAddPage = () => {
+        return useMutation({
+            mutationFn: async (pageData: Partial<AppPage>) => {
+                const db = getDb();
+                await addDoc(collection(db, "pages"), pageData);
+            },
+            ...genericMutationOptions(['pages'])
+        });
+    };
     
+    const useUpdatePage = () => {
+        return useMutation({
+            mutationFn: async ({ pageId, data }: { pageId: string, data: Partial<AppPage>}) => {
+                const db = getDb();
+                await updateDoc(doc(db, "pages", pageId), data);
+            },
+            ...genericMutationOptions(['pages'])
+        });
+    };
+
+    const useDeletePage = () => {
+        return useMutation({
+            mutationFn: async (pageId: string) => {
+                const db = getDb();
+                await deleteDoc(doc(db, "pages", pageId));
+            },
+            ...genericMutationOptions(['pages'])
+        });
+    };
+
+    const useReorderPages = () => {
+        return useMutation({
+            mutationFn: async (reorderedPages: AppPage[]) => {
+                const db = getDb();
+                const batch = writeBatch(db);
+                reorderedPages.forEach((page, index) => {
+                    const pageRef = doc(db, 'pages', page.id);
+                    batch.update(pageRef, { order: index });
+                });
+                await batch.commit();
+            },
+            ...genericMutationOptions(['pages'])
+        });
+    };
+    // #endregion
+
     // #region Badges & Collections
     const useFetchAllBadges = (workspaceId?: string) => {
         return useQuery<Badge[]>({
             queryKey: ['badges', workspaceId],
             queryFn: async () => {
+                if (!workspaceId) return [];
                 const db = getDb();
                 const q = query(collection(db, 'badges'), where('workspaceId', '==', workspaceId));
                 const snapshot = await getDocs(q);
@@ -152,6 +215,7 @@ export function useDataQueries() {
         return useQuery<BadgeCollection[]>({
             queryKey: ['badgeCollections', workspaceId],
             queryFn: async () => {
+                if (!workspaceId) return [];
                 const db = getDb();
                 const q = query(collection(db, 'badgeCollections'), where('workspaceId', '==', workspaceId));
                 const snapshot = await getDocs(q);
@@ -167,6 +231,7 @@ export function useDataQueries() {
       return useQuery<Project[]>({
           queryKey: ['projects', workspaceId],
           queryFn: async () => {
+              if (!workspaceId) return [];
               const db = getDb();
               const q = query(collection(db, 'projects'), where('workspaceId', '==', workspaceId));
               const snapshot = await getDocs(q);
@@ -180,6 +245,7 @@ export function useDataQueries() {
       return useQuery<Project | null>({
         queryKey: ['project', projectId],
         queryFn: async () => {
+            if (!projectId) return null;
             const db = getDb();
             const docRef = doc(db, 'projects', projectId!);
             const docSnap = await getDoc(docRef);
@@ -284,12 +350,13 @@ export function useDataQueries() {
         return useQuery<Notification[]>({
             queryKey: ['notifications', workspaceId],
             queryFn: async () => {
-                const db = getDb();
                 if (!workspaceId) return [];
+                const db = getDb();
                 const q = query(
                     collection(db, 'notifications'),
                     where('workspaceId', '==', workspaceId),
-                    orderBy('time', 'desc')
+                    orderBy('time', 'desc'),
+                    limit(50)
                 );
                 const snapshot = await getDocs(q);
                 return snapshot.docs.map(doc => convertTimestamps<Notification>({ id: doc.id, ...doc.data() }));
@@ -336,25 +403,23 @@ export function useDataQueries() {
     // #endregion
     
     // #region Events
-    const useFetchEvents = useQuery<Event[], Error, Event[], (string | undefined)[]>({
-        queryKey: ['events', undefined, undefined, undefined],
-        queryFn: async ({ queryKey }) => {
-          const [, workspaceId, startStr, endStr] = queryKey;
-          const db = getDb();
-          if (!workspaceId || !startStr || !endStr) return [];
-          const start = new Date(startStr);
-          const end = new Date(endStr);
-          const eventsQuery = query(
-            collection(db, "events"),
-            where("workspaceId", "==", workspaceId),
-            where("startTime", ">=", start),
-            where("startTime", "<=", end)
-          );
-          const snapshot = await getDocs(eventsQuery);
-          return snapshot.docs.map(doc => convertTimestamps<Event>({ eventId: doc.id, ...doc.data()}));
-        },
-        enabled: false, // This query is intended to be called manually via queryClient
-      });
+    const useFetchEvents = (workspaceId: string, start: Date, end: Date) => {
+        return useQuery<Event[]>({
+          queryKey: ['events', workspaceId, start.toISOString(), end.toISOString()],
+          queryFn: async () => {
+            const db = getDb();
+            const eventsQuery = query(
+              collection(db, "events"),
+              where("workspaceId", "==", workspaceId),
+              where("startTime", ">=", start),
+              where("startTime", "<=", end)
+            );
+            const snapshot = await getDocs(eventsQuery);
+            return snapshot.docs.map(doc => convertTimestamps<Event>({ eventId: doc.id, ...doc.data() }));
+          },
+          enabled: !!workspaceId,
+        });
+      };
 
     const useAddEvent = () => {
       return useMutation({
@@ -396,6 +461,11 @@ export function useDataQueries() {
         useRemovePreApprovedEmail,
         useFetchAppSettings,
         useUpdateAppSettings,
+        useFetchPages,
+        useAddPage,
+        useUpdatePage,
+        useDeletePage,
+        useReorderPages,
         useFetchAllBadges,
         useFetchAllBadgeCollections,
         useFetchProjects,
@@ -416,3 +486,5 @@ export function useDataQueries() {
         useDeleteEvent,
     };
 }
+
+    

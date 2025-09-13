@@ -33,6 +33,9 @@ const nextConfig = {
     config,
     { buildId, dev, isServer, defaultLoaders, nextRuntime, webpack }
   ) => {
+    if (!config.externals) {
+      config.externals = [];
+    }
     config.externals.push({
       canvas: "commonjs canvas",
     });

@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
@@ -21,9 +20,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { CenteredTabList } from '@/components/common/centered-tab-list';
 import { Card, CardDescription, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { getDb } from '@/lib/firebase';
-import { collection, query, where, onSnapshot, addDoc, doc, updateDoc, deleteDoc, Timestamp, getDocs } from 'firebase/firestore';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDataQueries } from '@/hooks/use-data-queries';
 
 function CalendarLinkPrompt() {
@@ -52,7 +48,6 @@ function CalendarLinkPrompt() {
 
 export function CalendarPageContent({ tab }: { tab: AppTab }) {
   const { viewAsUser, calendars } = useUser();
-  const queryClient = useQueryClient();
   const { useFetchEvents, useAddEvent, useUpdateEvent, useDeleteEvent } = useDataQueries();
 
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -68,31 +63,25 @@ export function CalendarPageContent({ tab }: { tab: AppTab }) {
   
   const userCanCreateEvent = viewAsUser ? canCreateAnyEvent(viewAsUser, calendars) : false;
 
-  const { data: viewEvents = [], isLoading: isDataLoading } = useQuery<Event[]>({
-    queryKey: ['events', viewAsUser?.workspaceId, view, currentDate.toISOString().split('T')[0]],
-    queryFn: () => {
-        let start: Date;
-        let end: Date;
+  const { data: viewEvents = [], isLoading: isDataLoading } = useFetchEvents(
+    viewAsUser?.workspaceId!,
+    useMemo(() => {
         switch (view) {
-          case 'month':
-            start = startOfMonth(currentDate);
-            end = endOfMonth(currentDate);
-            break;
-          case 'week':
-          case 'production-schedule':
-            start = startOfWeek(currentDate, { weekStartsOn: 1 });
-            end = addDays(start, 7);
-            break;
-          case 'day':
-          default:
-            start = startOfDay(currentDate);
-            end = addDays(start, 1);
-            break;
+            case 'month': return startOfMonth(currentDate);
+            case 'week':
+            case 'production-schedule': return startOfWeek(currentDate, { weekStartsOn: 1 });
+            default: return startOfDay(currentDate);
         }
-        return useFetchEvents(viewAsUser!.workspaceId, start, end).data || [];
-    },
-    enabled: !!viewAsUser?.googleCalendarLinked && !!viewAsUser?.workspaceId,
-  });
+    }, [view, currentDate]),
+    useMemo(() => {
+        switch (view) {
+            case 'month': return endOfMonth(currentDate);
+            case 'week':
+            case 'production-schedule': return addDays(startOfWeek(currentDate, { weekStartsOn: 1 }), 7);
+            default: return addDays(startOfDay(currentDate), 1);
+        }
+    }, [view, currentDate])
+  );
 
   const addMutation = useAddEvent();
   const updateMutation = useUpdateEvent();
@@ -311,3 +300,5 @@ export function CalendarPageContent({ tab }: { tab: AppTab }) {
     </>
   );
 }
+
+    
